@@ -69,7 +69,7 @@ if ENV["PRIVATE_FEED_NAME"]
     credentials << {
       "type" => "maven_repository",
       "url" => url,
-      "username" => "tingle",
+      "username" => "#{ENV["ORGANIZATION"]}",
       "password" => "#{ENV["SYSTEM_ACCESSTOKEN"]}"
     }
   elsif package_manager == "npm_and_yarn"
