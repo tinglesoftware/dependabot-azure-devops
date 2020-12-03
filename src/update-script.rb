@@ -72,6 +72,14 @@ if ENV["PRIVATE_FEED_NAME"]
       "username" => "tingle",
       "password" => "#{ENV["SYSTEM_ACCESSTOKEN"]}"
     }
+  elsif package_manager == "npm_and_yarn"
+    url = "https://pkgs.dev.azure.com/#{ENV["ORGANIZATION"]}/_packaging/#{ENV["PRIVATE_FEED_NAME"]}/npm/registry/"
+    puts "Adding private npm registry '#{url}'"
+    credentials << {
+      "type" => "npm_registry",
+      "registry" => url,
+      "token" => "#{ENV["PRIVATE_FEED_NAME"]}:#{ENV["SYSTEM_ACCESSTOKEN"]}"
+    }
   end
 end
 
