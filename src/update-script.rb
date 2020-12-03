@@ -73,7 +73,7 @@ if ENV["PRIVATE_FEED_NAME"]
       "password" => "#{ENV["SYSTEM_ACCESSTOKEN"]}"
     }
   elsif package_manager == "npm_and_yarn"
-    url = "https://pkgs.dev.azure.com/#{ENV["ORGANIZATION"]}/_packaging/#{ENV["PRIVATE_FEED_NAME"]}/npm/registry/"
+    url = "pkgs.dev.azure.com/#{ENV["ORGANIZATION"]}/_packaging/#{ENV["PRIVATE_FEED_NAME"]}/npm/registry/"
     puts "Adding private npm registry '#{url}'"
     credentials << {
       "type" => "npm_registry",
