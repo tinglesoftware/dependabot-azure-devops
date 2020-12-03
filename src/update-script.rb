@@ -36,6 +36,9 @@ credentials = [{
   "password" => ENV["SYSTEM_ACCESSTOKEN"]
 }]
 
+##############################
+# Add GitHub Access TOken (PAT) to avoid rate limiting #
+##############################
 if ENV["GITHUB_ACCESS_TOKEN"]
   credentials << {
     "type" => "git_source",
@@ -47,14 +50,27 @@ end
 
 if ENV["PRIVATE_FEED_NAME"]
   if package_manager == "nuget"
+    # Adding custom private feed removes the public onces so we have to create it
     credentials << {
       "type" => "nuget_feed",
       "url" => "https://api.nuget.org/v3/index.json",
     }
+
+    url = "https://pkgs.dev.azure.com/#{ENV["ORGANIZATION"]}/_packaging/#{ENV["PRIVATE_FEED_NAME"]}/nuget/v3/index.json"
+    puts "Adding private NuGet feed '#{url}'"
     credentials << {
       "type" => "nuget_feed",
-      "url" => "https://pkgs.dev.azure.com/#{ENV["ORGANIZATION"]}/_packaging/#{ENV["PRIVATE_FEED_NAME"]}/nuget/v3/index.json",
+      "url" => url,
       "token" => ":#{ENV["SYSTEM_ACCESSTOKEN"]}", # do not forget the colon
+    }
+  elsif package_manager == "maven"
+    url = "https://pkgs.dev.azure.com/#{ENV["ORGANIZATION"]}/_packaging/#{ENV["PRIVATE_FEED_NAME"]}/maven/v1"
+    puts "Adding private Maven repository '#{url}'"
+    credentials << {
+      "type" => "maven_repository",
+      "url" => url,
+      "username" => "tingle",
+      "password" => "#{ENV["SYSTEM_ACCESSTOKEN"]}"
     }
   end
 end
