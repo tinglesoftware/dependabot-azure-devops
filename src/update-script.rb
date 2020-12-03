@@ -56,6 +56,13 @@ if ENV["PRIVATE_FEED_NAME"]
       "url" => "https://pkgs.dev.azure.com/#{ENV["ORGANIZATION"]}/_packaging/#{ENV["PRIVATE_FEED_NAME"]}/nuget/v3/index.json",
       "token" => ":#{ENV["SYSTEM_ACCESSTOKEN"]}", # do not forget the colon
     }
+  elsif package_manager == "gradle"
+    credentials << {
+      "type" => "maven_repository",
+      "url" => "https://pkgs.dev.azure.com/#{ENV["ORGANIZATION"]}/_packaging/#{ENV["PRIVATE_FEED_NAME"]}/maven/v1",
+      "username" => "#{ENV["ORGANIZATION"]}",
+      "password" => ENV["SYSTEM_ACCESSTOKEN"]
+    }
   end
 end
 
