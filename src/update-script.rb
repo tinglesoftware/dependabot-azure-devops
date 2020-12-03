@@ -63,7 +63,7 @@ if ENV["PRIVATE_FEED_NAME"]
       "url" => url,
       "token" => ":#{ENV["SYSTEM_ACCESSTOKEN"]}", # do not forget the colon
     }
-  elsif package_manager == "gradle"
+  elsif package_manager == "gradle" || package_manager == "maven"
     url = "https://pkgs.dev.azure.com/#{ENV["ORGANIZATION"]}/_packaging/#{ENV["PRIVATE_FEED_NAME"]}/maven/v1"
     puts "Adding private Maven repository '#{url}'"
     credentials << {
