@@ -89,7 +89,7 @@ source = Dependabot::Source.new(
   api_endpoint: "https://dev.azure.com/",
   repo: repo_name,
   directory: directory,
-  branch: nil,
+  branch: ENV["TARGET_BRANCH"] || nil,
 )
 
 ##############################
