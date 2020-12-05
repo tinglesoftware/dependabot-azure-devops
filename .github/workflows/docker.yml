@@ -1,0 +1,29 @@
+name: Docker
+
+on:
+  # Triggers the workflow on push or pull request events but only for the main branch
+#   push:
+#     branches:
+#     - main
+  push:
+    branches:
+      - ref/tags/*
+#       # Publish `main` branch as Docker `latest` image.
+#       - main
+  pull_request:
+    branches:
+    - main
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # Run tests.
+  # See also https://docs.docker.com/docker-hub/builds/automated-testing/
+  test:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Build docker image
+        run: docker build -f /src/Dockerfile /src
