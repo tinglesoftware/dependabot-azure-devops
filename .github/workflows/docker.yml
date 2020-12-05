@@ -1,29 +1,65 @@
 name: Docker
 
 on:
-  # Triggers the workflow on push or pull request events but only for the main branch
-#   push:
-#     branches:
-#     - main
   push:
     branches:
       - ref/tags/*
 #       # Publish `main` branch as Docker `latest` image.
 #       - main
+    paths-ignore:
+      - README.md
+      - LICENSE.md
+      - CHANGELOG.md
+      - RELEASENOTES.md
+      - docs/**/*
   pull_request:
     branches:
-    - main
+      - main
+    paths-ignore:
+      - README.md
+      - LICENSE.md
+      - CHANGELOG.md
+      - RELEASENOTES.md
+      - docs/**/*
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # Run tests.
-  # See also https://docs.docker.com/docker-hub/builds/automated-testing/
+  # Run tests (for pull requests only).
   test:
-    # The type of runner that the job will run on
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
 
     steps:
       - uses: actions/checkout@v2
 
       - name: Build docker image
         run: docker build -f /src/Dockerfile /src
+
+  # Publish image
+  publish:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+    
+    env:
+      IMAGE_NAME: 'tinglesoftware/dependabot-azure-devops'
+    
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Extract version
+        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+
+      - name: Build image
+        run: docker build -f /src/Dockerfile -t $IMAGE_NAME /src
+      
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+      
+      - name: Push image to GitHub packages
+        run: |
+          IMAGE_ID=docker.pkg.github.com/$IMAGE_NAME
+          echo IMAGE_ID=$IMAGE_ID
+          echo VERSION=$VERSION
+          docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
+          docker push $IMAGE_ID:$VERSION
+    
