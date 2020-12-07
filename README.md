@@ -28,7 +28,7 @@ To run the script, some environment variables are required.
 First, you must pull the image locally to your machine:
 
 ```bash
-docker pull docker.pkg.github.com/tinglesoftware/dependabot-azure-devops/dependabot-azure-devops:0.1.0
+docker pull tingle/dependabot-azure-devops:0.1.1
 ```
 
 Next create and run a container from the image:
@@ -43,7 +43,7 @@ docker run --rm -it \
            -e GITHUB_ACCESS_TOKEN=<your-github-token-here> \
            -e PRIVATE_FEED_NAME=,your-private-feed> \
            -e DIRECTORY=/ \
-           tinglesoftware/dependabot-azure-devops/dependabot-azure-devops:0.1.0
+           tingle/dependabot-azure-devops:0.1.1
 ```
 
 An example:
@@ -58,7 +58,7 @@ docker run --rm -it \
            -e GITHUB_ACCESS_TOKEN=ijkl..mnop \
            -e PRIVATE_FEED_NAME=tinglesoftware \
            -e DIRECTORY=/ \
-           tinglesoftware/dependabot-azure-devops/dependabot-azure-devops:0.1.0
+           tingle/dependabot-azure-devops:0.1.1
 ```
 
 ## Running in Azure DevOps
@@ -96,7 +96,7 @@ spec:
         spec:
           containers:
             - name: dependabot
-              image: 'docker.pkg.github.com/tinglesoftware/dependabot-azure-devops/dependabot-azure-devops:0.1.0'
+              image: 'tingle/dependabot-azure-devops:0.1.1'
               env:
                 - name: ORGANIZATION
                   value: 'tinglesoftware'

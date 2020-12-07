@@ -21,7 +21,7 @@ spec:
         spec:
           containers:
             - name: dependabot
-              image: 'docker.pkg.github.com/tinglesoftware/dependabot-azure-devops/dependabot-azure-devops:0.1.0'
+              image: 'tingle/dependabot-azure-devops:0.1.1'
               env:
                 - name: ORGANIZATION
                   value: '{{ORGANIZATION}}'
