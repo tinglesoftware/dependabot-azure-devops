@@ -117,3 +117,11 @@ spec:
           restartPolicy: OnFailure
 
 ```
+
+### Issues &amp; Comments
+
+Please leave all comments, bugs, requests, and issues on the Issues page. We'll respond to your request ASAP!
+
+### License
+
+The code is licensed under the [MIT](http://www.opensource.org/licenses/mit-license.php "Read more about the MIT license form") license. Refere to the [LICENSE](./LICENSE.md) file for more information.
