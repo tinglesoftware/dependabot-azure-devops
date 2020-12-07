@@ -5,7 +5,7 @@ This repository contains convenience tool(s) for updating dependencies in Azure 
 1. Dependabot's [Update script](./src/update-script.rb) in Ruby.
 2. Dockerfile and build/image for running the script via Docker [here](./src/Dockerfile).
 3. Azure DevOps Extension source (./src/Extension). _[coming soon]_
-4. Kubernetes CronJob [template](./src/templates/dependabot-template.yml). _[coming soon]_
+4. Kubernetes CronJob [template](./templates/dependabot-template.yml).
 5. Semi-hosted version of Dependabot [here](./src/Hosting). _[coming soon]_
 
 ## Environment Variables
@@ -17,11 +17,11 @@ To run the script, some environment variables are required.
 |ORGANIZATION|**_Required_**. The name of the Azure DevOps Organization. This is can be extracted from the URL of the home page. https://dev.azure.com/{organization}/|
 |PROJECT|**_Required_**. The name of the Azure DevOps Project within the above organization. This can be extracted them the URL too. https://dev.azure.com/{organization}/{project}/|
 |REPOSITORY|**_Required_**. The name of the Azure DevOps Repository within the above project to run Dependabot against. This can be extracted from the URL of the repository. https://dev.azure.com/{organization}/{project}/_git/{repository}/|
-|DIRECTORY|**_Optional_**. The directory in which dependancies are to be checked. When not specified, the root of the repository (denoted as '/') is used.
 |PACKAGE_MANAGER|**_Required_**. The type of packages to check for dependecy upgrades. Examples: `nuget`, `maven`, `gradle`, `npm_and_yarn`, etc. See the [updated-script](./src/update-script.rb) for more.
 |SYSTEM_ACCESSTOKEN|**_Required_**. The Personal Access in Azure DevOps for accessing the repository and creating pull requests. The required permissions are: <br/>-&nbsp;Code (Full)<br/>-&nbsp;Packaging (Read)<br/>-&nbsp;Pull Requests Threads (Read & Write).<br/>See the [documentation](https://docs.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate?view=azure-devops&tabs=preview-page#create-a-pat) to know more about creating a Personal Access Token|
 |GITHUB_ACCESS_TOKEN|**_Optional_**. The GitHub token for authenticating requests against GitHub public repositories. This is useful to avoid rate limiting errors. The token must include permissions to read public repositories. See the [documentation](https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token) for more on Personal Access Tokens.|
 |PRIVATE_FEED_NAME|**_Optional_**. The name of the private feed within the Azure DevOps organization to use when resolving private packages. The script automatically adds the correct feed/registry URL to the process depending on the value set for `PACKAGE_MANAGER`. This is only required if there are packages in a private feed.|
+|DIRECTORY|**_Optional_**. The directory in which dependancies are to be checked. When not specified, the root of the repository (denoted as '/') is used.
 
 ## Running in docker
 
@@ -65,6 +65,55 @@ docker run --rm -it \
 
 Coming soon
 
-## Running using a Kubernetes CronJob of Job
+## Running using a Kubernetes CronJob
 
-Coming soon
+Kubernetes CronJobs are useful tools for running repeated jobs on a schedule. For more information on them read the [documentation](https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/).
+Using the Docker version of tools, we can create a CronJob and have it run periodically. The [environment variables](#environment-variables) discussed above are supplied in the job template but can be stored in a [ConfigMap](https://kubernetes.io/docs/concepts/configuration/configmap/) for ease of reuse.
+
+Use the [template provided](./templates/dependabot-template.yml) and replace the parameters in curly braces (e.g. replace `{{ORGANIZATION}}` with the actual value for your organization), then deploy it. Be sure to replace the `{{CRON_SCHEDULE}}` variable with the desired schedule as per the [Cron format](https://en.wikipedia.org/wiki/Cron) An example would like:
+
+```yml
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: dependabot-oss-ado-dp
+  labels:
+    tingle.io/dependabot: 'true'
+  annotations:
+    project: 'oss'
+    repository: 'ado-dp'
+spec:
+  schedule: '0 2 * * *' # 2 am GMT, every day
+  jobTemplate:
+    metadata:
+      labels:
+        tingle.io/dependabot: 'true'
+      annotations:
+        project: 'oss'
+        repository: 'ado-dp'
+    spec:
+      template:
+        spec:
+          containers:
+            - name: dependabot
+              image: 'docker.pkg.github.com/tinglesoftware/dependabot-azure-devops/dependabot-azure-devops:0.1.0'
+              env:
+                - name: ORGANIZATION
+                  value: 'tinglesoftware'
+                - name: PROJECT
+                  value: 'ado'
+                - name: REPOSITORY
+                  value: 'ado-dp'
+                - name: PACKAGE_MANAGER
+                  value: 'nuget'
+                - name: SYSTEM_ACCESSTOKEN
+                  value: 'abcd...efgh'
+                - name: GITHUB_ACCESS_TOKEN
+                  value: 'ijkl..mnop'
+                - name: PRIVATE_FEED_NAME
+                  value: 'tinglesoftware'
+                - name: DIRECTORY
+                  value: '/'
+          restartPolicy: OnFailure
+
+```

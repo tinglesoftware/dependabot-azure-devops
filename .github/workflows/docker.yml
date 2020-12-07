@@ -13,6 +13,7 @@ on:
       - CHANGELOG.md
       - RELEASENOTES.md
       - docs/**/*
+      - templates/**/*
   pull_request:
     branches:
       - main
@@ -22,6 +23,7 @@ on:
       - CHANGELOG.md
       - RELEASENOTES.md
       - docs/**/*
+      - templates/**/*
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
