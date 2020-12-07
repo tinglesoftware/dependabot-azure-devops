@@ -1,6 +1,14 @@
 # Dependabot for Azure DevOps
 
-This repository contains convenience tool(s) for updating dependencies in Azure DevOps repositories using [Dependabot](https://dependabot.com). In this repository you'll find:
+This repository contains convenience tool(s) for updating dependencies in Azure DevOps repositories using [Dependabot](https://dependabot.com).
+
+The work in this repository is based on inspired and ocassionally guided by:
+
+1. Official Script support: [code](https://github.com/dependabot/dependabot-script)
+2. Andrew Craven's work: [blog](https://medium.com/@acraven/updating-dependencies-in-azure-devops-repos-773cbbb6029d), [code](https://github.com/acraven/azure-dependabot)
+3. Chris' work: [code](https://github.com/chris5287/dependabot-for-azuredevops)
+
+In this repository you'll find:
 
 1. Dependabot's [Update script](./src/update-script.rb) in Ruby.
 2. Dockerfile and build/image for running the script via Docker [here](./src/Dockerfile).
