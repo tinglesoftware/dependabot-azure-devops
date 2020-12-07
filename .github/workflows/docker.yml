@@ -42,22 +42,24 @@ jobs:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
 
     env:
-      IMAGE_NAME: 'tinglesoftware/dependabot-azure-devops'
+      IMAGE_NAME: 'dependabot-azure-devops'
 
     steps:
       - uses: actions/checkout@v2
 
       - name: Build image
-        run: docker build -f src/Dockerfile -t $IMAGE_NAME src
+        run: |
+          docker build \
+          -f src/Dockerfile \
+          -t "$IMAGE_NAME" \
+          src
 
-      - name: Log into registry
+      - name: Log into registry (GitHub)
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
       - name: Push image to GitHub packages
         run: |
-          IMAGE_ID=docker.pkg.github.com/$IMAGE_NAME
           VERSION="${GITHUB_REF#refs/tags/}"
-          echo IMAGE_ID=$IMAGE_ID
-          echo VERSION=$VERSION
-          docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
-          docker push $IMAGE_ID:$VERSION
+          IMAGE_ID="docker.pkg.github.com/tinglesoftware/$IMAGE_NAME"
+          docker tag "$IMAGE_NAME" $IMAGE_ID:$VERSION
+          docker push "$IMAGE_ID:$VERSION"
