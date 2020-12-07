@@ -30,6 +30,7 @@ To run the script, some environment variables are required.
 |GITHUB_ACCESS_TOKEN|**_Optional_**. The GitHub token for authenticating requests against GitHub public repositories. This is useful to avoid rate limiting errors. The token must include permissions to read public repositories. See the [documentation](https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token) for more on Personal Access Tokens.|
 |PRIVATE_FEED_NAME|**_Optional_**. The name of the private feed within the Azure DevOps organization to use when resolving private packages. The script automatically adds the correct feed/registry URL to the process depending on the value set for `PACKAGE_MANAGER`. This is only required if there are packages in a private feed.|
 |DIRECTORY|**_Optional_**. The directory in which dependancies are to be checked. When not specified, the root of the repository (denoted as '/') is used.
+|TARGET_BRANCH|**_Optional_**. The branch to be targeted when creating a pull request. When not specified, Dependabot will resolve the default branch of the repository.
 
 ## Running in docker
 
@@ -49,8 +50,9 @@ docker run --rm -it \
            -e PACKAGE_MANAGER=<your-package-manager-here> \
            -e SYSTEM_ACCESSTOKEN=<your-devops-token-here> \
            -e GITHUB_ACCESS_TOKEN=<your-github-token-here> \
-           -e PRIVATE_FEED_NAME=,your-private-feed> \
+           -e PRIVATE_FEED_NAME=<your-private-feed> \
            -e DIRECTORY=/ \
+           -e TARGET_BRANCH=<your-target-branch> \
            tingle/dependabot-azure-devops:0.1.1
 ```
 
@@ -66,6 +68,7 @@ docker run --rm -it \
            -e GITHUB_ACCESS_TOKEN=ijkl..mnop \
            -e PRIVATE_FEED_NAME=tinglesoftware \
            -e DIRECTORY=/ \
+           -e TARGET_BRANCH=main \
            tingle/dependabot-azure-devops:0.1.1
 ```
 
@@ -122,6 +125,8 @@ spec:
                   value: 'tinglesoftware'
                 - name: DIRECTORY
                   value: '/'
+                - name: TARGET_BRANCH
+                  value: 'master'
           restartPolicy: OnFailure
 
 ```
@@ -132,4 +137,4 @@ Please leave all comments, bugs, requests, and issues on the Issues page. We'll 
 
 ### License
 
-The code is licensed under the [MIT](http://www.opensource.org/licenses/mit-license.php "Read more about the MIT license form") license. Refere to the [LICENSE](./LICENSE.md) file for more information.
+The code is licensed under the [MIT](http://www.opensource.org/licenses/mit-license.php "Read more about the MIT license form") license. Refere to the [LICENSE](./LICENSE) file for more information.

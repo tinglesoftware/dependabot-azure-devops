@@ -39,4 +39,6 @@ spec:
                   value: '{{PRIVATE_FEED_NAME}}'
                 - name: DIRECTORY
                   value: '{{DIRECTORY_PATH}}'
+                - name: TARGET_BRANCH
+                  value: '{{TARGET_BRANCH}}'
           restartPolicy: OnFailure
