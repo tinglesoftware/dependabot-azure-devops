@@ -60,6 +60,6 @@ jobs:
       - name: Push image to GitHub packages
         run: |
           VERSION="${GITHUB_REF#refs/tags/}"
-          IMAGE_ID="docker.pkg.github.com/tinglesoftware/$IMAGE_NAME"
+          IMAGE_ID="docker.pkg.github.com/${{ github.repository }}/$IMAGE_NAME"
           docker tag "$IMAGE_NAME" $IMAGE_ID:$VERSION
           docker push "$IMAGE_ID:$VERSION"
