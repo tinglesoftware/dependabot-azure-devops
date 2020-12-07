@@ -8,12 +8,12 @@ updates:
   - package-ecosystem: "bundler" # See documentation for possible values
     directory: "/src" # Location of package manifests
     schedule:
-      interval: "daily"
+      interval: "weekly"
       time: "02:00"
     open-pull-requests-limit: 10
   - package-ecosystem: "docker" # See documentation for possible values
     directory: "/src" # Location of package manifests
     schedule:
-      interval: "daily"
+      interval: "weekly"
       time: "02:00"
     open-pull-requests-limit: 10
