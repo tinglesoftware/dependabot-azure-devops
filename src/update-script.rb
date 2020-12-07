@@ -173,8 +173,8 @@ dependencies.select(&:top_level?).each do |dep|
     credentials: credentials,
     label_language: true,
     author_details: {
-      email: "dependabot@#{ENV["AUTHOR_EMAIL_DOMAIN"] || "github.com"}",
-      name: "Dependabot"
+      email: "noreply@github.com",
+      name: "dependabot[bot]"
     },
   )
 
