@@ -32,6 +32,7 @@ jobs:
     env:
       IMAGE_NAME: 'dependabot-azure-devops'
       DOCKER_BUILDKIT: 1 # Enable Docker BuildKit
+      GITHUB_DOCKER_IMAGE_ID: "docker.pkg.github.com/$GITHUB_REPOSITORY/$IMAGE_NAME"
 
     steps:
       - name: Checkout
@@ -54,6 +55,8 @@ jobs:
           docker build \
           -f src/Dockerfile \
           -t "$IMAGE_NAME" \
+          --cache-from $GITHUB_DOCKER_IMAGE_ID:latest \
+          --build-arg BUILDKIT_INLINE_CACHE=1 \
           src
 
       - name: Log into registry (GitHub)
@@ -61,9 +64,14 @@ jobs:
 
       - name: Push image to GitHub packages
         run: |
-          IMAGE_ID="docker.pkg.github.com/${{ github.repository }}/$IMAGE_NAME"
-          docker tag "$IMAGE_NAME" $IMAGE_ID:$GITVERSION_FULLSEMVER
-          docker push "$IMAGE_ID:$GITVERSION_FULLSEMVER"
+          docker tag "$IMAGE_NAME" $GITHUB_DOCKER_IMAGE_ID:$GITVERSION_FULLSEMVER
+          docker push "$GITHUB_DOCKER_IMAGE_ID:$GITVERSION_FULLSEMVER"
+
+      - name: Push image to GitHub packages (latest)
+        if: github.ref == 'refs/heads/main'
+        run: |
+          docker tag "$IMAGE_NAME" $GITHUB_DOCKER_IMAGE_ID:latest
+          docker push "$GITHUB_DOCKER_IMAGE_ID:latest"
 
       - name: Log into registry (Docker Hub)
         if: startsWith(github.ref, 'refs/tags')
