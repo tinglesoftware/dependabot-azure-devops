@@ -3,5 +3,5 @@
 mode: ContinuousDeployment
 branches:
   master:
-  regex: (^master$|^origin\/master$|^main$|^origin\/main$)
-  tag: ci
+    regex: (^master$|^origin\/master$|^main$|^origin\/main$)
+    tag: ci
