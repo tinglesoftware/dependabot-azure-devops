@@ -3,7 +3,6 @@ name: Docker
 on:
   push:
     branches:
-      # Publish `main` branch as Docker `latest` image.
       - main
     tags:
       - '*'
@@ -32,6 +31,7 @@ jobs:
 
     env:
       IMAGE_NAME: 'dependabot-azure-devops'
+      DOCKER_BUILDKIT: 1 # Enable Docker BuildKit
 
     steps:
       - name: Checkout
