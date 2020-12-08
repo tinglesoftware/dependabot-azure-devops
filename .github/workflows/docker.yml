@@ -54,6 +54,10 @@ jobs:
         with:
           useConfigFile: true
 
+      # Login to GitHub packages before build so that image layer cache is available
+      - name: Log into registry (GitHub)
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+
       - name: Build image
         run: |
           docker build \
@@ -62,9 +66,6 @@ jobs:
           --cache-from $GITHUB_DOCKER_IMAGE_ID:latest \
           --build-arg BUILDKIT_INLINE_CACHE=1 \
           src
-
-      - name: Log into registry (GitHub)
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
       - name: Push image to GitHub packages
         run: |
