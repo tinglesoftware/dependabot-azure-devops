@@ -62,8 +62,8 @@ jobs:
       - name: Push image to GitHub packages
         run: |
           IMAGE_ID="docker.pkg.github.com/${{ github.repository }}/$IMAGE_NAME"
-          docker tag "$IMAGE_NAME" $IMAGE_ID:${{ steps.gitversion.outputs.fullSemVer }}
-          docker push "$IMAGE_ID:${{ steps.gitversion.outputs.fullSemVer }}"
+          docker tag "$IMAGE_NAME" $IMAGE_ID:$GITVERSION_FULLSEMVER
+          docker push "$IMAGE_ID:$GITVERSION_FULLSEMVER"
 
       - name: Log into registry (Docker Hub)
         if: startsWith(github.ref, 'refs/tags')
@@ -72,5 +72,5 @@ jobs:
       - name: Push image to Docker Hub
         if: startsWith(github.ref, 'refs/tags')
         run: |
-          docker tag "$IMAGE_NAME" "tingle/$IMAGE_NAME:${{ steps.gitversion.outputs.fullSemVer }}"
-          docker push "tingle/$IMAGE_NAME:${{ steps.gitversion.outputs.fullSemVer }}"
+          docker tag "$IMAGE_NAME" "tingle/$IMAGE_NAME:$GITVERSION_FULLSEMVER"
+          docker push "tingle/$IMAGE_NAME:$GITVERSION_FULLSEMVER"
