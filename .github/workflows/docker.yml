@@ -2,9 +2,9 @@ name: Docker
 
 on:
   push:
-    # branches:
-    #   # Publish `main` branch as Docker `latest` image.
-    #   - main
+    branches:
+      # Publish `main` branch as Docker `latest` image.
+      - main
     tags:
       - '*'
     paths-ignore:
