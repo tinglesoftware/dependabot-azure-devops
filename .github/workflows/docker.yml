@@ -16,6 +16,7 @@ on:
       - templates/**/*
   pull_request:
     branches:
+      # Only trigger for PRs against `main` branch.
       - main
     paths-ignore:
       - README.md
@@ -25,23 +26,9 @@ on:
       - docs/**/*
       - templates/**/*
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # Run tests (for pull requests only).
-  test:
+  dockerize:
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Build docker image
-        run: docker build -f src/Dockerfile src
-
-  # Publish image
-  publish:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
 
     env:
       IMAGE_NAME: 'dependabot-azure-devops'
@@ -67,9 +54,11 @@ jobs:
           docker push "$IMAGE_ID:$VERSION"
 
       - name: Log into registry (Docker Hub)
+        if: startsWith(github.ref, 'refs/tags')
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
 
       - name: Push image to Docker Hub
+        if: startsWith(github.ref, 'refs/tags')
         run: |
           VERSION="${GITHUB_REF#refs/tags/}"
           docker tag "$IMAGE_NAME" "tingle/$IMAGE_NAME:$VERSION"
