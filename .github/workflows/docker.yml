@@ -42,7 +42,7 @@ jobs:
       - name: Make Image ID
         run: |
           IMAGE_ID="docker.pkg.github.com/$GITHUB_REPOSITORY/$IMAGE_NAME"
-          echo "::set-env name=GITHUB_DOCKER_IMAGE_ID::$IMAGE_ID"
+          echo "GITHUB_DOCKER_IMAGE_ID=$IMAGE_ID" >> $GITHUB_ENV
 
       - name: Install GitVersion
         uses: gittools/actions/gitversion/setup@v0.9.7
