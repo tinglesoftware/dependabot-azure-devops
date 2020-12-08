@@ -8,7 +8,7 @@ on:
       - '*'
     paths-ignore:
       - README.md
-      - LICENSE.md
+      - LICENSE
       - CHANGELOG.md
       - RELEASENOTES.md
       - docs/**/*
@@ -19,7 +19,7 @@ on:
       - main
     paths-ignore:
       - README.md
-      - LICENSE.md
+      - LICENSE
       - CHANGELOG.md
       - RELEASENOTES.md
       - docs/**/*
