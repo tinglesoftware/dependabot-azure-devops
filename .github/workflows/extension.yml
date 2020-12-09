@@ -44,7 +44,7 @@ jobs:
       run: npm install -g tfx-cli@0.8.3
 
     - name: Replace tokens
-      uses: cschleiden/replace-tokens@v1.0
+      uses: cschleiden/replace-tokens@v1
       with:
         files: '["${{ github.workspace }}/src/extension/overrides.json"]'
 
