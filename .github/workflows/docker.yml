@@ -61,7 +61,7 @@ jobs:
       - name: Build image
         run: |
           docker build \
-          -f src/Dockerfile \
+          -f src/docker/Dockerfile \
           -t "$IMAGE_NAME" \
           --cache-from $GITHUB_DOCKER_IMAGE_ID:latest \
           --build-arg BUILDKIT_INLINE_CACHE=1 \
