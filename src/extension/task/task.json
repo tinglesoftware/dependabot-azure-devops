@@ -10,7 +10,7 @@
         "Agent",
         "DeploymentGroup"
     ],
-    "author": "Tingle Software",
+    "author": "dependabot",
     "demands": [
         "docker"
     ],

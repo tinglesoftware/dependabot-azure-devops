@@ -3,7 +3,7 @@
     "id": "dependabot",
     "name": "Dependabot",
     "version": "0.1.0",
-    "publisher": "Tingle Software",
+    "publisher": "dependabot",
     "public": false,
     "targets": [
         {
