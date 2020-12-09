@@ -29,14 +29,13 @@
     ],
     "contributions": [
         {
-            "id": "my-hub",
-            "type": "ms.vss-web.hub",
+            "id": "dependabot",
+            "type": "ms.vss-distributed-task.task",
             "targets": [
-                "ms.vss-code-web.code-hub-group"
+                "ms.vss-distributed-task.tasks"
             ],
             "properties": {
-                "name": "My Hub",
-                "uri": "my-hub.html"
+                "name": "task"
             }
         }
     ]
