@@ -59,7 +59,6 @@
             "type": "filePath",
             "label": "Directory",
             "required": false,
-            "defaultValue": "/",
             "helpMarkDown": "Set the directory from where Dependabot should check for updates"
         },
         {
@@ -89,6 +88,14 @@
             "label": "Target Branch",
             "required": false,
             "helpMarkDown": "The branch to be targeted when creating pull requests. When not specified, Dependabot will resolve the default branch of the repository."
+        },
+        {
+            "name": "azureDevOpsAccessToken",
+            "type": "string",
+            "groupName": "advanced",
+            "label": "Azure DevOps Personal Access Token.",
+            "required": false,
+            "helpMarkDown": "The Personal Access Token for accessing Azure DevOps repositories. Supply a value here to avoid using permissions for the Build Service either because you cannot change its permissions or because you prefer that the Pull Requests be done by a different user."
         }
     ],
     "dataSourceBindings": [

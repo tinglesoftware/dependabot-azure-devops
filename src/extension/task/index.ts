@@ -77,7 +77,13 @@ async function run() {
         dockerRunner.arg(['-e', `PACKAGE_MANAGER=${packageManager}`]);
 
         // Set the access token for Azure DevOps Repos
-        let systemAccessToken: string = tl.getVariable('System.AccessToken');
+        // If the user has not provided one, we use the one from the build
+        let systemAccessToken: string = tl.getInput('azureDevOpsAccessToken');
+        if (!systemAccessToken)
+        {
+            tl.debug("No custom token provided. The SYSTEM_ACCESSTOKEN environment variable shall be used.");
+            systemAccessToken = tl.getVariable('System.AccessToken');
+        }
         dockerRunner.arg(['-e', `SYSTEM_ACCESSTOKEN=${systemAccessToken}`]);
 
         // Set the github token, if one is provided
