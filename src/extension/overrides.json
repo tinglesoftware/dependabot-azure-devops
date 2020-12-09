@@ -1,0 +1,3 @@
+{
+    "version": "#{GITVERSION_MAJORMINORPATCH}#"
+}
