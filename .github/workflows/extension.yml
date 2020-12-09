@@ -2,8 +2,6 @@ name: Extension
 
 on:
   push:
-    branches:
-      - main # TODO: remove this after testing is complete
     tags:
       - '*'
     paths:
