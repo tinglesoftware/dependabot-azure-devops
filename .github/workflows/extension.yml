@@ -45,6 +45,11 @@ jobs:
     - name: Install tfx-cli
       run: npm install -g tfx-cli@0.8.3
 
+    - name: Replace tokens
+      uses: cschleiden/replace-tokens@v1.0
+      with:
+        files: '["${{ github.workspace }}/src/extension/overrides.json"]'
+
     - name: Create Extension
       run: >
         tfx extension create
@@ -52,6 +57,7 @@ jobs:
         --manifest-globs vss-extension.json
         --output-path $GITHUB_WORKSPACE/drop
         --json5
+        --overrides-file $GITHUB_WORKSPACE/src/extension/overrides.json
 
     - name: Publish Artifact
       uses: actions/upload-artifact@v2
