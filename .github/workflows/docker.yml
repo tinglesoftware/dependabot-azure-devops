@@ -11,8 +11,8 @@ on:
       - LICENSE
       - CHANGELOG.md
       - RELEASENOTES.md
-      - docs/**/*
-      - templates/**/*
+      - docs/**
+      - templates/**
       - src/extension/**
   pull_request:
     branches:
@@ -23,8 +23,8 @@ on:
       - LICENSE
       - CHANGELOG.md
       - RELEASENOTES.md
-      - docs/**/*
-      - templates/**/*
+      - docs/**
+      - templates/**
       - src/extension/**
 
 jobs:

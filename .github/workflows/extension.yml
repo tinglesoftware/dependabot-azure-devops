@@ -7,16 +7,14 @@ on:
     tags:
       - '*'
     paths:
-      - "src/extension/*"
-      - "src/extension/**/*"
+      - "src/extension/**"
       - ".github/workflows/extension.yml"
   pull_request:
     branches:
       # Only trigger for PRs against `main` branch.
       - main
     paths:
-      - "src/extension/*"
-      - "src/extension/**/*"
+      - "src/extension/**"
       - ".github/workflows/extension.yml"
 
 jobs:
