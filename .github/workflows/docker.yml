@@ -6,26 +6,18 @@ on:
       - main
     tags:
       - '*'
-    paths-ignore:
-      - README.md
-      - LICENSE
-      - CHANGELOG.md
-      - RELEASENOTES.md
-      - docs/**
-      - templates/**
-      - src/extension/**
+    paths:
+      - "src/docker/**"
+      - "src/script/**"
+      - ".github/workflows/docker.yml"
   pull_request:
     branches:
       # Only trigger for PRs against `main` branch.
       - main
-    paths-ignore:
-      - README.md
-      - LICENSE
-      - CHANGELOG.md
-      - RELEASENOTES.md
-      - docs/**
-      - templates/**
-      - src/extension/**
+    paths:
+      - "src/docker/**"
+      - "src/script/**"
+      - ".github/workflows/docker.yml"
 
 jobs:
   dockerize:
