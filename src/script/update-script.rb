@@ -6,7 +6,10 @@ require "dependabot/pull_request_creator"
 require "dependabot/omnibus"
 
 # Full name of the GitHub repo you want to create pull requests for.
-repo_name = "#{ENV["ORGANIZATION"]}/#{ENV["PROJECT"]}/_git/#{ENV["REPOSITORY"]}"
+organization = ENV["ORGANIZATION"]
+project = ENV["PROJECT"]
+repository = ENV["REPOSITORY"]
+repo_name = "#{organization}/#{project}/_git/#{repository}"
 
 # Directory where the base dependency files are.
 directory = ENV["DIRECTORY"] || "/"
@@ -29,15 +32,16 @@ directory = ENV["DIRECTORY"] || "/"
 # - terraform
 package_manager = ENV["PACKAGE_MANAGER"] || "bundler"
 
+system_access_token = ENV["SYSTEM_ACCESSTOKEN"]
 credentials = [{
   "type" => "git_source",
   "host" => "dev.azure.com",
   "username" => "x-access-token",
-  "password" => ENV["SYSTEM_ACCESSTOKEN"]
+  "password" => system_access_token
 }]
 
 ##############################
-# Add GitHub Access TOken (PAT) to avoid rate limiting #
+# Add GitHub Access Token (PAT) to avoid rate limiting #
 ##############################
 if ENV["GITHUB_ACCESS_TOKEN"]
   credentials << {
@@ -48,7 +52,8 @@ if ENV["GITHUB_ACCESS_TOKEN"]
   }
 end
 
-if ENV["PRIVATE_FEED_NAME"]
+private_feed_name = ENV["PRIVATE_FEED_NAME"]
+if private_feed_name
   if package_manager == "nuget"
     # Adding custom private feed removes the public onces so we have to create it
     credentials << {
@@ -56,29 +61,29 @@ if ENV["PRIVATE_FEED_NAME"]
       "url" => "https://api.nuget.org/v3/index.json",
     }
 
-    url = "https://pkgs.dev.azure.com/#{ENV["ORGANIZATION"]}/_packaging/#{ENV["PRIVATE_FEED_NAME"]}/nuget/v3/index.json"
+    url = "https://pkgs.dev.azure.com/#{organization}/_packaging/#{private_feed_name}/nuget/v3/index.json"
     puts "Adding private NuGet feed '#{url}'"
     credentials << {
       "type" => "nuget_feed",
       "url" => url,
-      "token" => ":#{ENV["SYSTEM_ACCESSTOKEN"]}", # do not forget the colon
+      "token" => ":#{system_access_token}", # do not forget the colon
     }
   elsif package_manager == "gradle" || package_manager == "maven"
-    url = "https://pkgs.dev.azure.com/#{ENV["ORGANIZATION"]}/_packaging/#{ENV["PRIVATE_FEED_NAME"]}/maven/v1"
+    url = "https://pkgs.dev.azure.com/#{organization}/_packaging/#{private_feed_name}/maven/v1"
     puts "Adding private Maven repository '#{url}'"
     credentials << {
       "type" => "maven_repository",
       "url" => url,
-      "username" => "#{ENV["ORGANIZATION"]}",
-      "password" => "#{ENV["SYSTEM_ACCESSTOKEN"]}"
+      "username" => "#{organization}",
+      "password" => "#{system_access_token}"
     }
   elsif package_manager == "npm_and_yarn"
-    url = "pkgs.dev.azure.com/#{ENV["ORGANIZATION"]}/_packaging/#{ENV["PRIVATE_FEED_NAME"]}/npm/registry/"
+    url = "pkgs.dev.azure.com/#{organization}/_packaging/#{private_feed_name}/npm/registry/"
     puts "Adding private npm registry '#{url}'"
     credentials << {
       "type" => "npm_registry",
       "registry" => url,
-      "token" => "#{ENV["PRIVATE_FEED_NAME"]}:#{ENV["SYSTEM_ACCESSTOKEN"]}"
+      "token" => "#{private_feed_name}:#{system_access_token}"
     }
   end
 end
