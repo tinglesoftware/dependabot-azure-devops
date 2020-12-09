@@ -1,0 +1,53 @@
+{
+    "manifestVersion": 1,
+    "id": "dependabot",
+    "name": "Dependabot",
+    "version": "0.1.0",
+    "publisher": "Tingle Software",
+    "public": false,
+    "targets": [
+        {
+            "id": "Microsoft.VisualStudio.Services"
+        }
+    ],
+    "description": "Automaticaly update dependecies and vulernatibilities in your code",
+    "categories": [
+        "Azure Pipelines"
+    ],
+    "icons": {
+        "default": "images/icon.png"
+    },
+    "files": [
+        {
+            "path": "task"
+        },
+        {
+            "path": "../Gemfile",
+            "addressable": true,
+            "packagePath": "script"
+        },
+        {
+            "path": "../Gemfile/lock",
+            "addressable": true,
+            "packagePath": "script"
+        },
+        {
+            "path": "../update-script.rb",
+            "addressable": true,
+            "packagePath": "script"
+        }
+    ],
+    "contributions": [
+        {
+            "id": "my-hub",
+            "type": "ms.vss-web.hub",
+            "targets": [
+                "ms.vss-code-web.code-hub-group"
+            ],
+            "properties": {
+                "name": "My Hub",
+                "uri": "my-hub.html"
+            }
+        }
+    ]
+}
