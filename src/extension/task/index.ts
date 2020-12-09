@@ -24,7 +24,7 @@ function getGitHubAccessToken(endpoint: string): string {
     return result;
 }
 
-function getOrganization (organisationUrl: string) : string
+function extractOrganization (organisationUrl: string) : string
 {
     let parts = organisationUrl.split("/");
 
@@ -53,53 +53,71 @@ async function run() {
         tl.debug('Checking for docker install ...');
         tl.which('docker', true);
 
-        let dockerImage: string = 'tingle/dependabot-azure-devops:0.1.1';
-
-        // Prepare the variables for execution
-        var organizationUrl = tl.getVariable("System.TeamFoundationCollectionUri");
-        let organization: string = getOrganization(organizationUrl);
-        let project: string = tl.getVariable('System.TeamProject');
-        let repository: string = tl.getVariable('Build.Repository.Name');
-        let packageManager: string = tl.getInput('packageManager', true);
-        let systemAccessToken: string = tl.getVariable('System.AccessToken');
-
-        // Now execute using docker
-        tl.debug("Running docker container ...");
+        // Prepare the docker task
         let dockerRunner: tr.ToolRunner = tl.tool(tl.which('docker', true));
-        dockerRunner.arg(['run', '--rm', '-it']);
+        dockerRunner.arg(['run']);  // run command
+        dockerRunner.arg(['--rm']); //remove after execution
+        dockerRunner.arg(['-it']);  // interactive so that we can see the output
+
+        // Set the organization
+        var organizationUrl = tl.getVariable("System.TeamFoundationCollectionUri");
+        let organization: string = extractOrganization(organizationUrl);
         dockerRunner.arg(['-e', `ORGANIZATION=${organization}`]);
+
+        // Set the project
+        let project: string = tl.getVariable('System.TeamProject');
         dockerRunner.arg(['-e', `PROJECT=${project}`]);
+
+        // Set the repository
+        let repository: string = tl.getVariable('Build.Repository.Name');
         dockerRunner.arg(['-e', `REPOSITORY=${repository}`]);
+
+        // Set the package manager
+        let packageManager: string = tl.getInput('packageManager', true);
         dockerRunner.arg(['-e', `PACKAGE_MANAGER=${packageManager}`]);
+
+        // Set the access token for Azure DevOps Repos
+        let systemAccessToken: string = tl.getVariable('System.AccessToken');
         dockerRunner.arg(['-e', `SYSTEM_ACCESSTOKEN=${systemAccessToken}`]);
 
-        // Add optional variables
+        // Set the github token, if one is provided
         const githubEndpoint = tl.getInput("gitHubConnection");
         if (githubEndpoint)
         {
+            tl.debug("GitHub connection supplied. A token shall be extracted from it.");
             let githubAccessToken: string = getGitHubAccessToken(githubEndpoint);
             dockerRunner.arg(['-e', `GITHUB_ACCESS_TOKEN=${githubAccessToken}`]);
         }
 
+        // Set the name of the private feed
         let privateFeedName: string = tl.getInput('feedName', false);
         if (privateFeedName)
         {
             dockerRunner.arg(['-e', `PRIVATE_FEED_NAME=${privateFeedName}`]);
         }
 
+        // Set the directory
         let directory: string = tl.getInput("directory", false);
         if (directory)
         {
             dockerRunner.arg(['-e', `DIRECTORY=${directory}`]);
         }
 
+        // Set the target branch
         let targetBranch: string = tl.getInput('targetBranch', false);
         if (targetBranch)
         {
             dockerRunner.arg(['-e', `TARGET_BRANCH=${targetBranch}`]);
         }
 
+        // The docker image to run is not provided as an in put because of the chances of error.
+        // May be in the future it can be made optional. The difficulty in making it optional arises
+        // form compatibility if the image envrionment variables change names or format.
+        const dockerImage = 'tingle/dependabot-azure-devops:0.1.1';
+        tl.debug(`Running docker container using '${dockerImage}' ...`);
         dockerRunner.arg([dockerImage]);
+
+        // Now execute using docker
         await dockerRunner.exec();
 
         tl.debug("Docker container execution completed!");
