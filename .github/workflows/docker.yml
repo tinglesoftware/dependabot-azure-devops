@@ -65,7 +65,7 @@ jobs:
           -t "$IMAGE_NAME" \
           --cache-from $GITHUB_DOCKER_IMAGE_ID:latest \
           --build-arg BUILDKIT_INLINE_CACHE=1 \
-          src
+          src/script
 
       - name: Push image to GitHub packages
         run: |

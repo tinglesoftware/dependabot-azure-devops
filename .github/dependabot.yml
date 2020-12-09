@@ -6,7 +6,7 @@
 version: 2
 updates:
   - package-ecosystem: "bundler" # See documentation for possible values
-    directory: "/src" # Location of package manifests
+    directory: "/src/script" # Location of package manifests
     schedule:
       interval: "weekly"
       time: "02:00"
