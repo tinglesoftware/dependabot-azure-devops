@@ -15,5 +15,11 @@ updates:
     directory: "/src/docker" # Location of package manifests
     schedule:
       interval: "weekly"
-      time: "02:00"
+      time: "02:15"
+    open-pull-requests-limit: 10
+  - package-ecosystem: "npm" # See documentation for possible values
+    directory: "/src/extension" # Location of package manifests
+    schedule:
+      interval: "weekly"
+      time: "02:30"
     open-pull-requests-limit: 10
