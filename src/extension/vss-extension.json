@@ -22,17 +22,7 @@
             "path": "task"
         },
         {
-            "path": "../Gemfile",
-            "addressable": true,
-            "packagePath": "script"
-        },
-        {
-            "path": "../Gemfile/lock",
-            "addressable": true,
-            "packagePath": "script"
-        },
-        {
-            "path": "../update-script.rb",
+            "path": "../script",
             "addressable": true,
             "packagePath": "script"
         }
