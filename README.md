@@ -10,11 +10,11 @@ The work in this repository is based on inspired and ocassionally guided by:
 
 In this repository you'll find:
 
-1. Dependabot's [Update script](./src/update-script.rb) in Ruby.
-2. Dockerfile and build/image for running the script via Docker [here](./src/Dockerfile).
-3. Azure DevOps Extension source (./src/Extension). _[coming soon]_
+1. Dependabot's [Update script](./src/script/update-script.rb) in Ruby.
+2. Dockerfile and build/image for running the script via Docker [here](./src/docker).
+3. Azure DevOps [Extension source](./src/extension).
 4. Kubernetes CronJob [template](./templates/dependabot-template.yml).
-5. Semi-hosted version of Dependabot [here](./src/Hosting). _[coming soon]_
+5. Semi-hosted version of Dependabot [here](./src/hosting). _[coming soon]_
 
 ## Environment Variables
 
@@ -25,12 +25,12 @@ To run the script, some environment variables are required.
 |ORGANIZATION|**_Required_**. The name of the Azure DevOps Organization. This is can be extracted from the URL of the home page. https://dev.azure.com/{organization}/|
 |PROJECT|**_Required_**. The name of the Azure DevOps Project within the above organization. This can be extracted them the URL too. https://dev.azure.com/{organization}/{project}/|
 |REPOSITORY|**_Required_**. The name of the Azure DevOps Repository within the above project to run Dependabot against. This can be extracted from the URL of the repository. https://dev.azure.com/{organization}/{project}/_git/{repository}/|
-|PACKAGE_MANAGER|**_Required_**. The type of packages to check for dependecy upgrades. Examples: `nuget`, `maven`, `gradle`, `npm_and_yarn`, etc. See the [updated-script](./src/update-script.rb) for more.
+|PACKAGE_MANAGER|**_Required_**. The type of packages to check for dependecy upgrades. Examples: `nuget`, `maven`, `gradle`, `npm_and_yarn`, etc. See the [updated-script](./src/script/update-script.rb) or [docs](https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/configuration-options-for-dependency-updates#package-ecosystem) for more.|
 |SYSTEM_ACCESSTOKEN|**_Required_**. The Personal Access in Azure DevOps for accessing the repository and creating pull requests. The required permissions are: <br/>-&nbsp;Code (Full)<br/>-&nbsp;Packaging (Read)<br/>-&nbsp;Pull Requests Threads (Read & Write).<br/>See the [documentation](https://docs.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate?view=azure-devops&tabs=preview-page#create-a-pat) to know more about creating a Personal Access Token|
 |GITHUB_ACCESS_TOKEN|**_Optional_**. The GitHub token for authenticating requests against GitHub public repositories. This is useful to avoid rate limiting errors. The token must include permissions to read public repositories. See the [documentation](https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token) for more on Personal Access Tokens.|
 |PRIVATE_FEED_NAME|**_Optional_**. The name of the private feed within the Azure DevOps organization to use when resolving private packages. The script automatically adds the correct feed/registry URL to the process depending on the value set for `PACKAGE_MANAGER`. This is only required if there are packages in a private feed.|
-|DIRECTORY|**_Optional_**. The directory in which dependancies are to be checked. When not specified, the root of the repository (denoted as '/') is used.
-|TARGET_BRANCH|**_Optional_**. The branch to be targeted when creating a pull request. When not specified, Dependabot will resolve the default branch of the repository.
+|DIRECTORY|**_Optional_**. The directory in which dependancies are to be checked. When not specified, the root of the repository (denoted as '/') is used.|
+|TARGET_BRANCH|**_Optional_**. The branch to be targeted when creating a pull request. When not specified, Dependabot will resolve the default branch of the repository.|
 
 ## Running in docker
 
@@ -74,7 +74,38 @@ docker run --rm -it \
 
 ## Running in Azure DevOps
 
-Coming soon
+To run dependabot in Azure Pipelines, you need to install the extension from the [marketplace](https://marketplace.visualstudio.com/items?itemName=dependabot.dependabot).
+
+It's up to the user to schedule the pipeline in whatever is correct for their solution.
+
+An example of a YAML pipeline:
+
+```yaml
+trigger: none # Disable CI trigger
+
+schedules:
+  - cron: '0 2 0 0 0' # daily at 2am UTC
+    always: true # run even when there are no code changes
+    branches:
+      include:
+        - master
+    batch: true
+    displayName: Daily
+
+pool:
+  vmImage: 'ubuntu-latest' # requires macos or ubuntu (windows is not supported)
+
+steps:
+- task: dependabot@1
+  inputs:
+    packageManager: 'nuget'
+- task: dependabot@1
+  inputs:
+    packageManager: 'docker'
+    directory: '/docker'
+```
+
+Since this task makes use of a docker image, it may take time to install the docker image. The user can shoose to speed this up by using [Caching for Docker](https://docs.microsoft.com/en-us/azure/devops/pipelines/release/caching?view=azure-devops#docker-images) in Azure Pipelines. See the [source file](./src/extension/task/index.ts) for the exact image tag, e.g. `tingle/dependabot-azure-devops:0.1.1`. Subsequent dependabot tasks in a job will be faster after the first one pulls the image for the first time.
 
 ## Running using a Kubernetes CronJob
 
