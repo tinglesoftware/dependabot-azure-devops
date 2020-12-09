@@ -49,20 +49,11 @@ function getOrganization (organisationUrl: string) : string
 
 async function run() {
     try {
-        // Checking if bundler and ruby are installed
-        tl.debug('Checking for bundler install...');
-        tl.which('bundler', true);
-        tl.debug('Checking for ruby install...');
-        tl.which('ruby', true);
+        // Checking if docker is installed
+        tl.debug('Checking for docker install ...');
+        tl.which('docker', true);
 
-        // Install Gem files
-        tl.debug("Installing Gem files");
-        let bundlerRunner: tr.ToolRunner = tl.tool(tl.which('bundler', true));
-        bundlerRunner.arg(['install']);
-        bundlerRunner.arg(['-j', '3']);
-        bundlerRunner.arg(['--path', 'vendor']);
-        bundlerRunner.arg(['--gemfile', 'script/Gemfile']);
-        await bundlerRunner.exec();
+        let dockerImage: string = 'tingle/dependabot-azure-devops:0.1.1';
 
         // Prepare the variables for execution
         var organizationUrl = tl.getVariable("System.TeamFoundationCollectionUri");
@@ -72,23 +63,46 @@ async function run() {
         let packageManager: string = tl.getInput('packageManager', true);
         let systemAccessToken: string = tl.getVariable('System.AccessToken');
 
+        // Now execute using docker
+        tl.debug("Running docker container ...");
+        let dockerRunner: tr.ToolRunner = tl.tool(tl.which('docker', true));
+        dockerRunner.arg(['run', '--rm', '-it']);
+        dockerRunner.arg(['-e', `ORGANIZATION=${organization}`]);
+        dockerRunner.arg(['-e', `PROJECT=${project}`]);
+        dockerRunner.arg(['-e', `REPOSITORY=${repository}`]);
+        dockerRunner.arg(['-e', `PACKAGE_MANAGER=${packageManager}`]);
+        dockerRunner.arg(['-e', `SYSTEM_ACCESSTOKEN=${systemAccessToken}`]);
+
+        // Add optional variables
         const githubEndpoint = tl.getInput("gitHubConnection");
-        let githubAccessToken: string = null;
         if (githubEndpoint)
         {
-            githubAccessToken = getGitHubAccessToken(githubEndpoint);
+            let githubAccessToken: string = getGitHubAccessToken(githubEndpoint);
+            dockerRunner.arg(['-e', `GITHUB_ACCESS_TOKEN=${githubAccessToken}`]);
         }
 
         let privateFeedName: string = tl.getInput('feedName', false);
-        let directory: string = tl.getInput("directory", false);
-        let targetBranch: string = tl.getInput('targetBranch', false);
+        if (privateFeedName)
+        {
+            dockerRunner.arg(['-e', `PRIVATE_FEED_NAME=${privateFeedName}`]);
+        }
 
-        // Now execute the dependabot script
-        tl.debug("Running update script");
-        let scriptRunner: tr.ToolRunner = tl.tool(tl.which('bundler', true));
-        scriptRunner.arg(['exec', 'ruby', 'script/update-script.rb']);
-        
-        await scriptRunner.exec();
+        let directory: string = tl.getInput("directory", false);
+        if (directory)
+        {
+            dockerRunner.arg(['-e', `DIRECTORY=${directory}`]);
+        }
+
+        let targetBranch: string = tl.getInput('targetBranch', false);
+        if (targetBranch)
+        {
+            dockerRunner.arg(['-e', `TARGET_BRANCH=${targetBranch}`]);
+        }
+
+        dockerRunner.arg([dockerImage]);
+        await dockerRunner.exec();
+
+        tl.debug("Docker container execution completed!");
     }
     catch (err) {
         tl.setResult(tl.TaskResult.Failed, err.message);

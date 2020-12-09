@@ -20,11 +20,6 @@
     "files": [
         {
             "path": "task"
-        },
-        {
-            "path": "../script",
-            "addressable": true,
-            "packagePath": "script"
         }
     ],
     "contributions": [

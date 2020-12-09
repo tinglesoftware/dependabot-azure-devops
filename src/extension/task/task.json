@@ -12,8 +12,7 @@
     ],
     "author": "Tingle Software",
     "demands": [
-        "bundler",
-        "ruby"
+        "docker"
     ],
     "version": {
         "Major": 0,
