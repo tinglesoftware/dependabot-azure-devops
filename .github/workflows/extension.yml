@@ -76,6 +76,11 @@ jobs:
       with:
         name: drop
 
-    - name: Publish to market place
-      run: |
-        echo "Work in progress"
+    - name: Publish to marketplace
+      if: ${{ startsWith(github.ref, 'refs/tags/') }}
+      run: >
+        tfx extension publish
+        --vsix $GITHUB_WORKSPACE/*.vsix
+        --auth-type pat
+        --token ${{ secrets.AZURE_DEVOPS_EXTENSION_TOKEN }}
+        --json
