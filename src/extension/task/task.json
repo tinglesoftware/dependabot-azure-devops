@@ -3,7 +3,7 @@
     "id": "d98b873d-cf18-41eb-8ff5-234f14697896",
     "name": "dependabot",
     "friendlyName": "Dependabot",
-    "description": "Automaticaly update dependecies and vulernatibilities in your code",
+    "description": "Automaticaly update dependecies and vulnerabilities in your code",
     "helpMarkDown": "For help please visit https://github.com/tinglesoftware/dependabot-azure-devops",
     "category": "Utility",
     "runsOn": [
@@ -33,7 +33,7 @@
             "name": "packageManager",
             "type": "pickList",
             "label": "Package Ecosystem",
-            "helpMarkDown": "The package ecosystem to check updates for",
+            "helpMarkDown": "The package ecosystem to check updates for. Learn more [here](https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/configuration-options-for-dependency-updates#package-ecosystem).",
             "required": true,
             "options": {
                 "bundler": "Bundler",
@@ -59,7 +59,7 @@
             "type": "filePath",
             "label": "Directory",
             "required": false,
-            "helpMarkDown": "Set the directory from where Dependabot should check for updates"
+            "helpMarkDown": "Set the directory from where Dependabot should check for updates. Examples: `/` for root, `/src` for src folder."
         },
         {
             "name": "gitHubConnection",
@@ -75,7 +75,7 @@
             "type": "pickList",
             "label": "Private Feed",
             "defaultValue": "",
-            "helpMarkDown": "Include the selected feed for private NuGet, npm or maven packages.",
+            "helpMarkDown": "The name of the private feed within the Azure DevOps organization to use when resolving updates for private packages/dependencies. Project scoped feeds are not supported.",
             "required": false,
             "properties": {
                 "EditableOptions": "True"
@@ -87,7 +87,7 @@
             "groupName": "advanced",
             "label": "Target Branch",
             "required": false,
-            "helpMarkDown": "The branch to be targeted when creating pull requests. When not specified, Dependabot will resolve the default branch of the repository."
+            "helpMarkDown": "The branch to be targeted when creating pull requests. When not specified, Dependabot will resolve the default branch of the repository. Examples: `master`, `main`, `develop`"
         },
         {
             "name": "azureDevOpsAccessToken",
