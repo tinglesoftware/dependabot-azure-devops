@@ -10,7 +10,7 @@
             "id": "Microsoft.VisualStudio.Services"
         }
     ],
-    "description": "Automaticaly update dependecies and vulnerabilities in your code",
+    "description": "Automatically update dependecies and vulnerabilities in your code",
     "categories": [
         "Azure Pipelines"
     ],

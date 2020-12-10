@@ -40,6 +40,10 @@ jobs:
       with:
         node-version: '10.x'
 
+    - name: Install Node dependencies
+      run: npm run build:prod
+      working-directory: '${{ github.workspace }}/src/extension'
+
     - name: Install tfx-cli
       run: npm install -g tfx-cli@0.8.3
 
