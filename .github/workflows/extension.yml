@@ -64,7 +64,6 @@ jobs:
         --overrides-file $GITHUB_WORKSPACE/src/extension/overrides.dev.json
 
     - name: Create Extension (prod)
-      if: startsWith(github.ref, 'refs/tags/')
       run: >
         tfx extension create
         --root src/extension

@@ -118,10 +118,12 @@ async function run() {
             dockerRunner.arg(['-e', `TARGET_BRANCH=${targetBranch}`]);
         }
 
-        // The docker image to run is not provided as an in put because of the chances of error.
-        // May be in the future it can be made optional. The difficulty in making it optional arises
-        // form compatibility if the image envrionment variables change names or format.
-        const dockerImage = 'tingle/dependabot-azure-devops:0.1.1';
+        // Allow overriding of the docker image tag globally
+        let dockerImageTag: string = tl.getVariable('DEPENDABOT_DOCKER_IMAGE_TAG');
+        if (!dockerImageTag) {
+            dockerImageTag = '0.1.1';
+        }
+        const dockerImage = `tingle/dependabot-azure-devops:${dockerImageTag}`;
         tl.debug(`Running docker container using '${dockerImage}' ...`);
         dockerRunner.arg([dockerImage]);
 
