@@ -1,9 +1,11 @@
-FROM dependabot/dependabot-core:0.126.0
+FROM ruby:2.6.6-alpine
+WORKDIR /app
 
 # Copy the Gemfile and Gemfile.lock
 COPY ["Gemfile", "Gemfile.lock", "./"]
 
 # Install dependencies
+RUN apk add --updat build-base
 RUN bundle install -j 3 --path vendor
 
 # Script files are known to change more frequently than Gemfiles.
