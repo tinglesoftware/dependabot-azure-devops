@@ -6,6 +6,10 @@
     "description": "Automaticaly update dependecies and vulnerabilities in your code",
     "helpMarkDown": "For help please visit https://github.com/tinglesoftware/dependabot-azure-devops",
     "category": "Utility",
+    "visibility": [
+        "Build",
+        "Release"
+    ],
     "runsOn": [
         "Agent",
         "DeploymentGroup"
