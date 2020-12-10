@@ -74,7 +74,7 @@ docker run --rm -t \
 
 ## Running in Azure DevOps
 
-To run dependabot in Azure Pipelines, you need to install the extension from the [marketplace](https://marketplace.visualstudio.com/items?itemName=dependabot.dependabot).
+To run dependabot in Azure Pipelines, you need to install the extension from the [marketplace](https://marketplace.visualstudio.com/items?itemName=tingle-software.dependabot).
 
 It's up to the user to schedule the pipeline in whatever is correct for their solution.
 
