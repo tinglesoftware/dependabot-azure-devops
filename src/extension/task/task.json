@@ -60,7 +60,7 @@
         },
         {
             "name": "directory",
-            "type": "filePath",
+            "type": "string",
             "label": "Directory",
             "required": false,
             "helpMarkDown": "Set the directory from where Dependabot should check for updates. Examples: `/` for root, `/src` for src folder."
