@@ -1,3 +1,3 @@
 {
-    "version": "#{GITVERSION_MAJORMINORPATCH}#.#{GITHUB_RUN_ID}#"
+    "version": "#{GITVERSION_MAJORMINORPATCH}#.#{GITHUB_RUN_NUMBER}#"
 }
