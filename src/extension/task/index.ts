@@ -1,27 +1,27 @@
 import tl = require('azure-pipelines-task-lib/task');
 import tr = require('azure-pipelines-task-lib/toolrunner');
 
-function getGitHubAccessToken(endpoint: string): string {
-    let result: string = null;
+function getGithubEndPointToken(githubEndpoint: string): string {
+    const githubEndpointObject = tl.getEndpointAuthorization(githubEndpoint, false);
+    let githubEndpointToken: string = null;
 
-    const geo = tl.getEndpointAuthorization(endpoint, false);
-    if (!!geo)
+    if (!!githubEndpointObject)
     {
-        tl.debug("Endpoint scheme: " + geo.scheme);
-        if(geo.scheme == 'PersonalAccessToken') {
-            result = geo.parameters.accessToken
-        } else if (geo.scheme == 'OAuth') {
-            result = geo.parameters.AccessToken
-        } else if (geo.scheme) {
-            throw new Error(tl.loc("InvalidEndpointAuthScheme", geo.scheme));
+        tl.debug("Endpoint scheme: " + githubEndpointObject.scheme);
+        if(githubEndpointObject.scheme == 'PersonalAccessToken') {
+            githubEndpointToken = githubEndpointObject.parameters.accessToken
+        } else if (githubEndpointObject.scheme == 'OAuth') {
+            githubEndpointToken = githubEndpointObject.parameters.AccessToken
+        } else if (githubEndpointObject.scheme) {
+            throw new Error(tl.loc("InvalidEndpointAuthScheme", githubEndpointObject.scheme));
         }
     }
 
-    if (!result) {
-        throw new Error(tl.loc("InvalidGitHubEndpoint", endpoint));
+    if (!githubEndpointToken) {
+        throw new Error(tl.loc("InvalidGitHubEndpoint", githubEndpoint));
     }
 
-    return result;
+    return githubEndpointToken;
 }
 
 function extractOrganization (organisationUrl: string) : string
@@ -87,11 +87,11 @@ async function run() {
         dockerRunner.arg(['-e', `SYSTEM_ACCESSTOKEN=${systemAccessToken}`]);
 
         // Set the github token, if one is provided
-        const githubEndpoint = tl.getInput("gitHubConnection");
-        if (githubEndpoint)
+        const githubEndpointId = tl.getInput("gitHubConnection");
+        if (githubEndpointId)
         {
             tl.debug("GitHub connection supplied. A token shall be extracted from it.");
-            let githubAccessToken: string = getGitHubAccessToken(githubEndpoint);
+            let githubAccessToken: string = getGithubEndPointToken(githubEndpointId);
             dockerRunner.arg(['-e', `GITHUB_ACCESS_TOKEN=${githubAccessToken}`]);
         }
 
