@@ -58,8 +58,8 @@ async function run() {
         // Prepare the docker task
         let dockerRunner: tr.ToolRunner = tl.tool(tl.which('docker', true));
         dockerRunner.arg(['run']);  // run command
-        dockerRunner.arg(['--rm']); //remove after execution
-        dockerRunner.arg(['-it']);  // interactive so that we can see the output
+        dockerRunner.arg(['--rm']); // remove after execution
+        dockerRunner.arg(['-i']);   // attach pseudo tty
 
         // Set the organization
         var organizationUrl = tl.getVariable("System.TeamFoundationCollectionUri");

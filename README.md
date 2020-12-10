@@ -43,7 +43,7 @@ docker pull tingle/dependabot-azure-devops:0.1.1
 Next create and run a container from the image:
 
 ```bash
-docker run --rm -it \
+docker run --rm -t \
            -e ORGANIZATION=<your-organization-here> \
            -e PROJECT=<your-project-here> \
            -e REPOSITORY=<your-repository-here> \
@@ -59,7 +59,7 @@ docker run --rm -it \
 An example:
 
 ```bash
-docker run --rm -it \
+docker run --rm -t \
            -e ORGANIZATION=tinglesoftware \
            -e PROJECT=oss \
            -e REPOSITORY=dependabot-azure-devops \
