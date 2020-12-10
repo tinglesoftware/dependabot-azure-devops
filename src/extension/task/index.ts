@@ -62,7 +62,7 @@ async function run() {
         dockerRunner.arg(['-i']);   // attach pseudo tty
 
         // Set the organization
-        var organizationUrl = tl.getVariable("System.TeamFoundationCollectionUri");
+        var organizationUrl = tl.getVariable('System.TeamFoundationCollectionUri');
         let organization: string = extractOrganization(organizationUrl);
         dockerRunner.arg(['-e', `ORGANIZATION=${organization}`]);
 
@@ -83,16 +83,16 @@ async function run() {
         let systemAccessToken: string = tl.getInput('azureDevOpsAccessToken');
         if (!systemAccessToken)
         {
-            tl.debug("No custom token provided. The SYSTEM_ACCESSTOKEN environment variable shall be used.");
-            systemAccessToken = tl.getVariable('System.AccessToken');
+            tl.debug('No custom token provided. The SYSTEM_ACCESSTOKEN environment variable shall be used.');
+            systemAccessToken = tl.getVariable('System.AccessToken');;
         }
         dockerRunner.arg(['-e', `SYSTEM_ACCESSTOKEN=${systemAccessToken}`]);
 
         // Set the github token, if one is provided
-        const githubEndpointId = tl.getInput("gitHubConnection");
+        const githubEndpointId = tl.getInput('gitHubConnection');
         if (githubEndpointId)
         {
-            tl.debug("GitHub connection supplied. A token shall be extracted from it.");
+            tl.debug('GitHub connection supplied. A token shall be extracted from it.');
             let githubAccessToken: string = getGithubEndPointToken(githubEndpointId);
             dockerRunner.arg(['-e', `GITHUB_ACCESS_TOKEN=${githubAccessToken}`]);
         }
@@ -105,7 +105,7 @@ async function run() {
         }
 
         // Set the directory
-        let directory: string = tl.getInput("directory", false);
+        let directory: string = tl.getInput('directory', false);
         if (directory)
         {
             dockerRunner.arg(['-e', `DIRECTORY=${directory}`]);
@@ -128,7 +128,7 @@ async function run() {
         // Now execute using docker
         await dockerRunner.exec();
 
-        tl.debug("Docker container execution completed!");
+        tl.debug('Docker container execution completed!');
     }
     catch (err) {
         tl.setResult(tl.TaskResult.Failed, err.message);
