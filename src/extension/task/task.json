@@ -63,7 +63,7 @@
         },
         {
             "name": "gitHubConnection",
-            "type": "connectedService:github:OAuth,PersonalAccessToken",
+            "type": "connectedService:github:OAuth,PersonalAccessToken,InstallationToken,Token",
             "groupName": "advanced",
             "label": "GitHub connection (OAuth or PAT)",
             "defaultValue": "",
