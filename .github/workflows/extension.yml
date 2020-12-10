@@ -52,16 +52,26 @@ jobs:
     - name: Replace tokens
       uses: cschleiden/replace-tokens@v1
       with:
-        files: '["${{ github.workspace }}/src/extension/overrides.json"]'
+        files: '["${{ github.workspace }}/src/extension/overrides*.json"]'
 
-    - name: Create Extension
+    - name: Create Extension (dev)
       run: >
         tfx extension create
         --root src/extension
         --manifest-globs vss-extension.json
-        --output-path $GITHUB_WORKSPACE/drop
+        --output-path $GITHUB_WORKSPACE/drop/dev
         --json5
-        --overrides-file $GITHUB_WORKSPACE/src/extension/overrides.json
+        --overrides-file $GITHUB_WORKSPACE/src/extension/overrides.dev.json
+
+    - name: Create Extension (prod)
+      if: startsWith(github.ref, 'refs/tags/')
+      run: >
+        tfx extension create
+        --root src/extension
+        --manifest-globs vss-extension.json
+        --output-path $GITHUB_WORKSPACE/drop/prod
+        --json5
+        --overrides-file $GITHUB_WORKSPACE/src/extension/overrides.prod.json
 
     - name: Publish Artifact
       uses: actions/upload-artifact@v2
@@ -72,7 +82,6 @@ jobs:
   Publish:
     runs-on: ubuntu-latest
     needs: [ Build ]
-    if: startsWith(github.ref, 'refs/tags/')
 
     steps:
     - name: Download Artifact
@@ -80,11 +89,26 @@ jobs:
       with:
         name: drop
 
-    - name: Publish to marketplace
-      if: ${{ startsWith(github.ref, 'refs/tags/') }}
+    - name: Use Node.js 10.x
+      uses: actions/setup-node@v2.1.2
+      with:
+        node-version: '10.x'
+
+    - name: Install tfx-cli
+      run: npm install -g tfx-cli@0.8.3
+
+    - name: Publish to marketplace (dev)
       run: >
         tfx extension publish
-        --vsix $GITHUB_WORKSPACE/*.vsix
+        --vsix $GITHUB_WORKSPACE/dev/*.vsix
         --auth-type pat
         --token ${{ secrets.AZURE_DEVOPS_EXTENSION_TOKEN }}
-        --json
+        --shared-with tingle
+
+    - name: Publish to marketplace (prod)
+      if: startsWith(github.ref, 'refs/tags/')
+      run: >
+        tfx extension publish
+        --vsix $GITHUB_WORKSPACE/prod/*.vsix
+        --auth-type pat
+        --token ${{ secrets.AZURE_DEVOPS_EXTENSION_TOKEN }}

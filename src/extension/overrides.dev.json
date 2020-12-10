@@ -1,0 +1,4 @@
+{
+    "id":"dependabot-dev",
+    "version": "#{GITVERSION_MAJORMINORPATCH}#.#{GITHUB_RUN_ID}#"
+}
