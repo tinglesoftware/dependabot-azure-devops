@@ -17,6 +17,9 @@
     "icons": {
         "default": "images/icon.png"
     },
+    "content": {
+        "details": { "path": "README.md" }
+    },
     "files": [
         {
             "path": "task"
