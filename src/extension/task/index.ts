@@ -78,13 +78,13 @@ async function run() {
         let packageManager: string = tl.getInput('packageManager', true);
         dockerRunner.arg(['-e', `PACKAGE_MANAGER=${packageManager}`]);
 
-        // Set the access token for Azure DevOps Repos
-        // If the user has not provided one, we use the one from the build
+        // Set the access token for Azure DevOps Repos.
+        // If the user has not provided one, we use the one from the SystemVssConnection
         let systemAccessToken: string = tl.getInput('azureDevOpsAccessToken');
         if (!systemAccessToken)
         {
-            tl.debug('No custom token provided. The SYSTEM_ACCESSTOKEN environment variable shall be used.');
-            systemAccessToken = tl.getVariable('System.AccessToken');;
+            tl.debug('No custom token provided. The SystemVssConnection\'s AccessToken shall be used.');
+            systemAccessToken = tl.getEndpointAuthorizationParameter("SystemVssConnection", "AccessToken", false);
         }
         dockerRunner.arg(['-e', `SYSTEM_ACCESSTOKEN=${systemAccessToken}`]);
 
