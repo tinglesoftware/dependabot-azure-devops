@@ -79,5 +79,14 @@ jobs:
     - name: Push image to Docker Hub
       if: startsWith(github.ref, 'refs/tags')
       run: |
+        # Tag with full semver (Major.Minor.Patch)
         docker tag "$IMAGE_NAME" "tingle/$IMAGE_NAME:$GITVERSION_FULLSEMVER"
         docker push "tingle/$IMAGE_NAME:$GITVERSION_FULLSEMVER"
+
+        # Tag with Major and Minor
+        docker tag "$IMAGE_NAME" "tingle/$IMAGE_NAME:$GITVERSION_MAJOR.$GITVERSION_MINOR"
+        docker push "tingle/$IMAGE_NAME:$GITVERSION_MAJOR.$GITVERSION_MINOR"
+
+        # Tag with Major only
+        docker tag "$IMAGE_NAME" "tingle/$IMAGE_NAME:$GITVERSION_MAJOR"
+        docker push "tingle/$IMAGE_NAME:$GITVERSION_MAJOR"
