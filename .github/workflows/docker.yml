@@ -85,8 +85,8 @@ jobs:
 
         # Tag with Major and Minor
         docker tag "$IMAGE_NAME" "tingle/$IMAGE_NAME:$GITVERSION_MAJOR.$GITVERSION_MINOR"
-        docker push "tingle/$IMAGE_NAME:$GITVERSION_FULLSEMVER"
+        docker push "tingle/$IMAGE_NAME:$GITVERSION_MAJOR.$GITVERSION_MINOR"
 
         # Tag with Major only
         docker tag "$IMAGE_NAME" "tingle/$IMAGE_NAME:$GITVERSION_MAJOR"
-        docker push "tingle/$IMAGE_NAME:$GITVERSION_FULLSEMVER"
+        docker push "tingle/$IMAGE_NAME:$GITVERSION_MAJOR"
