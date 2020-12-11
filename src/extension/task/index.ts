@@ -121,7 +121,7 @@ async function run() {
         // Allow overriding of the docker image tag globally
         let dockerImageTag: string = tl.getVariable('DEPENDABOT_DOCKER_IMAGE_TAG');
         if (!dockerImageTag) {
-            dockerImageTag = '0.1.1';
+            dockerImageTag = '0.1' // will pull the latest patch for 0.1 e.g. 0.1.1
         }
         const dockerImage = `tingle/dependabot-azure-devops:${dockerImageTag}`;
         tl.debug(`Running docker container using '${dockerImage}' ...`);
