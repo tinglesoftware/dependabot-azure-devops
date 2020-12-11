@@ -1,6 +1,6 @@
 # Dependabot Azure DevOps Extension
 
-This is the unofficial [dependabot](https://github.com/Dependabot/dependabot-core) extension for [Azure DevOps](https://azure.microsoft.com/en-gb/services/devops/). It will allow you to run Dependabot inside a bild pipeline. You will find it [here in the Visual Studio marketplace](https://marketplace.visualstudio.com/items?itemName=tingle-software.dependabot). See the website for more [instructions](https://github.com/tinglesoftware/dependabot-azure-devops#running-in-azure-devops).
+This is the unofficial [dependabot](https://github.com/Dependabot/dependabot-core) extension for [Azure DevOps](https://azure.microsoft.com/en-gb/services/devops/). It will allow you to run Dependabot inside a build pipeline. You will find it [here in the Visual Studio marketplace](https://marketplace.visualstudio.com/items?itemName=tingle-software.dependabot). See the website for more [instructions](https://github.com/tinglesoftware/dependabot-azure-devops#running-in-azure-devops).
 
 ## Usage
 
