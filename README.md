@@ -31,6 +31,8 @@ To run the script, some environment variables are required.
 |PRIVATE_FEED_NAME|**_Optional_**. The name of the private feed within the Azure DevOps organization to use when resolving private packages. The script automatically adds the correct feed/registry URL to the process depending on the value set for `PACKAGE_MANAGER`. This is only required if there are packages in a private feed.|
 |DIRECTORY|**_Optional_**. The directory in which dependancies are to be checked. When not specified, the root of the repository (denoted as '/') is used.|
 |TARGET_BRANCH|**_Optional_**. The branch to be targeted when creating a pull request. When not specified, Dependabot will resolve the default branch of the repository.|
+|AZURE_HOSTNAME|**_Optional_**. The hostname of the where the organization is hosted. Defaults to `dev.azure.com` but for older organizations this may have the format `xxx.visualstudio.com`. Check the url on the browser. For Azure DevOps Server, this may be the unexposed one e.g. `localhost:8080` or one that you have exposed publicly via DNS.|
+|AZURE_HOSTNAME_PACKAGING|**_Optional_**. The hostname for private package repositories, feeds and registries. By default this is inferred from the `AZURE_HOSTNAME` but may occassionally be different. When `AZURE_HOSTNAME` is `dev.azure.com` the value used is `pkgs.dev.azure.com` whereas when the value ends in `visualstudio.com`, the value takes the format `{organization}.pkgs.visualstudio.com`. In some situations, the code may still be referencing the older packaging urls but your organization is transitioning, in this case, you can specify `dev.azure.com` for `AZURE_HOSTNAME` and `xxx.pkgs.visualstudio.com` for `AZURE_HOSTNAME_PACKAGING`.|
 
 ## Running in docker
 
@@ -53,6 +55,8 @@ docker run --rm -t \
            -e PRIVATE_FEED_NAME=<your-private-feed> \
            -e DIRECTORY=/ \
            -e TARGET_BRANCH=<your-target-branch> \
+           -e AZURE_HOSTNAME=<your-hostname> \
+           -e AZURE_HOSTNAME_PACKAGING=<your-packaging-hostname> \
            tingle/dependabot-azure-devops:0.1.1
 ```
 
@@ -69,6 +73,8 @@ docker run --rm -t \
            -e PRIVATE_FEED_NAME=tinglesoftware \
            -e DIRECTORY=/ \
            -e TARGET_BRANCH=main \
+           -e AZURE_HOSTNAME=dev.azure.com \
+           -e AZURE_HOSTNAME_PACKAGING=pkgs.dev.azure.com \
            tingle/dependabot-azure-devops:0.1.1
 ```
 
@@ -158,6 +164,10 @@ spec:
                   value: '/'
                 - name: TARGET_BRANCH
                   value: 'master'
+                - name: AZURE_HOSTNAME
+                  value: 'dev.azure.com'
+                - name: AZURE_HOSTNAME_PACKAGING
+                  value: 'pkgs.dev.azure.com'
           restartPolicy: OnFailure
 
 ```
