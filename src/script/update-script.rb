@@ -39,7 +39,9 @@ elsif package_manager == "pipenv" || package_manager == "pip-compile" || package
   package_manager = "pip"
 end
 
-# figure out the hostnames
+##################################
+# Setup the hostnames to be used #
+##################################
 azure_hostname = ENV["AZURE_HOSTNAME"] || "dev.azure.com"
 azure_hostname_packaging = ENV["AZURE_HOSTNAME_PACKAGING"]
 if !azure_hostname_packaging
@@ -52,7 +54,9 @@ end
 
 puts "Using '#{azure_hostname}' and '#{azure_hostname_packaging}' hostnames"
 
-# setup credentials
+#####################################
+# Setup credentials for source code #
+#####################################
 system_access_token = ENV["SYSTEM_ACCESSTOKEN"]
 credentials = [{
   "type" => "git_source",
@@ -61,9 +65,9 @@ credentials = [{
   "password" => system_access_token
 }]
 
-##############################
+########################################################
 # Add GitHub Access Token (PAT) to avoid rate limiting #
-##############################
+########################################################
 if ENV["GITHUB_ACCESS_TOKEN"]
   credentials << {
     "type" => "git_source",
@@ -73,6 +77,9 @@ if ENV["GITHUB_ACCESS_TOKEN"]
   }
 end
 
+#####################################################################
+# Setup credentials for private feeds, repositories, and registries #
+#####################################################################
 private_feed_name = ENV["PRIVATE_FEED_NAME"]
 if private_feed_name
   if package_manager == "nuget"
