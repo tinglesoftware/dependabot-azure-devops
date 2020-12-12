@@ -47,7 +47,7 @@ azure_hostname_packaging = ENV["AZURE_HOSTNAME_PACKAGING"]
 if !azure_hostname_packaging
   if azure_hostname.end_with?(".visualstudio.com")
     azure_hostname_packaging = "#{organization}.pkgs.visualstudio.com"
-  else
+  elsif azure_hostname == "dev.azure.com"
     azure_hostname_packaging = "pkgs.dev.azure.com/#{organization}"
   end
 end
@@ -82,6 +82,15 @@ end
 #####################################################################
 private_feed_name = ENV["PRIVATE_FEED_NAME"]
 if private_feed_name
+
+  # Ensure we have a hostname for packaging
+  if !azure_hostname_packaging
+    raise "Unable to infer the packaging host name from '#{azure_hostname}'."\
+          "\nPlease provide one using 'AZURE_HOSTNAME_PACKAGING' variable"\
+          " or remove the 'PRIVATE_FEED_NAME' variable."
+  end
+
+  # Add the credentials depending on the package manager
   if package_manager == "nuget"
     # Adding custom private feed removes the public onces so we have to create it
     credentials << {
