@@ -26,8 +26,7 @@ function getGithubEndPointToken(githubEndpoint: string): string {
     return githubEndpointToken;
 }
 
-function extractOrganization (organisationUrl: string) : string
-{
+function extractOrganization (organisationUrl: string) : string {
     let parts = organisationUrl.split("/");
 
     // Check for new style: https://dev.azure.com/x/
@@ -49,6 +48,13 @@ function extractOrganization (organisationUrl: string) : string
     tl.setResult(tl.TaskResult.Failed, `Error parsing organisation from organisation url: '${organisationUrl}'.`);
 }
 
+function extractHostname (organisationUrl: string) : string {
+    let parts = organisationUrl.split("/");
+
+    // For both new (https://dev.azure.com/x/) and old style (https://x.visualstudio.com/), the hostname is in position 2
+    return parts[2];
+}
+
 async function run() {
     try {
         // Checking if docker is installed
@@ -61,8 +67,12 @@ async function run() {
         dockerRunner.arg(['--rm']); // remove after execution
         dockerRunner.arg(['-i']);   // attach pseudo tty
 
-        // Set the organization
+        // Set the hostname
         var organizationUrl = tl.getVariable('System.TeamFoundationCollectionUri');
+        let hostname: string = extractHostname(organizationUrl);
+        dockerRunner.arg(['-e', `AZURE_HOSTNAME=${hostname}`]);
+
+        // Set the organization
         let organization: string = extractOrganization(organizationUrl);
         dockerRunner.arg(['-e', `ORGANIZATION=${organization}`]);
 
@@ -116,6 +126,13 @@ async function run() {
         if (targetBranch)
         {
             dockerRunner.arg(['-e', `TARGET_BRANCH=${targetBranch}`]);
+        }
+
+        // Set the hostname for packaging
+        let packagingHostname =tl.getInput('packagingHostname');
+        if (packagingHostname)
+        {
+            dockerRunner.arg(['-e', `AZURE_HOSTNAME_PACKAGING=${packagingHostname}`]);
         }
 
         // Allow overriding of the docker image tag globally

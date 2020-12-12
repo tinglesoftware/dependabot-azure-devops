@@ -100,6 +100,14 @@
             "label": "Azure DevOps Personal Access Token.",
             "required": false,
             "helpMarkDown": "The Personal Access Token for accessing Azure DevOps repositories. Supply a value here to avoid using permissions for the Build Service either because you cannot change its permissions or because you prefer that the Pull Requests be done by a different user."
+        },
+        {
+            "name": "packagingHostname",
+            "type": "string",
+            "groupName": "advanced",
+            "label": "Host name for private feeds.",
+            "required": false,
+            "helpMarkDown": "The hostname used for createing private feed urls. When not provided, it is inferred from the current environment. Examples: `pkgs.dev.azure.com`, `constoso.pkgs.visualstudio.com`"
         }
     ],
     "dataSourceBindings": [
