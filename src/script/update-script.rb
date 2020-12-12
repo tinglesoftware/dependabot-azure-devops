@@ -32,6 +32,13 @@ directory = ENV["DIRECTORY"] || "/"
 # - terraform
 package_manager = ENV["PACKAGE_MANAGER"] || "bundler"
 
+# Update older and common package managers to new and known ones
+if package_manager == "npm" || package_manager == "yarn"
+  package_manager = "npm_and_yarn"
+elsif package_manager == "pipenv" || package_manager == "pip-compile" || package_manager == "poetry"
+  package_manager = "pip"
+end
+
 # figure out the hostnames
 azure_hostname = ENV["AZURE_HOSTNAME"] || "dev.azure.com"
 azure_hostname_packaging = ENV["AZURE_HOSTNAME_PACKAGING"]
