@@ -32,10 +32,24 @@ directory = ENV["DIRECTORY"] || "/"
 # - terraform
 package_manager = ENV["PACKAGE_MANAGER"] || "bundler"
 
+# figure out the hostnames
+azure_hostname = ENV["AZURE_HOSTNAME"] || "dev.azure.com"
+azure_hostname_packaging = ENV["AZURE_HOSTNAME_PACKAGING"]
+if !azure_hostname_packaging
+  if azure_hostname.end_with?(".visualstudio.com")
+    azure_hostname_packaging = "#{organization}.pkgs.visualstudio.com"
+  else
+    azure_hostname_packaging = "pkgs.dev.azure.com/#{organization}"
+  end
+end
+
+puts "Using '#{azure_hostname}' and '#{azure_hostname_packaging}' hostnames"
+
+# setup credentials
 system_access_token = ENV["SYSTEM_ACCESSTOKEN"]
 credentials = [{
   "type" => "git_source",
-  "host" => "dev.azure.com",
+  "host" => azure_hostname,
   "username" => "x-access-token",
   "password" => system_access_token
 }]
@@ -61,7 +75,7 @@ if private_feed_name
       "url" => "https://api.nuget.org/v3/index.json",
     }
 
-    url = "https://pkgs.dev.azure.com/#{organization}/_packaging/#{private_feed_name}/nuget/v3/index.json"
+    url = "https://#{azure_hostname_packaging}/_packaging/#{private_feed_name}/nuget/v3/index.json"
     puts "Adding private NuGet feed '#{url}'"
     credentials << {
       "type" => "nuget_feed",
@@ -69,7 +83,7 @@ if private_feed_name
       "token" => ":#{system_access_token}", # do not forget the colon
     }
   elsif package_manager == "gradle" || package_manager == "maven"
-    url = "https://pkgs.dev.azure.com/#{organization}/_packaging/#{private_feed_name}/maven/v1"
+    url = "https://#{azure_hostname_packaging}/_packaging/#{private_feed_name}/maven/v1"
     puts "Adding private Maven repository '#{url}'"
     credentials << {
       "type" => "maven_repository",
@@ -78,7 +92,7 @@ if private_feed_name
       "password" => "#{system_access_token}"
     }
   elsif package_manager == "npm_and_yarn"
-    url = "pkgs.dev.azure.com/#{organization}/_packaging/#{private_feed_name}/npm/registry/"
+    url = "#{azure_hostname_packaging}/_packaging/#{private_feed_name}/npm/registry/"
     puts "Adding private npm registry '#{url}'"
     credentials << {
       "type" => "npm_registry",
@@ -90,8 +104,8 @@ end
 
 source = Dependabot::Source.new(
   provider: "azure",
-  hostname: "dev.azure.com",
-  api_endpoint: "https://dev.azure.com/",
+  hostname: azure_hostname,
+  api_endpoint: "https://#{azure_hostname}/",
   repo: repo_name,
   directory: directory,
   branch: ENV["TARGET_BRANCH"] || nil,
