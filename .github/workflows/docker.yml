@@ -52,6 +52,9 @@ jobs:
     - name: Log into registry (GitHub)
       run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
+    - name: Pull Docker base image & warm Docker cache
+      run: docker pull "$GITHUB_DOCKER_IMAGE_ID:latest"
+
     - name: Build image
       run: |
         docker build \
