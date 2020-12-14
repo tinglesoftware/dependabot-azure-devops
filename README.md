@@ -90,13 +90,13 @@ An example of a YAML pipeline:
 trigger: none # Disable CI trigger
 
 schedules:
-  - cron: '0 2 0 0 0' # daily at 2am UTC
-    always: true # run even when there are no code changes
-    branches:
-      include:
-        - master
-    batch: true
-    displayName: Daily
+- cron: '0 2 0 0 0' # daily at 2am UTC
+  always: true # run even when there are no code changes
+  branches:
+    include:
+      - master
+  batch: true
+  displayName: Daily
 
 pool:
   vmImage: 'ubuntu-latest' # requires macos or ubuntu (windows is not supported)
@@ -143,31 +143,31 @@ spec:
       template:
         spec:
           containers:
-            - name: dependabot
-              image: 'tingle/dependabot-azure-devops:0.1.1'
-              env:
-                - name: ORGANIZATION
-                  value: 'tinglesoftware'
-                - name: PROJECT
-                  value: 'ado'
-                - name: REPOSITORY
-                  value: 'ado-dp'
-                - name: PACKAGE_MANAGER
-                  value: 'nuget'
-                - name: SYSTEM_ACCESSTOKEN
-                  value: 'abcd...efgh'
-                - name: GITHUB_ACCESS_TOKEN
-                  value: 'ijkl..mnop'
-                - name: PRIVATE_FEED_NAME
-                  value: 'tinglesoftware'
-                - name: DIRECTORY
-                  value: '/'
-                - name: TARGET_BRANCH
-                  value: 'master'
-                - name: AZURE_HOSTNAME
-                  value: 'dev.azure.com'
-                - name: AZURE_HOSTNAME_PACKAGING
-                  value: 'pkgs.dev.azure.com'
+          - name: dependabot
+            image: 'tingle/dependabot-azure-devops:0.1.1'
+            env:
+              - name: ORGANIZATION
+                value: 'tinglesoftware'
+              - name: PROJECT
+                value: 'ado'
+              - name: REPOSITORY
+                value: 'ado-dp'
+              - name: PACKAGE_MANAGER
+                value: 'nuget'
+              - name: SYSTEM_ACCESSTOKEN
+                value: 'abcd...efgh'
+              - name: GITHUB_ACCESS_TOKEN
+                value: 'ijkl..mnop'
+              - name: PRIVATE_FEED_NAME
+                value: 'tinglesoftware'
+              - name: DIRECTORY
+                value: '/'
+              - name: TARGET_BRANCH
+                value: 'master'
+              - name: AZURE_HOSTNAME
+                value: 'dev.azure.com'
+              - name: AZURE_HOSTNAME_PACKAGING
+                value: 'pkgs.dev.azure.com'
           restartPolicy: OnFailure
 
 ```

@@ -20,25 +20,25 @@ spec:
       template:
         spec:
           containers:
-            - name: dependabot
-              image: 'tingle/dependabot-azure-devops:0.1.1'
-              env:
-                - name: ORGANIZATION
-                  value: '{{ORGANIZATION}}'
-                - name: PROJECT
-                  value: '{{PROJECT}}'
-                - name: REPOSITORY
-                  value: '{{REPOSITORY}}'
-                - name: PACKAGE_MANAGER
-                  value: '{{PACKAGE_MANAGER}}'
-                - name: SYSTEM_ACCESSTOKEN
-                  value: '{{SYSTEM_ACCESSTOKEN}}'
-                - name: GITHUB_ACCESS_TOKEN
-                  value: '{{GITHUB_ACCESS_TOKEN}}'
-                - name: PRIVATE_FEED_NAME
-                  value: '{{PRIVATE_FEED_NAME}}'
-                - name: DIRECTORY
-                  value: '{{DIRECTORY_PATH}}'
-                - name: TARGET_BRANCH
-                  value: '{{TARGET_BRANCH}}'
+          - name: dependabot
+            image: 'tingle/dependabot-azure-devops:0.1.1'
+            env:
+              - name: ORGANIZATION
+                value: '{{ORGANIZATION}}'
+              - name: PROJECT
+                value: '{{PROJECT}}'
+              - name: REPOSITORY
+                value: '{{REPOSITORY}}'
+              - name: PACKAGE_MANAGER
+                value: '{{PACKAGE_MANAGER}}'
+              - name: SYSTEM_ACCESSTOKEN
+                value: '{{SYSTEM_ACCESSTOKEN}}'
+              - name: GITHUB_ACCESS_TOKEN
+                value: '{{GITHUB_ACCESS_TOKEN}}'
+              - name: PRIVATE_FEED_NAME
+                value: '{{PRIVATE_FEED_NAME}}'
+              - name: DIRECTORY
+                value: '{{DIRECTORY_PATH}}'
+              - name: TARGET_BRANCH
+                value: '{{TARGET_BRANCH}}'
           restartPolicy: OnFailure
