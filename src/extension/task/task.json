@@ -3,7 +3,7 @@
     "id": "d98b873d-cf18-41eb-8ff5-234f14697896",
     "name": "dependabot",
     "friendlyName": "Dependabot",
-    "description": "Automatically update dependecies and vulnerabilities in your code",
+    "description": "Automatically update dependencies and vulnerabilities in your code",
     "helpMarkDown": "For help please visit https://github.com/tinglesoftware/dependabot-azure-devops",
     "category": "Utility",
     "visibility": [
@@ -107,7 +107,7 @@
             "groupName": "advanced",
             "label": "Host name for private feeds.",
             "required": false,
-            "helpMarkDown": "The hostname used for createing private feed urls. When not provided, it is inferred from the current environment. Examples: `pkgs.dev.azure.com`, `constoso.pkgs.visualstudio.com`"
+            "helpMarkDown": "The hostname used for creating private feed urls. When not provided, it is inferred from the current environment. Examples: `pkgs.dev.azure.com`, `constoso.pkgs.visualstudio.com`"
         }
     ],
     "dataSourceBindings": [
