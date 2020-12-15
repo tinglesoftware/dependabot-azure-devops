@@ -26,8 +26,8 @@ function getGithubEndPointToken(githubEndpoint: string): string {
     return githubEndpointToken;
 }
 
-function extractOrganization (organisationUrl: string) : string {
-    let parts = organisationUrl.split("/");
+function extractOrganization (organizationUrl: string) : string {
+    let parts = organizationUrl.split("/");
 
     // Check for new style: https://dev.azure.com/x/
     if (parts.length === 5)
@@ -41,15 +41,15 @@ function extractOrganization (organisationUrl: string) : string {
         // Get x.visualstudio.com part.
         let part = parts[2];
 
-        // Return organisation part (x).
+        // Return organization part (x).
         return part.split(".")[0];
     }
 
-    tl.setResult(tl.TaskResult.Failed, `Error parsing organisation from organisation url: '${organisationUrl}'.`);
+    tl.setResult(tl.TaskResult.Failed, `Error parsing organization from organization url: '${organizationUrl}'.`);
 }
 
-function extractHostname (organisationUrl: string) : string {
-    let parts = organisationUrl.split("/");
+function extractHostname (organizationUrl: string) : string {
+    let parts = organizationUrl.split("/");
 
     // For both new (https://dev.azure.com/x/) and old style (https://x.visualstudio.com/), the hostname is in position 2
     return parts[2];
@@ -129,7 +129,7 @@ async function run() {
         }
 
         // Set the hostname for packaging
-        let packagingHostname =tl.getInput('packagingHostname');
+        let packagingHostname = tl.getInput('packagingHostname');
         if (packagingHostname)
         {
             dockerRunner.arg(['-e', `AZURE_HOSTNAME_PACKAGING=${packagingHostname}`]);
