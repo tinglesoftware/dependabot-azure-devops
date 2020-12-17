@@ -14,6 +14,9 @@ repo_name = "#{organization}/#{project}/_git/#{repository}"
 # Directory where the base dependency files are.
 directory = ENV["DIRECTORY"] || "/"
 
+# Branch against which to create PRs
+branch = ENV["TARGET_BRANCH"] || nil
+
 # Name of the package manager you'd like to do the update for. Options are:
 # - bundler
 # - pip (includes pipenv)
@@ -131,13 +134,14 @@ source = Dependabot::Source.new(
   api_endpoint: "https://#{azure_hostname}/",
   repo: repo_name,
   directory: directory,
-  branch: ENV["TARGET_BRANCH"] || nil,
+  branch: branch,
 )
 
 ##############################
 # Fetch the dependency files #
 ##############################
 puts "Fetching #{package_manager} dependency files for #{repo_name}"
+puts "Targeting #{branch || 'default'} branch under #{directory} directory"
 fetcher = Dependabot::FileFetchers.for_package_manager(package_manager).new(
   source: source,
   credentials: credentials,
