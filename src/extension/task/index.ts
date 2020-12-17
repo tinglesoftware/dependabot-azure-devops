@@ -78,10 +78,12 @@ async function run() {
 
         // Set the project
         let project: string = tl.getVariable('System.TeamProject');
+        project = encodeURI(project); // encode special characters like spaces
         dockerRunner.arg(['-e', `PROJECT=${project}`]);
 
         // Set the repository
         let repository: string = tl.getVariable('Build.Repository.Name');
+        repository = encodeURI(repository); // encode special characters like spaces
         dockerRunner.arg(['-e', `REPOSITORY=${repository}`]);
 
         // Set the package manager
