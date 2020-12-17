@@ -53,6 +53,8 @@ spec:
                 value: 'dev.azure.com'
               - name: AZURE_HOSTNAME_PACKAGING
                 value: 'pkgs.dev.azure.com'
+              - name: OPEN_PULL_REQUESTS_LIMIT
+                value: '10'
           restartPolicy: OnFailure
 
 ```

@@ -108,6 +108,14 @@
             "label": "Host name for private feeds.",
             "required": false,
             "helpMarkDown": "The hostname used for creating private feed urls. When not provided, it is inferred from the current environment. Examples: `pkgs.dev.azure.com`, `constoso.pkgs.visualstudio.com`"
+        },
+        {
+            "name": "openPullRequestsLimit",
+            "type": "int",
+            "label": "Limit number of open pull requests for version updates.",
+            "required": false,
+            "defaultValue": "5",
+            "helpMarkDown": "The maximum number of open pull requests to have at any one time. Defaults to 5."
         }
     ],
     "dataSourceBindings": [

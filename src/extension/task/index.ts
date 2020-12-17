@@ -137,6 +137,13 @@ async function run() {
             dockerRunner.arg(['-e', `AZURE_HOSTNAME_PACKAGING=${packagingHostname}`]);
         }
 
+        // Set the open pull requests limit
+        let openPullRequestsLimit = tl.getInput('openPullRequestsLimit', true);
+        if (openPullRequestsLimit)
+        {
+            dockerRunner.arg(['-e', `OPEN_PULL_REQUESTS_LIMIT=${openPullRequestsLimit}`]);
+        }
+
         // Allow overriding of the docker image tag globally
         let dockerImageTag: string = tl.getVariable('DEPENDABOT_DOCKER_IMAGE_TAG');
         if (!dockerImageTag) {

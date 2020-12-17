@@ -41,4 +41,10 @@ spec:
                 value: '{{DIRECTORY_PATH}}'
               - name: TARGET_BRANCH
                 value: '{{TARGET_BRANCH}}'
+              - name: AZURE_HOSTNAME
+                value: '{{AZURE_HOSTNAME}}'
+              - name: AZURE_HOSTNAME_PACKAGING
+                value: '{{AZURE_HOSTNAME_PACKAGING}}'
+              - name: OPEN_PULL_REQUESTS_LIMIT
+                value: '{{OPEN_PULL_REQUESTS_LIMIT}}'
           restartPolicy: OnFailure
