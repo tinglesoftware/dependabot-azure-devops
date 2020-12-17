@@ -21,6 +21,7 @@ docker run --rm -t \
            -e TARGET_BRANCH=<your-target-branch> \
            -e AZURE_HOSTNAME=<your-hostname> \
            -e AZURE_HOSTNAME_PACKAGING=<your-packaging-hostname> \
+           -e OPEN_PULL_REQUESTS_LIMIT=10 \
            tingle/dependabot-azure-devops:0.1.1
 ```
 
@@ -39,6 +40,7 @@ docker run --rm -t \
            -e TARGET_BRANCH=main \
            -e AZURE_HOSTNAME=dev.azure.com \
            -e AZURE_HOSTNAME_PACKAGING=pkgs.dev.azure.com \
+           -e OPEN_PULL_REQUESTS_LIMIT=10 \
            tingle/dependabot-azure-devops:0.1.1
 ```
 
@@ -59,3 +61,4 @@ To run the script, some environment variables are required.
 |TARGET_BRANCH|**_Optional_**. The branch to be targeted when creating a pull request. When not specified, Dependabot will resolve the default branch of the repository.|
 |AZURE_HOSTNAME|**_Optional_**. The hostname of the where the organization is hosted. Defaults to `dev.azure.com` but for older organizations this may have the format `xxx.visualstudio.com`. Check the url on the browser. For Azure DevOps Server, this may be the unexposed one e.g. `localhost:8080` or one that you have exposed publicly via DNS.|
 |AZURE_HOSTNAME_PACKAGING|**_Optional_**. The hostname for private package repositories, feeds and registries. By default this is inferred from the `AZURE_HOSTNAME` but may occasionally be different. When `AZURE_HOSTNAME` is `dev.azure.com` the value used is `pkgs.dev.azure.com` whereas when the value ends in `visualstudio.com`, the value takes the format `{organization}.pkgs.visualstudio.com`. In some situations, the code may still be referencing the older packaging urls but your organization is transitioning, in this case, you can specify `dev.azure.com` for `AZURE_HOSTNAME` and `xxx.pkgs.visualstudio.com` for `AZURE_HOSTNAME_PACKAGING`.|
+|OPEN_PULL_REQUESTS_LIMIT|**_Optional_**. The maximum number of open pull requests to have at any one time. Defaults to 5.|
