@@ -5,7 +5,7 @@ require "dependabot/file_updaters"
 require "dependabot/pull_request_creator"
 require "dependabot/omnibus"
 
-# Full name of the GitHub repo you want to create pull requests for.
+# Full name of the repo you want to create pull requests for.
 organization = ENV["ORGANIZATION"]
 project = ENV["PROJECT"]
 repository = ENV["REPOSITORY"]
@@ -72,6 +72,7 @@ credentials = [{
 # Add GitHub Access Token (PAT) to avoid rate limiting #
 ########################################################
 if ENV["GITHUB_ACCESS_TOKEN"]
+  puts "GitHub access token has been provided."
   credentials << {
     "type" => "git_source",
     "host" => "github.com",
