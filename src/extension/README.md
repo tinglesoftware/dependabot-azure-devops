@@ -54,3 +54,37 @@ Since this task makes use of a docker image, it may take time to install the doc
 |targetBranch|**_Optional_**. The branch to be targeted when creating pull requests. When not specified, Dependabot will resolve the default branch of the repository. Examples: `master`, `main`, `develop`|
 |azureDevOpsAccessToken|**_Optional_**. The Personal Access Token for accessing Azure DevOps. Supply a value here to avoid using permissions for the Build Service either because you cannot change its permissions or because you prefer that the Pull Requests be done by a different user. When not provided, the current authentication scope is used. In either case, be use the following permissions are granted: <br/>-&nbsp;Code (Full)<br/>-&nbsp;Packaging (Read)<br/>-&nbsp;Pull Requests Threads (Read & Write).<br/>See the [documentation](https://docs.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate?view=azure-devops&tabs=preview-page#create-a-pat) to know more about creating a Personal Access Token|
 |packagingHostname|**_Optional_**. The hostname for private package repositories, feeds and registries. By default this is inferred from the current environment but may occasionally be different. When working using he new domain `dev.azure.com` the value used is `pkgs.dev.azure.com` whereas when working in the old url `xxx.visualstudio.com`, the value takes the format `xxx.pkgs.visualstudio.com`. In some situations, the code may still be referencing the older packaging urls but your organization is transitioning, in this case, you can specify `xxx.pkgs.visualstudio.com`.
+
+## Advanced
+
+In some situations you might want to override the docker image tag that is pulled. For example, to get the latest bits for testing. This is discouraged. Declare a global variable, for example:
+
+```yaml
+trigger: none # Disable CI trigger
+
+schedules:
+- cron: '0 2 0 0 0' # daily at 2am UTC
+  always: true # run even when there are no code changes
+  branches:
+    include:
+      - master
+  batch: true
+  displayName: Daily
+
+variables:
+  DEPENDABOT_DOCKER_IMAGE_TAG: '0.1.3' # could also be 'latest'
+
+pool:
+  vmImage: 'ubuntu-latest' # requires macos or ubuntu (windows is not supported)
+
+steps:
+- task: dependabot@1
+  inputs:
+    packageManager: 'nuget'
+- task: dependabot@1
+  inputs:
+    packageManager: 'docker'
+    directory: '/docker'
+```
+
+Check the logs for the image that is pulled.
