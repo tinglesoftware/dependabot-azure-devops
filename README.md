@@ -12,44 +12,9 @@ In this repository you'll find:
 
 1. Dependabot's [Update script](./src/script/update-script.rb) in Ruby.
 2. Dockerfile and build/image for running the script via Docker [here](./src/docker).
-3. Azure DevOps [Extension source](./src/extension).
+3. Azure DevOps [Extension](https://marketplace.visualstudio.com/items?itemName=tingle-software.dependabot) and [source](./src/extension).
 4. Kubernetes CronJob [template](./templates/dependabot-template.yml).
 5. Semi-hosted version of Dependabot [here](./src/hosting).
-
-## Running in Azure DevOps
-
-To run dependabot in Azure Pipelines, you need to install the extension from the [marketplace](https://marketplace.visualstudio.com/items?itemName=tingle-software.dependabot).
-
-It's up to the user to schedule the pipeline in whatever is correct for their solution.
-
-An example of a YAML pipeline:
-
-```yaml
-trigger: none # Disable CI trigger
-
-schedules:
-- cron: '0 2 0 0 0' # daily at 2am UTC
-  always: true # run even when there are no code changes
-  branches:
-    include:
-      - master
-  batch: true
-  displayName: Daily
-
-pool:
-  vmImage: 'ubuntu-latest' # requires macos or ubuntu (windows is not supported)
-
-steps:
-- task: dependabot@1
-  inputs:
-    packageManager: 'nuget'
-- task: dependabot@1
-  inputs:
-    packageManager: 'docker'
-    directory: '/docker'
-```
-
-Since this task makes use of a docker image, it may take time to install the docker image. The user can choose to speed this up by using [Caching for Docker](https://docs.microsoft.com/en-us/azure/devops/pipelines/release/caching?view=azure-devops#docker-images) in Azure Pipelines. See the [source file](./src/extension/task/index.ts) for the exact image tag, e.g. `tingle/dependabot-azure-devops:0.1.1`. Subsequent dependabot tasks in a job will be faster after the first one pulls the image for the first time.
 
 ## Running using a Kubernetes CronJob
 

@@ -1,6 +1,6 @@
 # Dependabot Azure DevOps Extension
 
-This is the unofficial [dependabot](https://github.com/Dependabot/dependabot-core) extension for [Azure DevOps](https://azure.microsoft.com/en-gb/services/devops/). It will allow you to run Dependabot inside a build pipeline. You will find it [here in the Visual Studio marketplace](https://marketplace.visualstudio.com/items?itemName=tingle-software.dependabot). See the website for more [instructions](https://github.com/tinglesoftware/dependabot-azure-devops#running-in-azure-devops).
+This is the unofficial [dependabot](https://github.com/Dependabot/dependabot-core) extension for [Azure DevOps](https://azure.microsoft.com/en-gb/services/devops/). It will allow you to run Dependabot inside a build pipeline. You will find it [here in the Visual Studio marketplace](https://marketplace.visualstudio.com/items?itemName=tingle-software.dependabot). You need to install it before running dependabot in your pipeline.
 
 ## Usage
 
@@ -11,6 +11,37 @@ To use in a YAML pipeline:
   inputs:
     packageManager: 'nuget'
 ```
+
+It's up to the user to schedule the pipeline in whatever is correct for their solution.
+
+An example of a YAML pipeline:
+
+```yaml
+trigger: none # Disable CI trigger
+
+schedules:
+- cron: '0 2 0 0 0' # daily at 2am UTC
+  always: true # run even when there are no code changes
+  branches:
+    include:
+      - master
+  batch: true
+  displayName: Daily
+
+pool:
+  vmImage: 'ubuntu-latest' # requires macos or ubuntu (windows is not supported)
+
+steps:
+- task: dependabot@1
+  inputs:
+    packageManager: 'nuget'
+- task: dependabot@1
+  inputs:
+    packageManager: 'docker'
+    directory: '/docker'
+```
+
+Since this task makes use of a docker image, it may take time to install the docker image. The user can choose to speed this up by using [Caching for Docker](https://docs.microsoft.com/en-us/azure/devops/pipelines/release/caching?view=azure-devops#docker-images) in Azure Pipelines. See the [source file](./src/extension/task/index.ts) for the exact image tag, e.g. `tingle/dependabot-azure-devops:0.1.1`. Subsequent dependabot tasks in a job will be faster after the first one pulls the image for the first time.
 
 ## Task Parameters
 
