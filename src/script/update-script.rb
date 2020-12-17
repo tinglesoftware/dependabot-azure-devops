@@ -55,7 +55,7 @@ if !azure_hostname_packaging
   end
 end
 
-puts "Using '#{azure_hostname}' and '#{azure_hostname_packaging}' hostnames"
+puts "Using '#{azure_hostname}' as hostname and '#{azure_hostname_packaging}' prefix for packaging"
 
 #####################################
 # Setup credentials for source code #
@@ -142,7 +142,7 @@ source = Dependabot::Source.new(
 # Fetch the dependency files #
 ##############################
 puts "Fetching #{package_manager} dependency files for #{repo_name}"
-puts "Targeting #{branch || 'default'} branch under #{directory} directory"
+puts "Targeting '#{branch || 'default'}' branch under '#{directory}' directory"
 fetcher = Dependabot::FileFetchers.for_package_manager(package_manager).new(
   source: source,
   credentials: credentials,
@@ -162,6 +162,9 @@ parser = Dependabot::FileParsers.for_package_manager(package_manager).new(
 )
 
 dependencies = parser.parse
+
+pull_requests_limit = ENV["OPEN_PULL_REQUESTS_LIMIT"].to_i || 5
+pull_requests_count = 0
 
 dependencies.select(&:top_level?).each do |dep|
   #########################################
@@ -239,6 +242,13 @@ dependencies.select(&:top_level?).each do |dep|
     end
   else
     puts "Seems PR is already present."
+  end
+
+  # Check if we have reached maximum number of open pull requests
+  pull_requests_count += 1
+  if pull_requests_limit > 0 && pull_requests_count >= pull_requests_limit
+    puts "Limit of open pull requests (#{pull_requests_limit}) reached."
+    break
   end
 
   next unless pull_request
