@@ -14,7 +14,7 @@ In this repository you'll find:
 2. Dockerfile and build/image for running the script via Docker [here](./src/docker).
 3. Azure DevOps [Extension source](./src/extension).
 4. Kubernetes CronJob [template](./templates/dependabot-template.yml).
-5. Semi-hosted version of Dependabot [here](./src/hosting). _[coming soon]_
+5. Semi-hosted version of Dependabot [here](./src/hosting).
 
 ## Running in Azure DevOps
 
