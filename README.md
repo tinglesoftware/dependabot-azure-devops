@@ -7,6 +7,7 @@ The work in this repository is based on inspired and occasionally guided by:
 1. Official Script support: [code](https://github.com/dependabot/dependabot-script)
 2. Andrew Craven's work: [blog](https://medium.com/@acraven/updating-dependencies-in-azure-devops-repos-773cbbb6029d), [code](https://github.com/acraven/azure-dependabot)
 3. Chris' work: [code](https://github.com/chris5287/dependabot-for-azuredevops)
+4. andrcun's work on GitLab: [code](https://gitlab.com/dependabot-gitlab/dependabot)
 
 In this repository you'll find:
 
