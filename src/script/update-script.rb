@@ -109,6 +109,16 @@ unless json_credentials.to_s.strip.empty?
   end
 end
 
+#####################################
+# Setup Ignore conditions #
+#####################################
+ignore_options = []
+json_ignore = ENV["DEPENDABOT_IGNORE"] || ""
+unless json_ignore.to_s.strip.empty?
+  json_ignore = JSON.parse(json_ignore)
+  ignore_options.push(*json_ignore)
+end
+
 source = Dependabot::Source.new(
   provider: "azure",
   hostname: azure_hostname,
@@ -147,17 +157,26 @@ dependencies = parser.parse
 pull_requests_limit = ENV["DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT"].to_i || 5
 pull_requests_count = 0
 
+# Get ignore versions for a dependency
+def ignore_conditions_for(options, dependency)
+  # Find where the name matches then get an array of version requirements, e.g. ["4.x", "5.x"]
+  found = options.find { |ig| dependency.name.match?(ig['name']) }
+  found ? found['versions'] : []
+end
+
 dependencies.select(&:top_level?).each do |dep|
   #########################################
   # Get update details for the dependency #
   #########################################
   puts "Checking if #{dep.name} #{dep.version} needs updating"
+  ignored_versions = ignore_conditions_for(ignore_options, dep)
 
   checker = Dependabot::UpdateCheckers.for_package_manager(package_manager).new(
     dependency: dep,
     dependency_files: files,
     credentials: credentials,
     requirements_update_strategy: update_strategy,
+    ignored_versions: ignored_versions,
   )
 
   if checker.up_to_date?
