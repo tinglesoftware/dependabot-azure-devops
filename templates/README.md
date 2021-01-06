@@ -61,4 +61,8 @@ spec:
                 value: '{{DEPENDABOT_VERSIONING_STRATEGY}}'
               - name: DEPENDABOT_EXTRA_CREDENTIALS
                 value: '{{DEPENDABOT__EXTRA_CREDENTIALS}}'
+              - name: DEPENDABOT_ALLOW
+                value: '{{DEPENDABOT_ALLOW}}'
+              - name: DEPENDABOT_IGNORE
+                value: '{{DEPENDABOT_IGNORE}}'
 ```

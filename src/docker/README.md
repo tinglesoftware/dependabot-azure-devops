@@ -22,6 +22,8 @@ docker run --rm -t \
            -e DEPENDABOT_VERSIONING_STRATEGY=<your-versioning-strategy> \
            -e DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT=10 \
            -e DEPENDABOT_EXTRA_CREDENTIALS=<your-extra-credentials> \
+           -e DEPENDABOT_ALLOW=<your-allowed-packages> \
+           -e DEPENDABOT_IGNORE=<your-ignore-packages> \
            tingle/dependabot-azure-devops:0.1.1
 ```
 
@@ -41,6 +43,8 @@ docker run --rm -t \
            -e DEPENDABOT_VERSIONING_STRATEGY=auto \
            -e DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT=10 \
            -e DEPENDABOT_EXTRA_CREDENTIALS='[{\"type\":\"npm_registry\",\"token\":\"<redacted>\",\"registry\":\"npm.fontawesome.com\"}]' \
+           -e DEPENDABOT_ALLOW='[{\"name\":"django*",\"type\":\"direct\"}]' \
+           -e DEPENDABOT_IGNORE='[{\"name\":\"express\",\"versions\":[\"4.x\",\"5.x\"]}]' \
            tingle/dependabot-azure-devops:0.1.1
 ```
 
@@ -62,3 +66,5 @@ To run the script, some environment variables are required.
 |DEPENDABOT_VERSIONING_STRATEGY|**_Optional_**. The versioning strategy to use. See [official docs](https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/configuration-options-for-dependency-updates#versioning-strategy) for the allowed values|
 |DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT|**_Optional_**. The maximum number of open pull requests to have at any one time. Defaults to 5.|
 |DEPENDABOT_EXTRA_CREDENTIALS|**_Optional_**. The extra credentials in JSON format. Extra credentials can be used to access private NuGet feeds, docker registries, maven repositories, etc. For example a private registry authentication (For example FontAwesome Pro: `[{"type":"npm_registry","token":"<redacted>","registry":"npm.fontawesome.com"}]`)|
+|DEPENDABOT_ALLOW|**_Optional_**. The dependencies whose updates are allowed, in JSON format. This can be used to control which packages can be updated. For example: `[{\"name\":"django*",\"type\":\"direct\"}]`. See [official docs](https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/configuration-options-for-dependency-updates#allow) for more.|
+|DEPENDABOT_IGNORE|**_Optional_**. The dependencies to be ignored, in JSON format. This can be used to control which packages can be updated. For example: `[{\"name\":\"express\",\"versions\":[\"4.x\",\"5.x\"]}]`. See [official docs](https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/configuration-options-for-dependency-updates#ignore) for more.|

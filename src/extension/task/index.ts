@@ -144,6 +144,20 @@ async function run() {
             dockerRunner.arg(['-e', `DEPENDABOT_EXTRA_CREDENTIALS=${extraCredentials}`]);
         }
 
+        // Set the dependencies to allow
+        let allow: string = tl.getVariable('DEPENDABOT_ALLOW');
+        if (allow)
+        {
+            dockerRunner.arg(['-e', `DEPENDABOT_ALLOW=${allow}`]);
+        }
+
+        // Set the dependencies to ignore
+        let ignore: string = tl.getVariable('DEPENDABOT_IGNORE');
+        if (ignore)
+        {
+            dockerRunner.arg(['-e', `DEPENDABOT_IGNORE=${ignore}`]);
+        }
+
         // Allow overriding of the docker image tag globally
         let dockerImageTag: string = tl.getVariable('DEPENDABOT_DOCKER_IMAGE_TAG');
         if (!dockerImageTag) {
