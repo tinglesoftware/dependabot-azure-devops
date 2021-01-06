@@ -1,52 +1,55 @@
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
-  name: dependabot-{{PROJECT}}-{{REPOSITORY}}
+  name: dependabot-{{AZURE_PROJECT}}-{{AZURE_REPOSITORY}}
   labels:
     tingle.io/dependabot: 'true'
   annotations:
-    project: '{{PROJECT}}'
-    repository: '{{REPOSITORY}}'
+    project: '{{AZURE_PROJECT}}'
+    repository: '{{AZURE_REPOSITORY}}'
 spec:
   schedule: '{{CRON_SCHEDULE}}' # (See https://en.wikipedia.org/wiki/Cron for format)
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
   jobTemplate:
     metadata:
       labels:
         tingle.io/dependabot: 'true'
       annotations:
-        project: '{{PROJECT}}'
-        repository: '{{REPOSITORY}}'
+        project: '{{AZURE_PROJECT}}'
+        repository: '{{AZURE_REPOSITORY}}'
     spec:
+      backoffLimit: 1
+      ttlSecondsAfterFinished: 172800
       template:
         spec:
+          restartPolicy: OnFailure
+          activeDeadlineSeconds: 3600
           containers:
           - name: dependabot
             image: 'tingle/dependabot-azure-devops:0.1.1'
             env:
-              - name: ORGANIZATION
-                value: '{{ORGANIZATION}}'
-              - name: PROJECT
-                value: '{{PROJECT}}'
-              - name: REPOSITORY
-                value: '{{REPOSITORY}}'
-              - name: PACKAGE_MANAGER
-                value: '{{PACKAGE_MANAGER}}'
-              - name: SYSTEM_ACCESSTOKEN
-                value: '{{SYSTEM_ACCESSTOKEN}}'
               - name: GITHUB_ACCESS_TOKEN
                 value: '{{GITHUB_ACCESS_TOKEN}}'
-              - name: PRIVATE_FEED_NAME
-                value: '{{PRIVATE_FEED_NAME}}'
-              - name: DIRECTORY
-                value: '{{DIRECTORY_PATH}}'
-              - name: TARGET_BRANCH
-                value: '{{TARGET_BRANCH}}'
-              - name: VERSIONING_STRATEGY
-                value: '{{VERSIONING_STRATEGY}}'
               - name: AZURE_HOSTNAME
                 value: '{{AZURE_HOSTNAME}}'
-              - name: EXTRA_CREDENTIALS
-                value: '[{\"type\":\"npm_registry\",\"token\":\"<redacted>\",\"registry\":\"npm.fontawesome.com\"}]'
-              - name: OPEN_PULL_REQUESTS_LIMIT
-                value: '{{OPEN_PULL_REQUESTS_LIMIT}}'
-          restartPolicy: OnFailure
+              - name: AZURE_ACCESS_TOKEN
+                value: '{{AZURE_ACCESS_TOKEN}}'
+              - name: AZURE_ORGANIZATION
+                value: '{{AZURE_ORGANIZATION}}'
+              - name: AZURE_PROJECT
+                value: '{{AZURE_PROJECT}}'
+              - name: AZURE_REPOSITORY
+                value: '{{AZURE_REPOSITORY}}'
+              - name: DEPENDABOT_PACKAGE_MANAGER
+                value: '{{DEPENDABOT_PACKAGE_MANAGER}}'
+              - name: DEPENDABOT_DIRECTORY
+                value: '{{DEPENDABOT_DIRECTORY_PATH}}'
+              - name: DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT
+                value: '{{DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT}}'
+              - name: DEPENDABOT_TARGET_BRANCH
+                value: '{{DEPENDABOT_TARGET_BRANCH}}'
+              - name: DEPENDABOT_VERSIONING_STRATEGY
+                value: '{{DEPENDABOT_VERSIONING_STRATEGY}}'
+              - name: DEPENDABOT_EXTRA_CREDENTIALS
+                value: '{{DEPENDABOT__EXTRA_CREDENTIALS}}'

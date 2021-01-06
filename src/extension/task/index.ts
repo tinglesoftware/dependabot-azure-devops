@@ -72,34 +72,6 @@ async function run() {
         let hostname: string = extractHostname(organizationUrl);
         dockerRunner.arg(['-e', `AZURE_HOSTNAME=${hostname}`]);
 
-        // Set the organization
-        let organization: string = extractOrganization(organizationUrl);
-        dockerRunner.arg(['-e', `ORGANIZATION=${organization}`]);
-
-        // Set the project
-        let project: string = tl.getVariable('System.TeamProject');
-        project = encodeURI(project); // encode special characters like spaces
-        dockerRunner.arg(['-e', `PROJECT=${project}`]);
-
-        // Set the repository
-        let repository: string = tl.getVariable('Build.Repository.Name');
-        repository = encodeURI(repository); // encode special characters like spaces
-        dockerRunner.arg(['-e', `REPOSITORY=${repository}`]);
-
-        // Set the package manager
-        let packageManager: string = tl.getInput('packageManager', true);
-        dockerRunner.arg(['-e', `PACKAGE_MANAGER=${packageManager}`]);
-
-        // Set the access token for Azure DevOps Repos.
-        // If the user has not provided one, we use the one from the SystemVssConnection
-        let systemAccessToken: string = tl.getInput('azureDevOpsAccessToken');
-        if (!systemAccessToken)
-        {
-            tl.debug('No custom token provided. The SystemVssConnection\'s AccessToken shall be used.');
-            systemAccessToken = tl.getEndpointAuthorizationParameter("SystemVssConnection", "AccessToken", false);
-        }
-        dockerRunner.arg(['-e', `SYSTEM_ACCESSTOKEN=${systemAccessToken}`]);
-
         // Set the github token, if one is provided
         const githubEndpointId = tl.getInput('gitHubConnection');
         if (githubEndpointId)
@@ -109,39 +81,67 @@ async function run() {
             dockerRunner.arg(['-e', `GITHUB_ACCESS_TOKEN=${githubAccessToken}`]);
         }
 
+        // Set the access token for Azure DevOps Repos.
+        // If the user has not provided one, we use the one from the SystemVssConnection
+        let systemAccessToken: string = tl.getInput('azureDevOpsAccessToken');
+        if (!systemAccessToken)
+        {
+            tl.debug('No custom token provided. The SystemVssConnection\'s AccessToken shall be used.');
+            systemAccessToken = tl.getEndpointAuthorizationParameter("SystemVssConnection", "AccessToken", false);
+        }
+        dockerRunner.arg(['-e', `AZURE_ACCESS_TOKEN=${systemAccessToken}`]);
+
+        // Set the organization
+        let organization: string = extractOrganization(organizationUrl);
+        dockerRunner.arg(['-e', `AZURE_ORGANIZATION=${organization}`]);
+
+        // Set the project
+        let project: string = tl.getVariable('System.TeamProject');
+        project = encodeURI(project); // encode special characters like spaces
+        dockerRunner.arg(['-e', `AZURE_PROJECT=${project}`]);
+
+        // Set the repository
+        let repository: string = tl.getVariable('Build.Repository.Name');
+        repository = encodeURI(repository); // encode special characters like spaces
+        dockerRunner.arg(['-e', `AZURE_REPOSITORY=${repository}`]);
+
+        // Set the package manager
+        let packageManager: string = tl.getInput('packageManager', true);
+        dockerRunner.arg(['-e', `DEPENDABOT_PACKAGE_MANAGER=${packageManager}`]);
+
         // Set the directory
         let directory: string = tl.getInput('directory', false);
         if (directory)
         {
-            dockerRunner.arg(['-e', `DIRECTORY=${directory}`]);
+            dockerRunner.arg(['-e', `DEPENDABOT_DIRECTORY=${directory}`]);
         }
 
         // Set the target branch
         let targetBranch: string = tl.getInput('targetBranch', false);
         if (targetBranch)
         {
-            dockerRunner.arg(['-e', `TARGET_BRANCH=${targetBranch}`]);
-        }
-
-        // Set the open pull requests limit
-        let openPullRequestsLimit = tl.getInput('openPullRequestsLimit', true);
-        if (openPullRequestsLimit)
-        {
-            dockerRunner.arg(['-e', `OPEN_PULL_REQUESTS_LIMIT=${openPullRequestsLimit}`]);
+            dockerRunner.arg(['-e', `DEPENDABOT_TARGET_BRANCH=${targetBranch}`]);
         }
 
         // Set the versioning strategy
         let versioningStrategy = tl.getInput('versioningStrategy', true);
         if (versioningStrategy)
         {
-            dockerRunner.arg(['-e', `VERSIONING_STRATEGY=${versioningStrategy}`]);
+            dockerRunner.arg(['-e', `DEPENDABOT_VERSIONING_STRATEGY=${versioningStrategy}`]);
+        }
+
+        // Set the open pull requests limit
+        let openPullRequestsLimit = tl.getInput('openPullRequestsLimit', true);
+        if (openPullRequestsLimit)
+        {
+            dockerRunner.arg(['-e', `DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT=${openPullRequestsLimit}`]);
         }
 
         // Set the extra credentials
         let extraCredentials: string = tl.getVariable('DEPENDABOT_EXTRA_CREDENTIALS');
         if (extraCredentials)
         {
-            dockerRunner.arg(['-e', `EXTRA_CREDENTIALS=${extraCredentials}`]);
+            dockerRunner.arg(['-e', `DEPENDABOT_EXTRA_CREDENTIALS=${extraCredentials}`]);
         }
 
         // Allow overriding of the docker image tag globally
