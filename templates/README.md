@@ -51,8 +51,8 @@ spec:
                 value: 'master'
               - name: AZURE_HOSTNAME
                 value: 'dev.azure.com'
-              - name: AZURE_HOSTNAME_PACKAGING
-                value: 'pkgs.dev.azure.com'
+              - name: EXTRA_CREDENTIALS
+                value: '[{\"type\":\"npm_registry\",\"token\":\"<redacted>\",\"registry\":\"npm.fontawesome.com\"}]'
               - name: OPEN_PULL_REQUESTS_LIMIT
                 value: '10'
           restartPolicy: OnFailure

@@ -75,17 +75,6 @@
             "helpMarkDown": "Specify the name of the GitHub service connection to use to connect to the GitHub repositories. The connection must be based on a GitHub user's OAuth or a GitHub personal access token. Learn more about service connections [here](https://aka.ms/AA3am5s)."
         },
         {
-            "name": "feedName",
-            "type": "pickList",
-            "label": "Private Feed",
-            "defaultValue": "",
-            "helpMarkDown": "The name of the private feed within the Azure DevOps organization to use when resolving updates for private packages/dependencies. Project scoped feeds are not supported.",
-            "required": false,
-            "properties": {
-                "EditableOptions": "True"
-            }
-        },
-        {
             "name": "targetBranch",
             "type": "string",
             "groupName": "advanced",
@@ -102,14 +91,6 @@
             "helpMarkDown": "The Personal Access Token for accessing Azure DevOps repositories. Supply a value here to avoid using permissions for the Build Service either because you cannot change its permissions or because you prefer that the Pull Requests be done by a different user."
         },
         {
-            "name": "packagingHostname",
-            "type": "string",
-            "groupName": "advanced",
-            "label": "Host name for private feeds.",
-            "required": false,
-            "helpMarkDown": "The hostname used for creating private feed urls. When not provided, it is inferred from the current environment. Examples: `pkgs.dev.azure.com`, `constoso.pkgs.visualstudio.com`"
-        },
-        {
             "name": "openPullRequestsLimit",
             "type": "int",
             "label": "Limit number of open pull requests for version updates.",
@@ -119,13 +100,6 @@
         }
     ],
     "dataSourceBindings": [
-        {
-            "target": "feedName",
-            "endpointId": "tfs:feed",
-            "endpointUrl": "{{endpoint.url}}/_apis/packaging/feeds",
-            "resultSelector": "jsonpath:$.value[*]",
-            "resultTemplate": "{ \"Value\" : \"{{{name}}}\", \"DisplayValue\" : \"{{{name}}}\" }"
-        }
     ],
     "execution": {
         "Node10": {

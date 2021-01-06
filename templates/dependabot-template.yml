@@ -43,8 +43,8 @@ spec:
                 value: '{{TARGET_BRANCH}}'
               - name: AZURE_HOSTNAME
                 value: '{{AZURE_HOSTNAME}}'
-              - name: AZURE_HOSTNAME_PACKAGING
-                value: '{{AZURE_HOSTNAME_PACKAGING}}'
+              - name: EXTRA_CREDENTIALS
+                value: '[{\"type\":\"npm_registry\",\"token\":\"<redacted>\",\"registry\":\"npm.fontawesome.com\"}]'
               - name: OPEN_PULL_REQUESTS_LIMIT
                 value: '{{OPEN_PULL_REQUESTS_LIMIT}}'
           restartPolicy: OnFailure

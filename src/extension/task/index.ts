@@ -109,13 +109,6 @@ async function run() {
             dockerRunner.arg(['-e', `GITHUB_ACCESS_TOKEN=${githubAccessToken}`]);
         }
 
-        // Set the name of the private feed
-        let privateFeedName: string = tl.getInput('feedName', false);
-        if (privateFeedName)
-        {
-            dockerRunner.arg(['-e', `PRIVATE_FEED_NAME=${privateFeedName}`]);
-        }
-
         // Set the directory
         let directory: string = tl.getInput('directory', false);
         if (directory)
@@ -130,18 +123,18 @@ async function run() {
             dockerRunner.arg(['-e', `TARGET_BRANCH=${targetBranch}`]);
         }
 
-        // Set the hostname for packaging
-        let packagingHostname = tl.getInput('packagingHostname');
-        if (packagingHostname)
-        {
-            dockerRunner.arg(['-e', `AZURE_HOSTNAME_PACKAGING=${packagingHostname}`]);
-        }
-
         // Set the open pull requests limit
         let openPullRequestsLimit = tl.getInput('openPullRequestsLimit', true);
         if (openPullRequestsLimit)
         {
             dockerRunner.arg(['-e', `OPEN_PULL_REQUESTS_LIMIT=${openPullRequestsLimit}`]);
+        }
+
+        // Set the extra credentials
+        let extraCredentials: string = tl.getVariable('DEPENDABOT_EXTRA_CREDENTIALS');
+        if (extraCredentials)
+        {
+            dockerRunner.arg(['-e', `EXTRA_CREDENTIALS=${extraCredentials}`]);
         }
 
         // Allow overriding of the docker image tag globally
