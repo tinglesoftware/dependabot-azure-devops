@@ -23,7 +23,7 @@ In this repository you'll find:
 The hosted version for Azure DevOps would work almost similar to the native version of dependabot on GitHub.
 It would support:
 
-1. Pulling configuration from a configuration file located at `.azuredevops/dependabot.yml`. The options would be the same as [the official .github/dependabot.yml](https://help.github.com/github/administering-a-repository/configuration-options-for-dependency-updates)
+1. Pulling configuration from a file located at `.azuredevops/dependabot.yml`. The options would be the same as [the official .github/dependabot.yml](https://help.github.com/github/administering-a-repository/configuration-options-for-dependency-updates)
 2. Adding/updating the file, wold immediately trigger a run.
 3. Viewing the most recent runs for each repository, project and organization configured.
 4. Hosted on Kubernetes is easier, but using build agents, would be an option to explore albeit limited.

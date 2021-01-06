@@ -1,3 +1,4 @@
+require "json"
 require "dependabot/file_fetchers"
 require "dependabot/file_parsers"
 require "dependabot/update_checkers"
@@ -42,20 +43,11 @@ elsif package_manager == "pipenv" || package_manager == "pip-compile" || package
   package_manager = "pip"
 end
 
-##################################
-# Setup the hostnames to be used #
-##################################
+#################################
+# Setup the hostname to be used #
+#################################
 azure_hostname = ENV["AZURE_HOSTNAME"] || "dev.azure.com"
-azure_hostname_packaging = ENV["AZURE_HOSTNAME_PACKAGING"]
-if !azure_hostname_packaging
-  if azure_hostname.end_with?(".visualstudio.com")
-    azure_hostname_packaging = "#{organization}.pkgs.visualstudio.com"
-  elsif azure_hostname == "dev.azure.com"
-    azure_hostname_packaging = "pkgs.dev.azure.com/#{organization}"
-  end
-end
-
-puts "Using '#{azure_hostname}' as hostname and '#{azure_hostname_packaging}' prefix for packaging"
+puts "Using '#{azure_hostname}' as hostname"
 
 #####################################
 # Setup credentials for source code #
@@ -81,50 +73,18 @@ if ENV["GITHUB_ACCESS_TOKEN"]
   }
 end
 
-#####################################################################
-# Setup credentials for private feeds, repositories, and registries #
-#####################################################################
-private_feed_name = ENV["PRIVATE_FEED_NAME"]
-if private_feed_name
-
-  # Ensure we have a hostname for packaging
-  if !azure_hostname_packaging
-    raise "Unable to infer the packaging host name from '#{azure_hostname}'."\
-          "\nPlease provide one using 'AZURE_HOSTNAME_PACKAGING' variable"\
-          " or remove the 'PRIVATE_FEED_NAME' variable."
-  end
-
-  # Add the credentials depending on the package manager
+###########################
+# Setup extra credentials #
+###########################
+json_credentials = ENV['EXTRA_CREDENTIALS'] || ""
+unless json_credentials.to_s.strip.empty?
+  json_credentials = JSON.parse(json_credentials)
+  credentials.push(*json_credentials)
+  # Adding custom private feed removes the public onces so we have to create it
   if package_manager == "nuget"
-    # Adding custom private feed removes the public onces so we have to create it
     credentials << {
       "type" => "nuget_feed",
       "url" => "https://api.nuget.org/v3/index.json",
-    }
-
-    url = "https://#{azure_hostname_packaging}/_packaging/#{private_feed_name}/nuget/v3/index.json"
-    puts "Adding private NuGet feed '#{url}'"
-    credentials << {
-      "type" => "nuget_feed",
-      "url" => url,
-      "token" => ":#{system_access_token}", # do not forget the colon
-    }
-  elsif package_manager == "gradle" || package_manager == "maven"
-    url = "https://#{azure_hostname_packaging}/_packaging/#{private_feed_name}/maven/v1"
-    puts "Adding private Maven repository '#{url}'"
-    credentials << {
-      "type" => "maven_repository",
-      "url" => url,
-      "username" => "#{organization}",
-      "password" => "#{system_access_token}"
-    }
-  elsif package_manager == "npm_and_yarn"
-    url = "#{azure_hostname_packaging}/_packaging/#{private_feed_name}/npm/registry/"
-    puts "Adding private npm registry '#{url}'"
-    credentials << {
-      "type" => "npm_registry",
-      "registry" => url,
-      "token" => "#{private_feed_name}:#{system_access_token}"
     }
   end
 end
