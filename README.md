@@ -39,7 +39,6 @@ In the body include:
 4. Number of updates in one configuration file (approximate is enough)
 5. Average size of a repository
 
-
 ### Issues &amp; Comments
 
 Please leave all comments, bugs, requests, and issues on the Issues page. We'll respond to your request ASAP!

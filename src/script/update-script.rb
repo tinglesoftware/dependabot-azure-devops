@@ -36,12 +36,19 @@ branch = ENV["TARGET_BRANCH"] || nil
 # - terraform
 package_manager = ENV["PACKAGE_MANAGER"] || "bundler"
 
-# Update older and common package managers to new and known ones
-if package_manager == "npm" || package_manager == "yarn"
-  package_manager = "npm_and_yarn"
-elsif package_manager == "pipenv" || package_manager == "pip-compile" || package_manager == "poetry"
-  package_manager = "pip"
-end
+# GitHub native implementation modifies some of the names in the config file
+# https://docs.github.com/en/github/administering-a-repository/configuration-options-for-dependency-updates#package-ecosystem
+PACKAGE_ECOSYSTEM_MAPPING = { # [Hash<String, String>]
+  "npm" => "npm_and_yarn",
+  "yarn" => "npm_and_yarn",
+  "pipenv" => "pip",
+  "pip-compile" => "pip",
+  "poetry" => "pip",
+  "gomod" => "go_modules",
+  "gitsubmodule" => "submodules",
+  "mix" => "hex"
+}.freeze
+package_manager = PACKAGE_ECOSYSTEM_MAPPING.fetch(package_manager, package_manager)
 
 #################################
 # Setup the hostname to be used #
