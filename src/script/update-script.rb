@@ -7,16 +7,16 @@ require "dependabot/pull_request_creator"
 require "dependabot/omnibus"
 
 # Full name of the repo you want to create pull requests for.
-organization = ENV["ORGANIZATION"]
-project = ENV["PROJECT"]
-repository = ENV["REPOSITORY"]
+organization = ENV["AZURE_ORGANIZATION"]
+project = ENV["AZURE_PROJECT"]
+repository = ENV["AZURE_REPOSITORY"]
 repo_name = "#{organization}/#{project}/_git/#{repository}"
 
 # Directory where the base dependency files are.
-directory = ENV["DIRECTORY"] || "/"
+directory = ENV["DEPENDABOT_DIRECTORY"] || "/"
 
 # Branch against which to create PRs
-branch = ENV["TARGET_BRANCH"] || nil
+branch = ENV["DEPENDABOT_TARGET_BRANCH"] || nil
 
 # Name of the package manager you'd like to do the update for. Options are:
 # - bundler
@@ -34,7 +34,7 @@ branch = ENV["TARGET_BRANCH"] || nil
 # - submodules
 # - docker
 # - terraform
-package_manager = ENV["PACKAGE_MANAGER"] || "bundler"
+package_manager = ENV["DEPENDABOT_PACKAGE_MANAGER"] || "bundler"
 
 # GitHub native implementation modifies some of the names in the config file
 # https://docs.github.com/en/github/administering-a-repository/configuration-options-for-dependency-updates#package-ecosystem
@@ -53,7 +53,7 @@ package_manager = PACKAGE_ECOSYSTEM_MAPPING.fetch(package_manager, package_manag
 ##########################################################
 # Setup the versioning strategy (a.k.a. update strategy) #
 ##########################################################
-versioning_strategy = ENV['VERSIONING_STRATEGY'] || "auto"
+versioning_strategy = ENV["DEPENDABOT_VERSIONING_STRATEGY"] || "auto"
 # GitHub native implementation modifies some of the names in the config file
 VERSIONING_STRATEGIES = { # [Hash<String, Symbol>]
   "auto" => :auto,
@@ -73,12 +73,11 @@ puts "Using '#{azure_hostname}' as hostname"
 #####################################
 # Setup credentials for source code #
 #####################################
-system_access_token = ENV["SYSTEM_ACCESSTOKEN"]
 credentials = [{
   "type" => "git_source",
   "host" => azure_hostname,
   "username" => "x-access-token",
-  "password" => system_access_token
+  "password" => ENV["AZURE_ACCESS_TOKEN"]
 }]
 
 ########################################################
@@ -97,7 +96,7 @@ end
 ###########################
 # Setup extra credentials #
 ###########################
-json_credentials = ENV['EXTRA_CREDENTIALS'] || ""
+json_credentials = ENV["DEPENDABOT_EXTRA_CREDENTIALS"] || ""
 unless json_credentials.to_s.strip.empty?
   json_credentials = JSON.parse(json_credentials)
   credentials.push(*json_credentials)
@@ -145,7 +144,7 @@ parser = Dependabot::FileParsers.for_package_manager(package_manager).new(
 
 dependencies = parser.parse
 
-pull_requests_limit = ENV["OPEN_PULL_REQUESTS_LIMIT"].to_i || 5
+pull_requests_limit = ENV["DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT"].to_i || 5
 pull_requests_count = 0
 
 dependencies.select(&:top_level?).each do |dep|
