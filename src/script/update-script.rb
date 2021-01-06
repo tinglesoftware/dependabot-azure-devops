@@ -50,6 +50,20 @@ PACKAGE_ECOSYSTEM_MAPPING = { # [Hash<String, String>]
 }.freeze
 package_manager = PACKAGE_ECOSYSTEM_MAPPING.fetch(package_manager, package_manager)
 
+##########################################################
+# Setup the versioning strategy (a.k.a. update strategy) #
+##########################################################
+versioning_strategy = ENV['VERSIONING_STRATEGY'] || "auto"
+# GitHub native implementation modifies some of the names in the config file
+VERSIONING_STRATEGIES = { # [Hash<String, Symbol>]
+  "auto" => :auto,
+  "lockfile-only" => :lockfile_only,
+  "widen" => :widen_ranges,
+  "increase" => :bump_versions,
+  "increase-if-necessary" => :bump_versions_if_necessary
+}.freeze
+update_strategy = VERSIONING_STRATEGIES.fetch(versioning_strategy, versioning_strategy)
+
 #################################
 # Setup the hostname to be used #
 #################################
@@ -110,6 +124,7 @@ source = Dependabot::Source.new(
 ##############################
 puts "Fetching #{package_manager} dependency files for #{repo_name}"
 puts "Targeting '#{branch || 'default'}' branch under '#{directory}' directory"
+puts "Using '#{update_strategy}' versioning strategy"
 fetcher = Dependabot::FileFetchers.for_package_manager(package_manager).new(
   source: source,
   credentials: credentials,
@@ -143,6 +158,7 @@ dependencies.select(&:top_level?).each do |dep|
     dependency: dep,
     dependency_files: files,
     credentials: credentials,
+    requirements_update_strategy: update_strategy,
   )
 
   if checker.up_to_date?

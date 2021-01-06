@@ -130,6 +130,13 @@ async function run() {
             dockerRunner.arg(['-e', `OPEN_PULL_REQUESTS_LIMIT=${openPullRequestsLimit}`]);
         }
 
+        // Set the versioning strategy
+        let versioningStrategy = tl.getInput('versioningStrategy', true);
+        if (versioningStrategy)
+        {
+            dockerRunner.arg(['-e', `VERSIONING_STRATEGY=${versioningStrategy}`]);
+        }
+
         // Set the extra credentials
         let extraCredentials: string = tl.getVariable('DEPENDABOT_EXTRA_CREDENTIALS');
         if (extraCredentials)

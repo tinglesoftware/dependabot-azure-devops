@@ -41,6 +41,8 @@ spec:
                 value: '{{DIRECTORY_PATH}}'
               - name: TARGET_BRANCH
                 value: '{{TARGET_BRANCH}}'
+              - name: VERSIONING_STRATEGY
+                value: '{{VERSIONING_STRATEGY}}'
               - name: AZURE_HOSTNAME
                 value: '{{AZURE_HOSTNAME}}'
               - name: EXTRA_CREDENTIALS

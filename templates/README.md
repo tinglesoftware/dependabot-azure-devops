@@ -49,6 +49,8 @@ spec:
                 value: '/'
               - name: TARGET_BRANCH
                 value: 'master'
+              - name: VERSIONING_STRATEGY
+                value: '{{VERSIONING_STRATEGY}}'
               - name: AZURE_HOSTNAME
                 value: 'dev.azure.com'
               - name: EXTRA_CREDENTIALS

@@ -97,6 +97,22 @@
             "required": false,
             "defaultValue": "5",
             "helpMarkDown": "The maximum number of open pull requests to have at any one time. Defaults to 5."
+        },
+        {
+            "name": "versioningStrategy",
+            "type": "pickList",
+            "groupName": "advanced",
+            "label": "Versioning Strategy",
+            "defaultValue": "auto",
+            "required": true,
+            "helpMarkDown": "The versioning strategy to use. Learn more [here](https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/configuration-options-for-dependency-updates#versioning-strategy).",
+            "options": {
+                "auto": "auto",
+                "lockfile-only": "lockfile-only",
+                "widen": "widen",
+                "increase": "increase",
+                "increase-if-necessary": "increase-if-necessary"
+            }
         }
     ],
     "dataSourceBindings": [
