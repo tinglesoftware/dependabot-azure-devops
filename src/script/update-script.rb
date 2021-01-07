@@ -110,8 +110,14 @@ unless json_credentials.to_s.strip.empty?
 end
 
 #####################################
-# Setup Ignore conditions #
+# Setup Allow and Ignore conditions #
 #####################################
+allow_options = []
+json_allow = ENV["DEPENDABOT_ALLOW"] || ""
+unless json_allow.to_s.strip.empty?
+  json_allow = JSON.parse(json_allow)
+  allow_options.push(*json_allow)
+end
 ignore_options = []
 json_ignore = ENV["DEPENDABOT_IGNORE"] || ""
 unless json_ignore.to_s.strip.empty?
@@ -157,6 +163,21 @@ dependencies = parser.parse
 pull_requests_limit = ENV["DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT"].to_i || 5
 pull_requests_count = 0
 
+# Get allow versions for a dependency
+TYPE_HANDLERS = { # [Hash<String, Proc>] handlers for type allow rules
+  "all" => proc { true },
+  "direct" => proc { |dep| dep.top_level? },
+  "indirect" => proc { |dep| !dep.top_level? },
+  "production" => proc { |dep| dep.production? },
+  "development" => proc { |dep| !dep.production? },
+  "security" => proc { |_, checker| checker.vulnerable? }
+}.freeze
+def allow_conditions_for(options, dependency)
+  # Find where the name matches then get the type e.g. production, direct, etc
+  found = options.find { |al| dependency.name.match?(al['name']) }
+  found ? found['type'] : nil
+end
+
 # Get ignore versions for a dependency
 def ignore_conditions_for(options, dependency)
   # Find where the name matches then get an array of version requirements, e.g. ["4.x", "5.x"]
@@ -196,6 +217,14 @@ dependencies.select(&:top_level?).each do |dep|
 
   puts "Requirements to unlock #{requirements_to_unlock}"
   next if requirements_to_unlock == :update_not_possible
+
+  # Check if the dependency is allowed
+  allow_type = allow_conditions_for(allow_options, dep)
+  allowed = checker.vulnerable? || allow_options.empty? || (allow_type && TYPE_HANDLERS[allow_type].call(dep, checker))
+  if !allowed
+    puts "Updating #{dep.name} is not allowed"
+    next
+  end
 
   updated_deps = checker.updated_dependencies(
     requirements_to_unlock: requirements_to_unlock
