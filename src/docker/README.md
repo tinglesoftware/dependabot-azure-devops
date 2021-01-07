@@ -3,7 +3,7 @@
 First, you need to pull the image locally to your machine:
 
 ```bash
-docker pull tingle/dependabot-azure-devops:0.1.1
+docker pull tingle/dependabot-azure-devops:0.2.0
 ```
 
 Next create and run a container from the image:
@@ -24,7 +24,7 @@ docker run --rm -t \
            -e DEPENDABOT_EXTRA_CREDENTIALS=<your-extra-credentials> \
            -e DEPENDABOT_ALLOW=<your-allowed-packages> \
            -e DEPENDABOT_IGNORE=<your-ignore-packages> \
-           tingle/dependabot-azure-devops:0.1.1
+           tingle/dependabot-azure-devops:0.2.0
 ```
 
 An example:
@@ -45,7 +45,7 @@ docker run --rm -t \
            -e DEPENDABOT_EXTRA_CREDENTIALS='[{\"type\":\"npm_registry\",\"token\":\"<redacted>\",\"registry\":\"npm.fontawesome.com\"}]' \
            -e DEPENDABOT_ALLOW='[{\"name\":"django*",\"type\":\"direct\"}]' \
            -e DEPENDABOT_IGNORE='[{\"name\":\"express\",\"versions\":[\"4.x\",\"5.x\"]}]' \
-           tingle/dependabot-azure-devops:0.1.1
+           tingle/dependabot-azure-devops:0.2.0
 ```
 
 ## Environment Variables

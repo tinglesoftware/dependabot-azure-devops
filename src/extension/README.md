@@ -43,7 +43,7 @@ steps:
     versioningStrategy: 'auto'
 ```
 
-Since this task makes use of a docker image, it may take time to install the docker image. The user can choose to speed this up by using [Caching for Docker](https://docs.microsoft.com/en-us/azure/devops/pipelines/release/caching?view=azure-devops#docker-images) in Azure Pipelines. See the [source file](./src/extension/task/index.ts) for the exact image tag, e.g. `tingle/dependabot-azure-devops:0.1.1`. Subsequent dependabot tasks in a job will be faster after the first one pulls the image for the first time.
+Since this task makes use of a docker image, it may take time to install the docker image. The user can choose to speed this up by using [Caching for Docker](https://docs.microsoft.com/en-us/azure/devops/pipelines/release/caching?view=azure-devops#docker-images) in Azure Pipelines. See the [source file](./src/extension/task/index.ts) for the exact image tag, e.g. `tingle/dependabot-azure-devops:0.2.0`. Subsequent dependabot tasks in a job will be faster after the first one pulls the image for the first time.
 
 ## Task Parameters
 
@@ -75,7 +75,7 @@ schedules:
 
 # variables declared below can be put in one or more Variable Groups for sharing across pipelines
 variables:
-  DEPENDABOT_DOCKER_IMAGE_TAG: '0.1.3' # could also be 'latest'
+  DEPENDABOT_DOCKER_IMAGE_TAG: '0.2.0' # could also be 'latest'
   DEPENDABOT_EXTRA_CREDENTIALS: '[{\"type\":\"npm_registry\",\"token\":\"<redacted>\",\"registry\":\"npm.fontawesome.com\"}]' # put the credentials for private registries and feeds
   DEPENDABOT_ALLOW: '[{\"name\":"django*",\"type\":\"direct\"}]' # packages allowed to be updated
   DEPENDABOT_IGNORE: '[{\"name\":\"express\",\"versions\":[\"4.x\",\"5.x\"]}]' # packages to be ignored

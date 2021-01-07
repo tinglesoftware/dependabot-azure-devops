@@ -29,15 +29,7 @@ It would support:
 4. Hosted on Kubernetes is easier, but using build agents, would be an option to explore albeit limited.
 5. Extra credentials for things like private registries, feeds and package repositories.
 
-Currently, we have an implementation that works internally but is still a work in progress.
-If you would like to join the private test send a request via support@tingle.software with the subject `Dependabot for Azure DevOps Hosted (Private Test)`.
-In the body include:
-
-1. Details of your organization (name should be enough),
-2. Number of projects to target,
-3. Number or repositories to target,
-4. Number of updates in one configuration file (approximate is enough)
-5. Average size of a repository
+Currently, we have an implementation that works internally but is still a work in progress. If you would like to join the private test send a request via support@tingle.software.
 
 ### Issues &amp; Comments
 
