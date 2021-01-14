@@ -53,7 +53,6 @@ package_manager = PACKAGE_ECOSYSTEM_MAPPING.fetch(package_manager, package_manag
 ##########################################################
 # Setup the versioning strategy (a.k.a. update strategy) #
 ##########################################################
-versioning_strategy = ENV["DEPENDABOT_VERSIONING_STRATEGY"] || "auto"
 # GitHub native implementation modifies some of the names in the config file
 VERSIONING_STRATEGIES = { # [Hash<String, Symbol>]
   "auto" => :auto,
@@ -62,7 +61,15 @@ VERSIONING_STRATEGIES = { # [Hash<String, Symbol>]
   "increase" => :bump_versions,
   "increase-if-necessary" => :bump_versions_if_necessary
 }.freeze
+versioning_strategy = ENV["DEPENDABOT_VERSIONING_STRATEGY"] || "auto"
 update_strategy = VERSIONING_STRATEGIES.fetch(versioning_strategy, versioning_strategy)
+# For npm_and_yarn, we must correct the strategy to one allowed
+# https://github.com/dependabot/dependabot-core/blob/5ec858331d11253a30aa15fab25ae22fbdecdee0/npm_and_yarn/lib/dependabot/npm_and_yarn/update_checker/requirements_updater.rb#L18-L19
+if package_manager == "npm_and_yarn"
+  if update_strategy == :auto || update_strategy == :lockfile_only
+    update_strategy = :bump_versions
+  end
+end
 
 #################################
 # Setup the hostname to be used #
