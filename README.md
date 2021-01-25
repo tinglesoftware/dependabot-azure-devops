@@ -2,6 +2,12 @@
 
 This repository contains convenience tool(s) for updating dependencies in Azure DevOps repositories using [Dependabot](https://dependabot.com).
 
+![GitHub Workflow Status](https://img.shields.io/github/workflow/status/tinglesoftware/dependabot-azure-devops/Docker?style=flat-square)
+[![Release](https://img.shields.io/github/release/tinglesoftware/dependabot-azure-devops.svg?style=flat-square)](https://github.com/tinglesoftware/dependabot-azure-devops/releases/latest)
+[![Docker Image](https://img.shields.io/docker/image-size/tingle/dependabot-azure-devops/latest?style=flat-square)](https://hub.docker.com/r/tingle/dependabot-azure-devops)
+[![Docker Pulls](https://img.shields.io/docker/pulls/tingle/dependabot-azure-devops?style=flat-square)](https://hub.docker.com/r/tingle/dependabot-azure-devops)
+[![license](https://img.shields.io/github/license/tinglesoftware/dependabot-azure-devops.svg?style=flat-square)](LICENSE)
+
 The work in this repository is based on inspired and occasionally guided by:
 
 1. Official Script support: [code](https://github.com/dependabot/dependabot-script)
