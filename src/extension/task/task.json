@@ -1,125 +1,123 @@
 {
-    "$schema": "https://raw.githubusercontent.com/Microsoft/azure-pipelines-task-lib/master/tasks.schema.json",
-    "id": "d98b873d-cf18-41eb-8ff5-234f14697896",
-    "name": "dependabot",
-    "friendlyName": "Dependabot",
-    "description": "Automatically update dependencies and vulnerabilities in your code",
-    "helpMarkDown": "For help please visit https://github.com/tinglesoftware/dependabot-azure-devops",
-    "category": "Utility",
-    "visibility": [
-        "Build",
-        "Release"
-    ],
-    "runsOn": [
-        "Agent",
-        "DeploymentGroup"
-    ],
-    "author": "Tingle Software",
-    "demands": [
-        "docker"
-    ],
-    "version": {
-        "Major": 1,
-        "Minor": 1,
-        "Patch": 0
-    },
-    "instanceNameFormat": "Dependabot",
-    "minimumAgentVersion": "2.105.0",
-    "groups": [
-        {
-            "name": "advanced",
-            "displayName": "Advanced",
-            "isExpanded": false
-        }
-    ],
-    "inputs": [
-        {
-            "name": "packageManager",
-            "type": "pickList",
-            "label": "Package Ecosystem",
-            "helpMarkDown": "The package ecosystem to check updates for. Learn more [here](https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/configuration-options-for-dependency-updates#package-ecosystem).",
-            "required": true,
-            "options": {
-                "bundler": "Bundler",
-                "cargo": "Cargo",
-                "composer": "Composer",
-                "docker": "docker",
-                "hex": "Elixir",
-                "elm": "Elm",
-                "gitsubmodule": "git submodule",
-                "github-actions": "GitHub Actions",
-                "gomod": "Go modules",
-                "gradle": "Gradle",
-                "maven": "Maven",
-                "mix": "Mix",
-                "npm": "npm",
-                "nuget": "NuGet",
-                "pip": "pip",
-                "terraform": "Terraform"
-            }
-        },
-        {
-            "name": "directory",
-            "type": "string",
-            "label": "Directory",
-            "required": false,
-            "helpMarkDown": "Set the directory from where Dependabot should check for updates. Examples: `/` for root, `/src` for src folder."
-        },
-        {
-            "name": "gitHubConnection",
-            "type": "connectedService:github:OAuth,PersonalAccessToken,InstallationToken,Token",
-            "groupName": "advanced",
-            "label": "GitHub connection (OAuth or PAT)",
-            "defaultValue": "",
-            "required": false,
-            "helpMarkDown": "Specify the name of the GitHub service connection to use to connect to the GitHub repositories. The connection must be based on a GitHub user's OAuth or a GitHub personal access token. Learn more about service connections [here](https://aka.ms/AA3am5s)."
-        },
-        {
-            "name": "targetBranch",
-            "type": "string",
-            "groupName": "advanced",
-            "label": "Target Branch",
-            "required": false,
-            "helpMarkDown": "The branch to be targeted when creating pull requests. When not specified, Dependabot will resolve the default branch of the repository. Examples: `master`, `main`, `develop`"
-        },
-        {
-            "name": "azureDevOpsAccessToken",
-            "type": "string",
-            "groupName": "advanced",
-            "label": "Azure DevOps Personal Access Token.",
-            "required": false,
-            "helpMarkDown": "The Personal Access Token for accessing Azure DevOps repositories. Supply a value here to avoid using permissions for the Build Service either because you cannot change its permissions or because you prefer that the Pull Requests be done by a different user."
-        },
-        {
-            "name": "openPullRequestsLimit",
-            "type": "int",
-            "label": "Limit number of open pull requests for version updates.",
-            "required": false,
-            "defaultValue": "5",
-            "helpMarkDown": "The maximum number of open pull requests to have at any one time. Defaults to 5."
-        },
-        {
-            "name": "versioningStrategy",
-            "type": "pickList",
-            "groupName": "advanced",
-            "label": "Versioning Strategy",
-            "defaultValue": "auto",
-            "required": true,
-            "helpMarkDown": "The versioning strategy to use. Learn more [here](https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/configuration-options-for-dependency-updates#versioning-strategy).",
-            "options": {
-                "auto": "auto",
-                "lockfile-only": "lockfile-only",
-                "widen": "widen",
-                "increase": "increase",
-                "increase-if-necessary": "increase-if-necessary"
-            }
-        }
-    ],
-    "dataSourceBindings": [
-    ],
-    "execution": {
-        "Node10": {
-            "target": "index.js"
-        }
+  "$schema": "https://raw.githubusercontent.com/Microsoft/azure-pipelines-task-lib/master/tasks.schema.json",
+  "id": "d98b873d-cf18-41eb-8ff5-234f14697896",
+  "name": "dependabot",
+  "friendlyName": "Dependabot",
+  "description": "Automatically update dependencies and vulnerabilities in your code",
+  "helpMarkDown": "For help please visit https://github.com/tinglesoftware/dependabot-azure-devops",
+  "category": "Utility",
+  "visibility": ["Build", "Release"],
+  "runsOn": ["Agent", "DeploymentGroup"],
+  "author": "Tingle Software",
+  "demands": ["docker"],
+  "version": {
+    "Major": 1,
+    "Minor": 1,
+    "Patch": 0
+  },
+  "instanceNameFormat": "Dependabot",
+  "minimumAgentVersion": "2.105.0",
+  "groups": [
+    {
+      "name": "advanced",
+      "displayName": "Advanced",
+      "isExpanded": false
     }
+  ],
+  "inputs": [
+    {
+      "name": "useConfigFile",
+      "type": "boolean",
+      "label": "Use Custom Dependabot YAML File",
+      "required": false,
+      "helpMarkDown": "With this enabled, the task will pick config values specified from the yaml file located at /.azuredevops/dependabot.yml"
+    },
+    {
+      "name": "packageManager",
+      "type": "pickList",
+      "label": "Package Ecosystem",
+      "helpMarkDown": "The package ecosystem to check updates for. Learn more [here](https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/configuration-options-for-dependency-updates#package-ecosystem).",
+      "required": true,
+      "options": {
+        "bundler": "Bundler",
+        "cargo": "Cargo",
+        "composer": "Composer",
+        "docker": "docker",
+        "hex": "Elixir",
+        "elm": "Elm",
+        "gitsubmodule": "git submodule",
+        "github-actions": "GitHub Actions",
+        "gomod": "Go modules",
+        "gradle": "Gradle",
+        "maven": "Maven",
+        "mix": "Mix",
+        "npm": "npm",
+        "nuget": "NuGet",
+        "pip": "pip",
+        "terraform": "Terraform"
+      }
+    },
+    {
+      "name": "directory",
+      "type": "string",
+      "label": "Directory",
+      "required": false,
+      "helpMarkDown": "Set the directory from where Dependabot should check for updates. Examples: `/` for root, `/src` for src folder."
+    },
+    {
+      "name": "gitHubConnection",
+      "type": "connectedService:github:OAuth,PersonalAccessToken,InstallationToken,Token",
+      "groupName": "advanced",
+      "label": "GitHub connection (OAuth or PAT)",
+      "defaultValue": "",
+      "required": false,
+      "helpMarkDown": "Specify the name of the GitHub service connection to use to connect to the GitHub repositories. The connection must be based on a GitHub user's OAuth or a GitHub personal access token. Learn more about service connections [here](https://aka.ms/AA3am5s)."
+    },
+    {
+      "name": "targetBranch",
+      "type": "string",
+      "groupName": "advanced",
+      "label": "Target Branch",
+      "required": false,
+      "helpMarkDown": "The branch to be targeted when creating pull requests. When not specified, Dependabot will resolve the default branch of the repository. Examples: `master`, `main`, `develop`"
+    },
+    {
+      "name": "azureDevOpsAccessToken",
+      "type": "string",
+      "groupName": "advanced",
+      "label": "Azure DevOps Personal Access Token.",
+      "required": false,
+      "helpMarkDown": "The Personal Access Token for accessing Azure DevOps repositories. Supply a value here to avoid using permissions for the Build Service either because you cannot change its permissions or because you prefer that the Pull Requests be done by a different user."
+    },
+    {
+      "name": "openPullRequestsLimit",
+      "type": "int",
+      "label": "Limit number of open pull requests for version updates.",
+      "required": false,
+      "defaultValue": "5",
+      "helpMarkDown": "The maximum number of open pull requests to have at any one time. Defaults to 5."
+    },
+    {
+      "name": "versioningStrategy",
+      "type": "pickList",
+      "groupName": "advanced",
+      "label": "Versioning Strategy",
+      "defaultValue": "auto",
+      "required": true,
+      "helpMarkDown": "The versioning strategy to use. Learn more [here](https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/configuration-options-for-dependency-updates#versioning-strategy).",
+      "options": {
+        "auto": "auto",
+        "lockfile-only": "lockfile-only",
+        "widen": "widen",
+        "increase": "increase",
+        "increase-if-necessary": "increase-if-necessary"
+      }
+    }
+  ],
+  "dataSourceBindings": [],
+  "execution": {
+    "Node10": {
+      "target": "index.js"
+    }
+  }
 }
