@@ -31,11 +31,6 @@ jobs:
       with:
         fetch-depth: 0 # Required for GitVersion
 
-    - name: Make Image ID
-      run: |
-        IMAGE_ID="docker.pkg.github.com/$GITHUB_REPOSITORY/$IMAGE_NAME"
-        echo "GITHUB_DOCKER_IMAGE_ID=$IMAGE_ID" >> $GITHUB_ENV
-
     - name: Install GitVersion
       uses: gittools/actions/gitversion/setup@v0.9.9
       with:
@@ -46,48 +41,32 @@ jobs:
       with:
         useConfigFile: true
 
-    # Login to GitHub packages before build so that image layer cache is available
-    - name: Log into registry (GitHub)
-      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+    - name: Log into registry (Docker Hub)
+      run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
 
     - name: Pull Docker base image & warm Docker cache
-      run: docker pull "$GITHUB_DOCKER_IMAGE_ID:latest"
+      run: docker pull "tingle/$IMAGE_NAME:latest"
 
     - name: Build image
       run: |
         docker build \
         -f src/script/Dockerfile \
-        -t "$IMAGE_NAME" \
-        --cache-from $GITHUB_DOCKER_IMAGE_ID:latest \
+        -t "tingle/$IMAGE_NAME:latest" \
+        -t "tingle/$IMAGE_NAME:$GITVERSION_FULLSEMVER" \
+        -t "tingle/$IMAGE_NAME:$GITVERSION_MAJOR.$GITVERSION_MINOR" \
+        -t "tingle/$IMAGE_NAME:$GITVERSION_MAJOR" \
+        --cache-from tingle/$IMAGE_NAME:latest \
         --build-arg BUILDKIT_INLINE_CACHE=1 \
         src/script
 
-    - name: Push image to GitHub packages
-      run: |
-        docker tag "$IMAGE_NAME" $GITHUB_DOCKER_IMAGE_ID:$GITVERSION_FULLSEMVER
-        docker push "$GITHUB_DOCKER_IMAGE_ID:$GITVERSION_FULLSEMVER"
-
-    - name: Push image to GitHub packages (latest)
+    - name: Push image to Docker Hub (latest)
       if: github.ref == 'refs/heads/main'
       run: |
-        docker tag "$IMAGE_NAME" $GITHUB_DOCKER_IMAGE_ID:latest
-        docker push "$GITHUB_DOCKER_IMAGE_ID:latest"
+        docker push "tingle/$IMAGE_NAME:latest"
 
-    - name: Log into registry (Docker Hub)
-      if: startsWith(github.ref, 'refs/tags')
-      run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
-
-    - name: Push image to Docker Hub
+    - name: Push image to Docker Hub (versioned)
       if: startsWith(github.ref, 'refs/tags')
       run: |
-        # Tag with full semver (Major.Minor.Patch)
-        docker tag "$IMAGE_NAME" "tingle/$IMAGE_NAME:$GITVERSION_FULLSEMVER"
         docker push "tingle/$IMAGE_NAME:$GITVERSION_FULLSEMVER"
-
-        # Tag with Major and Minor
-        docker tag "$IMAGE_NAME" "tingle/$IMAGE_NAME:$GITVERSION_MAJOR.$GITVERSION_MINOR"
         docker push "tingle/$IMAGE_NAME:$GITVERSION_MAJOR.$GITVERSION_MINOR"
-
-        # Tag with Major only
-        docker tag "$IMAGE_NAME" "tingle/$IMAGE_NAME:$GITVERSION_MAJOR"
         docker push "tingle/$IMAGE_NAME:$GITVERSION_MAJOR"
