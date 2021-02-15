@@ -1,4 +1,4 @@
-FROM dependabot/dependabot-core:0.131.2
+FROM dependabot/dependabot-core:0.133.2
 
 # Copy the Gemfile and Gemfile.lock
 COPY ["Gemfile", "Gemfile.lock", "./"]
