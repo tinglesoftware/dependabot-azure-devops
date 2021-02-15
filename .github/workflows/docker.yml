@@ -7,7 +7,6 @@ on:
     tags:
       - '*'
     paths:
-      - "src/docker/**"
       - "src/script/**"
       - ".github/workflows/docker.yml"
   pull_request:
@@ -15,7 +14,6 @@ on:
       # Only trigger for PRs against `main` branch.
       - main
     paths:
-      - "src/docker/**"
       - "src/script/**"
       - ".github/workflows/docker.yml"
 
@@ -58,7 +56,7 @@ jobs:
     - name: Build image
       run: |
         docker build \
-        -f src/docker/Dockerfile \
+        -f src/script/Dockerfile \
         -t "$IMAGE_NAME" \
         --cache-from $GITHUB_DOCKER_IMAGE_ID:latest \
         --build-arg BUILDKIT_INLINE_CACHE=1 \

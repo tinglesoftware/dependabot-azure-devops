@@ -19,7 +19,7 @@ The work in this repository is based on inspired and occasionally guided by:
 In this repository you'll find:
 
 1. Dependabot's [Update script](./src/script/update-script.rb) in Ruby.
-2. Dockerfile and build/image for running the script via Docker [here](./src/docker).
+2. Dockerfile and build/image for running the script via Docker [here](./src/script).
 3. Azure DevOps [Extension](https://marketplace.visualstudio.com/items?itemName=tingle-software.dependabot) and [source](./src/extension).
 4. Kubernetes CronJob [template](./templates).
 5. Hosted versions: [fully hosted](#hosted-version), self hosted (source code and instructions coming soon).
