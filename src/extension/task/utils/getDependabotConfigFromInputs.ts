@@ -16,9 +16,6 @@ export default function getDependabotConfigFromInputs() {
 
     openPullRequestLimit: parseInt(getInput("openPullRequestsLimit", true)),
 
-    allow: getVariable("DEPENDABOT_ALLOW"),
-    ignore: getVariable("DEPENDABOT_IGNORE"),
-
     targetBranch: getInput("targetBranch", false),
     versioningStrategy: getInput("versioningStrategy", true),
   };

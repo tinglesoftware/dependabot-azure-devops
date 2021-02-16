@@ -126,7 +126,11 @@ async function run() {
       dockerRunner.arg(["-e", `DEPENDABOT_EXTRA_CREDENTIALS=${extraCredentials}`]);
     }
 
-    //check if user has requested the use of dependabot YAML config file for updates
+    // Get the override allow and ignore
+    let allowOvr = tl.getVariable("DEPENDABOT_ALLOW");
+    let ignoreOvr = tl.getVariable("DEPENDABOT_IGNORE");
+
+    // Check if to use dependabot.yml or task inputs
     let useConfigFile: boolean = tl.getBoolInput("useConfigFile", false);
     var updates: IDependabotUpdate[];
 
@@ -134,10 +138,7 @@ async function run() {
     else updates = getDependabotConfigFromInputs();
 
     for (const update of updates) {
-      dockerRunner.arg([
-        "-e",
-        `DEPENDABOT_PACKAGE_MANAGER=${update.packageEcosystem}`,
-      ]);
+      dockerRunner.arg(["-e", `DEPENDABOT_PACKAGE_MANAGER=${update.packageEcosystem}`]);
 
       // Set the directory
       if (update.directory) {
@@ -146,41 +147,32 @@ async function run() {
 
       // Set the target branch
       if (update.targetBranch) {
-        dockerRunner.arg([
-          "-e",
-          `DEPENDABOT_TARGET_BRANCH=${update.targetBranch}`,
-        ]);
+        dockerRunner.arg(["-e", `DEPENDABOT_TARGET_BRANCH=${update.targetBranch}`]);
       }
 
       // Set the versioning strategy
       if (update.versioningStrategy) {
-        dockerRunner.arg([
-          "-e",
-          `DEPENDABOT_VERSIONING_STRATEGY=${update.versioningStrategy}`,
-        ]);
+        dockerRunner.arg(["-e", `DEPENDABOT_VERSIONING_STRATEGY=${update.versioningStrategy}`]);
       }
       // Set the open pull requests limit
       if (update.openPullRequestLimit) {
-        dockerRunner.arg([
-          "-e",
-          `DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT=${update.openPullRequestLimit}`,
-        ]);
+        dockerRunner.arg(["-e", `DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT=${update.openPullRequestLimit}`]);
       }
 
       // Set the dependencies to allow
-      if (update.allow) {
-        dockerRunner.arg(["-e", `DEPENDABOT_ALLOW=${update.allow}`]);
+      let allow = allowOvr || update.allow
+      if (allow) {
+        dockerRunner.arg(["-e", `DEPENDABOT_ALLOW=${allow}`]);
       }
 
       // Set the dependencies to ignore
-      if (update.ignore) {
-        dockerRunner.arg(["-e", `DEPENDABOT_IGNORE=${update.ignore}`]);
+      let ignore = ignoreOvr || update.ignore
+      if (ignore) {
+        dockerRunner.arg(["-e", `DEPENDABOT_IGNORE=${ignore}`]);
       }
 
       // Allow overriding of the docker image tag globally
-      let dockerImageTag: string = tl.getVariable(
-        "DEPENDABOT_DOCKER_IMAGE_TAG"
-      );
+      let dockerImageTag: string = tl.getVariable("DEPENDABOT_DOCKER_IMAGE_TAG");
       if (!dockerImageTag) {
         dockerImageTag = "0.2"; // will pull the latest patch for 0.2 e.g. 0.2.0
       }
