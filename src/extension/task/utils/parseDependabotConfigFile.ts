@@ -50,18 +50,27 @@ export default function parseDependabotConfigFile(): IDependabotUpdate[] {
       targetBranch: update["target-branch"],
       versioningStrategy: update["versioning-strategy"],
 
-      allow: updates["allow"] ? JSON.stringify(updates["allow"]) : undefined,
-      ignore: updates["ignore"] ? JSON.stringify(updates["ignore"]) : undefined,
+      // Convert to JSON and shorten the names as required by the script
+      allow: updates["allow"]
+                ? JSON.stringify(updates["allow"]).replace("dependency-name", "name")
+                                                  .replace("dependency-type", "type")
+                : undefined,
+      ignore: updates["ignore"]
+                ? JSON.stringify(updates["ignore"]).replace("dependency-name", "name")
+                : undefined,
     };
 
-    if (!dependabotUpdate.packageEcosystem)
+    if (!dependabotUpdate.packageEcosystem) {
       throw new Error(
         "The value 'package-ecosystem' in dependency update config is missing"
       );
-    if (!dependabotUpdate.directory)
+    }
+
+    if (!dependabotUpdate.directory) {
       throw new Error(
         "The value 'directory' in dependency update config is missing"
       );
+    }
 
     updates.push(dependabotUpdate);
   });
