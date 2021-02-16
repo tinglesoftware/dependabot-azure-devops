@@ -29,14 +29,16 @@
       "name": "useConfigFile",
       "type": "boolean",
       "label": "Use Custom Dependabot YAML File",
+      "defaultValue": "false",
       "required": false,
-      "helpMarkDown": "With this enabled, the task will pick config values specified from the yaml file located at /.azuredevops/dependabot.yml"
+      "helpMarkDown": "Determines if the task will pick config values specified from the yaml file located at `.azuredevops/dependabot.yml`"
     },
     {
       "name": "packageManager",
       "type": "pickList",
       "label": "Package Ecosystem",
       "helpMarkDown": "The package ecosystem to check updates for. Learn more [here](https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/configuration-options-for-dependency-updates#package-ecosystem).",
+      "defaultValue": "nuget",
       "required": true,
       "options": {
         "bundler": "Bundler",
@@ -65,29 +67,11 @@
       "helpMarkDown": "Set the directory from where Dependabot should check for updates. Examples: `/` for root, `/src` for src folder."
     },
     {
-      "name": "gitHubConnection",
-      "type": "connectedService:github:OAuth,PersonalAccessToken,InstallationToken,Token",
-      "groupName": "advanced",
-      "label": "GitHub connection (OAuth or PAT)",
-      "defaultValue": "",
-      "required": false,
-      "helpMarkDown": "Specify the name of the GitHub service connection to use to connect to the GitHub repositories. The connection must be based on a GitHub user's OAuth or a GitHub personal access token. Learn more about service connections [here](https://aka.ms/AA3am5s)."
-    },
-    {
       "name": "targetBranch",
       "type": "string",
-      "groupName": "advanced",
       "label": "Target Branch",
       "required": false,
       "helpMarkDown": "The branch to be targeted when creating pull requests. When not specified, Dependabot will resolve the default branch of the repository. Examples: `master`, `main`, `develop`"
-    },
-    {
-      "name": "azureDevOpsAccessToken",
-      "type": "string",
-      "groupName": "advanced",
-      "label": "Azure DevOps Personal Access Token.",
-      "required": false,
-      "helpMarkDown": "The Personal Access Token for accessing Azure DevOps repositories. Supply a value here to avoid using permissions for the Build Service either because you cannot change its permissions or because you prefer that the Pull Requests be done by a different user."
     },
     {
       "name": "openPullRequestsLimit",
@@ -112,6 +96,23 @@
         "increase": "increase",
         "increase-if-necessary": "increase-if-necessary"
       }
+    },
+    {
+      "name": "gitHubConnection",
+      "type": "connectedService:github:OAuth,PersonalAccessToken,InstallationToken,Token",
+      "groupName": "advanced",
+      "label": "GitHub connection (OAuth or PAT)",
+      "defaultValue": "",
+      "required": false,
+      "helpMarkDown": "Specify the name of the GitHub service connection to use to connect to the GitHub repositories. The connection must be based on a GitHub user's OAuth or a GitHub personal access token. Learn more about service connections [here](https://aka.ms/AA3am5s)."
+    },
+    {
+      "name": "azureDevOpsAccessToken",
+      "type": "string",
+      "groupName": "advanced",
+      "label": "Azure DevOps Personal Access Token.",
+      "required": false,
+      "helpMarkDown": "The Personal Access Token for accessing Azure DevOps repositories. Supply a value here to avoid using permissions for the Build Service either because you cannot change its permissions or because you prefer that the Pull Requests be done by a different user."
     }
   ],
   "dataSourceBindings": [],
