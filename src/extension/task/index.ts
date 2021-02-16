@@ -1,7 +1,7 @@
 import tl = require("azure-pipelines-task-lib/task");
 import tr = require("azure-pipelines-task-lib/toolrunner");
 import { IDependabotUpdate } from "./models/IDependabotUpdate";
-import getDependabotConfigFromInputs from "./utils/getDependabotConfigFromInputs";
+import getConfigFromInputs from "./utils/getConfigFromInputs";
 import parseConfigFile from "./utils/parseConfigFile";
 
 function getGithubEndPointToken(githubEndpoint: string): string {
@@ -135,7 +135,7 @@ async function run() {
     var updates: IDependabotUpdate[];
 
     if (useConfigFile) updates = parseConfigFile();
-    else updates = getDependabotConfigFromInputs();
+    else updates = getConfigFromInputs();
 
     for (const update of updates) {
       dockerRunner.arg(["-e", `DEPENDABOT_PACKAGE_MANAGER=${update.packageEcosystem}`]);

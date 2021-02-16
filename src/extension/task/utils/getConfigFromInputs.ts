@@ -9,7 +9,7 @@ import { IDependabotUpdate } from "../models/IDependabotUpdate";
  *
  * @returns {IDependabotUpdate[]} updates - array of dependency update configurations
  */
-export default function getDependabotConfigFromInputs() {
+export default function getConfigFromInputs() {
   var dependabotUpdate: IDependabotUpdate = {
     packageEcosystem: getInput("packageManager", true),
     directory: getInput("directory", false),
