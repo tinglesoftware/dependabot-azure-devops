@@ -46,7 +46,6 @@ export default function parseDependabotConfigFile(): IDependabotUpdate[] {
       directory: update["directory"],
 
       openPullRequestLimit: update["open-pull-requests-limit"] || 5,
-      devopsExtraCredentials: update["azure-dev-ops"],
 
       targetBranch: update["target-branch"],
       versioningStrategy: update["versioning-strategy"],

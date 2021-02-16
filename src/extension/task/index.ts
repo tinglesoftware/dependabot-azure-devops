@@ -120,6 +120,12 @@ async function run() {
     repository = encodeURI(repository); // encode special characters like spaces
     dockerRunner.arg(["-e", `AZURE_REPOSITORY=${repository}`]);
 
+    // Set the extra credentials
+    let extraCredentials = tl.getVariable("DEPENDABOT_EXTRA_CREDENTIALS");
+    if (extraCredentials) {
+      dockerRunner.arg(["-e", `DEPENDABOT_EXTRA_CREDENTIALS=${extraCredentials}`]);
+    }
+
     //check if user has requested the use of dependabot YAML config file for updates
     let useConfigFile: boolean = tl.getBoolInput("useConfigFile", false);
     var updates: IDependabotUpdate[];
@@ -158,14 +164,6 @@ async function run() {
         dockerRunner.arg([
           "-e",
           `DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT=${update.openPullRequestLimit}`,
-        ]);
-      }
-
-      // Set the extra credentials
-      if (update.devopsExtraCredentials) {
-        dockerRunner.arg([
-          "-e",
-          `DEPENDABOT_EXTRA_CREDENTIALS=${update.devopsExtraCredentials}`,
         ]);
       }
 

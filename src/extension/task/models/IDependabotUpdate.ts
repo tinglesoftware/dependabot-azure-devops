@@ -37,7 +37,6 @@ export interface IDependabotUpdate {
    * How to update manifest version requirements
    */
   versioningStrategy?: string;
-  devopsExtraCredentials?: Record<string, string> | string;
 }
 
 export interface IDependabotAllowDependency {

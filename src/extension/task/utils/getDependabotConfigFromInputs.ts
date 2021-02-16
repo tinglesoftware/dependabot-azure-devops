@@ -15,7 +15,6 @@ export default function getDependabotConfigFromInputs() {
     directory: getInput("directory", false),
 
     openPullRequestLimit: parseInt(getInput("openPullRequestsLimit", true)),
-    devopsExtraCredentials: getVariable("DEPENDABOT_EXTRA_CREDENTIALS"),
 
     allow: getVariable("DEPENDABOT_ALLOW"),
     ignore: getVariable("DEPENDABOT_IGNORE"),
