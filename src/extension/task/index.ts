@@ -2,7 +2,7 @@ import tl = require("azure-pipelines-task-lib/task");
 import tr = require("azure-pipelines-task-lib/toolrunner");
 import { IDependabotUpdate } from "./models/IDependabotUpdate";
 import getDependabotConfigFromInputs from "./utils/getDependabotConfigFromInputs";
-import parseDependabotConfigFile from "./utils/parseDependabotConfigFile";
+import parseConfigFile from "./utils/parseConfigFile";
 
 function getGithubEndPointToken(githubEndpoint: string): string {
   const githubEndpointObject = tl.getEndpointAuthorization(
@@ -134,7 +134,7 @@ async function run() {
     let useConfigFile: boolean = tl.getBoolInput("useConfigFile", false);
     var updates: IDependabotUpdate[];
 
-    if (useConfigFile) updates = parseDependabotConfigFile();
+    if (useConfigFile) updates = parseConfigFile();
     else updates = getDependabotConfigFromInputs();
 
     for (const update of updates) {

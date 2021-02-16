@@ -14,7 +14,7 @@ import { getVariable } from "azure-pipelines-task-lib";
  *
  * @returns {IDependabotUpdate[]} updates - array of dependency update configurations
  */
-export default function parseDependabotConfigFile(): IDependabotUpdate[] {
+export default function parseConfigFile(): IDependabotUpdate[] {
   var filePath = path.join(
     getVariable("Build.SourcesDirectory"),
     "/.azuredevops/dependabot.yml"
