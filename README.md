@@ -16,6 +16,10 @@ In this repository you'll find:
 4. Kubernetes CronJob [template](#kubernetes-cronjob).
 5. Hosted versions: [fully hosted](#hosted-version), self hosted (source code and instructions coming soon).
 
+## Using a configuration file
+
+Similar to the GitHub native version where you add a `.github/dependabot.yml` file, this repository adds support for the same official [configuration options](https://help.github.com/github/administering-a-repository/configuration-options-for-dependency-updates) via a file located at `.azuredevops/dependabot.yml`. This support is only available in the Azure DevOps extension and the hosted version. However, the extension does not currently support automatically picking up the file, a pipeline is still required. See [docs](./src/extension/README.md#usage).
+
 ## Kubernetes CronJob
 
 A Kubernetes CronJobs is a useful resource for running tasks (a.k.a Jobs) on a recurring schedule. For more information on them read the [documentation](https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/). Using the Docker image, we can create a CronJob and have it run periodically. The [environment variables](./src/script/README.md#environment-variables) are supplied in the job template but can be stored in a [ConfigMap](https://kubernetes.io/docs/concepts/configuration/configmap/) for ease of reuse.
@@ -36,7 +40,7 @@ Use the [template provided](./cronjob-template.yaml) and replace the parameters 
 The hosted version for Azure DevOps would work almost similar to the native version of dependabot on GitHub.
 It would support:
 
-1. Pulling configuration from a file located at `.azuredevops/dependabot.yml`. The options would be the same as [the official .github/dependabot.yml](https://help.github.com/github/administering-a-repository/configuration-options-for-dependency-updates)
+1. Pulling configuration from a file located at `.azuredevops/dependabot.yml`.
 2. Adding/updating the file, wold immediately trigger a run.
 3. Viewing the most recent runs for each repository, project and organization configured.
 4. Hosted on Kubernetes is easier, but using build agents, would be an option to explore albeit limited.
