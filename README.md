@@ -8,14 +8,6 @@ This repository contains convenience tool(s) for updating dependencies in Azure 
 [![Docker Pulls](https://img.shields.io/docker/pulls/tingle/dependabot-azure-devops?style=flat-square)](https://hub.docker.com/r/tingle/dependabot-azure-devops)
 [![license](https://img.shields.io/github/license/tinglesoftware/dependabot-azure-devops.svg?style=flat-square)](LICENSE)
 
-The work in this repository is based on inspired and occasionally guided by:
-
-1. Official Script support: [code](https://github.com/dependabot/dependabot-script)
-2. Andrew Craven's work: [blog](https://medium.com/@acraven/updating-dependencies-in-azure-devops-repos-773cbbb6029d), [code](https://github.com/acraven/azure-dependabot)
-3. Chris' work: [code](https://github.com/chris5287/dependabot-for-azuredevops)
-4. andrcun's work on GitLab: [code](https://gitlab.com/dependabot-gitlab/dependabot)
-5. WeWork's work for GitLab: [code](https://github.com/wemake-services/kira-dependencies)
-
 In this repository you'll find:
 
 1. Dependabot's [Update script](./src/script/update-script.rb) in Ruby.
@@ -36,6 +28,16 @@ It would support:
 5. Extra credentials for things like private registries, feeds and package repositories.
 
 Currently, we have an implementation that works internally but is still a work in progress. If you would like to join the private test send a request via support@tingle.software.
+
+### Acknowledgements
+
+The work in this repository is based on inspired and occasionally guided by some predecessors in the same area:
+
+1. Official Script support: [code](https://github.com/dependabot/dependabot-script)
+2. Andrew Craven's work: [blog](https://medium.com/@acraven/updating-dependencies-in-azure-devops-repos-773cbbb6029d), [code](https://github.com/acraven/azure-dependabot)
+3. Chris' work: [code](https://github.com/chris5287/dependabot-for-azuredevops)
+4. andrcun's work on GitLab: [code](https://gitlab.com/dependabot-gitlab/dependabot)
+5. WeWork's work for GitLab: [code](https://github.com/wemake-services/kira-dependencies)
 
 ### Issues &amp; Comments
 
