@@ -160,13 +160,13 @@ async function run() {
       }
 
       // Set the dependencies to allow
-      let allow = allowOvr || update.allow
+      let allow = update.allow || allowOvr;
       if (allow) {
         dockerRunner.arg(["-e", `DEPENDABOT_ALLOW=${allow}`]);
       }
 
       // Set the dependencies to ignore
-      let ignore = ignoreOvr || update.ignore
+      let ignore = update.ignore || ignoreOvr;
       if (ignore) {
         dockerRunner.arg(["-e", `DEPENDABOT_IGNORE=${ignore}`]);
       }
