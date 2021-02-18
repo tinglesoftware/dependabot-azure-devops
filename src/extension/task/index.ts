@@ -37,6 +37,11 @@ function getGithubEndPointToken(githubEndpoint: string): string {
 function extractOrganization(organizationUrl: string): string {
   let parts = organizationUrl.split("/");
 
+  // Check for on-premise style: https://server.domain.com/tfs/x/
+  if (parts.length === 6) {
+    return parts[4];
+  }
+
   // Check for new style: https://dev.azure.com/x/
   if (parts.length === 5) {
     return parts[3];
