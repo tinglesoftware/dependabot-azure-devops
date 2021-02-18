@@ -1,59 +1,74 @@
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
-  name: dependabot-{{AZURE_PROJECT}}-{{AZURE_REPOSITORY}}
+  name: dependabot-{{azure_project}}-{{azure_repository}}
   labels:
     tingle.io/dependabot: 'true'
+    dev.azure.com/project: '{{azure_project}}'
+    dev.azure.com/repository: '{{azure_repository}}'
   annotations:
-    project: '{{AZURE_PROJECT}}'
-    repository: '{{AZURE_REPOSITORY}}'
+    dependabot.com/update-id: '{{dependabot_update_id}}'
+    dependabot.com/package-ecosystem: '{{dependabot_package_ecosystem}}'
+    dependabot.com/directory: '{{dependabot_directory}}'
 spec:
-  schedule: '{{CRON_SCHEDULE}}' # (See https://en.wikipedia.org/wiki/Cron for format)
+  schedule: '{{k8s_schedule}}' # (See https://en.wikipedia.org/wiki/Cron for format)
   successfulJobsHistoryLimit: 1
   failedJobsHistoryLimit: 1
   jobTemplate:
     metadata:
       labels:
         tingle.io/dependabot: 'true'
+        dev.azure.com/project: '{{azure_project}}'
+        dev.azure.com/repository: '{{azure_repository}}'
       annotations:
-        project: '{{AZURE_PROJECT}}'
-        repository: '{{AZURE_REPOSITORY}}'
+        dependabot.com/update-id: '{{dependabot_update_id}}'
+        dependabot.com/package-ecosystem: '{{dependabot_package_ecosystem}}'
+        dependabot.com/directory: '{{dependabot_directory}}'
     spec:
       backoffLimit: 1
       ttlSecondsAfterFinished: 172800
       template:
         spec:
+          nodeSelector:
+            kubernetes.io/os: linux
           restartPolicy: OnFailure
           activeDeadlineSeconds: 3600
           containers:
           - name: dependabot
-            image: 'tingle/dependabot-azure-devops:0.2.0'
+            image: 'tingle/dependabot-azure-devops:0.2.0' # Use a specific tag otherwise the image may be cached already
+            resources:
+              limits:
+                memory: "300Mi"
+                cpu: "100m"
+              requests:
+                memory: "200Mi"
+                cpu: "50m"
             env:
-              - name: GITHUB_ACCESS_TOKEN
-                value: '{{GITHUB_ACCESS_TOKEN}}'
-              - name: AZURE_HOSTNAME
-                value: '{{AZURE_HOSTNAME}}'
-              - name: AZURE_ACCESS_TOKEN
-                value: '{{AZURE_ACCESS_TOKEN}}'
-              - name: AZURE_ORGANIZATION
-                value: '{{AZURE_ORGANIZATION}}'
-              - name: AZURE_PROJECT
-                value: '{{AZURE_PROJECT}}'
-              - name: AZURE_REPOSITORY
-                value: '{{AZURE_REPOSITORY}}'
-              - name: DEPENDABOT_PACKAGE_MANAGER
-                value: '{{DEPENDABOT_PACKAGE_MANAGER}}'
-              - name: DEPENDABOT_DIRECTORY
-                value: '{{DEPENDABOT_DIRECTORY_PATH}}'
-              - name: DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT
-                value: '{{DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT}}'
-              - name: DEPENDABOT_TARGET_BRANCH
-                value: '{{DEPENDABOT_TARGET_BRANCH}}'
-              - name: DEPENDABOT_VERSIONING_STRATEGY
-                value: '{{DEPENDABOT_VERSIONING_STRATEGY}}'
-              - name: DEPENDABOT_EXTRA_CREDENTIALS
-                value: '{{DEPENDABOT__EXTRA_CREDENTIALS}}'
-              - name: DEPENDABOT_ALLOW
-                value: '{{DEPENDABOT_ALLOW}}'
-              - name: DEPENDABOT_IGNORE
-                value: '{{DEPENDABOT_IGNORE}}'
+            - name: GITHUB_ACCESS_TOKEN
+              value: '{{github_access_token}}'
+            - name: AZURE_HOSTNAME
+              value: '{{azure_hostname}}'
+            - name: AZURE_ACCESS_TOKEN
+              value: '{{azure_access_token}}'
+            - name: AZURE_ORGANIZATION
+              value: '{{azure_organization}}'
+            - name: AZURE_PROJECT
+              value: '{{azure_project}}'
+            - name: AZURE_REPOSITORY
+              value: '{{azure_repository}}'
+            - name: DEPENDABOT_PACKAGE_MANAGER
+              value: '{{dependabot_package_manager}}'
+            - name: DEPENDABOT_DIRECTORY
+              value: '{{dependabot_directory_path}}'
+            - name: DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT
+              value: '{{dependabot_open_pull_requests_limit}}'
+            - name: DEPENDABOT_TARGET_BRANCH
+              value: '{{dependabot_target_branch}}'
+            - name: DEPENDABOT_VERSIONING_STRATEGY
+              value: '{{dependabot_versioning_strategy}}'
+            - name: DEPENDABOT_EXTRA_CREDENTIALS
+              value: '{{dependabot_extra_credentials}}'
+            - name: DEPENDABOT_ALLOW
+              value: '{{dependabot_allow}}'
+            - name: DEPENDABOT_IGNORE
+              value: '{{dependabot_ignore}}'
