@@ -28,7 +28,7 @@ An example of a YAML pipeline:
 trigger: none # Disable CI trigger
 
 schedules:
-- cron: '0 2 0 0 0' # daily at 2am UTC
+- cron: '0 2 * * *' # daily at 2am UTC
   always: true # run even when there are no code changes
   branches:
     include:
@@ -74,7 +74,7 @@ In some situations you might want to override the docker image tag that is pulle
 trigger: none # Disable CI trigger
 
 schedules:
-- cron: '0 2 0 0 0' # daily at 2am UTC
+- cron: '0 2 * * *' # daily at 2am UTC
   always: true # run even when there are no code changes
   branches:
     include:
