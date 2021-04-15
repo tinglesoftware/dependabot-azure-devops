@@ -35,6 +35,15 @@ Use the [template provided](./cronjob-template.yaml) and replace the parameters 
 5. Labels can be used to find cronjobs created.
 6. Annotations can be used to store extra data for comparison but not searching/finding e.g. package ecosystem.
 
+## Credentials for private registries and feeds
+
+Besides accessing the repository, sometimes, private feeds/registries may need to be accessed. For example a private NuGet feed or a company internal docker registry. Adding credentials is currently done via the `DEPENDABOT_EXTRA_CREDENTIALS` environment variable. The value is supplied in JSON hence allowing any type of credentials even if they are not for private feeds/registries.
+
+When working with Azure Artifacts, some extra steps need to be done:
+
+1. The PAT should have *Packaging Read* permission.
+2. The user owning the PAT must be granted permissions to access the feed either directly or via a group. An easy way for this is to give `Contributor` permissions the `[{project_name}]\Contributors` group under the `Feed Settings -> Permissions` page. The page has the url format: `https://dev.azure.com/{organization}/{project}/_packaging?_a=settings&feed={feed-name}&view=permissions`.
+
 ## Hosted version
 
 The hosted version for Azure DevOps would work almost similar to the native version of dependabot on GitHub.
@@ -46,7 +55,7 @@ It would support:
 4. Hosted on Kubernetes is easier, but using build agents, would be an option to explore albeit limited.
 5. Extra credentials for things like private registries, feeds and package repositories.
 
-Currently, we have an implementation that works internally but is still a work in progress. If you would like to join the private test send a request via support@tingle.software.
+Currently, we have an implementation that works internally but is still a work in progress.
 
 ### Acknowledgements
 
