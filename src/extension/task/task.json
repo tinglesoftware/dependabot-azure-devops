@@ -88,7 +88,6 @@
     {
       "name": "versioningStrategy",
       "type": "pickList",
-      "groupName": "advanced",
       "label": "Versioning Strategy",
       "defaultValue": "auto",
       "required": true,
