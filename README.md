@@ -20,6 +20,15 @@ In this repository you'll find:
 
 Similar to the GitHub native version where you add a `.github/dependabot.yml` file, this repository adds support for the same official [configuration options](https://help.github.com/github/administering-a-repository/configuration-options-for-dependency-updates) via a file located at `.azuredevops/dependabot.yml`. This support is only available in the Azure DevOps extension and the hosted version. However, the extension does not currently support automatically picking up the file, a pipeline is still required. See [docs](./src/extension/README.md#usage).
 
+## Credentials for private registries and feeds
+
+Besides accessing the repository, sometimes, private feeds/registries may need to be accessed. For example a private NuGet feed or a company internal docker registry. Adding credentials is currently done via the `DEPENDABOT_EXTRA_CREDENTIALS` environment variable. The value is supplied in JSON hence allowing any type of credentials even if they are not for private feeds/registries.
+
+When working with Azure Artifacts, some extra steps need to be done:
+
+1. The PAT should have *Packaging Read* permission.
+2. The user owning the PAT must be granted permissions to access the feed either directly or via a group. An easy way for this is to give `Contributor` permissions the `[{project_name}]\Contributors` group under the `Feed Settings -> Permissions` page. The page has the url format: `https://dev.azure.com/{organization}/{project}/_packaging?_a=settings&feed={feed-name}&view=permissions`.
+
 ## Kubernetes CronJob
 
 A Kubernetes CronJobs is a useful resource for running tasks (a.k.a Jobs) on a recurring schedule. For more information on them read the [documentation](https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/). Using the Docker image, we can create a CronJob and have it run periodically. The [environment variables](./src/script/README.md#environment-variables) are supplied in the job template but can be stored in a [ConfigMap](https://kubernetes.io/docs/concepts/configuration/configmap/) for ease of reuse.
@@ -35,15 +44,6 @@ Use the [template provided](./cronjob-template.yaml) and replace the parameters 
 5. Labels can be used to find cronjobs created.
 6. Annotations can be used to store extra data for comparison but not searching/finding e.g. package ecosystem.
 
-## Credentials for private registries and feeds
-
-Besides accessing the repository, sometimes, private feeds/registries may need to be accessed. For example a private NuGet feed or a company internal docker registry. Adding credentials is currently done via the `DEPENDABOT_EXTRA_CREDENTIALS` environment variable. The value is supplied in JSON hence allowing any type of credentials even if they are not for private feeds/registries.
-
-When working with Azure Artifacts, some extra steps need to be done:
-
-1. The PAT should have *Packaging Read* permission.
-2. The user owning the PAT must be granted permissions to access the feed either directly or via a group. An easy way for this is to give `Contributor` permissions the `[{project_name}]\Contributors` group under the `Feed Settings -> Permissions` page. The page has the url format: `https://dev.azure.com/{organization}/{project}/_packaging?_a=settings&feed={feed-name}&view=permissions`.
-
 ## Hosted version
 
 The hosted version for Azure DevOps would work almost similar to the native version of dependabot on GitHub.
@@ -56,6 +56,10 @@ It would support:
 5. Extra credentials for things like private registries, feeds and package repositories.
 
 Currently, we have an implementation that works internally but is still a work in progress.
+
+## Still using the old `*.visualstudio.com` URL?
+
+The new URL in the format `https://dev.azure.com/{organization}` is recommended. If you are still using the older `{organization}.visualstudio.com` URL, you need to toggle on the new URL. As far as out testing has gone, we have not had any issues using both the new and old URL. It is possible to keep both. The [core implementation](https://github.com/dependabot/dependabot-core) will only support the new one. See [#27](https://github.com/tinglesoftware/dependabot-azure-devops/issues/27#issuecomment-768054722) for more explanation. For someone really looking to use dependabot to keep dependencies up to date, migrating to the new URL should really be a no-brainer.
 
 ### Acknowledgements
 
