@@ -125,6 +125,14 @@
       "label": "Azure DevOps Personal Access Token.",
       "required": false,
       "helpMarkDown": "The Personal Access Token for accessing Azure DevOps repositories. Supply a value here to avoid using permissions for the Build Service either because you cannot change its permissions or because you prefer that the Pull Requests be done by a different user."
+    },
+    {
+      "name": "workItemId",
+      "type": "int",
+      "groupName": "work",
+      "label": "Work item identifier to be linked to the Pull Requests.",
+      "required": false,
+      "helpMarkDown": "The identifier of the work item to be linked to the Pull Requests that dependabot creates."
     }
   ],
   "dataSourceBindings": [],

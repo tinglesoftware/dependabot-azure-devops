@@ -24,6 +24,7 @@ docker run --rm -t \
            -e DEPENDABOT_EXTRA_CREDENTIALS=<your-extra-credentials> \
            -e DEPENDABOT_ALLOW=<your-allowed-packages> \
            -e DEPENDABOT_IGNORE=<your-ignore-packages> \
+           -e AZURE_WORK_ITEM_ID=<your-work-item-id> \
            tingle/dependabot-azure-devops:0.2.0
 ```
 
@@ -45,6 +46,7 @@ docker run --rm -t \
            -e DEPENDABOT_EXTRA_CREDENTIALS='[{\"type\":\"npm_registry\",\"token\":\"<redacted>\",\"registry\":\"npm.fontawesome.com\"}]' \
            -e DEPENDABOT_ALLOW='[{\"name\":"django*",\"type\":\"direct\"}]' \
            -e DEPENDABOT_IGNORE='[{\"name\":\"express\",\"versions\":[\"4.x\",\"5.x\"]}]' \
+           -e AZURE_WORK_ITEM_ID=123 \
            tingle/dependabot-azure-devops:0.2.0
 ```
 
@@ -69,3 +71,4 @@ To run the script, some environment variables are required.
 |DEPENDABOT_ALLOW|**_Optional_**. The dependencies whose updates are allowed, in JSON format. This can be used to control which packages can be updated. For example: `[{\"name\":"django*",\"type\":\"direct\"}]`. See [official docs](https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/configuration-options-for-dependency-updates#allow) for more.|
 |DEPENDABOT_IGNORE|**_Optional_**. The dependencies to be ignored, in JSON format. This can be used to control which packages can be updated. For example: `[{\"name\":\"express\",\"versions\":[\"4.x\",\"5.x\"]}]`. See [official docs](https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/configuration-options-for-dependency-updates#ignore) for more.|
 |DEPENDABOT_FAIL_ON_EXCEPTION|**_Optional_**. Determines if the execution should fail when an exception occurs. Defaults to `true`.|
+|AZURE_WORK_ITEM_ID|**_Optional_**. The identifier of the work item to be linked to the Pull Requests that dependabot creates.|

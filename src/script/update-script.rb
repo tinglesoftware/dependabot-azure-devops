@@ -119,6 +119,12 @@ unless json_credentials.to_s.strip.empty?
   end
 end
 
+# Get the work item to attach
+work_item_id = ENV['AZURE_WORK_ITEM_ID'].to_i || nil
+if work_item_id
+  puts "Pull Requests shall be linked to work item ##{work_item_id}"
+end
+
 #####################################
 # Setup Allow and Ignore conditions #
 #####################################
@@ -267,11 +273,15 @@ dependencies.select(&:top_level?).each do |dep|
       dependencies: updated_deps,
       files: updated_files,
       credentials: credentials,
-      label_language: true,
+      # assignees: assignees,
       author_details: {
         email: "noreply@github.com",
         name: "dependabot[bot]"
       },
+      label_language: true,
+      provider_metadata: {
+        work_item: work_item_id,
+      }
     )
 
     print "Submitting #{dep.name} pull request for creation. "
