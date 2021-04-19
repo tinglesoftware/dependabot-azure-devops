@@ -122,17 +122,15 @@ end
 #####################################
 # Setup Allow and Ignore conditions #
 #####################################
+allow_options_json = ENV["DEPENDABOT_ALLOW"] || ""
 allow_options = []
-json_allow = ENV["DEPENDABOT_ALLOW"] || ""
-unless json_allow.to_s.strip.empty?
-  json_allow = JSON.parse(json_allow)
-  allow_options.push(*json_allow)
+unless allow_options_json.to_s.strip.empty?
+  allow_options = JSON.parse(allow_options_json)
 end
+ignore_options_json = ENV["DEPENDABOT_IGNORE"] || ""
 ignore_options = []
-json_ignore = ENV["DEPENDABOT_IGNORE"] || ""
-unless json_ignore.to_s.strip.empty?
-  json_ignore = JSON.parse(json_ignore)
-  ignore_options.push(*json_ignore)
+unless ignore_options_json.to_s.strip.empty?
+  ignore_options = JSON.parse(ignore_options_json)
 end
 
 source = Dependabot::Source.new(
