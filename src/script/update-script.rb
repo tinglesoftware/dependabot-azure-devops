@@ -18,6 +18,9 @@ directory = ENV["DEPENDABOT_DIRECTORY"] || "/"
 # Branch against which to create PRs
 branch = ENV["DEPENDABOT_TARGET_BRANCH"] || nil
 
+# Stop the job if an exception occurs
+fail_on_exception = ENV['DEPENDABOT_FAIL_ON_EXCEPTION'] == "true"
+
 # Name of the package manager you'd like to do the update for. Options are:
 # - bundler
 # - pip (includes pipenv)
@@ -193,103 +196,110 @@ def ignore_conditions_for(options, dependency)
 end
 
 dependencies.select(&:top_level?).each do |dep|
-  #########################################
-  # Get update details for the dependency #
-  #########################################
-  puts "Checking if #{dep.name} #{dep.version} needs updating"
-  ignored_versions = ignore_conditions_for(ignore_options, dep)
-
-  checker = Dependabot::UpdateCheckers.for_package_manager(package_manager).new(
-    dependency: dep,
-    dependency_files: files,
-    credentials: credentials,
-    requirements_update_strategy: update_strategy,
-    ignored_versions: ignored_versions,
-  )
-
-  if checker.up_to_date?
-    puts "No update needed for #{dep.name} #{dep.version}"
-    next
-  end
-
-  requirements_to_unlock =
-    if !checker.requirements_unlocked_or_can_be?
-      if checker.can_update?(requirements_to_unlock: :none) then :none
-      else :update_not_possible
-      end
-    elsif checker.can_update?(requirements_to_unlock: :own) then :own
-    elsif checker.can_update?(requirements_to_unlock: :all) then :all
-    else :update_not_possible
-    end
-
-  puts "Requirements to unlock #{requirements_to_unlock}"
-  next if requirements_to_unlock == :update_not_possible
-
-  # Check if the dependency is allowed
-  allow_type = allow_conditions_for(allow_options, dep)
-  allowed = checker.vulnerable? || allow_options.empty? || (allow_type && TYPE_HANDLERS[allow_type].call(dep, checker))
-  if !allowed
-    puts "Updating #{dep.name} is not allowed"
-    next
-  end
-
-  updated_deps = checker.updated_dependencies(
-    requirements_to_unlock: requirements_to_unlock
-  )
-
-  #####################################
-  # Generate updated dependency files #
-  #####################################
-  puts "Updating #{dep.name} from #{dep.version} to #{checker.latest_version}"
-  updater = Dependabot::FileUpdaters.for_package_manager(package_manager).new(
-    dependencies: updated_deps,
-    dependency_files: files,
-    credentials: credentials,
-  )
-
-  updated_files = updater.updated_dependency_files
-
-  ########################################
-  # Create a pull request for the update #
-  ########################################
-  pr_creator = Dependabot::PullRequestCreator.new(
-    source: source,
-    base_commit: commit,
-    dependencies: updated_deps,
-    files: updated_files,
-    credentials: credentials,
-    label_language: true,
-    author_details: {
-      email: "noreply@github.com",
-      name: "dependabot[bot]"
-    },
-  )
-
-  print "Submitting #{dep.name} pull request for creation. "
-  pull_request = pr_creator.create
-
-  if pull_request
-    content = JSON[pull_request.body]
-    if pull_request&.status == 201
-      puts "Done (PR ##{content["pullRequestId"]})"
-    else
-      puts "Failed! PR already exists or an error has occurred."
-      puts "Status: #{pull_request&.status}."
-      puts "Message #{content["message"]}"
-    end
-  else
-    puts "Seems PR is already present."
-  end
-
   # Check if we have reached maximum number of open pull requests
-  pull_requests_count += 1
   if pull_requests_limit > 0 && pull_requests_count >= pull_requests_limit
     puts "Limit of open pull requests (#{pull_requests_limit}) reached."
     break
   end
 
-  next unless pull_request
+  begin
 
+    #########################################
+    # Get update details for the dependency #
+    #########################################
+    puts "Checking if #{dep.name} #{dep.version} needs updating"
+    ignored_versions = ignore_conditions_for(ignore_options, dep)
+
+    checker = Dependabot::UpdateCheckers.for_package_manager(package_manager).new(
+      dependency: dep,
+      dependency_files: files,
+      credentials: credentials,
+      requirements_update_strategy: update_strategy,
+      ignored_versions: ignored_versions,
+    )
+
+    if checker.up_to_date?
+      puts "No update needed for #{dep.name} #{dep.version}"
+      next
+    end
+
+    requirements_to_unlock =
+      if !checker.requirements_unlocked_or_can_be?
+        if checker.can_update?(requirements_to_unlock: :none) then :none
+        else :update_not_possible
+        end
+      elsif checker.can_update?(requirements_to_unlock: :own) then :own
+      elsif checker.can_update?(requirements_to_unlock: :all) then :all
+      else :update_not_possible
+      end
+
+    puts "Requirements to unlock #{requirements_to_unlock}"
+    next if requirements_to_unlock == :update_not_possible
+
+    # Check if the dependency is allowed
+    allow_type = allow_conditions_for(allow_options, dep)
+    allowed = checker.vulnerable? || allow_options.empty? || (allow_type && TYPE_HANDLERS[allow_type].call(dep, checker))
+    if !allowed
+      puts "Updating #{dep.name} is not allowed"
+      next
+    end
+
+    updated_deps = checker.updated_dependencies(
+      requirements_to_unlock: requirements_to_unlock
+    )
+
+    #####################################
+    # Generate updated dependency files #
+    #####################################
+    puts "Updating #{dep.name} from #{dep.version} to #{checker.latest_version}"
+    updater = Dependabot::FileUpdaters.for_package_manager(package_manager).new(
+      dependencies: updated_deps,
+      dependency_files: files,
+      credentials: credentials,
+    )
+
+    updated_files = updater.updated_dependency_files
+
+    ########################################
+    # Create a pull request for the update #
+    ########################################
+    pr_creator = Dependabot::PullRequestCreator.new(
+      source: source,
+      base_commit: commit,
+      dependencies: updated_deps,
+      files: updated_files,
+      credentials: credentials,
+      label_language: true,
+      author_details: {
+        email: "noreply@github.com",
+        name: "dependabot[bot]"
+      },
+    )
+
+    print "Submitting #{dep.name} pull request for creation. "
+    pull_request = pr_creator.create
+
+    if pull_request
+      content = JSON[pull_request.body]
+      if pull_request&.status == 201
+        puts "Done (PR ##{content["pullRequestId"]})"
+      else
+        puts "Failed! PR already exists or an error has occurred."
+        puts "Status: #{pull_request&.status}."
+        puts "Message #{content["message"]}"
+      end
+    else
+      puts "Seems PR is already present."
+    end
+
+    pull_requests_count += 1
+    next unless pull_request
+
+  rescue StandardError => e
+    raise e if fail_on_exception
+    puts "Error updating #{dep.name} from #{dep.version} to #{checker.latest_version} (continuing)"
+    puts e.full_message
+  end
 end
 
 puts "Done"
