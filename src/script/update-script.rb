@@ -264,6 +264,7 @@ dependencies.select(&:top_level?).each do |dep|
 
     updated_files = updater.updated_dependency_files
 
+    pull_request_id = nil
     ########################################
     # Create a pull request for the update #
     ########################################
@@ -289,11 +290,13 @@ dependencies.select(&:top_level?).each do |dep|
 
     if pull_request
       content = JSON[pull_request.body]
-      if pull_request&.status == 201
-        puts "Done (PR ##{content["pullRequestId"]})"
+      status_code = pull_request&.status
+      pull_request_id = content["pullRequestId"]
+      if status_code == 201
+        puts "Done (PR ##{pull_request_id})"
       else
         puts "Failed! PR already exists or an error has occurred."
-        puts "Status: #{pull_request&.status}."
+        puts "Status: #{status_code}."
         puts "Message #{content["message"]}"
       end
     else
@@ -301,7 +304,7 @@ dependencies.select(&:top_level?).each do |dep|
     end
 
     pull_requests_count += 1
-    next unless pull_request
+    next unless pull_request_id
 
   rescue StandardError => e
     raise e if fail_on_exception
