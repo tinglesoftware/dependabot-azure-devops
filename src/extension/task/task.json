@@ -127,6 +127,14 @@
       "helpMarkDown": "The Personal Access Token for accessing Azure DevOps repositories. Supply a value here to avoid using permissions for the Build Service either because you cannot change its permissions or because you prefer that the Pull Requests be done by a different user."
     },
     {
+      "name": "targetRepositoryName",
+      "type": "string",
+      "groupName": "advanced",
+      "label": "Target Repository Name",
+      "required": false,
+      "helpMarkDown": "The name of the repository to target for processing. If this value is not supplied then the Build Repository Name is used. Supplying this value allows creation of a single pipeline that runs Dependablot against multiple repositories."
+    },
+    {
       "name": "workItemId",
       "type": "int",
       "groupName": "work",
