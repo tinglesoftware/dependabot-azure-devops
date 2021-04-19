@@ -298,6 +298,7 @@ dependencies.select(&:top_level?).each do |dep|
         puts "Failed! PR already exists or an error has occurred."
         puts "Status: #{status_code}."
         puts "Message #{content["message"]}"
+        # TODO: throw exception here? (pull_request.create does not throw)
       end
     else
       puts "Seems PR is already present."
