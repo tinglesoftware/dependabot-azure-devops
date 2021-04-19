@@ -72,3 +72,5 @@ spec:
               value: '{{dependabot_allow}}'
             - name: DEPENDABOT_IGNORE
               value: '{{dependabot_ignore}}'
+            - name: DEPENDABOT_FAIL_ON_EXCEPTION
+              value: '{{dependabot_fail_on_exception}}'
