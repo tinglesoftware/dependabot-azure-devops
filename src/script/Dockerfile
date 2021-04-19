@@ -4,7 +4,8 @@ FROM dependabot/dependabot-core:0.142.1
 COPY ["Gemfile", "Gemfile.lock", "./"]
 
 # Install dependencies
-RUN bundle install -j 3 --path vendor
+RUN bundle config set --local path "vendor" \
+  && bundle install --jobs 4 --retry 3
 
 # Script files are known to change more frequently than Gemfiles.
 # They are copied after installation of dependencies so that the
