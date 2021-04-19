@@ -264,44 +264,67 @@ dependencies.select(&:top_level?).each do |dep|
 
     updated_files = updater.updated_dependency_files
 
+    ###################################
+    # Find out if a PR already exists #
+    ###################################
+    conflict_pull_request_commit_id = nil
+    conflict_pull_request_id = nil
+
     pull_request_id = nil
-    ########################################
-    # Create a pull request for the update #
-    ########################################
-    pr_creator = Dependabot::PullRequestCreator.new(
-      source: source,
-      base_commit: commit,
-      dependencies: updated_deps,
-      files: updated_files,
-      credentials: credentials,
-      # assignees: assignees,
-      author_details: {
-        email: "noreply@github.com",
-        name: "dependabot[bot]"
-      },
-      label_language: true,
-      provider_metadata: {
-        work_item: work_item_id,
-      }
-    )
-
-    print "Submitting #{dep.name} pull request for creation. "
-    pull_request = pr_creator.create
-
-    if pull_request
-      content = JSON[pull_request.body]
-      status_code = pull_request&.status
-      pull_request_id = content["pullRequestId"]
-      if status_code == 201
-        puts "Done (PR ##{pull_request_id})"
-      else
-        puts "Failed! PR already exists or an error has occurred."
-        puts "Status: #{status_code}."
-        puts "Message #{content["message"]}"
-        # TODO: throw exception here? (pull_request.create does not throw)
-      end
+    if conflict_pull_request_commit_id && conflict_pull_request_id
+      ##############################################
+      # Update pull request with conflict resolved #
+      ##############################################
+      pr_updater = Dependabot::PullRequestUpdater.new(
+        source: source,
+        base_commit: commit,
+        old_commit: conflict_pull_request_commit_id,
+        files: updated_files,
+        credentials: credentials,
+        pull_request_number: conflict_pull_request_id,
+      )
+      pr_updater.update
+      pull_request_id = conflict_pull_request_id
+      puts "Pull Request ##{pull_request_id} updated."
     else
-      puts "Seems PR is already present."
+      ########################################
+      # Create a pull request for the update #
+      ########################################
+      pr_creator = Dependabot::PullRequestCreator.new(
+        source: source,
+        base_commit: commit,
+        dependencies: updated_deps,
+        files: updated_files,
+        credentials: credentials,
+        # assignees: assignees,
+        author_details: {
+          email: "noreply@github.com",
+          name: "dependabot[bot]"
+        },
+        label_language: true,
+        provider_metadata: {
+          work_item: work_item_id,
+        }
+      )
+
+      print "Submitting #{dep.name} pull request for creation. "
+      pull_request = pr_creator.create
+
+      if pull_request
+        content = JSON[pull_request.body]
+        status_code = pull_request&.status
+        pull_request_id = content["pullRequestId"]
+        if status_code == 201
+          puts "Done (PR ##{pull_request_id})"
+        else
+          puts "Failed! PR already exists or an error has occurred."
+          puts "Status: #{status_code}."
+          puts "Message #{content["message"]}"
+          # TODO: throw exception here? (pull_request.create does not throw)
+        end
+      else
+        puts "Seems PR is already present."
+      end
     end
 
     pull_requests_count += 1
