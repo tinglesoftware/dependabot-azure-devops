@@ -307,6 +307,8 @@ dependencies.select(&:top_level?).each do |dep|
     pull_requests_count += 1
     next unless pull_request_id
 
+    # TODO: support setting auto complete here
+
   rescue StandardError => e
     raise e if fail_on_exception
     puts "Error updating #{dep.name} from #{dep.version} to #{checker.latest_version} (continuing)"
