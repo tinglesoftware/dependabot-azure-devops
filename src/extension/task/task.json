@@ -102,6 +102,14 @@
       "visibleRule": "useConfigFile=false"
     },
     {
+      "name": "failOnException",
+      "type": "boolean",
+      "label": "Determines if the execution should fail when an exception occurs. Defaults to `true`",
+      "defaultValue": false,
+      "required": true,
+      "helpMarkDown": "When set to true, a failure in updating a single dependency will cause the container execution to fail thereby causing the task to fail. This is important when you want a single failure to prevent trying to update other dependencies."
+    },
+    {
       "name": "gitHubConnection",
       "type": "connectedService:github:OAuth,PersonalAccessToken,InstallationToken,Token",
       "groupName": "advanced",

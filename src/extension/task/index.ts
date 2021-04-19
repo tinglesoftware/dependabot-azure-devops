@@ -125,6 +125,10 @@ async function run() {
     repository = encodeURI(repository); // encode special characters like spaces
     dockerRunner.arg(["-e", `AZURE_REPOSITORY=${repository}`]);
 
+    // Set exception behaviour
+    let failOnException = tl.getBoolInput("failOnException", true);
+    dockerRunner.arg(["-e", `DEPENDABOT_FAIL_ON_EXCEPTION=${failOnException}`]);
+
     // Set the extra credentials
     let extraCredentials = tl.getVariable("DEPENDABOT_EXTRA_CREDENTIALS");
     if (extraCredentials) {
