@@ -1,7 +1,10 @@
 FROM dependabot/dependabot-core:0.142.1
 
 # Copy the Gemfile and Gemfile.lock
-COPY ["Gemfile", "Gemfile.lock", "./"]
+ARG CODE_DIR=/home/dependabot/dependabot-script
+RUN mkdir -p ${CODE_DIR}
+COPY --chown=dependabot:dependabot Gemfile Gemfile.lock ${CODE_DIR}/
+WORKDIR ${CODE_DIR}
 
 # Install dependencies
 RUN bundle config set --local path "vendor" \
@@ -16,7 +19,7 @@ RUN bundle config set --local path "vendor" \
 # https://testdriven.io/blog/faster-ci-builds-with-docker-cache/
 
 # Copy the Ruby scripts
-COPY ["update-script.rb", "./"]
+COPY --chown=dependabot:dependabot update-script.rb ${CODE_DIR}
 
 # Run update script
 ENTRYPOINT ["bundle", "exec", "ruby", "./update-script.rb"]
