@@ -196,6 +196,11 @@ def ignore_conditions_for(options, dependency)
 end
 
 dependencies.select(&:top_level?).each do |dep|
+  # Check if we have reached maximum number of open pull requests
+  if pull_requests_limit > 0 && pull_requests_count >= pull_requests_limit
+    puts "Limit of open pull requests (#{pull_requests_limit}) reached."
+    break
+  end
 
   begin
 
@@ -287,13 +292,7 @@ dependencies.select(&:top_level?).each do |dep|
       puts "Seems PR is already present."
     end
 
-    # Check if we have reached maximum number of open pull requests
     pull_requests_count += 1
-    if pull_requests_limit > 0 && pull_requests_count >= pull_requests_limit
-      puts "Limit of open pull requests (#{pull_requests_limit}) reached."
-      break
-    end
-
     next unless pull_request
 
   rescue StandardError => e
