@@ -125,6 +125,12 @@ async function run() {
     repository = encodeURI(repository); // encode special characters like spaces
     dockerRunner.arg(["-e", `AZURE_REPOSITORY=${repository}`]);
 
+    // Set the work item id, if provided
+    let workItemId = tl.getInput("workItemId");
+    if (workItemId) {
+      dockerRunner.arg(["-e", `AZURE_WORK_ITEM_ID=${workItemId}`]);
+    }
+
     // Set exception behaviour
     let failOnException = tl.getBoolInput("failOnException", true);
     dockerRunner.arg(["-e", `DEPENDABOT_FAIL_ON_EXCEPTION=${failOnException}`]);
