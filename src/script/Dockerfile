@@ -20,6 +20,7 @@ RUN bundle config set --local path "vendor" \
 
 # Copy the Ruby scripts
 COPY --chown=dependabot:dependabot update-script.rb ${CODE_DIR}
+COPY --chown=dependabot:dependabot azure_helpers.rb ${CODE_DIR}
 
 # Run update script
 ENTRYPOINT ["bundle", "exec", "ruby", "./update-script.rb"]

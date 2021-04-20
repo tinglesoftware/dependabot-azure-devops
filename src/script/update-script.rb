@@ -4,7 +4,9 @@ require "dependabot/file_parsers"
 require "dependabot/update_checkers"
 require "dependabot/file_updaters"
 require "dependabot/pull_request_creator"
+require "dependabot/pull_request_updater"
 require "dependabot/omnibus"
+require_relative "azure_helpers"
 
 # Full name of the repo you want to create pull requests for.
 organization = ENV["AZURE_ORGANIZATION"]
@@ -199,6 +201,16 @@ def ignore_conditions_for(options, dependency)
   found ? found['versions'] : []
 end
 
+################################################
+# Get active pull requests for this repository #
+################################################
+azure_client = Dependabot::Clients::Azure.for_source(
+  source: source,
+  credentials: credentials,
+)
+default_branch_name = azure_client.fetch_default_branch(source.repo)
+active_pull_requests_for_this_repo = azure_get_active_prs(azure_client, source, default_branch_name)
+
 dependencies.select(&:top_level?).each do |dep|
   # Check if we have reached maximum number of open pull requests
   if pull_requests_limit > 0 && pull_requests_count >= pull_requests_limit
@@ -269,6 +281,43 @@ dependencies.select(&:top_level?).each do |dep|
     ###################################
     conflict_pull_request_commit_id = nil
     conflict_pull_request_id = nil
+    active_pull_requests_for_this_repo.each do |pr|
+      pr_id = pr["pullRequestId"]
+      title = pr["title"]
+      sourceRefName = pr["sourceRefName"]
+
+      # Filter those containing " #{dep.name} "
+      # The prefix " " and suffix " " avoids taking PRS for dependencies named the same
+      # e.g. Tingle.EventBus and Tingle.EventBus.Transports.Azure.ServiceBus
+      next if !title.include?(" #{dep.name} ")
+
+      # Ensure the title contains the current dependency version
+      # Sometimes, the dep.version might be null such as in npm
+      # when the package.lock.json is not checked into source.
+      if title.include?(dep.name) && dep.version && title.include?(dep.version)
+        # If the title does not contain the updated version,
+        # we need to close the PR and delete it's branch,
+        # because there is a newer version available
+        if !title.include?(updated_deps[0].version)
+          # Close old version PR
+          azure_abandon_pr(azure_client, source, pr_id)
+          azure_delete_branch(azure_client, source, sourceRefName)
+          puts "Closed Pull Request ##{pr_id}"
+          next
+        end
+
+        # If the merge status of the current PR is not successful,
+        # we need to resolve the merge conflicts
+        if pr["mergeStatus"] != "succeeded"
+          # ignore pull request manully edited
+          next if azure_pull_request_commits(azure_client, source, pr_id).length > 1
+          # keep pull request
+          conflict_pull_request_commit_id = pr["lastMergeSourceCommit"]["commitId"]
+          conflict_pull_request_id = pr_id
+          break
+        end
+      end
+    end
 
     pull_request_id = nil
     if conflict_pull_request_commit_id && conflict_pull_request_id
@@ -283,10 +332,12 @@ dependencies.select(&:top_level?).each do |dep|
         credentials: credentials,
         pull_request_number: conflict_pull_request_id,
       )
+
+      puts "Submitting pull request (##{conflict_pull_request_id}) update for #{dep.name}."
       pr_updater.update
       pull_request_id = conflict_pull_request_id
-      puts "Pull Request ##{pull_request_id} updated."
-    else
+      puts "Done PR ##{pull_request_id} updated."
+    else # TODO: do not try creating PR if it already exists
       ########################################
       # Create a pull request for the update #
       ########################################
@@ -315,7 +366,7 @@ dependencies.select(&:top_level?).each do |dep|
         status_code = pull_request&.status
         pull_request_id = content["pullRequestId"]
         if status_code == 201
-          puts "Done (PR ##{pull_request_id})"
+          puts "Done (PR ##{pull_request_id})."
         else
           puts "Failed! PR already exists or an error has occurred."
           puts "Status: #{status_code}."
