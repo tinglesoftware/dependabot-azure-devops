@@ -58,9 +58,22 @@ module Dependabot
                 JSON.parse(response.body).fetch("value")
             end
 
-            def pull_request_auto_complete(pull_request_id)
-                # TODO: implement this
-                puts "Setting auto complete is not yet implemented"
+            def pull_request_auto_complete(pull_request_id, deleteSourceBranch, strategy, user_id)
+                # https://docs.microsoft.com/en-us/rest/api/azure/devops/git/pull%20requests/update?view=azure-devops-rest-6.0
+                content = {
+                    completionOptions: {
+                        deleteSourceBranch: deleteSourceBranch,
+                        mergeStrategy: strategy
+                    },
+                    autoCompleteSetBy: {
+                        id: user_id
+                    }
+                }
+
+                response = patch(source.api_endpoint +
+                    source.organization + "/" + source.project +
+                    "/_apis/git/repositories/" + source.unscoped_repo +
+                    "/pullrequests/#{pull_request_id}?api-version=6.0", content.to_json)
             end
 
             def patch(url, json)
