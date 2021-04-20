@@ -46,16 +46,14 @@ Use the [template provided](./cronjob-template.yaml) and replace the parameters 
 
 ## Hosted version
 
-The hosted version for Azure DevOps would work almost similar to the native version of dependabot on GitHub.
-It would support:
+The hosted version ([source code](https://github.com/tinglesoftware/zote)) for Azure DevOps work almost similar to the native version of dependabot on GitHub, hosted in your own Kubernetes cluster. It supports:
 
 1. Pulling configuration from a file located at `.azuredevops/dependabot.yml`.
-2. Adding/updating the file, wold immediately trigger a run.
-3. Viewing the most recent runs for each repository, project and organization configured.
-4. Hosted on Kubernetes is easier, but using build agents, would be an option to explore albeit limited.
-5. Extra credentials for things like private registries, feeds and package repositories.
-
-Currently, we have an implementation that works internally but is still a work in progress.
+2. Adding/updating the file, triggers a run.
+3. Extra credentials for private registries, feeds and package repositories.
+4. Hosted on Kubernetes; easier compared to using Azure build agents.
+5. Auto resolving of merge conflicts using webhooks.
+6. Viewing the most recent runs for each repository, project and organization configured.
 
 ## Still using the old `*.visualstudio.com` URL?
 
