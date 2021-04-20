@@ -4,7 +4,9 @@ require "dependabot/file_parsers"
 require "dependabot/update_checkers"
 require "dependabot/file_updaters"
 require "dependabot/pull_request_creator"
+require "dependabot/pull_request_updater"
 require "dependabot/omnibus"
+require_relative "azure_helpers"
 
 # Full name of the repo you want to create pull requests for.
 organization = ENV["AZURE_ORGANIZATION"]
@@ -120,9 +122,9 @@ unless json_credentials.to_s.strip.empty?
 end
 
 # Get the work item to attach
-work_item_id = ENV['AZURE_WORK_ITEM_ID'].to_i || nil
+work_item_id = ENV['AZURE_WORK_ITEM_ID'] || nil
 if work_item_id
-  puts "Pull Requests shall be linked to work item ##{work_item_id}"
+  puts "Pull Requests shall be linked to work item #{work_item_id}"
 end
 
 #####################################
@@ -199,6 +201,16 @@ def ignore_conditions_for(options, dependency)
   found ? found['versions'] : []
 end
 
+################################################
+# Get active pull requests for this repository #
+################################################
+azure_client = Dependabot::Clients::Azure.for_source(
+  source: source,
+  credentials: credentials,
+)
+default_branch_name = azure_client.fetch_default_branch(source.repo)
+active_pull_requests_for_this_repo = azure_client.pull_requests_active(default_branch_name)
+
 dependencies.select(&:top_level?).each do |dep|
   # Check if we have reached maximum number of open pull requests
   if pull_requests_limit > 0 && pull_requests_count >= pull_requests_limit
@@ -264,50 +276,129 @@ dependencies.select(&:top_level?).each do |dep|
 
     updated_files = updater.updated_dependency_files
 
+    ###################################
+    # Find out if a PR already exists #
+    ###################################
+    conflict_pull_request_commit_id = nil
+    conflict_pull_request_id = nil
+    existing_pull_request = nil
+    active_pull_requests_for_this_repo.each do |pr|
+      pr_id = pr["pullRequestId"]
+      title = pr["title"]
+      sourceRefName = pr["sourceRefName"]
+
+      # Filter those containing " #{dep.name} "
+      # The prefix " " and suffix " " avoids taking PRS for dependencies named the same
+      # e.g. Tingle.EventBus and Tingle.EventBus.Transports.Azure.ServiceBus
+      next if !title.include?(" #{dep.name} ")
+
+      # Ensure the title contains the current dependency version
+      # Sometimes, the dep.version might be null such as in npm
+      # when the package.lock.json is not checked into source.
+      if title.include?(dep.name) && dep.version && title.include?(dep.version)
+        # If the title does not contain the updated version,
+        # we need to close the PR and delete it's branch,
+        # because there is a newer version available
+        if !title.include?(updated_deps[0].version)
+          # Close old version PR
+          azure_client.pull_request_abandon(pr_id)
+          azure_client.branch_delete(sourceRefName)
+          puts "Closed Pull Request ##{pr_id}"
+          next
+        end
+
+        # If the merge status of the current PR is not successful,
+        # we need to resolve the merge conflicts
+        existing_pull_request = pr
+        if pr["mergeStatus"] != "succeeded"
+          # ignore pull request manully edited
+          next if azure_client.pull_request_commits(pr_id).length > 1
+          # keep pull request
+          conflict_pull_request_commit_id = pr["lastMergeSourceCommit"]["commitId"]
+          conflict_pull_request_id = pr_id
+          break
+        end
+      end
+    end
+
+    pull_request = nil
     pull_request_id = nil
-    ########################################
-    # Create a pull request for the update #
-    ########################################
-    pr_creator = Dependabot::PullRequestCreator.new(
-      source: source,
-      base_commit: commit,
-      dependencies: updated_deps,
-      files: updated_files,
-      credentials: credentials,
-      # assignees: assignees,
-      author_details: {
-        email: "noreply@github.com",
-        name: "dependabot[bot]"
-      },
-      label_language: true,
-      provider_metadata: {
-        work_item: work_item_id,
-      }
-    )
+    if conflict_pull_request_commit_id && conflict_pull_request_id
+      ##############################################
+      # Update pull request with conflict resolved #
+      ##############################################
+      pr_updater = Dependabot::PullRequestUpdater.new(
+        source: source,
+        base_commit: commit,
+        old_commit: conflict_pull_request_commit_id,
+        files: updated_files,
+        credentials: credentials,
+        pull_request_number: conflict_pull_request_id,
+      )
 
-    print "Submitting #{dep.name} pull request for creation. "
-    pull_request = pr_creator.create
+      print "Submitting pull request (##{conflict_pull_request_id}) update for #{dep.name}. "
+      pr_updater.update
+      pull_request = existing_pull_request
+      pull_request_id = conflict_pull_request_id
+      puts "Done."
+    elsif !existing_pull_request # Only create PR if there is none existing
+      ########################################
+      # Create a pull request for the update #
+      ########################################
+      pr_creator = Dependabot::PullRequestCreator.new(
+        source: source,
+        base_commit: commit,
+        dependencies: updated_deps,
+        files: updated_files,
+        credentials: credentials,
+        # assignees: assignees,
+        author_details: {
+          email: "noreply@github.com",
+          name: "dependabot[bot]"
+        },
+        label_language: true,
+        provider_metadata: {
+          work_item: work_item_id,
+        }
+      )
 
-    if pull_request
-      content = JSON[pull_request.body]
-      status_code = pull_request&.status
-      pull_request_id = content["pullRequestId"]
-      if status_code == 201
-        puts "Done (PR ##{pull_request_id})"
+      print "Submitting #{dep.name} pull request for creation. "
+      pull_request = pr_creator.create
+
+      if pull_request && pull_request&.status == 201
+        content = JSON[pull_request.body]
+        pull_request_id = content["pullRequestId"]
+        puts "Done (PR ##{pull_request_id})."
       else
         puts "Failed! PR already exists or an error has occurred."
-        puts "Status: #{status_code}."
+        puts "Status: #{pull_request&.status}."
         puts "Message #{content["message"]}"
         # TODO: throw exception here? (pull_request.create does not throw)
       end
     else
-      puts "Seems PR is already present."
+      pull_request = existing_pull_request # One already existed
+      pull_request_id = pull_request["pullRequestId"]
+      puts "Pull request for #{dep.version} already exists (##{pull_request_id}) and does not need updating."
     end
 
     pull_requests_count += 1
     next unless pull_request_id
 
-    # TODO: support setting auto complete here
+    # TODO: support approving the PR
+
+    # Set auto complete for this Pull Request
+    # Pull requests that pass all policies will be merged automatically.
+    if ENV["AZURE_SET_AUTO_COMPLETE"]
+      auto_complete_user_id = pull_request["createdBy"]["id"]
+      puts "Setting auto complete on ##{pull_request_id}."
+      # WARN: changing the naming of these arguements (or lack of) causes some wired error
+      azure_client.pull_request_auto_complete(
+        pull_request_id,
+        auto_complete_user_id,
+        merge_strategy: "squash",
+        delete_source_branch: true,
+      )
+    end
 
   rescue StandardError => e
     raise e if fail_on_exception

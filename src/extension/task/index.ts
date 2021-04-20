@@ -139,6 +139,10 @@ async function run() {
       dockerRunner.arg(["-e", `AZURE_WORK_ITEM_ID=${workItemId}`]);
     }
 
+    // Set auto complete, if set
+    let setAutoComplete = tl.getBoolInput('setAutoComplete', false);
+    dockerRunner.arg(["-e", `AZURE_SET_AUTO_COMPLETE=${setAutoComplete}`]);
+
     // Set exception behaviour
     let failOnException = tl.getBoolInput("failOnException", true);
     dockerRunner.arg(["-e", `DEPENDABOT_FAIL_ON_EXCEPTION=${failOnException}`]);
@@ -161,6 +165,7 @@ async function run() {
     else updates = getConfigFromInputs();
 
     for (const update of updates) {
+      // TODO: ensure the arguments are cleared for every call
       dockerRunner.arg(["-e", `DEPENDABOT_PACKAGE_MANAGER=${update.packageEcosystem}`]);
 
       // Set the directory
