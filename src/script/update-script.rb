@@ -389,12 +389,14 @@ dependencies.select(&:top_level?).each do |dep|
     # Set auto complete for this Pull Request
     # Pull requests that pass all policies will be merged automatically.
     if ENV["AZURE_SET_AUTO_COMPLETE"]
+      auto_complete_user_id = pull_request["createdBy"]["id"]
+      puts "Setting auto complete on ##{pull_request_id}."
+      # WARN: changing the naming of these arguements (or lack of) causes some wired error
       azure_client.pull_request_auto_complete(
         pull_request_id,
-        deleteSourceBranch: true,
-        # https://docs.microsoft.com/en-us/rest/api/azure/devops/git/pull%20requests/update?view=azure-devops-rest-6.0#gitpullrequestmergestrategy
-        strategy: "squash", # Possible values: noFastForward, rebase, rebaseMerge, squash
-        user_id: pull_request["createdBy"]["id"]
+        auto_complete_user_id,
+        merge_strategy: "squash",
+        delete_source_branch: true,
       )
     end
 
