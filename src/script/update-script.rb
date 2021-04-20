@@ -203,7 +203,7 @@ end
 def ignore_conditions_for(options, dependency)
   # Find where the name matches then get an array of version requirements, e.g. ["4.x", "5.x"]
   found = options.find { |ig| dependency.name.match?(ig['name']) }
-  found ? found['versions'] : []
+  found ? found['versions'] || [] : []
 end
 
 ################################################
