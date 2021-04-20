@@ -209,7 +209,7 @@ azure_client = Dependabot::Clients::Azure.for_source(
   credentials: credentials,
 )
 default_branch_name = azure_client.fetch_default_branch(source.repo)
-active_pull_requests_for_this_repo = azure_get_active_prs(azure_client, source, default_branch_name)
+active_pull_requests_for_this_repo = azure_client.pull_requests_active(default_branch_name)
 
 dependencies.select(&:top_level?).each do |dep|
   # Check if we have reached maximum number of open pull requests
@@ -300,8 +300,8 @@ dependencies.select(&:top_level?).each do |dep|
         # because there is a newer version available
         if !title.include?(updated_deps[0].version)
           # Close old version PR
-          azure_abandon_pr(azure_client, source, pr_id)
-          azure_delete_branch(azure_client, source, sourceRefName)
+          azure_client.pull_request_abandon(pr_id)
+          azure_client.branch_delete(sourceRefName)
           puts "Closed Pull Request ##{pr_id}"
           next
         end
@@ -310,7 +310,7 @@ dependencies.select(&:top_level?).each do |dep|
         # we need to resolve the merge conflicts
         if pr["mergeStatus"] != "succeeded"
           # ignore pull request manully edited
-          next if azure_pull_request_commits(azure_client, source, pr_id).length > 1
+          next if azure_client.pull_request_commits(pr_id).length > 1
           # keep pull request
           conflict_pull_request_commit_id = pr["lastMergeSourceCommit"]["commitId"]
           conflict_pull_request_id = pr_id

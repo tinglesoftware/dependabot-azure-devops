@@ -1,58 +1,62 @@
 require "json"
-require "dependabot/file_fetchers"
-require "dependabot/file_parsers"
-require "dependabot/update_checkers"
-require "dependabot/file_updaters"
-require "dependabot/pull_request_creator"
-require "dependabot/omnibus"
+require "dependabot/shared_helpers"
+require "excon"
 
-def azure_get_active_prs(client, source, default_branch)
-    response = client.get(source.api_endpoint +
-        source.organization + "/" + source.project +
-        "/_apis/git/repositories/" + source.unscoped_repo +
-        "/pullrequests?searchCriteria.status=active" \
-        "&searchCriteria.targetRefName=refs/heads/" + default_branch)
+module Dependabot
+    module Clients
+        class Azure
 
-    JSON.parse(response.body).fetch("value")
-end
+            def pull_requests_active(default_branch)
+                response = get(source.api_endpoint +
+                    source.organization + "/" + source.project +
+                    "/_apis/git/repositories/" + source.unscoped_repo +
+                    "/pullrequests?searchCriteria.status=active" \
+                    "&searchCriteria.targetRefName=refs/heads/" + default_branch)
 
-def azure_abandon_pr(client, source, pull_request_id)
-    # TODO: implement this
-    puts "Abandoning PR is not yet implemented"
-end
+                JSON.parse(response.body).fetch("value")
+            end
 
-def azure_delete_branch(client, source, name)
-    branch_name = name.gsub?("refs/heads/", "")
-    branch = client.branch(branch_name)
-    branch_object_id = branch["objectId"]
+            def pull_request_abandon(pull_request_id)
+                # TODO: implement this
+                puts "Abandoning PR is not yet implemented"
+            end
 
-    # https://developercommunity.visualstudio.com/t/delete-tags-or-branches-using-rest-apis/698220
-    # https://github.com/MicrosoftDocs/azure-devops-docs/issues/2648
-    content = [
-        {
-            name: name,
-            oldObjectId: branch_object_id,
-            newObjectId: "0000000000000000000000000000000000000000"
-        }
-    ]
+            def branch_delete(name)
+                branch_name = name.gsub?("refs/heads/", "")
+                branch = branch(branch_name)
+                branch_object_id = branch["objectId"]
 
-    response = client.post(source.api_endpoint +
-                source.organization + "/" + source.project +
-                "/_apis/git/repositories/" + source.unscoped_repo +
-                "/refs?api-version=5.0", content.to_json)
-end
+                # https://developercommunity.visualstudio.com/t/delete-tags-or-branches-using-rest-apis/698220
+                # https://github.com/MicrosoftDocs/azure-devops-docs/issues/2648
+                content = [
+                    {
+                        name: name,
+                        oldObjectId: branch_object_id,
+                        newObjectId: "0000000000000000000000000000000000000000"
+                    }
+                ]
 
-def azure_pull_request_commits(client, source, pull_request_id)
-    response = client.get(source.api_endpoint +
-        source.organization + "/" + source.project +
-        "/_apis/git/repositories/" + source.unscoped_repo +
-        "/pullrequests/" + "#{pull_request_id}" +
-        "/commits")
+                response = post(source.api_endpoint +
+                    source.organization + "/" + source.project +
+                    "/_apis/git/repositories/" + source.unscoped_repo +
+                    "/refs?api-version=5.0", content.to_json)
+            end
 
-    JSON.parse(response.body).fetch("value")
-end
+            def pull_request_commits(pull_request_id)
+                response = get(source.api_endpoint +
+                    source.organization + "/" + source.project +
+                    "/_apis/git/repositories/" + source.unscoped_repo +
+                    "/pullrequests/" + "#{pull_request_id}" +
+                    "/commits")
 
-def azure_set_auto_complete(client, source, pull_request_id)
-    # TODO: implement this
-    puts "Setting auto complete is not yet implemented"
+                JSON.parse(response.body).fetch("value")
+            end
+
+            def pull_request_auto_complete(pull_request_id)
+                # TODO: implement this
+                puts "Setting auto complete is not yet implemented"
+            end
+
+        end
+    end
 end
