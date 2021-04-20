@@ -112,7 +112,7 @@
     {
       "name": "setAutoComplete",
       "type": "boolean",
-      "label": "Determines if the pull requests that dependabot creates should have auto complete set",
+      "label": "Determines if the pull requests that dependabot creates should have auto complete set.",
       "defaultValue": false,
       "required": false,
       "helpMarkDown": "When set to `true`, pull requests that pass all policies will be merged automatically."
@@ -141,6 +141,14 @@
       "label": "Target Repository Name",
       "required": false,
       "helpMarkDown": "The name of the repository to target for processing. If this value is not supplied then the Build Repository Name is used. Supplying this value allows creation of a single pipeline that runs Dependablot against multiple repositories."
+    },
+    {
+      "name": "excludeRequirementsToUnlock",
+      "type": "string",
+      "groupName": "advanced",
+      "label": "Space-separated list of dependency updates requirements to be excluded.",
+      "required": false,
+      "helpMarkDown": "Exclude certain dependency updates requirements. See list of allowed values [here](https://github.com/dependabot/dependabot-core/issues/600#issuecomment-407808103). Useful if you have lots of dependencies and the update script too slow. The values provided are space-separated. Example: `own all` to only use the `none` version requirement."
     },
     {
       "name": "workItemId",
