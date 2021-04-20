@@ -112,7 +112,7 @@
     {
       "name": "setAutoComplete",
       "type": "boolean",
-      "label": "Determines if the pull requests that dependabot creates should have auto complete set",
+      "label": "Determines if the pull requests that dependabot creates should have auto complete set.",
       "defaultValue": false,
       "required": false,
       "helpMarkDown": "When set to `true`, pull requests that pass all policies will be merged automatically."
