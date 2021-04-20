@@ -17,8 +17,14 @@ module Dependabot
             end
 
             def pull_request_abandon(pull_request_id)
-                # TODO: implement this
-                puts "Abandoning PR is not yet implemented"
+                content = {
+                    status: "abandoned"
+                }
+
+                response = patch(source.api_endpoint +
+                    source.organization + "/" + source.project +
+                    "/_apis/git/repositories/" + source.unscoped_repo +
+                    "/pullrequests/#{pull_request_id}?api-version=5.0", content.to_json)
             end
 
             def branch_delete(name)
@@ -57,6 +63,25 @@ module Dependabot
                 puts "Setting auto complete is not yet implemented"
             end
 
+            def patch(url, json)
+                response = Excon.patch(
+                    url,
+                    body: json,
+                    user: credentials&.fetch("username", nil),
+                    password: credentials&.fetch("password", nil),
+                    idempotent: true,
+                    **SharedHelpers.excon_defaults(
+                        headers: auth_header.merge(
+                            {
+                            "Content-Type" => "application/json"
+                            }
+                        )
+                    )
+                )
+                raise NotFound if response.status == 404
+
+                response
+            end
         end
     end
 end
