@@ -153,6 +153,10 @@ async function run() {
       dockerRunner.arg(["-e", `DEPENDABOT_EXTRA_CREDENTIALS=${extraCredentials}`]);
     }
 
+    // Set the excluded requirements to unlock
+    let excludeRequirementsToUnlock = tl.getInput('excludeRequirementsToUnlock') || "";
+    dockerRunner.arg(["-e", `DEPENDABOT_EXCLUDE_REQUIREMENTS_TO_UNLOCK=${excludeRequirementsToUnlock}`]);
+
     // Get the override allow and ignore
     let allowOvr = tl.getVariable("DEPENDABOT_ALLOW");
     let ignoreOvr = tl.getVariable("DEPENDABOT_IGNORE");
