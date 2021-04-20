@@ -121,7 +121,15 @@ async function run() {
     dockerRunner.arg(["-e", `AZURE_PROJECT=${project}`]);
 
     // Set the repository
-    let repository: string = tl.getVariable("Build.Repository.Name");
+    let repository: string = tl.getInput("targetRepositoryName");
+
+    if (!repository) {
+      tl.debug(
+        "No custom repository provided. The Pipeline Repository Name shall be used."
+      );
+
+      repository = tl.getVariable("Build.Repository.Name");
+    }
     repository = encodeURI(repository); // encode special characters like spaces
     dockerRunner.arg(["-e", `AZURE_REPOSITORY=${repository}`]);
 
