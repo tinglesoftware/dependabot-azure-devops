@@ -25,6 +25,7 @@ docker run --rm -t \
            -e DEPENDABOT_ALLOW=<your-allowed-packages> \
            -e DEPENDABOT_IGNORE=<your-ignore-packages> \
            -e AZURE_WORK_ITEM_ID=<your-work-item-id> \
+           -e AZURE_SET_AUTO_COMPLETE=<true/false> \
            tingle/dependabot-azure-devops:0.2.0
 ```
 
@@ -47,6 +48,7 @@ docker run --rm -t \
            -e DEPENDABOT_ALLOW='[{\"name\":"django*",\"type\":\"direct\"}]' \
            -e DEPENDABOT_IGNORE='[{\"name\":\"express\",\"versions\":[\"4.x\",\"5.x\"]}]' \
            -e AZURE_WORK_ITEM_ID=123 \
+           -e AZURE_SET_AUTO_COMPLETE=true \
            tingle/dependabot-azure-devops:0.2.0
 ```
 
@@ -72,3 +74,4 @@ To run the script, some environment variables are required.
 |DEPENDABOT_IGNORE|**_Optional_**. The dependencies to be ignored, in JSON format. This can be used to control which packages can be updated. For example: `[{\"name\":\"express\",\"versions\":[\"4.x\",\"5.x\"]}]`. See [official docs](https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/configuration-options-for-dependency-updates#ignore) for more.|
 |DEPENDABOT_FAIL_ON_EXCEPTION|**_Optional_**. Determines if the execution should fail when an exception occurs. Defaults to `true`.|
 |AZURE_WORK_ITEM_ID|**_Optional_**. The identifier of the work item to be linked to the Pull Requests that dependabot creates.|
+|AZURE_SET_AUTO_COMPLETE|**_Optional_**. Determines if the pull requests that dependabot creates should have auto complete set. When set to `true`, pull requests that pass all policies will be merged automatically|
