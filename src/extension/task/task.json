@@ -106,8 +106,16 @@
       "type": "boolean",
       "label": "Determines if the execution should fail when an exception occurs. Defaults to `true`",
       "defaultValue": false,
-      "required": true,
+      "required": false,
       "helpMarkDown": "When set to true, a failure in updating a single dependency will cause the container execution to fail thereby causing the task to fail. This is important when you want a single failure to prevent trying to update other dependencies."
+    },
+    {
+      "name": "setAutoComplete",
+      "type": "boolean",
+      "label": "Determines if the pull requests that dependabot creates should have auto complete set",
+      "defaultValue": false,
+      "required": false,
+      "helpMarkDown": "When set to `true`, pull requests that pass all policies will be merged automatically."
     },
     {
       "name": "gitHubConnection",
