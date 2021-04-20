@@ -281,6 +281,7 @@ dependencies.select(&:top_level?).each do |dep|
     ###################################
     conflict_pull_request_commit_id = nil
     conflict_pull_request_id = nil
+    existing_pull_request = nil
     active_pull_requests_for_this_repo.each do |pr|
       pr_id = pr["pullRequestId"]
       title = pr["title"]
@@ -308,6 +309,7 @@ dependencies.select(&:top_level?).each do |dep|
 
         # If the merge status of the current PR is not successful,
         # we need to resolve the merge conflicts
+        existing_pull_request = pr
         if pr["mergeStatus"] != "succeeded"
           # ignore pull request manully edited
           next if azure_client.pull_request_commits(pr_id).length > 1
@@ -319,6 +321,7 @@ dependencies.select(&:top_level?).each do |dep|
       end
     end
 
+    pull_request = nil
     pull_request_id = nil
     if conflict_pull_request_commit_id && conflict_pull_request_id
       ##############################################
@@ -333,11 +336,12 @@ dependencies.select(&:top_level?).each do |dep|
         pull_request_number: conflict_pull_request_id,
       )
 
-      puts "Submitting pull request (##{conflict_pull_request_id}) update for #{dep.name}."
+      print "Submitting pull request (##{conflict_pull_request_id}) update for #{dep.name}. "
       pr_updater.update
+      pull_request = existing_pull_request
       pull_request_id = conflict_pull_request_id
-      puts "Done PR ##{pull_request_id} updated."
-    else # TODO: do not try creating PR if it already exists
+      puts "Done."
+    elsif !existing_pull_request # Only create PR if there is none existing
       ########################################
       # Create a pull request for the update #
       ########################################
@@ -376,6 +380,10 @@ dependencies.select(&:top_level?).each do |dep|
       else
         puts "Seems PR is already present."
       end
+    else
+      pull_request = existing_pull_request # One already existed
+      pull_request_id = pull_request["pullRequestId"]
+      puts "Pull request for #{dep.version} already exists (##{pull_request_id}) and does not need updating."
     end
 
     pull_requests_count += 1
@@ -391,7 +399,7 @@ dependencies.select(&:top_level?).each do |dep|
         deleteSourceBranch: true,
         # https://docs.microsoft.com/en-us/rest/api/azure/devops/git/pull%20requests/update?view=azure-devops-rest-6.0#gitpullrequestmergestrategy
         strategy: "squash", # Possible values: noFastForward, rebase, rebaseMerge, squash
-        user_id: "" # TODO: get the userId from the created PR
+        user_id: pull_request["createdBy"]["id"]
       )
     end
 
