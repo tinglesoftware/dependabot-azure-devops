@@ -76,6 +76,11 @@ if package_manager == "npm_and_yarn"
   end
 end
 
+# See description of requirements here:
+# https://github.com/dependabot/dependabot-core/issues/600#issuecomment-407808103
+# https://github.com/wemake-services/kira-dependencies/pull/210
+excluded_requirements = ENV['DEPENDABOT_EXCLUDE_REQUIREMENTS_TO_UNLOCK']&.split(" ")&.map(&:to_sym) || []
+
 #################################
 # Setup the hostname to be used #
 #################################
@@ -241,11 +246,11 @@ dependencies.select(&:top_level?).each do |dep|
 
     requirements_to_unlock =
       if !checker.requirements_unlocked_or_can_be?
-        if checker.can_update?(requirements_to_unlock: :none) then :none
+        if !excluded_requirements.include?(:none) && checker.can_update?(requirements_to_unlock: :none) then :none
         else :update_not_possible
         end
-      elsif checker.can_update?(requirements_to_unlock: :own) then :own
-      elsif checker.can_update?(requirements_to_unlock: :all) then :all
+      elsif !excluded_requirements.include?(:own) && checker.can_update?(requirements_to_unlock: :own) then :own
+      elsif !excluded_requirements.include?(:all) && checker.can_update?(requirements_to_unlock: :all) then :all
       else :update_not_possible
       end
 
