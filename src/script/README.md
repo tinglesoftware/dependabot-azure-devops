@@ -3,7 +3,7 @@
 First, you need to pull the image locally to your machine:
 
 ```bash
-docker pull tingle/dependabot-azure-devops:0.2.0
+docker pull tingle/dependabot-azure-devops:0.3.0
 ```
 
 Next create and run a container from the image:
@@ -26,7 +26,7 @@ docker run --rm -t \
            -e DEPENDABOT_IGNORE=<your-ignore-packages> \
            -e AZURE_WORK_ITEM_ID=<your-work-item-id> \
            -e AZURE_SET_AUTO_COMPLETE=<true/false> \
-           tingle/dependabot-azure-devops:0.2.0
+           tingle/dependabot-azure-devops:0.3.0
 ```
 
 An example:
@@ -49,7 +49,7 @@ docker run --rm -t \
            -e DEPENDABOT_IGNORE='[{\"name\":\"express\",\"versions\":[\"4.x\",\"5.x\"]}]' \
            -e AZURE_WORK_ITEM_ID=123 \
            -e AZURE_SET_AUTO_COMPLETE=true \
-           tingle/dependabot-azure-devops:0.2.0
+           tingle/dependabot-azure-devops:0.3.0
 ```
 
 ## Environment Variables

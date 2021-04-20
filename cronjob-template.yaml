@@ -35,7 +35,7 @@ spec:
           activeDeadlineSeconds: 3600
           containers:
           - name: dependabot
-            image: 'tingle/dependabot-azure-devops:0.2.0' # Use a specific tag otherwise the image may be cached already
+            image: 'tingle/dependabot-azure-devops:0.3.0' # Use a specific tag otherwise the image may be cached already
             resources:
               limits:
                 memory: "300Mi"
