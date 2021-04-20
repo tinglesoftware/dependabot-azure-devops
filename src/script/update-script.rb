@@ -122,9 +122,9 @@ unless json_credentials.to_s.strip.empty?
 end
 
 # Get the work item to attach
-work_item_id = ENV['AZURE_WORK_ITEM_ID'].to_i || nil
+work_item_id = ENV['AZURE_WORK_ITEM_ID'] || nil
 if work_item_id
-  puts "Pull Requests shall be linked to work item ##{work_item_id}"
+  puts "Pull Requests shall be linked to work item #{work_item_id}"
 end
 
 #####################################

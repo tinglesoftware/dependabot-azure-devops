@@ -136,7 +136,7 @@
     },
     {
       "name": "workItemId",
-      "type": "int",
+      "type": "string",
       "groupName": "work",
       "label": "Work item identifier to be linked to the Pull Requests.",
       "required": false,
