@@ -14,6 +14,9 @@ project = ENV["AZURE_PROJECT"]
 repository = ENV["AZURE_REPOSITORY"]
 repo_name = "#{organization}/#{project}/_git/#{repository}"
 
+# Set auto complete on created pull requests
+set_auto_complete = ENV["AZURE_SET_AUTO_COMPLETE"] == "true"
+
 # Directory where the base dependency files are.
 directory = ENV["DEPENDABOT_DIRECTORY"] || "/"
 
@@ -393,7 +396,7 @@ dependencies.select(&:top_level?).each do |dep|
 
     # Set auto complete for this Pull Request
     # Pull requests that pass all policies will be merged automatically.
-    if ENV["AZURE_SET_AUTO_COMPLETE"]
+    if set_auto_complete
       auto_complete_user_id = pull_request["createdBy"]["id"]
       puts "Setting auto complete on ##{pull_request_id}."
       # WARN: changing the naming of these arguements (or lack of) causes some wired error
