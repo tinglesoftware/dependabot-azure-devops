@@ -381,10 +381,10 @@ dependencies.select(&:top_level?).each do |dep|
           puts "Done (PR ##{pull_request_id})."
         else
           content = JSON[pull_request.body]
+          message = content["message"]
           puts "Failed! PR already exists or an error has occurred."
-          puts "Status: #{req_status}."
-          puts "Message #{content["message"]}"
-          # TODO: throw exception here? (pull_request.create does not throw)
+          # throw exception here because pull_request.create does not throw
+          raise StandardError.new "Pull Request creation failed with status #{req_status}. Message: #{message}"
         end
       end
     else
