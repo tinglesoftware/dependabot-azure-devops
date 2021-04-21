@@ -373,15 +373,19 @@ dependencies.select(&:top_level?).each do |dep|
       print "Submitting #{dep.name} pull request for creation. "
       pull_request = pr_creator.create
 
-      if pull_request && pull_request&.status == 201
-        content = JSON[pull_request.body]
-        pull_request_id = content["pullRequestId"]
-        puts "Done (PR ##{pull_request_id})."
-      else
-        puts "Failed! PR already exists or an error has occurred."
-        puts "Status: #{pull_request&.status}."
-        puts "Message #{content["message"]}"
-        # TODO: throw exception here? (pull_request.create does not throw)
+      if pull_request
+        req_status = pull_request&.status
+        if req_status == 201
+          pull_request = JSON[pull_request.body]
+          pull_request_id = pull_request["pullRequestId"]
+          puts "Done (PR ##{pull_request_id})."
+        else
+          content = JSON[pull_request.body]
+          message = content["message"]
+          puts "Failed! PR already exists or an error has occurred."
+          # throw exception here because pull_request.create does not throw
+          raise StandardError.new "Pull Request creation failed with status #{req_status}. Message: #{message}"
+        end
       end
     else
       pull_request = existing_pull_request # One already existed
