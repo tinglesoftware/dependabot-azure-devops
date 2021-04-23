@@ -386,6 +386,8 @@ dependencies.select(&:top_level?).each do |dep|
           # throw exception here because pull_request.create does not throw
           raise StandardError.new "Pull Request creation failed with status #{req_status}. Message: #{message}"
         end
+      else
+        puts "Seems PR is already present."
       end
     else
       pull_request = existing_pull_request # One already existed

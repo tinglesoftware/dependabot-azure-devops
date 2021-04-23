@@ -28,7 +28,7 @@ module Dependabot
             end
 
             def branch_delete(name)
-                branch_name = name.gsub?("refs/heads/", "")
+                branch_name = name.gsub("refs/heads/", "")
                 branch = branch(branch_name)
                 branch_object_id = branch["objectId"]
 
