@@ -76,6 +76,44 @@ module Dependabot
                     "/pullrequests/#{pull_request_id}?api-version=6.0", content.to_json)
             end
 
+            def pull_request_approve(pull_request_id, reviewer_name, reviewer_token)
+                # https://docs.microsoft.com/en-us/rest/api/azure/devops/memberentitlementmanagement/user%20entitlements/search%20user%20entitlements?view=azure-devops-rest-6.0
+                response = get("https://vsaex.dev.azure.com/" + source.organization + "/_apis/userentitlements?$filter=name eq '#{reviewer_name}'&api-version=6.0-preview.3")
+
+                user_id = JSON.parse(response.body).fetch("members")[0]['id']
+
+                # https://docs.microsoft.com/en-us/rest/api/azure/devops/git/pull%20request%20reviewers/create%20pull%20request%20reviewer?view=azure-devops-rest-6.0
+                content = {
+                    # 10 - approved 5 - approved with suggestions 0 - no vote -5 - waiting for author -10 - rejected
+                    vote: 10
+                }
+
+                response = put(source.api_endpoint +
+                    source.organization + "/" + source.project +
+                    "/_apis/git/repositories/" + source.unscoped_repo +
+                    "/pullrequests/#{pull_request_id}/reviewers/#{user_id}?api-version=6.0", content.to_json, reviewer_token)
+            end
+
+            def put(url, json, token)
+                response = Excon.put(
+                    url,
+                    body: json,
+                    user: credentials&.fetch("username", nil),
+                    password: token,
+                    idempotent: true,
+                    **SharedHelpers.excon_defaults(
+                        headers: auth_header.merge(
+                            {
+                                "Content-Type" => "application/json"
+                            }
+                        )
+                    )
+                )
+                raise NotFound if response.status == 404
+
+                response
+            end
+
             def patch(url, json)
                 response = Excon.patch(
                     url,

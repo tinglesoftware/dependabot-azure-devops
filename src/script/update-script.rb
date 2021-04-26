@@ -17,6 +17,11 @@ repo_name = "#{organization}/#{project}/_git/#{repository}"
 # Set auto complete on created pull requests
 set_auto_complete = ENV["AZURE_SET_AUTO_COMPLETE"] == "true"
 
+# Automatically Approve the PR
+auto_approve_pr = ENV["AZURE_AUTO_APPROVE_PR"] == "true"
+auto_approve_token = ENV["AZURE_AUTO_APPROVE_TOKEN"]
+auto_approve_user = ENV["AZURE_AUTO_APPROVE_NAME"]
+
 # Directory where the base dependency files are.
 directory = ENV["DEPENDABOT_DIRECTORY"] || "/"
 
@@ -398,7 +403,15 @@ dependencies.select(&:top_level?).each do |dep|
     pull_requests_count += 1
     next unless pull_request_id
 
-    # TODO: support approving the PR
+    if auto_approve_pr
+      puts "Auto Approving PR for user #{auto_approve_user}"
+
+      azure_client.pull_request_approve(
+        pull_request_id,
+        auto_approve_user,
+        auto_approve_token
+      )
+    end
 
     # Set auto complete for this Pull Request
     # Pull requests that pass all policies will be merged automatically.
