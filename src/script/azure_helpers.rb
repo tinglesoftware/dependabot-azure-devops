@@ -88,13 +88,13 @@ module Dependabot
                     vote: 10
                 }
 
-                response = put(source.api_endpoint +
+                response = put_with_token(source.api_endpoint +
                     source.organization + "/" + source.project +
                     "/_apis/git/repositories/" + source.unscoped_repo +
                     "/pullrequests/#{pull_request_id}/reviewers/#{user_id}?api-version=6.0", content.to_json, reviewer_token)
             end
 
-            def put(url, json, token)
+            def put_with_token(url, json, token)
                 response = Excon.put(
                     url,
                     body: json,
