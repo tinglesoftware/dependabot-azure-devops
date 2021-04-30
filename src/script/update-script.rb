@@ -405,13 +405,7 @@ dependencies.select(&:top_level?).each do |dep|
     if set_auto_complete
       auto_complete_user_id = pull_request["createdBy"]["id"]
       puts "Setting auto complete on ##{pull_request_id}."
-      # WARN: changing the naming of these arguements (or lack of) causes some wired error
-      azure_client.pull_request_auto_complete(
-        pull_request_id,
-        auto_complete_user_id,
-        merge_strategy: "squash",
-        delete_source_branch: true,
-      )
+      azure_client.pull_request_auto_complete(pull_request_id, auto_complete_user_id)
     end
 
   rescue StandardError => e
