@@ -29,8 +29,8 @@ module Dependabot
 
             def branch_delete(name)
                 branch_name = name.gsub("refs/heads/", "")
-                branch = branch(branch_name)
-                branch_object_id = branch["objectId"]
+                branch_object = branch(branch_name)
+                branch_object_id = branch_object["objectId"]
 
                 # https://developercommunity.visualstudio.com/t/delete-tags-or-branches-using-rest-apis/698220
                 # https://github.com/MicrosoftDocs/azure-devops-docs/issues/2648
