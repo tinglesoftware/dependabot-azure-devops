@@ -147,12 +147,12 @@ async function run() {
     let autoApprove = tl.getBoolInput('autoApprove', false);
     if (autoApprove) {
       // Get auto approve variables
-      var autoApproveUser = tl.getInput("autoApproveUser");
-      var autoApproveToken = tl.getInput("autoApproveToken");
+      var azureAutoAprooveUserEmail = tl.getInput("azureAutoAprooveUserEmail");
+      var azureAutoApproveToken = tl.getInput("azureAutoApproveToken");
 
       dockerRunner.arg(["-e", `AZURE_AUTO_APPROVE_PR=${autoApprove}`]);
-      dockerRunner.arg(["-e", `AZURE_AUTO_APPROVE_NAME=${autoApproveUser}`]);
-      dockerRunner.arg(["-e", `AZURE_AUTO_APPROVE_TOKEN=${autoApproveToken}`]);
+      dockerRunner.arg(["-e", `AZURE_AUTO_APPROVE_USER_EMAIL=${azureAutoAprooveUserEmail}`]);
+      dockerRunner.arg(["-e", `AZURE_AUTO_APPROVE_USER_TOKEN=${azureAutoApproveToken}`]);
     }
 
     // Set exception behaviour

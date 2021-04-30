@@ -19,8 +19,8 @@ set_auto_complete = ENV["AZURE_SET_AUTO_COMPLETE"] == "true"
 
 # Automatically Approve the PR
 auto_approve_pr = ENV["AZURE_AUTO_APPROVE_PR"] == "true"
-auto_approve_token = ENV["AZURE_AUTO_APPROVE_TOKEN"]
-auto_approve_user = ENV["AZURE_AUTO_APPROVE_NAME"]
+auto_approve_user_token = ENV["AZURE_AUTO_APPROVE_USER_TOKEN"]
+auto_approve_user_email = ENV["AZURE_AUTO_APPROVE_USER_EMAIL"]
 
 # Directory where the base dependency files are.
 directory = ENV["DEPENDABOT_DIRECTORY"] || "/"
@@ -404,12 +404,12 @@ dependencies.select(&:top_level?).each do |dep|
     next unless pull_request_id
 
     if auto_approve_pr
-      puts "Auto Approving PR for user #{auto_approve_user}"
+      puts "Auto Approving PR for user #{auto_approve_user_email}"
 
       azure_client.pull_request_approve(
         pull_request_id,
-        auto_approve_user,
-        auto_approve_token
+        auto_approve_user_email,
+        auto_approve_user_token
       )
     end
 

@@ -118,7 +118,7 @@
       "helpMarkDown": "When set to `true`, pull requests will automatically be approved by the specified user."
     },
     {
-      "name": "autoApproveUser",
+      "name": "azureAutoAprooveUserEmail",
       "type": "string",
       "label": "The email of the user that should approve the PR.",
       "defaultValue": "",
@@ -127,12 +127,12 @@
       "visibleRule": "autoApprove=true"
     },
     {
-      "name": "autoApproveToken",
+      "name": "azureAutoApproveToken",
       "type": "string",
       "label": "A personal access token of the user that should approve the PR.",
       "defaultValue": "",
       "required": false,
-      "helpMarkDown": "A personal access token of the user of that shall be used to approve the created PR automatically. The token must belong to the user which was specified by email.",
+      "helpMarkDown": "A personal access token of the user of that shall be used to approve the created PR automatically. The token must belong to the user which was specified by email. If the same user that creates the PR should approve, this can be left empty. This won't work with if the Build Service with the build service account!",
       "visibleRule": "autoApprove=true"
     },
     {
