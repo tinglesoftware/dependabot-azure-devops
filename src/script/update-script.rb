@@ -406,6 +406,11 @@ dependencies.select(&:top_level?).each do |dep|
     if auto_approve_pr
       puts "Auto Approving PR for user #{auto_approve_user_email}"
 
+      if not auto_approve_user_token
+        puts "No dedicated token set for auto approve - using regular Access Token"
+        auto_approve_user_token = ENV["AZURE_ACCESS_TOKEN"]
+      end
+
       azure_client.pull_request_approve(
         pull_request_id,
         auto_approve_user_email,
