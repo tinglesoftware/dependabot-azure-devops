@@ -64,9 +64,13 @@ jobs:
       run: |
         docker push "tingle/$IMAGE_NAME:latest"
 
-    - name: Push image to Docker Hub (versioned)
-      if: startsWith(github.ref, 'refs/tags')
+    - name: Push image to Docker Hub (FullSemVer)
+      if: "!startsWith(github.ref, 'refs/pull')"
       run: |
         docker push "tingle/$IMAGE_NAME:$GITVERSION_FULLSEMVER"
+
+    - name: Push image to Docker Hub (major, minor)
+      if: startsWith(github.ref, 'refs/tags')
+      run: |
         docker push "tingle/$IMAGE_NAME:$GITVERSION_MAJOR.$GITVERSION_MINOR"
         docker push "tingle/$IMAGE_NAME:$GITVERSION_MAJOR"
