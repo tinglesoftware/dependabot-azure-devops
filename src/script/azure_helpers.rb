@@ -58,7 +58,7 @@ module Dependabot
                 JSON.parse(response.body).fetch("value")
             end
 
-            def pull_request_auto_complete(pull_request_id, auto_complete_user_id, merge_strategy, delete_source_branch = false)
+            def pull_request_auto_complete(pull_request_id, auto_complete_user_id, merge_strategy)
                 # https://docs.microsoft.com/en-us/rest/api/azure/devops/git/pull%20requests/update?view=azure-devops-rest-6.0
                 content = {
                     autoCompleteSetBy: {
@@ -66,7 +66,7 @@ module Dependabot
                     },
                     completionOptions: {
                         mergeStrategy: merge_strategy,
-                        deleteSourceBranch: delete_source_branch,
+                        deleteSourceBranch: true,
                         transitionWorkItems: false
                     }
                 }

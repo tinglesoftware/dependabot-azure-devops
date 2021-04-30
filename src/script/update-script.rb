@@ -410,7 +410,6 @@ dependencies.select(&:top_level?).each do |dep|
         pull_request_id,
         auto_complete_user_id,
         merge_strategy: "squash",
-        delete_source_branch: true,
       )
     end
 
