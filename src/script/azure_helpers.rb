@@ -66,7 +66,8 @@ module Dependabot
                     },
                     completionOptions: {
                         mergeStrategy: merge_strategy,
-                        deleteSourceBranch: delete_source_branch
+                        deleteSourceBranch: delete_source_branch,
+                        transitionWorkItems: false
                     }
                 }
 
