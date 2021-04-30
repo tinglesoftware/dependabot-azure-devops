@@ -147,11 +147,11 @@ async function run() {
     let autoApprove = tl.getBoolInput('autoApprove', false);
     if (autoApprove) {
       // Get auto approve variables
-      var azureAutoAprooveUserEmail = tl.getInput("azureAutoAprooveUserEmail");
+      var azureAutoAproveUserEmail = tl.getInput("azureAutoAproveUserEmail");
       var azureAutoApproveToken = tl.getInput("azureAutoApproveToken");
 
       dockerRunner.arg(["-e", `AZURE_AUTO_APPROVE_PR=${autoApprove}`]);
-      dockerRunner.arg(["-e", `AZURE_AUTO_APPROVE_USER_EMAIL=${azureAutoAprooveUserEmail}`]);
+      dockerRunner.arg(["-e", `AZURE_AUTO_APPROVE_USER_EMAIL=${azureAutoAproveUserEmail}`]);
       dockerRunner.arg(["-e", `AZURE_AUTO_APPROVE_USER_TOKEN=${azureAutoApproveToken}`]);
     }
 

@@ -118,7 +118,7 @@
       "helpMarkDown": "When set to `true`, pull requests will automatically be approved by the specified user."
     },
     {
-      "name": "azureAutoAprooveUserEmail",
+      "name": "azureAutoAproveUserEmail",
       "type": "string",
       "label": "The email of the user that should approve the PR.",
       "defaultValue": "",
