@@ -26,6 +26,9 @@ docker run --rm -t \
            -e DEPENDABOT_IGNORE=<your-ignore-packages> \
            -e AZURE_WORK_ITEM_ID=<your-work-item-id> \
            -e AZURE_SET_AUTO_COMPLETE=<true/false> \
+           -e AZURE_AUTO_APPROVE_PR=<true/false> \
+           -e AZURE_AUTO_APPROVE_USER_EMAIL=<approving-user-email> \
+           -e AZURE_AUTO_APPROVE_USER_TOKEN=<approving-user-token-here> \
            tingle/dependabot-azure-devops:0.3.0
 ```
 
@@ -49,6 +52,9 @@ docker run --rm -t \
            -e DEPENDABOT_IGNORE='[{\"name\":\"express\",\"versions\":[\"4.x\",\"5.x\"]}]' \
            -e AZURE_WORK_ITEM_ID=123 \
            -e AZURE_SET_AUTO_COMPLETE=true \
+           -e AZURE_AUTO_APPROVE_PR=true \
+           -e AZURE_AUTO_APPROVE_USER_EMAIL=supervisor@contoso.com \
+           -e AZURE_AUTO_APPROVE_USER_TOKEN=ijkl..mnop \
            tingle/dependabot-azure-devops:0.3.0
 ```
 
@@ -76,3 +82,6 @@ To run the script, some environment variables are required.
 |DEPENDABOT_EXCLUDE_REQUIREMENTS_TO_UNLOCK|**_Optional_**. Exclude certain dependency updates requirements. See list of allowed values [here](https://github.com/dependabot/dependabot-core/issues/600#issuecomment-407808103). Useful if you have lots of dependencies and the update script too slow. The values provided are space-separated. Example: `own all` to only use the `none` version requirement.|
 |AZURE_WORK_ITEM_ID|**_Optional_**. The identifier of the work item to be linked to the Pull Requests that dependabot creates.|
 |AZURE_SET_AUTO_COMPLETE|**_Optional_**. Determines if the pull requests that dependabot creates should have auto complete set. When set to `true`, pull requests that pass all policies will be merged automatically|
+|AZURE_AUTO_APPROVE_PR|**_Optional_**. Determines if the pull requests that dependabot creates should be automatically completed. When set to `true`, pull requests will be approved automatically by the user specified in the `AZURE_AUTO_APPROVE_USER_EMAIL` environment variable.|
+|AZURE_AUTO_APPROVE_USER_EMAIL|**_Optional_**. Email of the user that should be used to automatically approve pull requests. Required if `AZURE_AUTO_APPROVE_PR` is set to `true`.|
+|AZURE_AUTO_APPROVE_USER_TOKEN|**_Optional_**. A personal access token that is assigned to the user specified in `AZURE_AUTO_APPROVE_USER_EMAIL` to automatically approve the created PR. Required if `AZURE_AUTO_APPROVE_PR` is set to `true`.|
