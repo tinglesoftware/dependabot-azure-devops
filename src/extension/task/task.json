@@ -118,7 +118,7 @@
       "helpMarkDown": "When set to `true`, pull requests will automatically be approved by the specified user."
     },
     {
-      "name": "azureAutoAproveUserEmail",
+      "name": "autoApproveUserEmail",
       "type": "string",
       "label": "The email of the user that should approve the PR.",
       "defaultValue": "",
@@ -127,7 +127,7 @@
       "visibleRule": "autoApprove=true"
     },
     {
-      "name": "azureAutoApproveToken",
+      "name": "autoApproveUserToken",
       "type": "string",
       "label": "A personal access token of the user that should approve the PR.",
       "defaultValue": "",
