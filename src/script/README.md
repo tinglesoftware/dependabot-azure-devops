@@ -3,7 +3,7 @@
 First, you need to pull the image locally to your machine:
 
 ```bash
-docker pull tingle/dependabot-azure-devops:0.3.0
+docker pull tingle/dependabot-azure-devops:0.4.0
 ```
 
 Next create and run a container from the image:
@@ -29,7 +29,7 @@ docker run --rm -t \
            -e AZURE_AUTO_APPROVE_PR=<true/false> \
            -e AZURE_AUTO_APPROVE_USER_EMAIL=<approving-user-email> \
            -e AZURE_AUTO_APPROVE_USER_TOKEN=<approving-user-token-here> \
-           tingle/dependabot-azure-devops:0.3.0
+           tingle/dependabot-azure-devops:0.4.0
 ```
 
 An example:
@@ -55,7 +55,7 @@ docker run --rm -t \
            -e AZURE_AUTO_APPROVE_PR=true \
            -e AZURE_AUTO_APPROVE_USER_EMAIL=supervisor@contoso.com \
            -e AZURE_AUTO_APPROVE_USER_TOKEN=ijkl..mnop \
-           tingle/dependabot-azure-devops:0.3.0
+           tingle/dependabot-azure-devops:0.4.0
 ```
 
 ## Environment Variables
