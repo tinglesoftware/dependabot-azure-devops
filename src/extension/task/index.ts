@@ -143,6 +143,18 @@ async function run() {
     let setAutoComplete = tl.getBoolInput('setAutoComplete', false);
     dockerRunner.arg(["-e", `AZURE_SET_AUTO_COMPLETE=${setAutoComplete}`]);
 
+    // Auto Approve, if set
+    let autoApprove = tl.getBoolInput('autoApprove', false);
+    if (autoApprove) {
+      // Get auto approve variables
+      var azureAutoAproveUserEmail = tl.getInput("azureAutoAproveUserEmail");
+      var azureAutoApproveToken = tl.getInput("azureAutoApproveToken");
+
+      dockerRunner.arg(["-e", `AZURE_AUTO_APPROVE_PR=${autoApprove}`]);
+      dockerRunner.arg(["-e", `AZURE_AUTO_APPROVE_USER_EMAIL=${azureAutoAproveUserEmail}`]);
+      dockerRunner.arg(["-e", `AZURE_AUTO_APPROVE_USER_TOKEN=${azureAutoApproveToken}`]);
+    }
+
     // Set exception behaviour
     let failOnException = tl.getBoolInput("failOnException", true);
     dockerRunner.arg(["-e", `DEPENDABOT_FAIL_ON_EXCEPTION=${failOnException}`]);
