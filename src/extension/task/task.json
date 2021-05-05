@@ -19,6 +19,11 @@
   "minimumAgentVersion": "2.105.0",
   "groups": [
     {
+      "name": "approval_completion",
+      "displayName": "Auto Approval and Auto Completion or PRs",
+      "isExpanded": false
+    },
+    {
       "name": "advanced",
       "displayName": "Advanced",
       "isExpanded": false
@@ -28,7 +33,7 @@
     {
       "name": "useConfigFile",
       "type": "boolean",
-      "label": "Use Custom Dependabot YAML File",
+      "label": "Use Dependabot YAML file",
       "defaultValue": "false",
       "required": false,
       "helpMarkDown": "Determines if the task will pick config values specified from the yaml file located at `.azuredevops/dependabot.yml`"
@@ -105,13 +110,30 @@
       "name": "failOnException",
       "type": "boolean",
       "label": "Determines if the execution should fail when an exception occurs. Defaults to `true`",
-      "defaultValue": false,
+      "defaultValue": true,
       "required": false,
       "helpMarkDown": "When set to true, a failure in updating a single dependency will cause the container execution to fail thereby causing the task to fail. This is important when you want a single failure to prevent trying to update other dependencies."
     },
     {
+      "name": "workItemId",
+      "type": "string",
+      "label": "Work item identifier to be linked to the Pull Requests.",
+      "required": false,
+      "helpMarkDown": "The identifier of the work item to be linked to the Pull Requests that dependabot creates."
+    },
+    {
+      "name": "setAutoComplete",
+      "type": "boolean",
+      "groupName": "approval_completion",
+      "label": "Determines if the pull requests that dependabot creates should have auto complete set.",
+      "defaultValue": false,
+      "required": false,
+      "helpMarkDown": "When set to `true`, pull requests that pass all policies will be merged automatically."
+    },
+    {
       "name": "autoApprove",
       "type": "boolean",
+      "groupName": "approval_completion",
       "label": "Determines if the pull requests that dependabot creates should be automatically approved.",
       "defaultValue": false,
       "required": false,
@@ -120,6 +142,7 @@
     {
       "name": "autoApproveUserEmail",
       "type": "string",
+      "groupName": "approval_completion",
       "label": "The email of the user that should approve the PR.",
       "defaultValue": "",
       "required": false,
@@ -129,19 +152,12 @@
     {
       "name": "autoApproveUserToken",
       "type": "string",
+      "groupName": "approval_completion",
       "label": "A personal access token of the user that should approve the PR.",
       "defaultValue": "",
       "required": false,
       "helpMarkDown": "A personal access token of the user of that shall be used to approve the created PR automatically. The token must belong to the user which was specified by email. If the same user that creates the PR should approve, this can be left empty. This won't work with if the Build Service with the build service account!",
       "visibleRule": "autoApprove=true"
-    },
-    {
-      "name": "setAutoComplete",
-      "type": "boolean",
-      "label": "Determines if the pull requests that dependabot creates should have auto complete set.",
-      "defaultValue": false,
-      "required": false,
-      "helpMarkDown": "When set to `true`, pull requests that pass all policies will be merged automatically."
     },
     {
       "name": "gitHubConnection",
@@ -175,14 +191,6 @@
       "label": "Space-separated list of dependency updates requirements to be excluded.",
       "required": false,
       "helpMarkDown": "Exclude certain dependency updates requirements. See list of allowed values [here](https://github.com/dependabot/dependabot-core/issues/600#issuecomment-407808103). Useful if you have lots of dependencies and the update script too slow. The values provided are space-separated. Example: `own all` to only use the `none` version requirement."
-    },
-    {
-      "name": "workItemId",
-      "type": "string",
-      "groupName": "work",
-      "label": "Work item identifier to be linked to the Pull Requests.",
-      "required": false,
-      "helpMarkDown": "The identifier of the work item to be linked to the Pull Requests that dependabot creates."
     }
   ],
   "dataSourceBindings": [],
