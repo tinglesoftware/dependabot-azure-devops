@@ -215,9 +215,10 @@ async function run() {
         dockerRunner.arg(["-e", `DEPENDABOT_IGNORE=${ignore}`]);
       }
 
-      // Allow overriding of the docker image tag globally
-      let dockerImageTag: string = tl.getVariable("DEPENDABOT_DOCKER_IMAGE_TAG");
+      // Allow overriding of the docker image tag
+      let dockerImageTag: string = tl.getInput('dockerImageTag');
       if (!dockerImageTag) {
+        // TODO: get the latest version to use from a given url
         dockerImageTag = "0.4"; // will pull the latest patch for 0.4 e.g. 0.4.0
       }
 

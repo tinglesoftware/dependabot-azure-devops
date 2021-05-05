@@ -191,6 +191,14 @@
       "label": "Space-separated list of dependency updates requirements to be excluded.",
       "required": false,
       "helpMarkDown": "Exclude certain dependency updates requirements. See list of allowed values [here](https://github.com/dependabot/dependabot-core/issues/600#issuecomment-407808103). Useful if you have lots of dependencies and the update script too slow. The values provided are space-separated. Example: `own all` to only use the `none` version requirement."
+    },
+    {
+      "name": "dockerImageTag",
+      "type": "string",
+      "groupName": "advanced",
+      "label": "Tag of the docker image to be pulled.",
+      "required": false,
+      "helpMarkDown": "The image tag to use when pulling the docker container used by the task. A tag also defines the version. By default, the task decides which tag/version to use. This can be the latest or most stable version."
     }
   ],
   "dataSourceBindings": [],
