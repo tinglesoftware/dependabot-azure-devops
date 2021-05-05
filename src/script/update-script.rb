@@ -177,7 +177,7 @@ end
 source = Dependabot::Source.new(
   provider: "azure",
   hostname: azure_hostname,
-  api_endpoint: "#{protocol}//#{azure_hostname}:#{port}/#{virtual_directory}/",
+  api_endpoint: "#{protocol}://#{azure_hostname}:#{port}/#{virtual_directory}/",
   repo: repo_name,
   directory: directory,
   branch: branch,

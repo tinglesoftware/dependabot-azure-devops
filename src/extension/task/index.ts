@@ -88,7 +88,7 @@ async function run() {
     // Set the protocol
     var organizationUrl = tl.getVariable("System.TeamFoundationCollectionUri");
     var parsedUrl = new URL(organizationUrl);  
-    let protocol: string = parsedUrl.protocol;
+    let protocol: string = parsedUrl.protocol.slice(0, -1);
     dockerRunner.arg(["-e", `AZURE_PROTOCOL=${protocol}`]);
 
     // Set the hostname
@@ -97,12 +97,15 @@ async function run() {
 
     // Set the port
     let port: string = parsedUrl.port;
-    dockerRunner.arg(["-e", `AZURE_PORT=${port}`]);
+    if (port !== "") {
+       dockerRunner.arg(["-e", `AZURE_PORT=${port}`]);
+    }
 
     // Set the virtual directory
     let virtualDirectory: string = extractVirtualDirectory(parsedUrl);
-    dockerRunner.arg(["-e", `AZURE_VIRTUAL_DIRECTORY=${virtualDirectory}`]);
-
+    if (virtualDirectory !== "") {
+      dockerRunner.arg(["-e", `AZURE_VIRTUAL_DIRECTORY=${virtualDirectory}`]);
+    }
     // Set the github token, if one is provided
     const githubEndpointId = tl.getInput("gitHubConnection");
     if (githubEndpointId) {
