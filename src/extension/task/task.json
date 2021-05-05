@@ -115,6 +115,15 @@
       "helpMarkDown": "When set to true, a failure in updating a single dependency will cause the container execution to fail thereby causing the task to fail. This is important when you want a single failure to prevent trying to update other dependencies."
     },
     {
+      "name": "setAutoComplete",
+      "type": "boolean",
+      "groupName": "approval_completion",
+      "label": "Determines if the pull requests that dependabot creates should have auto complete set.",
+      "defaultValue": false,
+      "required": false,
+      "helpMarkDown": "When set to `true`, pull requests that pass all policies will be merged automatically."
+    },
+    {
       "name": "autoApprove",
       "type": "boolean",
       "groupName": "approval_completion",
@@ -142,15 +151,6 @@
       "required": false,
       "helpMarkDown": "A personal access token of the user of that shall be used to approve the created PR automatically. The token must belong to the user which was specified by email. If the same user that creates the PR should approve, this can be left empty. This won't work with if the Build Service with the build service account!",
       "visibleRule": "autoApprove=true"
-    },
-    {
-      "name": "setAutoComplete",
-      "type": "boolean",
-      "groupName": "approval_completion",
-      "label": "Determines if the pull requests that dependabot creates should have auto complete set.",
-      "defaultValue": false,
-      "required": false,
-      "helpMarkDown": "When set to `true`, pull requests that pass all policies will be merged automatically."
     },
     {
       "name": "gitHubConnection",
