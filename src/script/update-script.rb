@@ -90,10 +90,30 @@ end
 excluded_requirements = ENV['DEPENDABOT_EXCLUDE_REQUIREMENTS_TO_UNLOCK']&.split(" ")&.map(&:to_sym) || []
 
 #################################
+# Setup the protocol to be used #
+#################################
+protocol = ENV["AZURE_PROTOCOL"] || "https"
+puts "Using '#{protocol}' as protocol"
+
+#################################
 # Setup the hostname to be used #
 #################################
 azure_hostname = ENV["AZURE_HOSTNAME"] || "dev.azure.com"
 puts "Using '#{azure_hostname}' as hostname"
+
+
+#################################
+# Setup the port to be used #
+#################################
+port = ENV["AZURE_PORT"] || "443"
+puts "Using '#{port}' as port"
+
+
+#################################
+# Setup the port to be used #
+#################################
+virtual_directory = ENV["AZURE_VIRTUAL_DIRECTORY"] || ""
+puts "Using '#{virtual_directory}' as virtual directory"
 
 #####################################
 # Setup credentials for source code #
@@ -157,7 +177,7 @@ end
 source = Dependabot::Source.new(
   provider: "azure",
   hostname: azure_hostname,
-  api_endpoint: "https://#{azure_hostname}/",
+  api_endpoint: "#{protocol}://#{azure_hostname}:#{port}/#{virtual_directory}/",
   repo: repo_name,
   directory: directory,
   branch: branch,

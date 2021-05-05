@@ -34,6 +34,16 @@ function getGithubEndPointToken(githubEndpoint: string): string {
   return githubEndpointToken;
 }
 
+function extractVirtualDirectory(organizationUrl: URL): string {
+  let path = organizationUrl.pathname.split("/");
+  // Virtual Directories are sometimes used in on-premises
+  // URLs tipically are like this: https://server.domain.com/tfs/x/
+  if (path.length == 2) {
+    return path[0];
+  }
+  return "";
+}
+
 function extractOrganization(organizationUrl: string): string {
   let parts = organizationUrl.split("/");
 
@@ -62,13 +72,6 @@ function extractOrganization(organizationUrl: string): string {
   );
 }
 
-function extractHostname(organizationUrl: string): string {
-  let parts = organizationUrl.split("/");
-
-  // For both new (https://dev.azure.com/x/) and old style (https://x.visualstudio.com/), the hostname is in position 2
-  return parts[2];
-}
-
 async function run() {
   try {
     // Checking if docker is installed
@@ -81,10 +84,24 @@ async function run() {
     dockerRunner.arg(["--rm"]); // remove after execution
     dockerRunner.arg(["-i"]); // attach pseudo tty
 
-    // Set the hostname
+
+    // Set the protocol
     var organizationUrl = tl.getVariable("System.TeamFoundationCollectionUri");
-    let hostname: string = extractHostname(organizationUrl);
+    var parsedUrl = new URL(organizationUrl);  
+    let protocol: string = parsedUrl.protocol;
+    dockerRunner.arg(["-e", `AZURE_PROTOCOL=${protocol}`]);
+
+    // Set the hostname
+    let hostname: string = parsedUrl.hostname;
     dockerRunner.arg(["-e", `AZURE_HOSTNAME=${hostname}`]);
+
+    // Set the port
+    let port: string = parsedUrl.port;
+    dockerRunner.arg(["-e", `AZURE_PORT=${port}`]);
+
+    // Set the virtual directory
+    let virtualDirectory: string = extractVirtualDirectory(parsedUrl);
+    dockerRunner.arg(["-e", `AZURE_VIRTUAL_DIRECTORY=${virtualDirectory}`]);
 
     // Set the github token, if one is provided
     const githubEndpointId = tl.getInput("gitHubConnection");
