@@ -115,6 +115,14 @@
       "helpMarkDown": "When set to true, a failure in updating a single dependency will cause the container execution to fail thereby causing the task to fail. This is important when you want a single failure to prevent trying to update other dependencies."
     },
     {
+      "name": "workItemId",
+      "type": "string",
+      "groupName": "work",
+      "label": "Work item identifier to be linked to the Pull Requests.",
+      "required": false,
+      "helpMarkDown": "The identifier of the work item to be linked to the Pull Requests that dependabot creates."
+    },
+    {
       "name": "setAutoComplete",
       "type": "boolean",
       "groupName": "approval_completion",
@@ -184,14 +192,6 @@
       "label": "Space-separated list of dependency updates requirements to be excluded.",
       "required": false,
       "helpMarkDown": "Exclude certain dependency updates requirements. See list of allowed values [here](https://github.com/dependabot/dependabot-core/issues/600#issuecomment-407808103). Useful if you have lots of dependencies and the update script too slow. The values provided are space-separated. Example: `own all` to only use the `none` version requirement."
-    },
-    {
-      "name": "workItemId",
-      "type": "string",
-      "groupName": "work",
-      "label": "Work item identifier to be linked to the Pull Requests.",
-      "required": false,
-      "helpMarkDown": "The identifier of the work item to be linked to the Pull Requests that dependabot creates."
     }
   ],
   "dataSourceBindings": [],
