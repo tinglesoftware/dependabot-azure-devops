@@ -110,7 +110,7 @@
       "name": "failOnException",
       "type": "boolean",
       "label": "Determines if the execution should fail when an exception occurs. Defaults to `true`",
-      "defaultValue": false,
+      "defaultValue": true,
       "required": false,
       "helpMarkDown": "When set to true, a failure in updating a single dependency will cause the container execution to fail thereby causing the task to fail. This is important when you want a single failure to prevent trying to update other dependencies."
     },
