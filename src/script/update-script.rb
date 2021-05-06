@@ -105,7 +105,7 @@ puts "Using '#{azure_hostname}' as hostname"
 #################################
 # Setup the port to be used #
 #################################
-port = ENV["AZURE_PORT"] || "443"
+port = ENV["AZURE_PORT"] || (protocol == "http" ? "80" : "443")
 puts "Using '#{port}' as port"
 
 
