@@ -98,7 +98,7 @@ async function run() {
     // Set the port
     let port: string = parsedUrl.port;
     if (port !== "") {
-       dockerRunner.arg(["-e", `AZURE_PORT=${port}`]);
+      dockerRunner.arg(["-e", `AZURE_PORT=${port}`]);
     }
 
     // Set the virtual directory

@@ -92,27 +92,29 @@ excluded_requirements = ENV['DEPENDABOT_EXCLUDE_REQUIREMENTS_TO_UNLOCK']&.split(
 #################################
 # Setup the protocol to be used #
 #################################
-protocol = ENV["AZURE_PROTOCOL"] || "https"
+protocol = ENV["AZURE_PROTOCOL"]
+protocol = "https" if protocol.nil? || protocol.empty?
 puts "Using '#{protocol}' as protocol"
 
 #################################
 # Setup the hostname to be used #
 #################################
-azure_hostname = ENV["AZURE_HOSTNAME"] || "dev.azure.com"
+azure_hostname = ENV["AZURE_HOSTNAME"]
+azure_hostname = "dev.azure.com" if azure_hostname.nil? || azure_hostname.empty?
 puts "Using '#{azure_hostname}' as hostname"
 
-
 #################################
 # Setup the port to be used #
 #################################
-port = ENV["AZURE_PORT"] || (protocol == "http" ? "80" : "443")
+port = ENV["AZURE_PORT"]
+port = (protocol == "http" ? "80" : "443") if port.nil? || port.empty?
 puts "Using '#{port}' as port"
 
-
 #################################
 # Setup the port to be used #
 #################################
-virtual_directory = ENV["AZURE_VIRTUAL_DIRECTORY"] || ""
+virtual_directory = ENV["AZURE_VIRTUAL_DIRECTORY"]
+virtual_directory = "" if virtual_directory.nil?
 puts "Using '#{virtual_directory}' as virtual directory"
 
 #####################################
@@ -174,10 +176,13 @@ unless ignore_options_json.to_s.strip.empty?
   ignore_options = JSON.parse(ignore_options_json)
 end
 
+api_endpoint = "#{protocol}://#{azure_hostname}:#{port}/"
+api_endpoint = api_endpoint + "#{virtual_directory}/" if !virtual_directory.empty?
+
 source = Dependabot::Source.new(
   provider: "azure",
   hostname: azure_hostname,
-  api_endpoint: "#{protocol}://#{azure_hostname}:#{port}/#{virtual_directory}/",
+  api_endpoint: api_endpoint,
   repo: repo_name,
   directory: directory,
   branch: branch,
