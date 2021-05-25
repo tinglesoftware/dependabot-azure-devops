@@ -14,6 +14,14 @@ project = ENV["AZURE_PROJECT"]
 repository = ENV["AZURE_REPOSITORY"]
 repo_name = "#{organization}/#{project}/_git/#{repository}"
 
+# Allow the user to override the full repo path
+# Useful for legacy org.visualstudio.com URLs where the org name isn't needed in the URL path
+if repository.start_with("https://")
+  repo_name = repository
+end
+
+put "Using '#{repo_name}' as repo path"
+
 # Set auto complete on created pull requests
 set_auto_complete = ENV["AZURE_SET_AUTO_COMPLETE"] == "true"
 
