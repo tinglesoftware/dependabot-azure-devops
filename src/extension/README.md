@@ -94,8 +94,8 @@ schedules:
 # variables declared below can be put in one or more Variable Groups for sharing across pipelines
 variables:
   DEPENDABOT_EXTRA_CREDENTIALS: '[{\"type\":\"npm_registry\",\"token\":\"<redacted>\",\"registry\":\"npm.fontawesome.com\"}]' # put the credentials for private registries and feeds
-  DEPENDABOT_ALLOW: '[{\"name\":"django*",\"type\":\"direct\"}]' # packages allowed to be updated
-  DEPENDABOT_IGNORE: '[{\"name\":\"express\",\"versions\":[\"4.x\",\"5.x\"]}]' # packages to be ignored
+  DEPENDABOT_ALLOW_CONDITIONS: '[{\"dependency-name\":"django*",\""dependency-type\":\"direct\"}]' # packages allowed to be updated
+  DEPENDABOT_IGNORE_CONDITIONS: '[{\""dependency-name\":\"express\",\"versions\":[\"4.x\",\"5.x\"]}]' # packages to be ignored
 
 pool:
   vmImage: 'ubuntu-latest' # requires macos or ubuntu (windows is not supported)

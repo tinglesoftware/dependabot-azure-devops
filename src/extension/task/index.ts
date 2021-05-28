@@ -190,8 +190,8 @@ async function run() {
     dockerRunner.arg(["-e", `DEPENDABOT_EXCLUDE_REQUIREMENTS_TO_UNLOCK=${excludeRequirementsToUnlock}`]);
 
     // Get the override allow and ignore
-    let allowOvr = tl.getVariable("DEPENDABOT_ALLOW");
-    let ignoreOvr = tl.getVariable("DEPENDABOT_IGNORE");
+    let allowOvr = tl.getVariable("DEPENDABOT_ALLOW_CONDITIONS");
+    let ignoreOvr = tl.getVariable("DEPENDABOT_IGNORE_CONDITIONS");
 
     // Check if to use dependabot.yml or task inputs
     let useConfigFile: boolean = tl.getBoolInput("useConfigFile", false);
@@ -226,13 +226,13 @@ async function run() {
       // Set the dependencies to allow
       let allow = update.allow || allowOvr;
       if (allow) {
-        dockerRunner.arg(["-e", `DEPENDABOT_ALLOW=${allow}`]);
+        dockerRunner.arg(["-e", `DEPENDABOT_ALLOW_CONDITIONS=${allow}`]);
       }
 
       // Set the dependencies to ignore
       let ignore = update.ignore || ignoreOvr;
       if (ignore) {
-        dockerRunner.arg(["-e", `DEPENDABOT_IGNORE=${ignore}`]);
+        dockerRunner.arg(["-e", `DEPENDABOT_IGNORE_CONDITIONS=${ignore}`]);
       }
 
       // Allow overriding of the docker image tag

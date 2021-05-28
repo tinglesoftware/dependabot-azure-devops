@@ -51,13 +51,8 @@ export default function parseConfigFile(): IDependabotUpdate[] {
       versioningStrategy: update["versioning-strategy"],
 
       // Convert to JSON and shorten the names as required by the script
-      allow: updates["allow"]
-                ? JSON.stringify(updates["allow"]).replace("dependency-name", "name")
-                                                  .replace("dependency-type", "type")
-                : undefined,
-      ignore: updates["ignore"]
-                ? JSON.stringify(updates["ignore"]).replace("dependency-name", "name")
-                : undefined,
+      allow: updates["allow"] ? JSON.stringify(updates["allow"]) : undefined,
+      ignore: updates["ignore"] ? JSON.stringify(updates["ignore"]) : undefined,
     };
 
     if (!dependabotUpdate.packageEcosystem) {
