@@ -1,4 +1,8 @@
 require "json"
+require "logger"
+require "dependabot/logger"
+
+Dependabot.logger = Logger.new($stdout)
 
 require "dependabot/file_fetchers"
 require "dependabot/file_parsers"
@@ -6,6 +10,7 @@ require "dependabot/update_checkers"
 require "dependabot/file_updaters"
 require "dependabot/pull_request_creator"
 require "dependabot/pull_request_updater"
+require "dependabot/config/file_fetcher"
 require "dependabot/omnibus"
 
 require_relative "azure_helpers"
