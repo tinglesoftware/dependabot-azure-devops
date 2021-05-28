@@ -8,28 +8,39 @@ require "dependabot/pull_request_updater"
 require "dependabot/omnibus"
 require_relative "azure_helpers"
 
-# Full name of the repo you want to create pull requests for.
-organization = ENV["AZURE_ORGANIZATION"]
-project = ENV["AZURE_PROJECT"]
-repository = ENV["AZURE_REPOSITORY"]
-repo_name = "#{organization}/#{project}/_git/#{repository}"
+$options = {
+  credentials: [],
+  provider: "azure",
 
-# Set auto complete on created pull requests
-set_auto_complete = ENV["AZURE_SET_AUTO_COMPLETE"] == "true"
+  directory: ENV["DEPENDABOT_DIRECTORY"] || "/", # Directory where the base dependency files are.
+  branch: ENV["DEPENDABOT_TARGET_BRANCH"] || nil, # Branch against which to create PRs
 
-# Automatically Approve the PR
-auto_approve_pr = ENV["AZURE_AUTO_APPROVE_PR"] == "true"
-auto_approve_user_email = ENV["AZURE_AUTO_APPROVE_USER_EMAIL"]
-auto_approve_user_token = ENV["AZURE_AUTO_APPROVE_USER_TOKEN"]
+  requirements_update_strategy: nil,
+  ignore_conditions: [],
+  fail_on_exception: ENV['DEPENDABOT_FAIL_ON_EXCEPTION'] == "true", # Stop the job if an exception occurs
+  pull_requests_limit: ENV["DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT"].to_i || 5,
 
-# Directory where the base dependency files are.
-directory = ENV["DEPENDABOT_DIRECTORY"] || "/"
+  # Details on the location of the repository
+  azure_organization: ENV["AZURE_ORGANIZATION"],
+  azure_project: ENV["AZURE_PROJECT"],
+  azure_repository: ENV["AZURE_REPOSITORY"],
+  azure_hostname: ENV["AZURE_HOSTNAME"] || "dev.azure.com",
+  azure_protocol: ENV["AZURE_PROTOCOL"] || "https",
+  azure_port: nil,
+  azure_virtual_directory: ENV["AZURE_VIRTUAL_DIRECTORY"] || "",
 
-# Branch against which to create PRs
-branch = ENV["DEPENDABOT_TARGET_BRANCH"] || nil
+  work_item_id: ENV['AZURE_WORK_ITEM_ID'] || nil, # Get the work item to attach
 
-# Stop the job if an exception occurs
-fail_on_exception = ENV['DEPENDABOT_FAIL_ON_EXCEPTION'] == "true"
+  set_auto_complete: ENV["AZURE_SET_AUTO_COMPLETE"] == "true", # Set auto complete on created pull requests
+
+  # Automatically Approve the PR
+  auto_approve_pr: ENV["AZURE_AUTO_APPROVE_PR"] == "true",
+  auto_approve_user_email: ENV["AZURE_AUTO_APPROVE_USER_EMAIL"],
+  auto_approve_user_token: ENV["AZURE_AUTO_APPROVE_USER_TOKEN"],
+}
+
+# Full name of the repo targeted.
+$repo_name = "#{$options[:azure_organization]}/#{$options[:azure_project]}/_git/#{$options[:azure_repository]}"
 
 # Name of the package manager you'd like to do the update for. Options are:
 # - bundler
@@ -47,7 +58,7 @@ fail_on_exception = ENV['DEPENDABOT_FAIL_ON_EXCEPTION'] == "true"
 # - submodules
 # - docker
 # - terraform
-package_manager = ENV["DEPENDABOT_PACKAGE_MANAGER"] || "bundler"
+$package_manager = ENV["DEPENDABOT_PACKAGE_MANAGER"] || "bundler"
 
 # GitHub native implementation modifies some of the names in the config file
 # https://docs.github.com/en/github/administering-a-repository/configuration-options-for-dependency-updates#package-ecosystem
@@ -61,26 +72,30 @@ PACKAGE_ECOSYSTEM_MAPPING = { # [Hash<String, String>]
   "gitsubmodule" => "submodules",
   "mix" => "hex"
 }.freeze
-package_manager = PACKAGE_ECOSYSTEM_MAPPING.fetch(package_manager, package_manager)
+$package_manager = PACKAGE_ECOSYSTEM_MAPPING.fetch($package_manager, $package_manager)
 
-##########################################################
-# Setup the versioning strategy (a.k.a. update strategy) #
-##########################################################
+##########################################
+# Setup the requirements update strategy #
+##########################################
 # GitHub native implementation modifies some of the names in the config file
-VERSIONING_STRATEGIES = { # [Hash<String, Symbol>]
-  "auto" => :auto,
-  "lockfile-only" => :lockfile_only,
-  "widen" => :widen_ranges,
-  "increase" => :bump_versions,
-  "increase-if-necessary" => :bump_versions_if_necessary
-}.freeze
-versioning_strategy = ENV["DEPENDABOT_VERSIONING_STRATEGY"] || "auto"
-update_strategy = VERSIONING_STRATEGIES.fetch(versioning_strategy, versioning_strategy)
-# For npm_and_yarn, we must correct the strategy to one allowed
-# https://github.com/dependabot/dependabot-core/blob/5ec858331d11253a30aa15fab25ae22fbdecdee0/npm_and_yarn/lib/dependabot/npm_and_yarn/update_checker/requirements_updater.rb#L18-L19
-if package_manager == "npm_and_yarn"
-  if update_strategy == :auto || update_strategy == :lockfile_only
-    update_strategy = :bump_versions
+unless ENV["DEPENDABOT_VERSIONING_STRATEGY"].to_s.strip.empty?
+  VERSIONING_STRATEGIES = { # [Hash<String, Symbol>]
+    "auto" => :auto,
+    "lockfile-only" => :lockfile_only,
+    "widen" => :widen_ranges,
+    "increase" => :bump_versions,
+    "increase-if-necessary" => :bump_versions_if_necessary
+  }.freeze
+  requirements_update_strategy_raw = ENV["DEPENDABOT_VERSIONING_STRATEGY"] || "auto"
+  $options[:requirements_update_strategy] = VERSIONING_STRATEGIES.fetch(requirements_update_strategy_raw)
+
+  # For npm_and_yarn, we must correct the strategy to one allowed
+  # https://github.com/dependabot/dependabot-core/blob/5ec858331d11253a30aa15fab25ae22fbdecdee0/npm_and_yarn/lib/dependabot/npm_and_yarn/update_checker/requirements_updater.rb#L18-L19
+  if $package_manager == "npm_and_yarn"
+    strategy = $options[:requirements_update_strategy]
+    if strategy == :auto || strategy == :lockfile_only
+      $options[:requirements_update_strategy] = :bump_versions
+    end
   end
 end
 
@@ -89,50 +104,28 @@ end
 # https://github.com/wemake-services/kira-dependencies/pull/210
 excluded_requirements = ENV['DEPENDABOT_EXCLUDE_REQUIREMENTS_TO_UNLOCK']&.split(" ")&.map(&:to_sym) || []
 
-#################################
-# Setup the protocol to be used #
-#################################
-protocol = ENV["AZURE_PROTOCOL"]
-protocol = "https" if protocol.nil? || protocol.empty?
-puts "Using '#{protocol}' as protocol"
-
-#################################
-# Setup the hostname to be used #
-#################################
-azure_hostname = ENV["AZURE_HOSTNAME"]
-azure_hostname = "dev.azure.com" if azure_hostname.nil? || azure_hostname.empty?
-puts "Using '#{azure_hostname}' as hostname"
-
-#################################
-# Setup the port to be used #
-#################################
-port = ENV["AZURE_PORT"]
-port = (protocol == "http" ? "80" : "443") if port.nil? || port.empty?
-puts "Using '#{port}' as port"
-
-#################################
-# Setup the port to be used #
-#################################
-virtual_directory = ENV["AZURE_VIRTUAL_DIRECTORY"]
-virtual_directory = "" if virtual_directory.nil?
-puts "Using '#{virtual_directory}' as virtual directory"
+####################################################
+# Setup the hostname, protocol and port to be used #
+####################################################
+$options[:azure_port] = ENV["AZURE_PORT"] || ($options[:azure_protocol] == "http" ? "80" : "443")
+puts "Using hostname = '#{$options[:azure_hostname]}', protocol = '#{$options[:azure_protocol]}', port = '#{$options[:azure_port]}'."
 
 #####################################
 # Setup credentials for source code #
 #####################################
-credentials = [{
+$options[:credentials] << {
   "type" => "git_source",
-  "host" => azure_hostname,
+  "host" => $options[:azure_hostname],
   "username" => "x-access-token",
   "password" => ENV["AZURE_ACCESS_TOKEN"]
-}]
+}
 
 ########################################################
 # Add GitHub Access Token (PAT) to avoid rate limiting #
 ########################################################
-if ENV["GITHUB_ACCESS_TOKEN"]
+unless ENV["GITHUB_ACCESS_TOKEN"].to_s.strip.empty?
   puts "GitHub access token has been provided."
-  credentials << {
+  $options[:credentials] << {
     "type" => "git_source",
     "host" => "github.com",
     "username" => "x-access-token",
@@ -143,23 +136,19 @@ end
 ###########################
 # Setup extra credentials #
 ###########################
-json_credentials = ENV["DEPENDABOT_EXTRA_CREDENTIALS"] || ""
-unless json_credentials.to_s.strip.empty?
-  json_credentials = JSON.parse(json_credentials)
-  credentials.push(*json_credentials)
-  # Adding custom private feed removes the public onces so we have to create it
-  if package_manager == "nuget"
-    credentials << {
-      "type" => "nuget_feed",
-      "url" => "https://api.nuget.org/v3/index.json",
-    }
-  end
-end
+unless ENV["DEPENDABOT_EXTRA_CREDENTIALS"].to_s.strip.empty?
+  # For example:
+  # "[{\"type\":\"npm_registry\",\"registry\":\
+  #     "registry.npmjs.org\",\"token\":\"123\"}]"
+  $options[:credentials].concat(JSON.parse(ENV["DEPENDABOT_EXTRA_CREDENTIALS"]))
 
-# Get the work item to attach
-work_item_id = ENV['AZURE_WORK_ITEM_ID'] || nil
-if work_item_id
-  puts "Pull Requests shall be linked to work item #{work_item_id}"
+  # # Adding custom private feed removes the public onces so we have to create it
+  # if $package_manager == "nuget"
+  #   $options[:credentials] << {
+  #     "type" => "nuget_feed",
+  #     "url" => "https://api.nuget.org/v3/index.json",
+  #   }
+  # end
 end
 
 #####################################
@@ -170,33 +159,37 @@ allow_options = []
 unless allow_options_json.to_s.strip.empty?
   allow_options = JSON.parse(allow_options_json)
 end
-ignore_options_json = ENV["DEPENDABOT_IGNORE"] || ""
-ignore_options = []
-unless ignore_options_json.to_s.strip.empty?
-  ignore_options = JSON.parse(ignore_options_json)
+
+# Setup ignore conditions
+unless ENV["DEPENDABOT_IGNORE"].to_s.strip.empty? # TODO: rename to DEPENDABOT_IGNORE_CONDITIONS
+  # For example:
+  # [{"dependency-name":"ruby","version-requirement":">= 3.a, < 4"}]
+  $options[:ignore_conditions] = JSON.parse(ENV["DEPENDABOT_IGNORE"])
 end
 
-api_endpoint = "#{protocol}://#{azure_hostname}:#{port}/"
-api_endpoint = api_endpoint + "#{virtual_directory}/" if !virtual_directory.empty?
+$api_endpoint = "#{$options[:azure_protocol]}://#{$options[:azure_hostname]}:#{$options[:azure_port]}/"
+$api_endpoint = $api_endpoint + "#{$options[:azure_virtual_directory]}/" if !$options[:azure_virtual_directory].empty?
+puts "Using '#{$api_endpoint}' as API endpoint"
+puts "Pull Requests shall be linked to work item #{$options[:work_item_id]}" if $options[:work_item_id]
 
-source = Dependabot::Source.new(
-  provider: "azure",
-  hostname: azure_hostname,
-  api_endpoint: api_endpoint,
-  repo: repo_name,
-  directory: directory,
-  branch: branch,
+$source = Dependabot::Source.new(
+  provider: $options[:provider],
+  hostname: $options[:azure_hostname],
+  api_endpoint: $api_endpoint,
+  repo: $repo_name,
+  directory: $options[:directory],
+  branch: $options[:branch],
 )
 
 ##############################
 # Fetch the dependency files #
 ##############################
-puts "Fetching #{package_manager} dependency files for #{repo_name}"
-puts "Targeting '#{branch || 'default'}' branch under '#{directory}' directory"
-puts "Using '#{update_strategy}' versioning strategy"
-fetcher = Dependabot::FileFetchers.for_package_manager(package_manager).new(
-  source: source,
-  credentials: credentials,
+puts "Fetching #{$package_manager} dependency files for #{$repo_name}"
+puts "Targeting '#{$options[:branch] || 'default'}' branch under '#{$options[:directory]}' directory"
+puts "Using '#{$options[:requirements_update_strategy]}' requirements update strategy" if $options[:requirements_update_strategy]
+fetcher = Dependabot::FileFetchers.for_package_manager($package_manager).new(
+  source: $source,
+  credentials: $options[:credentials],
 )
 
 files = fetcher.files
@@ -206,15 +199,14 @@ commit = fetcher.commit
 # Parse the dependency files #
 ##############################
 puts "Parsing dependencies information"
-parser = Dependabot::FileParsers.for_package_manager(package_manager).new(
+parser = Dependabot::FileParsers.for_package_manager($package_manager).new(
   dependency_files: files,
-  source: source,
-  credentials: credentials,
+  source: $source,
+  credentials: $options[:credentials],
 )
 
 dependencies = parser.parse
 
-pull_requests_limit = ENV["DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT"].to_i || 5
 pull_requests_count = 0
 
 # Get allow versions for a dependency
@@ -243,16 +235,16 @@ end
 # Get active pull requests for this repository #
 ################################################
 azure_client = Dependabot::Clients::Azure.for_source(
-  source: source,
-  credentials: credentials,
+  source: $source,
+  credentials: $options[:credentials],
 )
-default_branch_name = azure_client.fetch_default_branch(source.repo)
+default_branch_name = azure_client.fetch_default_branch($source.repo)
 active_pull_requests_for_this_repo = azure_client.pull_requests_active(default_branch_name)
 
 dependencies.select(&:top_level?).each do |dep|
   # Check if we have reached maximum number of open pull requests
-  if pull_requests_limit > 0 && pull_requests_count >= pull_requests_limit
-    puts "Limit of open pull requests (#{pull_requests_limit}) reached."
+  if $options[:pull_requests_limit] > 0 && pull_requests_count >= $options[:pull_requests_limit]
+    puts "Limit of open pull requests (#{$options[:pull_requests_limit]}) reached."
     break
   end
 
@@ -262,14 +254,13 @@ dependencies.select(&:top_level?).each do |dep|
     # Get update details for the dependency #
     #########################################
     puts "Checking if #{dep.name} #{dep.version} needs updating"
-    ignored_versions = ignore_conditions_for(ignore_options, dep)
 
-    checker = Dependabot::UpdateCheckers.for_package_manager(package_manager).new(
+    checker = Dependabot::UpdateCheckers.for_package_manager($package_manager).new(
       dependency: dep,
       dependency_files: files,
-      credentials: credentials,
-      requirements_update_strategy: update_strategy,
-      ignored_versions: ignored_versions,
+      credentials: $options[:credentials],
+      requirements_update_strategy: $options[:requirements_update_strategy],
+      ignored_versions: ignore_conditions_for($options[:ignore_conditions], dep),
     )
 
     if checker.up_to_date?
@@ -306,10 +297,10 @@ dependencies.select(&:top_level?).each do |dep|
     # Generate updated dependency files #
     #####################################
     puts "Updating #{dep.name} from #{dep.version} to #{checker.latest_version}"
-    updater = Dependabot::FileUpdaters.for_package_manager(package_manager).new(
+    updater = Dependabot::FileUpdaters.for_package_manager($package_manager).new(
       dependencies: updated_deps,
       dependency_files: files,
-      credentials: credentials,
+      credentials: $options[:credentials],
     )
 
     updated_files = updater.updated_dependency_files
@@ -366,11 +357,11 @@ dependencies.select(&:top_level?).each do |dep|
       # Update pull request with conflict resolved #
       ##############################################
       pr_updater = Dependabot::PullRequestUpdater.new(
-        source: source,
+        source: $source,
         base_commit: commit,
         old_commit: conflict_pull_request_commit_id,
         files: updated_files,
-        credentials: credentials,
+        credentials: $options[:credentials],
         pull_request_number: conflict_pull_request_id,
       )
 
@@ -384,11 +375,11 @@ dependencies.select(&:top_level?).each do |dep|
       # Create a pull request for the update #
       ########################################
       pr_creator = Dependabot::PullRequestCreator.new(
-        source: source,
+        source: $source,
         base_commit: commit,
         dependencies: updated_deps,
         files: updated_files,
-        credentials: credentials,
+        credentials: $options[:credentials],
         # assignees: assignees,
         author_details: {
           email: "noreply@github.com",
@@ -396,7 +387,7 @@ dependencies.select(&:top_level?).each do |dep|
         },
         label_language: true,
         provider_metadata: {
-          work_item: work_item_id,
+          work_item: $options[:work_item_id],
         }
       )
 
@@ -428,31 +419,31 @@ dependencies.select(&:top_level?).each do |dep|
     pull_requests_count += 1
     next unless pull_request_id
 
-    if auto_approve_pr
-      puts "Auto Approving PR for user #{auto_approve_user_email}"
+    if $options[:auto_approve_pr]
+      puts "Auto Approving PR for user #{$options[:auto_approve_user_email]}"
 
-      if not auto_approve_user_token
+      if not $options[:auto_approve_user_token]
         puts "No dedicated token set for auto approve - using regular Access Token"
-        auto_approve_user_token = ENV["AZURE_ACCESS_TOKEN"]
+        $options[:auto_approve_user_token] = ENV["AZURE_ACCESS_TOKEN"]
       end
 
       azure_client.pull_request_approve(
         pull_request_id,
-        auto_approve_user_email,
-        auto_approve_user_token
+        $options[:auto_approve_user_email],
+        $options[:auto_approve_user_token]
       )
     end
 
     # Set auto complete for this Pull Request
     # Pull requests that pass all policies will be merged automatically.
-    if set_auto_complete
+    if $options[:set_auto_complete]
       auto_complete_user_id = pull_request["createdBy"]["id"]
       puts "Setting auto complete on ##{pull_request_id}."
       azure_client.pull_request_auto_complete(pull_request_id, auto_complete_user_id)
     end
 
   rescue StandardError => e
-    raise e if fail_on_exception
+    raise e if $options[:fail_on_exception]
     puts "Error updating #{dep.name} from #{dep.version} to #{checker.latest_version} (continuing)"
     puts e.full_message
   end
