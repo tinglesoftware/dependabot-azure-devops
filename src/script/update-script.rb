@@ -1,4 +1,5 @@
 require "json"
+
 require "dependabot/file_fetchers"
 require "dependabot/file_parsers"
 require "dependabot/update_checkers"
@@ -6,7 +7,11 @@ require "dependabot/file_updaters"
 require "dependabot/pull_request_creator"
 require "dependabot/pull_request_updater"
 require "dependabot/omnibus"
+
 require_relative "azure_helpers"
+
+# These options try to follow the dry-run.rb script.
+# https://github.com/dependabot/dependabot-core/blob/main/bin/dry-run.rb
 
 $options = {
   credentials: [],
@@ -181,6 +186,14 @@ $source = Dependabot::Source.new(
   branch: $options[:branch],
 )
 
+## Make an empty update_config
+$config_file = Dependabot::Config::File.new(updates: [])
+$update_config = $config_file.update_config(
+  $package_manager,
+  directory: $options[:directory],
+  target_branch: $options[:branch]
+)
+
 ##############################
 # Fetch the dependency files #
 ##############################
@@ -225,10 +238,21 @@ def allow_conditions_for(options, dependency)
 end
 
 # Get ignore versions for a dependency
-def ignore_conditions_for(options, dependency)
-  # Find where the name matches then get an array of version requirements, e.g. ["4.x", "5.x"]
-  found = options.find { |ig| dependency.name.match?(ig['name']) }
-  found ? found['versions'] || [] : []
+def ignored_versions_for(dep)
+  if $options[:ignore_conditions].any?
+    ignore_conditions = $options[:ignore_conditions].map do |ic|
+      Dependabot::Config::IgnoreCondition.new(
+        dependency_name: ic["dependency-name"],
+        versions: [ic["version-requirement"]].compact,
+        update_types: ic["update-types"]
+      )
+    end
+    # Dependabot::Config::UpdateConfig.new(ignore_conditions: ignore_conditions).
+    #   ignored_versions_for(dep, security_updates_only: $options[:security_updates_only])
+    Dependabot::Config::UpdateConfig.new(ignore_conditions: ignore_conditions).ignored_versions_for(dep)
+  else
+    $update_config.ignored_versions_for(dep)
+  end
 end
 
 ################################################
@@ -260,7 +284,7 @@ dependencies.select(&:top_level?).each do |dep|
       dependency_files: files,
       credentials: $options[:credentials],
       requirements_update_strategy: $options[:requirements_update_strategy],
-      ignored_versions: ignore_conditions_for($options[:ignore_conditions], dep),
+      ignored_versions: ignored_versions_for(dep),
     )
 
     if checker.up_to_date?
