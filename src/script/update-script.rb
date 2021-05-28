@@ -25,6 +25,7 @@ $options = {
   directory: ENV["DEPENDABOT_DIRECTORY"] || "/", # Directory where the base dependency files are.
   branch: ENV["DEPENDABOT_TARGET_BRANCH"] || nil, # Branch against which to create PRs
 
+  allow_conditions: [],
   requirements_update_strategy: nil,
   ignore_conditions: [],
   fail_on_exception: ENV['DEPENDABOT_FAIL_ON_EXCEPTION'] == "true", # Stop the job if an exception occurs
@@ -152,21 +153,57 @@ end
 $options[:azure_port] = ENV["AZURE_PORT"] || ($options[:azure_protocol] == "http" ? "80" : "443")
 puts "Using hostname = '#{$options[:azure_hostname]}', protocol = '#{$options[:azure_protocol]}', port = '#{$options[:azure_port]}'."
 
-#####################################
-# Setup Allow and Ignore conditions #
-#####################################
-allow_options_json = ENV["DEPENDABOT_ALLOW"] || ""
-allow_options = []
-unless allow_options_json.to_s.strip.empty?
-  allow_options = JSON.parse(allow_options_json)
+##########################
+# Setup Allow conditions #
+##########################
+unless ENV["DEPENDABOT_ALLOW_CONDITIONS"].to_s.strip.empty?
+  # For example:
+  # [{"dependency-name":"sphinx","dependency-type":"production"}]
+  $options[:allow_conditions] = JSON.parse(ENV["DEPENDABOT_ALLOW_CONDITIONS"])
 end
 
-# Setup ignore conditions
+# Get allow versions for a dependency
+TYPE_HANDLERS = { # [Hash<String, Proc>] handlers for type allow rules
+  "all" => proc { true },
+  "direct" => proc { |dep| dep.top_level? },
+  "indirect" => proc { |dep| !dep.top_level? },
+  "production" => proc { |dep| dep.production? },
+  "development" => proc { |dep| !dep.production? },
+  "security" => proc { |_, checker| checker.vulnerable? }
+}.freeze
+def allow_conditions_for(dep)
+  # Find where the name matches then get the type e.g. production, direct, etc
+  found = $options[:allow_conditions].find { |al| dep.name.match?(al['dependency-name']) }
+  found ? found['dependency-type'] : nil
+end
+
+###########################
+# Setup Ignore conditions #
+###########################
 unless ENV["DEPENDABOT_IGNORE_CONDITIONS"].to_s.strip.empty?
   # For example:
   # [{"dependency-name":"ruby","version-requirement":">= 3.a, < 4"}]
   $options[:ignore_conditions] = JSON.parse(ENV["DEPENDABOT_IGNORE_CONDITIONS"])
 end
+
+# Get ignore versions for a dependency
+def ignored_versions_for(dep)
+  if $options[:ignore_conditions].any?
+    ignore_conditions = $options[:ignore_conditions].map do |ic|
+      Dependabot::Config::IgnoreCondition.new(
+        dependency_name: ic["dependency-name"],
+        versions: [ic["version-requirement"]].compact,
+        update_types: ic["update-types"]
+      )
+    end
+    # Dependabot::Config::UpdateConfig.new(ignore_conditions: ignore_conditions).
+    #   ignored_versions_for(dep, security_updates_only: $options[:security_updates_only])
+    Dependabot::Config::UpdateConfig.new(ignore_conditions: ignore_conditions).ignored_versions_for(dep)
+  else
+    $update_config.ignored_versions_for(dep)
+  end
+end
+
 
 $api_endpoint = "#{$options[:azure_protocol]}://#{$options[:azure_hostname]}:#{$options[:azure_port]}/"
 $api_endpoint = $api_endpoint + "#{$options[:azure_virtual_directory]}/" if !$options[:azure_virtual_directory].empty?
@@ -219,41 +256,6 @@ parser = Dependabot::FileParsers.for_package_manager($package_manager).new(
 
 dependencies = parser.parse
 
-pull_requests_count = 0
-
-# Get allow versions for a dependency
-TYPE_HANDLERS = { # [Hash<String, Proc>] handlers for type allow rules
-  "all" => proc { true },
-  "direct" => proc { |dep| dep.top_level? },
-  "indirect" => proc { |dep| !dep.top_level? },
-  "production" => proc { |dep| dep.production? },
-  "development" => proc { |dep| !dep.production? },
-  "security" => proc { |_, checker| checker.vulnerable? }
-}.freeze
-def allow_conditions_for(options, dependency)
-  # Find where the name matches then get the type e.g. production, direct, etc
-  found = options.find { |al| dependency.name.match?(al['name']) }
-  found ? found['type'] : nil
-end
-
-# Get ignore versions for a dependency
-def ignored_versions_for(dep)
-  if $options[:ignore_conditions].any?
-    ignore_conditions = $options[:ignore_conditions].map do |ic|
-      Dependabot::Config::IgnoreCondition.new(
-        dependency_name: ic["dependency-name"],
-        versions: [ic["version-requirement"]].compact,
-        update_types: ic["update-types"]
-      )
-    end
-    # Dependabot::Config::UpdateConfig.new(ignore_conditions: ignore_conditions).
-    #   ignored_versions_for(dep, security_updates_only: $options[:security_updates_only])
-    Dependabot::Config::UpdateConfig.new(ignore_conditions: ignore_conditions).ignored_versions_for(dep)
-  else
-    $update_config.ignored_versions_for(dep)
-  end
-end
-
 ################################################
 # Get active pull requests for this repository #
 ################################################
@@ -263,6 +265,8 @@ azure_client = Dependabot::Clients::Azure.for_source(
 )
 default_branch_name = azure_client.fetch_default_branch($source.repo)
 active_pull_requests_for_this_repo = azure_client.pull_requests_active(default_branch_name)
+
+pull_requests_count = 0
 
 dependencies.select(&:top_level?).each do |dep|
   # Check if we have reached maximum number of open pull requests
@@ -305,8 +309,8 @@ dependencies.select(&:top_level?).each do |dep|
     next if requirements_to_unlock == :update_not_possible
 
     # Check if the dependency is allowed
-    allow_type = allow_conditions_for(allow_options, dep)
-    allowed = checker.vulnerable? || allow_options.empty? || (allow_type && TYPE_HANDLERS[allow_type].call(dep, checker))
+    allow_type = allow_conditions_for(dep)
+    allowed = checker.vulnerable? || $options[:allow_conditions].empty? || (allow_type && TYPE_HANDLERS[allow_type].call(dep, checker))
     if !allowed
       puts "Updating #{dep.name} is not allowed"
       next
