@@ -30,6 +30,11 @@ $options = {
   fail_on_exception: ENV['DEPENDABOT_FAIL_ON_EXCEPTION'] == "true", # Stop the job if an exception occurs
   pull_requests_limit: ENV["DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT"].to_i || 5,
 
+  # See description of requirements here:
+  # https://github.com/dependabot/dependabot-core/issues/600#issuecomment-407808103
+  # https://github.com/wemake-services/kira-dependencies/pull/210
+  excluded_requirements: ENV['DEPENDABOT_EXCLUDE_REQUIREMENTS_TO_UNLOCK']&.split(" ")&.map(&:to_sym) || [],
+
   # Details on the location of the repository
   azure_organization: ENV["AZURE_ORGANIZATION"],
   azure_project: ENV["AZURE_PROJECT"],
@@ -48,9 +53,6 @@ $options = {
   auto_approve_user_email: ENV["AZURE_AUTO_APPROVE_USER_EMAIL"],
   auto_approve_user_token: ENV["AZURE_AUTO_APPROVE_USER_TOKEN"],
 }
-
-# Full name of the repo targeted.
-$repo_name = "#{$options[:azure_organization]}/#{$options[:azure_project]}/_git/#{$options[:azure_repository]}"
 
 # Name of the package manager you'd like to do the update for. Options are:
 # - bundler
@@ -84,6 +86,41 @@ PACKAGE_ECOSYSTEM_MAPPING = { # [Hash<String, String>]
 }.freeze
 $package_manager = PACKAGE_ECOSYSTEM_MAPPING.fetch($package_manager, $package_manager)
 
+#########################################################
+# Setup credentials for source code,                    #
+# Add GitHub Access Token (PAT) to avoid rate limiting, #
+# Setup extra credentials                               #
+########################################################
+$options[:credentials] << {
+  "type" => "git_source",
+  "host" => $options[:azure_hostname],
+  "username" => "x-access-token",
+  "password" => ENV["AZURE_ACCESS_TOKEN"]
+}
+unless ENV["GITHUB_ACCESS_TOKEN"].to_s.strip.empty?
+  puts "GitHub access token has been provided."
+  $options[:credentials] << {
+    "type" => "git_source",
+    "host" => "github.com",
+    "username" => "x-access-token",
+    "password" => ENV["GITHUB_ACCESS_TOKEN"] # A GitHub access token with read access to public repos
+  }
+end
+unless ENV["DEPENDABOT_EXTRA_CREDENTIALS"].to_s.strip.empty?
+  # For example:
+  # "[{\"type\":\"npm_registry\",\"registry\":\
+  #     "registry.npmjs.org\",\"token\":\"123\"}]"
+  $options[:credentials].concat(JSON.parse(ENV["DEPENDABOT_EXTRA_CREDENTIALS"]))
+
+  # Adding custom private feed removes the public onces so we have to create it
+  if $package_manager == "nuget"
+    $options[:credentials] << {
+      "type" => "nuget_feed",
+      "url" => "https://api.nuget.org/v3/index.json",
+    }
+  end
+end
+
 ##########################################
 # Setup the requirements update strategy #
 ##########################################
@@ -109,57 +146,11 @@ unless ENV["DEPENDABOT_VERSIONING_STRATEGY"].to_s.strip.empty?
   end
 end
 
-# See description of requirements here:
-# https://github.com/dependabot/dependabot-core/issues/600#issuecomment-407808103
-# https://github.com/wemake-services/kira-dependencies/pull/210
-excluded_requirements = ENV['DEPENDABOT_EXCLUDE_REQUIREMENTS_TO_UNLOCK']&.split(" ")&.map(&:to_sym) || []
-
 ####################################################
 # Setup the hostname, protocol and port to be used #
 ####################################################
 $options[:azure_port] = ENV["AZURE_PORT"] || ($options[:azure_protocol] == "http" ? "80" : "443")
 puts "Using hostname = '#{$options[:azure_hostname]}', protocol = '#{$options[:azure_protocol]}', port = '#{$options[:azure_port]}'."
-
-#####################################
-# Setup credentials for source code #
-#####################################
-$options[:credentials] << {
-  "type" => "git_source",
-  "host" => $options[:azure_hostname],
-  "username" => "x-access-token",
-  "password" => ENV["AZURE_ACCESS_TOKEN"]
-}
-
-########################################################
-# Add GitHub Access Token (PAT) to avoid rate limiting #
-########################################################
-unless ENV["GITHUB_ACCESS_TOKEN"].to_s.strip.empty?
-  puts "GitHub access token has been provided."
-  $options[:credentials] << {
-    "type" => "git_source",
-    "host" => "github.com",
-    "username" => "x-access-token",
-    "password" => ENV["GITHUB_ACCESS_TOKEN"] # A GitHub access token with read access to public repos
-  }
-end
-
-###########################
-# Setup extra credentials #
-###########################
-unless ENV["DEPENDABOT_EXTRA_CREDENTIALS"].to_s.strip.empty?
-  # For example:
-  # "[{\"type\":\"npm_registry\",\"registry\":\
-  #     "registry.npmjs.org\",\"token\":\"123\"}]"
-  $options[:credentials].concat(JSON.parse(ENV["DEPENDABOT_EXTRA_CREDENTIALS"]))
-
-  # # Adding custom private feed removes the public onces so we have to create it
-  # if $package_manager == "nuget"
-  #   $options[:credentials] << {
-  #     "type" => "nuget_feed",
-  #     "url" => "https://api.nuget.org/v3/index.json",
-  #   }
-  # end
-end
 
 #####################################
 # Setup Allow and Ignore conditions #
@@ -171,16 +162,19 @@ unless allow_options_json.to_s.strip.empty?
 end
 
 # Setup ignore conditions
-unless ENV["DEPENDABOT_IGNORE"].to_s.strip.empty? # TODO: rename to DEPENDABOT_IGNORE_CONDITIONS
+unless ENV["DEPENDABOT_IGNORE_CONDITIONS"].to_s.strip.empty?
   # For example:
   # [{"dependency-name":"ruby","version-requirement":">= 3.a, < 4"}]
-  $options[:ignore_conditions] = JSON.parse(ENV["DEPENDABOT_IGNORE"])
+  $options[:ignore_conditions] = JSON.parse(ENV["DEPENDABOT_IGNORE_CONDITIONS"])
 end
 
 $api_endpoint = "#{$options[:azure_protocol]}://#{$options[:azure_hostname]}:#{$options[:azure_port]}/"
 $api_endpoint = $api_endpoint + "#{$options[:azure_virtual_directory]}/" if !$options[:azure_virtual_directory].empty?
 puts "Using '#{$api_endpoint}' as API endpoint"
 puts "Pull Requests shall be linked to work item #{$options[:work_item_id]}" if $options[:work_item_id]
+
+# Full name of the repo targeted.
+$repo_name = "#{$options[:azure_organization]}/#{$options[:azure_project]}/_git/#{$options[:azure_repository]}"
 
 $source = Dependabot::Source.new(
   provider: $options[:provider],
@@ -299,11 +293,11 @@ dependencies.select(&:top_level?).each do |dep|
 
     requirements_to_unlock =
       if !checker.requirements_unlocked_or_can_be?
-        if !excluded_requirements.include?(:none) && checker.can_update?(requirements_to_unlock: :none) then :none
+        if !$options[:excluded_requirements].include?(:none) && checker.can_update?(requirements_to_unlock: :none) then :none
         else :update_not_possible
         end
-      elsif !excluded_requirements.include?(:own) && checker.can_update?(requirements_to_unlock: :own) then :own
-      elsif !excluded_requirements.include?(:all) && checker.can_update?(requirements_to_unlock: :all) then :all
+      elsif !$options[:excluded_requirements].include?(:own) && checker.can_update?(requirements_to_unlock: :own) then :own
+      elsif !$options[:excluded_requirements].include?(:all) && checker.can_update?(requirements_to_unlock: :all) then :all
       else :update_not_possible
       end
 
