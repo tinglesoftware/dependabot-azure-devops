@@ -182,7 +182,7 @@ end
 ###########################
 unless ENV["DEPENDABOT_IGNORE_CONDITIONS"].to_s.strip.empty?
   # For example:
-  # [{"dependency-name":"ruby","version-requirement":">= 3.a, < 4"}]
+  # [{"dependency-name":"ruby","versions":[">= 3.a", "< 4"]}]
   $options[:ignore_conditions] = JSON.parse(ENV["DEPENDABOT_IGNORE_CONDITIONS"])
 end
 
@@ -192,7 +192,7 @@ def ignored_versions_for(dep)
     ignore_conditions = $options[:ignore_conditions].map do |ic|
       Dependabot::Config::IgnoreCondition.new(
         dependency_name: ic["dependency-name"],
-        versions: [ic["version-requirement"]].compact,
+        versions: ic["versions"],
         update_types: ic["update-types"]
       )
     end
