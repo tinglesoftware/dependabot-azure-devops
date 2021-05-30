@@ -16,11 +16,11 @@ export interface IDependabotUpdate {
   /**
    * Customize which updates are allowed.
    */
-  allow?: IDependabotAllowDependency[] | string;
+  allow?: string;
   /**
    * Ignore certain dependencies or versions.
    */
-  ignore?: IDependabotIgnoreDependency[] | string;
+  ignore?: string;
   /**
    * 	Limit number of open pull requests for version updates.
    */
@@ -41,16 +41,6 @@ export interface IDependabotUpdate {
    * The milestone to associate pull requests with.
    */
    milestone?: string;
-}
-
-export interface IDependabotAllowDependency {
-  dependencyName: string;
-  dependencyType: string;
-}
-
-export interface IDependabotIgnoreDependency {
-  dependencyName: string;
-  versions: string[];
 }
 
 export interface IDependabotUpdateSchedule {
