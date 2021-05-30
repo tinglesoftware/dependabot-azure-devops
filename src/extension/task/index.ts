@@ -84,10 +84,9 @@ async function run() {
     dockerRunner.arg(["--rm"]); // remove after execution
     dockerRunner.arg(["-i"]); // attach pseudo tty
 
-
     // Set the protocol
     var organizationUrl = tl.getVariable("System.TeamFoundationCollectionUri");
-    var parsedUrl = new URL(organizationUrl);  
+    var parsedUrl = new URL(organizationUrl);
     let protocol: string = parsedUrl.protocol.slice(0, -1);
     dockerRunner.arg(["-e", `AZURE_PROTOCOL=${protocol}`]);
 
@@ -153,12 +152,6 @@ async function run() {
     repository = encodeURI(repository); // encode special characters like spaces
     dockerRunner.arg(["-e", `AZURE_REPOSITORY=${repository}`]);
 
-    // Set the milestone, if provided
-    let milestone = tl.getInput("milestone");
-    if (milestone) {
-      dockerRunner.arg(["-e", `DEPENDABOT_MILESTONE=${milestone}`]);
-    }
-
     // Set auto complete, if set
     let setAutoComplete = tl.getBoolInput('setAutoComplete', false);
     dockerRunner.arg(["-e", `AZURE_SET_AUTO_COMPLETE=${setAutoComplete}`]);
@@ -189,7 +182,7 @@ async function run() {
     let excludeRequirementsToUnlock = tl.getInput('excludeRequirementsToUnlock') || "";
     dockerRunner.arg(["-e", `DEPENDABOT_EXCLUDE_REQUIREMENTS_TO_UNLOCK=${excludeRequirementsToUnlock}`]);
 
-    // Get the override allow and ignore
+    // Get the override values for allow and ignore
     let allowOvr = tl.getVariable("DEPENDABOT_ALLOW_CONDITIONS");
     let ignoreOvr = tl.getVariable("DEPENDABOT_IGNORE_CONDITIONS");
 
@@ -227,6 +220,11 @@ async function run() {
       let allow = update.allow || allowOvr;
       if (allow) {
         dockerRunner.arg(["-e", `DEPENDABOT_ALLOW_CONDITIONS=${allow}`]);
+      }
+
+      // Set the milestone, if provided
+      if (update.milestone) {
+        dockerRunner.arg(["-e", `DEPENDABOT_MILESTONE=${update.milestone}`]);
       }
 
       // Set the dependencies to ignore

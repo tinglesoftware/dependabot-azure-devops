@@ -18,6 +18,7 @@ export default function getConfigFromInputs() {
 
     targetBranch: getInput("targetBranch", false),
     versioningStrategy: getInput("versioningStrategy", true),
+    milestone: getInput("milestone"),
   };
 
   return [dependabotUpdate];

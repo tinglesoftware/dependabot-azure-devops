@@ -5,28 +5,28 @@
  */
 export interface IDependabotUpdate {
   /**
-   * Location of package manifests
+   * Location of package manifests.
    * */
   directory: string;
   /**
-   * Package manager to use
+   * Package manager to use.
    * */
   packageEcosystem: string;
   schedule?: IDependabotUpdateSchedule;
   /**
-   * Customize which updates are allowed
+   * Customize which updates are allowed.
    */
   allow?: IDependabotAllowDependency[] | string;
   /**
-   * Ignore certain dependencies or versions
+   * Ignore certain dependencies or versions.
    */
   ignore?: IDependabotIgnoreDependency[] | string;
   /**
-   * 	Limit number of open pull requests for version updates
+   * 	Limit number of open pull requests for version updates.
    */
   openPullRequestLimit?: number;
   /**
-   * Branch to create pull requests against
+   * Branch to create pull requests against.
    */
   targetBranch?: string;
   /**
@@ -34,9 +34,13 @@ export interface IDependabotUpdate {
    */
   vendor?: boolean;
   /**
-   * How to update manifest version requirements
+   * How to update manifest version requirements.
    */
   versioningStrategy?: string;
+  /**
+   * The milestone to associate pull requests with.
+   */
+   milestone?: string;
 }
 
 export interface IDependabotAllowDependency {
