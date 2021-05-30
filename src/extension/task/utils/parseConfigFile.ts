@@ -28,6 +28,23 @@ export default function parseConfigFile(): IDependabotUpdate[] {
     throw new Error("Invalid dependabot config object");
   }
 
+  const rawVersion = config["version"];
+  let version = -1;
+
+  // ensure the version has been specified
+  if(!!!rawVersion) throw new Error("The version must be specified in dependabot.yml");
+
+  //try convert the version to integer
+  try{
+    version = parseInt(rawVersion, 10);
+  }
+  catch(e) {
+    throw new Error("Dependabot version specified must be a valid integer");
+  }
+
+  //ensure the version is == 2
+  if(version !== 2) throw new Error("Only version 2 of dependabot is supported. Version specified: " + version);
+
   var updates: IDependabotUpdate[] = [];
 
   //check the updates parsed
@@ -52,8 +69,8 @@ export default function parseConfigFile(): IDependabotUpdate[] {
       milestone: update["milestone"],
 
       // Convert to JSON and shorten the names as required by the script
-      allow: updates["allow"] ? JSON.stringify(updates["allow"]) : undefined,
-      ignore: updates["ignore"] ? JSON.stringify(updates["ignore"]) : undefined,
+      allow: update["allow"] ? JSON.stringify(update["allow"]) : undefined,
+      ignore: update["ignore"] ? JSON.stringify(update["ignore"]) : undefined,
     };
 
     if (!dependabotUpdate.packageEcosystem) {
