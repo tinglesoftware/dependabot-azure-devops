@@ -64,7 +64,7 @@ Since this task makes use of a docker image, it may take time to install the doc
 |openPullRequestsLimit|**_Optional_**. The maximum number of open pull requests to have at any one time. Defaults to 5.|
 |versioningStrategy|**_Optional_**. The versioning strategy to use. See the [official docs](https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/configuration-options-for-dependency-updates#versioning-strategy). Defaults to `auto`.|
 |failOnException|**_Optional_**. Determines if the execution should fail when an exception occurs. Defaults to `true`.|
-|workItemId|**_Optional_**. The identifier of the work item to be linked to the Pull Requests that dependabot creates.|
+|milestone|**_Optional_**. The identifier of the work item to be linked to the Pull Requests that dependabot creates.|
 |setAutoComplete|**_Optional_**. Determines if the pull requests that dependabot creates should have auto complete set. When set to `true`, pull requests that pass all policies will be merged automatically.|
 |autoApprove|**_Optional_**. Determines if the pull requests that dependabot creates should be automatically completed. When set to `true`, pull requests will be approved automatically by the user specified in the `autoApproveUserEmail` field.|
 |autoApproveUserEmail|**_Optional_**. Email of the user that should be used to automatically approve pull requests. Required if `autoApprove` is set to `true`.|

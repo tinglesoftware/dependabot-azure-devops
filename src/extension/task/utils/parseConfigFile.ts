@@ -49,6 +49,7 @@ export default function parseConfigFile(): IDependabotUpdate[] {
 
       targetBranch: update["target-branch"],
       versioningStrategy: update["versioning-strategy"],
+      milestone: update["milestone"],
 
       // Convert to JSON and shorten the names as required by the script
       allow: updates["allow"] ? JSON.stringify(updates["allow"]) : undefined,

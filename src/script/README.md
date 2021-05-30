@@ -27,7 +27,7 @@ docker run --rm -t \
            -e DEPENDABOT_EXTRA_CREDENTIALS=<your-extra-credentials> \
            -e DEPENDABOT_ALLOW_CONDITIONS=<your-allowed-packages> \
            -e DEPENDABOT_IGNORE_CONDITIONS=<your-ignore-packages> \
-           -e AZURE_WORK_ITEM_ID=<your-work-item-id> \
+           -e DEPENDABOT_MILESTONE=<your-work-item-id> \
            -e AZURE_SET_AUTO_COMPLETE=<true/false> \
            -e AZURE_AUTO_APPROVE_PR=<true/false> \
            -e AZURE_AUTO_APPROVE_USER_EMAIL=<approving-user-email> \
@@ -53,7 +53,7 @@ docker run --rm -t \
            -e DEPENDABOT_EXTRA_CREDENTIALS='[{\"type\":\"npm_registry\",\"token\":\"<redacted>\",\"registry\":\"npm.fontawesome.com\"}]' \
            -e DEPENDABOT_ALLOW_CONDITIONS='[{\"dependency-name\":"django*",\"dependency-type\":\"direct\"}]' \
            -e DEPENDABOT_IGNORE_CONDITIONS='[{\"dependency-name\":\"express\",\"versions\":[\"4.x\",\"5.x\"]}]' \
-           -e AZURE_WORK_ITEM_ID=123 \
+           -e DEPENDABOT_MILESTONE=123 \
            -e AZURE_SET_AUTO_COMPLETE=true \
            -e AZURE_AUTO_APPROVE_PR=true \
            -e AZURE_AUTO_APPROVE_USER_EMAIL=supervisor@contoso.com \
@@ -82,7 +82,7 @@ docker run --rm -t \
            -e DEPENDABOT_EXTRA_CREDENTIALS='[{\"type\":\"npm_registry\",\"token\":\"<redacted>\",\"registry\":\"npm.fontawesome.com\"}]' \
            -e DEPENDABOT_ALLOW_CONDITIONS='[{\"dependency-name\":"django*",\"dependency-type\":\"direct\"}]' \
            -e DEPENDABOT_IGNORE_CONDITIONS='[{\"dependency-name\":\"express\",\"versions\":[\"4.x\",\"5.x\"]}]' \
-           -e AZURE_WORK_ITEM_ID=123 \
+           -e DEPENDABOT_MILESTONE=123 \
            -e AZURE_SET_AUTO_COMPLETE=true \
            -e AZURE_AUTO_APPROVE_PR=true \
            -e AZURE_AUTO_APPROVE_USER_EMAIL=supervisor@contoso.com \
@@ -115,7 +115,7 @@ To run the script, some environment variables are required.
 |DEPENDABOT_IGNORE_CONDITIONS|**_Optional_**. The dependencies to be ignored, in JSON format. This can be used to control which packages can be updated. For example: `[{\"dependency-name\":\"express\",\"versions\":[\"4.x\",\"5.x\"]}]`. See [official docs](https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/configuration-options-for-dependency-updates#ignore) for more.|
 |DEPENDABOT_FAIL_ON_EXCEPTION|**_Optional_**. Determines if the execution should fail when an exception occurs. Defaults to `true`.|
 |DEPENDABOT_EXCLUDE_REQUIREMENTS_TO_UNLOCK|**_Optional_**. Exclude certain dependency updates requirements. See list of allowed values [here](https://github.com/dependabot/dependabot-core/issues/600#issuecomment-407808103). Useful if you have lots of dependencies and the update script too slow. The values provided are space-separated. Example: `own all` to only use the `none` version requirement.|
-|AZURE_WORK_ITEM_ID|**_Optional_**. The identifier of the work item to be linked to the Pull Requests that dependabot creates.|
+|DEPENDABOT_MILESTONE|**_Optional_**. The identifier of the work item to be linked to the Pull Requests that dependabot creates.|
 |AZURE_SET_AUTO_COMPLETE|**_Optional_**. Determines if the pull requests that dependabot creates should have auto complete set. When set to `true`, pull requests that pass all policies will be merged automatically|
 |AZURE_AUTO_APPROVE_PR|**_Optional_**. Determines if the pull requests that dependabot creates should be automatically completed. When set to `true`, pull requests will be approved automatically by the user specified in the `AZURE_AUTO_APPROVE_USER_EMAIL` environment variable.|
 |AZURE_AUTO_APPROVE_USER_EMAIL|**_Optional_**. Email of the user that should be used to automatically approve pull requests. Required if `AZURE_AUTO_APPROVE_PR` is set to `true`.|
