@@ -74,7 +74,7 @@ jobs:
         tfx extension create
         --root src/extension
         --manifest-globs vss-extension.json
-        --output-path $GITHUB_WORKSPACE/drop/dev
+        --output-path $GITHUB_WORKSPACE/drop
         --json5
         --overrides-file $GITHUB_WORKSPACE/src/extension/overrides.dev.json
 
@@ -83,7 +83,7 @@ jobs:
         tfx extension create
         --root src/extension
         --manifest-globs vss-extension.json
-        --output-path $GITHUB_WORKSPACE/drop/prod
+        --output-path $GITHUB_WORKSPACE/drop
         --json5
         --overrides-file $GITHUB_WORKSPACE/src/extension/overrides.prod.json
 
