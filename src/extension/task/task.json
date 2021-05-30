@@ -24,6 +24,11 @@
       "isExpanded": false
     },
     {
+      "name": "github",
+      "displayName": "GitHub authentication",
+      "isExpanded": false
+    },
+    {
       "name": "advanced",
       "displayName": "Advanced",
       "isExpanded": false
@@ -160,22 +165,22 @@
       "visibleRule": "autoApprove=true"
     },
     {
-      "name": "gitHubConnection",
-      "type": "connectedService:github:OAuth,PersonalAccessToken,InstallationToken,Token",
-      "groupName": "advanced",
-      "label": "GitHub connection (OAuth or PAT)",
-      "defaultValue": "",
-      "required": false,
-      "helpMarkDown": "Specify the name of the GitHub service connection to use to connect to the GitHub repositories. The connection must be based on a GitHub user's OAuth or a GitHub personal access token. Learn more about service connections [here](https://aka.ms/AA3am5s)."
-    },
-    {
       "name": "gitHubAccessToken",
       "type": "string",
-      "groupName": "advanced",
+      "groupName": "github",
       "label": "GitHub connection (OAuth or PAT)",
       "defaultValue": "",
       "required": false,
       "helpMarkDown": "The Personal Access Token for accessing GitHub repositories. Use this in place of `gitHubConnection` such as when it is not possible to create a service connection."
+    },
+    {
+      "name": "gitHubConnection",
+      "type": "connectedService:github:OAuth,PersonalAccessToken,InstallationToken,Token",
+      "groupName": "github",
+      "label": "GitHub connection (OAuth or PAT)",
+      "defaultValue": "",
+      "required": false,
+      "helpMarkDown": "Specify the name of the GitHub service connection to use to connect to the GitHub repositories. The connection must be based on a GitHub user's OAuth or a GitHub personal access token. Learn more about service connections [here](https://aka.ms/AA3am5s)."
     },
     {
       "name": "azureDevOpsAccessToken",
