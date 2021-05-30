@@ -98,7 +98,7 @@ async function run() {
     let dockerImageTag: string = tl.getInput('dockerImageTag') || "0.4"; // pull the latest patch for 0.4 e.g. 0.4.0
 
     // Prepare the github token, if one is provided
-    let githubAccessToken: string;
+    let githubAccessToken: string= tl.getInput("gitHubAccessToken");
     if (!githubAccessToken) {
       const githubEndpointId = tl.getInput("gitHubConnection");
       if (githubEndpointId) {
