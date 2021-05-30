@@ -115,7 +115,7 @@
       "helpMarkDown": "When set to true, a failure in updating a single dependency will cause the container execution to fail thereby causing the task to fail. This is important when you want a single failure to prevent trying to update other dependencies."
     },
     {
-      "name": "workItemId",
+      "name": "milestone",
       "type": "string",
       "label": "Work item identifier to be linked to the Pull Requests.",
       "required": false,

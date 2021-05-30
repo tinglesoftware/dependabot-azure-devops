@@ -153,10 +153,10 @@ async function run() {
     repository = encodeURI(repository); // encode special characters like spaces
     dockerRunner.arg(["-e", `AZURE_REPOSITORY=${repository}`]);
 
-    // Set the work item id, if provided
-    let workItemId = tl.getInput("workItemId");
-    if (workItemId) {
-      dockerRunner.arg(["-e", `DEPENDABOT_MILESTONE=${workItemId}`]);
+    // Set the milestone, if provided
+    let milestone = tl.getInput("milestone");
+    if (milestone) {
+      dockerRunner.arg(["-e", `DEPENDABOT_MILESTONE=${milestone}`]);
     }
 
     // Set auto complete, if set
