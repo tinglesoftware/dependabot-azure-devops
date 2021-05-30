@@ -45,7 +45,7 @@ $options = {
   azure_port: nil,
   azure_virtual_directory: ENV["AZURE_VIRTUAL_DIRECTORY"] || "",
 
-  work_item_id: ENV['AZURE_WORK_ITEM_ID'] || nil, # Get the work item to attach
+  work_item_id: ENV['DEPENDABOT_MILESTONE'] || nil, # Get the work item to attach
 
   set_auto_complete: ENV["AZURE_SET_AUTO_COMPLETE"] == "true", # Set auto complete on created pull requests
 

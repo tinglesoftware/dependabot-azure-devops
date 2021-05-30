@@ -156,7 +156,7 @@ async function run() {
     // Set the work item id, if provided
     let workItemId = tl.getInput("workItemId");
     if (workItemId) {
-      dockerRunner.arg(["-e", `AZURE_WORK_ITEM_ID=${workItemId}`]);
+      dockerRunner.arg(["-e", `DEPENDABOT_MILESTONE=${workItemId}`]);
     }
 
     // Set auto complete, if set
