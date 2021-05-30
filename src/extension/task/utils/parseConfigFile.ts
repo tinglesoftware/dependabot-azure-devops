@@ -69,8 +69,8 @@ export default function parseConfigFile(): IDependabotUpdate[] {
       milestone: update["milestone"],
 
       // Convert to JSON and shorten the names as required by the script
-      allow: updates["allow"] ? JSON.stringify(updates["allow"]) : undefined,
-      ignore: updates["ignore"] ? JSON.stringify(updates["ignore"]) : undefined,
+      allow: update["allow"] ? JSON.stringify(update["allow"]) : undefined,
+      ignore: update["ignore"] ? JSON.stringify(update["ignore"]) : undefined,
     };
 
     if (!dependabotUpdate.packageEcosystem) {
