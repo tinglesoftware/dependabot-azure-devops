@@ -78,109 +78,54 @@ async function run() {
     tl.debug("Checking for docker install ...");
     tl.which("docker", true);
 
-    // Prepare the docker task
-    let dockerRunner: tr.ToolRunner = tl.tool(tl.which("docker", true));
-    dockerRunner.arg(["run"]); // run command
-    dockerRunner.arg(["--rm"]); // remove after execution
-    dockerRunner.arg(["-i"]); // attach pseudo tty
-
-    // Set the protocol
-    var organizationUrl = tl.getVariable("System.TeamFoundationCollectionUri");
-    var parsedUrl = new URL(organizationUrl);
+    // Prepare shared variables
+    let organizationUrl = tl.getVariable("System.TeamFoundationCollectionUri");
+    let parsedUrl = new URL(organizationUrl);
     let protocol: string = parsedUrl.protocol.slice(0, -1);
-    dockerRunner.arg(["-e", `AZURE_PROTOCOL=${protocol}`]);
-
-    // Set the hostname
     let hostname: string = parsedUrl.hostname;
-    dockerRunner.arg(["-e", `AZURE_HOSTNAME=${hostname}`]);
-
-    // Set the port
     let port: string = parsedUrl.port;
-    if (port !== "") {
-      dockerRunner.arg(["-e", `AZURE_PORT=${port}`]);
-    }
-
-    // Set the virtual directory
     let virtualDirectory: string = extractVirtualDirectory(parsedUrl);
-    if (virtualDirectory !== "") {
-      dockerRunner.arg(["-e", `AZURE_VIRTUAL_DIRECTORY=${virtualDirectory}`]);
-    }
-    // Set the github token, if one is provided
-    const githubEndpointId = tl.getInput("gitHubConnection");
-    if (githubEndpointId) {
-      tl.debug(
-        "GitHub connection supplied. A token shall be extracted from it."
-      );
-      let githubAccessToken: string = getGithubEndPointToken(githubEndpointId);
-      dockerRunner.arg(["-e", `GITHUB_ACCESS_TOKEN=${githubAccessToken}`]);
+    let organization: string = extractOrganization(organizationUrl);
+    let project: string = encodeURI(tl.getVariable("System.TeamProject")); // encode special characters like spaces
+    let setAutoComplete = tl.getBoolInput('setAutoComplete', false);
+    let failOnException = tl.getBoolInput("failOnException", true);
+    let excludeRequirementsToUnlock = tl.getInput('excludeRequirementsToUnlock') || "";
+    let autoApprove: boolean = tl.getBoolInput('autoApprove', false);
+    let autoApproveUserEmail: string = tl.getInput("autoApproveUserEmail");
+    let autoApproveUserToken: string = tl.getInput("autoApproveUserToken");
+    let extraCredentials = tl.getVariable("DEPENDABOT_EXTRA_CREDENTIALS");
+    // TODO: get the latest version to use from a given url
+    let dockerImageTag: string = tl.getInput('dockerImageTag') || "0.4"; // pull the latest patch for 0.4 e.g. 0.4.0
+
+    // Prepare the github token, if one is provided
+    let githubAccessToken: string;
+    if (!githubAccessToken) {
+      const githubEndpointId = tl.getInput("gitHubConnection");
+      if (githubEndpointId) {
+        tl.debug("GitHub connection supplied. A token shall be extracted from it.");
+        githubAccessToken = getGithubEndPointToken(githubEndpointId);
+      }
     }
 
-    // Set the access token for Azure DevOps Repos.
+    // Prepare the access token for Azure DevOps Repos.
     // If the user has not provided one, we use the one from the SystemVssConnection
     let systemAccessToken: string = tl.getInput("azureDevOpsAccessToken");
     if (!systemAccessToken) {
-      tl.debug(
-        "No custom token provided. The SystemVssConnection's AccessToken shall be used."
-      );
+      tl.debug("No custom token provided. The SystemVssConnection's AccessToken shall be used.");
       systemAccessToken = tl.getEndpointAuthorizationParameter(
         "SystemVssConnection",
         "AccessToken",
         false
       );
     }
-    dockerRunner.arg(["-e", `AZURE_ACCESS_TOKEN=${systemAccessToken}`]);
 
-    // Set the organization
-    let organization: string = extractOrganization(organizationUrl);
-    dockerRunner.arg(["-e", `AZURE_ORGANIZATION=${organization}`]);
-
-    // Set the project
-    let project: string = tl.getVariable("System.TeamProject");
-    project = encodeURI(project); // encode special characters like spaces
-    dockerRunner.arg(["-e", `AZURE_PROJECT=${project}`]);
-
-    // Set the repository
+    // Prepare the repository
     let repository: string = tl.getInput("targetRepositoryName");
-
     if (!repository) {
-      tl.debug(
-        "No custom repository provided. The Pipeline Repository Name shall be used."
-      );
-
+      tl.debug("No custom repository provided. The Pipeline Repository Name shall be used.");
       repository = tl.getVariable("Build.Repository.Name");
     }
     repository = encodeURI(repository); // encode special characters like spaces
-    dockerRunner.arg(["-e", `AZURE_REPOSITORY=${repository}`]);
-
-    // Set auto complete, if set
-    let setAutoComplete = tl.getBoolInput('setAutoComplete', false);
-    dockerRunner.arg(["-e", `AZURE_SET_AUTO_COMPLETE=${setAutoComplete}`]);
-
-    // Auto Approve, if set
-    let autoApprove = tl.getBoolInput('autoApprove', false);
-    if (autoApprove) {
-      // Get auto approve variables
-      var autoApproveUserEmail = tl.getInput("autoApproveUserEmail");
-      var autoApproveUserToken = tl.getInput("autoApproveUserToken");
-
-      dockerRunner.arg(["-e", `AZURE_AUTO_APPROVE_PR=${autoApprove}`]);
-      dockerRunner.arg(["-e", `AZURE_AUTO_APPROVE_USER_EMAIL=${autoApproveUserEmail}`]);
-      dockerRunner.arg(["-e", `AZURE_AUTO_APPROVE_USER_TOKEN=${autoApproveUserToken}`]);
-    }
-
-    // Set exception behaviour
-    let failOnException = tl.getBoolInput("failOnException", true);
-    dockerRunner.arg(["-e", `DEPENDABOT_FAIL_ON_EXCEPTION=${failOnException}`]);
-
-    // Set the extra credentials
-    let extraCredentials = tl.getVariable("DEPENDABOT_EXTRA_CREDENTIALS");
-    if (extraCredentials) {
-      dockerRunner.arg(["-e", `DEPENDABOT_EXTRA_CREDENTIALS=${extraCredentials}`]);
-    }
-
-    // Set the excluded requirements to unlock
-    let excludeRequirementsToUnlock = tl.getInput('excludeRequirementsToUnlock') || "";
-    dockerRunner.arg(["-e", `DEPENDABOT_EXCLUDE_REQUIREMENTS_TO_UNLOCK=${excludeRequirementsToUnlock}`]);
 
     // Get the override values for allow and ignore
     let allowOvr = tl.getVariable("DEPENDABOT_ALLOW_CONDITIONS");
@@ -193,9 +138,25 @@ async function run() {
     if (useConfigFile) updates = parseConfigFile();
     else updates = getConfigFromInputs();
 
+    // For each update run docker container
     for (const update of updates) {
-      // TODO: ensure the arguments are cleared for every call
+      // Prepare the docker task
+      let dockerRunner: tr.ToolRunner = tl.tool(tl.which("docker", true));
+      dockerRunner.arg(["run"]); // run command
+      dockerRunner.arg(["--rm"]); // remove after execution
+      dockerRunner.arg(["-i"]); // attach pseudo tty
+
+      // Set env variables in the runner
       dockerRunner.arg(["-e", `DEPENDABOT_PACKAGE_MANAGER=${update.packageEcosystem}`]);
+      dockerRunner.arg(["-e", `DEPENDABOT_FAIL_ON_EXCEPTION=${failOnException}`]); // Set exception behaviour
+      dockerRunner.arg(["-e", `DEPENDABOT_EXCLUDE_REQUIREMENTS_TO_UNLOCK=${excludeRequirementsToUnlock}`]);
+      dockerRunner.arg(["-e", `AZURE_PROTOCOL=${protocol}`]);
+      dockerRunner.arg(["-e", `AZURE_HOSTNAME=${hostname}`]);
+      dockerRunner.arg(["-e", `AZURE_ORGANIZATION=${organization}`]); // Set the organization
+      dockerRunner.arg(["-e", `AZURE_PROJECT=${project}`]); // Set the project
+      dockerRunner.arg(["-e", `AZURE_REPOSITORY=${repository}`]);
+      dockerRunner.arg(["-e", `AZURE_ACCESS_TOKEN=${systemAccessToken}`]);
+      dockerRunner.arg(["-e", `AZURE_SET_AUTO_COMPLETE=${setAutoComplete}`]); // Set auto complete, if set
 
       // Set the directory
       if (update.directory) {
@@ -233,15 +194,37 @@ async function run() {
         dockerRunner.arg(["-e", `DEPENDABOT_IGNORE_CONDITIONS=${ignore}`]);
       }
 
-      // Allow overriding of the docker image tag
-      let dockerImageTag: string = tl.getInput('dockerImageTag');
-      if (!dockerImageTag) {
-        // TODO: get the latest version to use from a given url
-        dockerImageTag = "0.4"; // will pull the latest patch for 0.4 e.g. 0.4.0
+      // Set the extra credentials
+      if (extraCredentials) {
+        dockerRunner.arg(["-e", `DEPENDABOT_EXTRA_CREDENTIALS=${extraCredentials}`]);
+      }
+
+      // Set the github token, if one is provided
+      if (githubAccessToken) {
+        dockerRunner.arg(["-e", `GITHUB_ACCESS_TOKEN=${githubAccessToken}`]);
+      }
+
+      // Set the port
+      if (port && port !== "") {
+        dockerRunner.arg(["-e", `AZURE_PORT=${port}`]);
+      }
+
+      // Set the virtual directory
+      if (virtualDirectory !== "") {
+        dockerRunner.arg(["-e", `AZURE_VIRTUAL_DIRECTORY=${virtualDirectory}`]);
+      }
+
+      // Set auto complete
+      dockerRunner.arg(["-e", `AZURE_AUTO_APPROVE_PR=${autoApprove}`]);
+      if (autoApproveUserEmail) {
+        dockerRunner.arg(["-e", `AZURE_AUTO_APPROVE_USER_EMAIL=${autoApproveUserEmail}`]);
+      }
+      if (autoApproveUserToken) {
+        dockerRunner.arg(["-e", `AZURE_AUTO_APPROVE_USER_TOKEN=${autoApproveUserToken}`]);
       }
 
       const dockerImage = `tingle/dependabot-azure-devops:${dockerImageTag}`;
-      tl.debug(`Running docker container using '${dockerImage}' ...`);
+      tl.debug(`Running docker container -> '${dockerImage}' ...`);
       dockerRunner.arg([dockerImage]);
 
       // Now execute using docker
