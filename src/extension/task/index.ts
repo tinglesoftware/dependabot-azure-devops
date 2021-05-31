@@ -94,8 +94,7 @@ async function run() {
     let autoApproveUserEmail: string = tl.getInput("autoApproveUserEmail");
     let autoApproveUserToken: string = tl.getInput("autoApproveUserToken");
     let extraCredentials = tl.getVariable("DEPENDABOT_EXTRA_CREDENTIALS");
-    // TODO: get the latest version to use from a given url
-    let dockerImageTag: string = tl.getInput('dockerImageTag') || "0.4"; // pull the latest patch for 0.4 e.g. 0.4.0
+    let dockerImageTag: string = tl.getInput('dockerImageTag'); // TODO: get the latest version to use from a given url
 
     // Prepare the github token, if one is provided
     let githubAccessToken: string= tl.getInput("gitHubAccessToken");
