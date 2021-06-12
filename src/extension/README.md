@@ -75,6 +75,7 @@ Since this task makes use of a docker image, it may take time to install the doc
 |targetRepositoryName|**_Optional_**. The name of the repository to target for processing. If this value is not supplied then the Build Repository Name is used. Supplying this value allows creation of a single pipeline that runs Dependablot against multiple repositories.|
 |excludeRequirementsToUnlock|**_Optional_**. Space-separated list of dependency updates requirements to be excluded. See list of allowed values [here](https://github.com/dependabot/dependabot-core/issues/600#issuecomment-407808103). Useful if you have lots of dependencies and the update script too slow. The values provided are space-separated. Example: `own all` to only use the `none` version requirement.|
 |dockerImageTag|**_Optional_**. The image tag to use when pulling the docker container used by the task. A tag also defines the version. By default, the task decides which tag/version to use. This can be the latest or most stable version.|
+|extraEnvironmentVariables|**_Optional_**. A semicolon (`;`) delimited list of environment variables that are sent to the docker container. See possible use case [here](https://github.com/tinglesoftware/dependabot-azure-devops/issues/138)|
 
 ## Advanced
 
