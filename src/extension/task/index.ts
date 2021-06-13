@@ -157,7 +157,7 @@ async function run() {
     else updates = getConfigFromInputs();
 
     // Get extraEnvironmentVariable list
-    let extraEnvironmentVariables = extractExtraEnvironmentVariables(tl.getDelimitedInput("extraEnvironmentVariable", ";", false));
+    let extraEnvironmentVariables = extractExtraEnvironmentVariables(tl.getDelimitedInput("extraEnvironmentVariables", ";", false));
 
     // For each update run docker container
     for (const update of updates) {
