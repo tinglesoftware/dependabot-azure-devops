@@ -214,6 +214,15 @@
       "required": false,
       "defaultValue": "0.5",
       "helpMarkDown": "The image tag to use when pulling the docker container used by the task. A tag also defines the version. By default, the task decides which tag/version to use. This can be the latest or most stable version. You can also use `major.minor` format to get the latest patch"
+    },
+    {
+      "name": "extraEnvironmentVariables",
+      "type": "string",
+      "groupName": "advanced",
+      "label": "Semicolon delimited list of environment variables",
+      "required": false,
+      "defaultValue": "",
+      "helpMarkDown": "A semicolon (`;`) delimited list of environment variables that are sent to the docker container. See possible use case [here](https://github.com/tinglesoftware/dependabot-azure-devops/issues/138)"
     }
   ],
   "dataSourceBindings": [],
