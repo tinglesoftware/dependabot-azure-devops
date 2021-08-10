@@ -1,12 +1,8 @@
 import tl = require("azure-pipelines-task-lib/task");
 import tr = require("azure-pipelines-task-lib/toolrunner");
 import { IDependabotUpdate } from "./models/IDependabotUpdate";
-import extractOrganization from "./utils/extractOrganization";
-import extractVirtualDirectory from "./utils/extractVirtualDirectory";
-import getAzureDevOpsAccessToken from "./utils/getAzureDevOpsAccessToken";
 import getConfigFromInputs from "./utils/getConfigFromInputs";
-import getGithubAccessToken from "./utils/getGithubAccessToken";
-import getTargetRepository from "./utils/getTargetRepository";
+import getSharedVariables from "./utils/getSharedVariables";
 import parseConfigFile from "./utils/parseConfigFile";
 
 async function run() {
@@ -15,42 +11,12 @@ async function run() {
     tl.debug("Checking for docker install ...");
     tl.which("docker", true);
 
-    // Prepare shared variables
-    let organizationUrl = tl.getVariable("System.TeamFoundationCollectionUri");
-    let parsedUrl = new URL(organizationUrl);
-    let protocol: string = parsedUrl.protocol.slice(0, -1);
-    let hostname: string = parsedUrl.hostname;
-    let port: string = parsedUrl.port;
-    let virtualDirectory: string = extractVirtualDirectory(parsedUrl);
-    let organization: string = extractOrganization(organizationUrl);
-    let project: string = encodeURI(tl.getVariable("System.TeamProject")); // encode special characters like spaces
-    let setAutoComplete = tl.getBoolInput('setAutoComplete', false);
-    let failOnException = tl.getBoolInput("failOnException", true);
-    let excludeRequirementsToUnlock = tl.getInput('excludeRequirementsToUnlock') || "";
-    let autoApprove: boolean = tl.getBoolInput('autoApprove', false);
-    let autoApproveUserEmail: string = tl.getInput("autoApproveUserEmail");
-    let autoApproveUserToken: string = tl.getInput("autoApproveUserToken");
-    let extraCredentials = tl.getVariable("DEPENDABOT_EXTRA_CREDENTIALS");
-    let dockerImageTag: string = tl.getInput('dockerImageTag'); // TODO: get the latest version to use from a given url
+    // prepare the shared variables
+    const variables = getSharedVariables();
 
-    // Prepare the github token, if one is provided
-    let githubAccessToken: string= getGithubAccessToken(); 
-
-    // Prepare the access token for Azure DevOps Repos.
-    let systemAccessToken: string = getAzureDevOpsAccessToken()
-
-    // Prepare the repository
-    let repository: string = getTargetRepository();
-
-    // Get the override values for allow and ignore
-    let allowOvr = tl.getVariable("DEPENDABOT_ALLOW_CONDITIONS");
-    let ignoreOvr = tl.getVariable("DEPENDABOT_IGNORE_CONDITIONS");
-
-    // Check if to use dependabot.yml or task inputs
-    let useConfigFile: boolean = tl.getBoolInput("useConfigFile", false);
     var updates: IDependabotUpdate[];
 
-    if (useConfigFile) updates = parseConfigFile();
+    if (variables.useConfigFile) updates = parseConfigFile();
     else updates = getConfigFromInputs();
 
     // For each update run docker container
@@ -63,15 +29,15 @@ async function run() {
 
       // Set env variables in the runner
       dockerRunner.arg(["-e", `DEPENDABOT_PACKAGE_MANAGER=${update.packageEcosystem}`]);
-      dockerRunner.arg(["-e", `DEPENDABOT_FAIL_ON_EXCEPTION=${failOnException}`]); // Set exception behaviour
-      dockerRunner.arg(["-e", `DEPENDABOT_EXCLUDE_REQUIREMENTS_TO_UNLOCK=${excludeRequirementsToUnlock}`]);
-      dockerRunner.arg(["-e", `AZURE_PROTOCOL=${protocol}`]);
-      dockerRunner.arg(["-e", `AZURE_HOSTNAME=${hostname}`]);
-      dockerRunner.arg(["-e", `AZURE_ORGANIZATION=${organization}`]); // Set the organization
-      dockerRunner.arg(["-e", `AZURE_PROJECT=${project}`]); // Set the project
-      dockerRunner.arg(["-e", `AZURE_REPOSITORY=${repository}`]);
-      dockerRunner.arg(["-e", `AZURE_ACCESS_TOKEN=${systemAccessToken}`]);
-      dockerRunner.arg(["-e", `AZURE_SET_AUTO_COMPLETE=${setAutoComplete}`]); // Set auto complete, if set
+      dockerRunner.arg(["-e", `DEPENDABOT_FAIL_ON_EXCEPTION=${variables.failOnException}`]); // Set exception behaviour
+      dockerRunner.arg(["-e", `DEPENDABOT_EXCLUDE_REQUIREMENTS_TO_UNLOCK=${variables.excludeRequirementsToUnlock}`]);
+      dockerRunner.arg(["-e", `AZURE_PROTOCOL=${variables.protocol}`]);
+      dockerRunner.arg(["-e", `AZURE_HOSTNAME=${variables.hostname}`]);
+      dockerRunner.arg(["-e", `AZURE_ORGANIZATION=${variables.organization}`]); // Set the organization
+      dockerRunner.arg(["-e", `AZURE_PROJECT=${variables.project}`]); // Set the project
+      dockerRunner.arg(["-e", `AZURE_REPOSITORY=${variables.repository}`]);
+      dockerRunner.arg(["-e", `AZURE_ACCESS_TOKEN=${variables.systemAccessToken}`]);
+      dockerRunner.arg(["-e", `AZURE_SET_AUTO_COMPLETE=${variables.setAutoComplete}`]); // Set auto complete, if set
 
       // Set the directory
       if (update.directory) {
@@ -93,7 +59,7 @@ async function run() {
       }
 
       // Set the dependencies to allow
-      let allow = update.allow || allowOvr;
+      let allow = update.allow || variables.allowOvr;
       if (allow) {
         dockerRunner.arg(["-e", `DEPENDABOT_ALLOW_CONDITIONS=${allow}`]);
       }
@@ -104,38 +70,38 @@ async function run() {
       }
 
       // Set the dependencies to ignore
-      let ignore = update.ignore || ignoreOvr;
+      let ignore = update.ignore || variables.ignoreOvr;
       if (ignore) {
         dockerRunner.arg(["-e", `DEPENDABOT_IGNORE_CONDITIONS=${ignore}`]);
       }
 
       // Set the extra credentials
-      if (extraCredentials) {
-        dockerRunner.arg(["-e", `DEPENDABOT_EXTRA_CREDENTIALS=${extraCredentials}`]);
+      if (variables.extraCredentials) {
+        dockerRunner.arg(["-e", `DEPENDABOT_EXTRA_CREDENTIALS=${variables.extraCredentials}`]);
       }
 
       // Set the github token, if one is provided
-      if (githubAccessToken) {
-        dockerRunner.arg(["-e", `GITHUB_ACCESS_TOKEN=${githubAccessToken}`]);
+      if (variables.githubAccessToken) {
+        dockerRunner.arg(["-e", `GITHUB_ACCESS_TOKEN=${variables.githubAccessToken}`]);
       }
 
       // Set the port
-      if (port && port !== "") {
-        dockerRunner.arg(["-e", `AZURE_PORT=${port}`]);
+      if (variables.port && variables.port !== "") {
+        dockerRunner.arg(["-e", `AZURE_PORT=${variables.port}`]);
       }
 
       // Set the virtual directory
-      if (virtualDirectory !== "") {
-        dockerRunner.arg(["-e", `AZURE_VIRTUAL_DIRECTORY=${virtualDirectory}`]);
+      if (variables.virtualDirectory !== "") {
+        dockerRunner.arg(["-e", `AZURE_VIRTUAL_DIRECTORY=${variables.virtualDirectory}`]);
       }
 
       // Set auto complete
-      dockerRunner.arg(["-e", `AZURE_AUTO_APPROVE_PR=${autoApprove}`]);
-      if (autoApproveUserEmail) {
-        dockerRunner.arg(["-e", `AZURE_AUTO_APPROVE_USER_EMAIL=${autoApproveUserEmail}`]);
+      dockerRunner.arg(["-e", `AZURE_AUTO_APPROVE_PR=${variables.autoApprove}`]);
+      if (variables.autoApproveUserEmail) {
+        dockerRunner.arg(["-e", `AZURE_AUTO_APPROVE_USER_EMAIL=${variables.autoApproveUserEmail}`]);
       }
-      if (autoApproveUserToken) {
-        dockerRunner.arg(["-e", `AZURE_AUTO_APPROVE_USER_TOKEN=${autoApproveUserToken}`]);
+      if (variables.autoApproveUserToken) {
+        dockerRunner.arg(["-e", `AZURE_AUTO_APPROVE_USER_TOKEN=${variables.autoApproveUserToken}`]);
       }
 
       // Add in extra environment variables
@@ -143,7 +109,7 @@ async function run() {
         dockerRunner.arg(["-e", extraEnvVar]);
       });
 
-      const dockerImage = `tingle/dependabot-azure-devops:${dockerImageTag}`;
+      const dockerImage = `tingle/dependabot-azure-devops:${variables.dockerImageTag}`;
       tl.debug(`Running docker container -> '${dockerImage}' ...`);
       dockerRunner.arg([dockerImage]);
 
