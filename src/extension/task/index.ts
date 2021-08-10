@@ -72,25 +72,6 @@ function extractOrganization(organizationUrl: string): string {
   );
 }
 
-function extractExtraEnvironmentVariables(rawExtraEnvironmentVariables: string[]): Record<string, string> {
-  let formattedEnvironmentVariables:Record<string, string> = {};
-
-  // With how this is set up later environment variables could overwrite earlier environment variables but that is on the user
-  for (const extraEnvironmentVariable in rawExtraEnvironmentVariables) {
-    let environmentVariableParts = extraEnvironmentVariable.split("=");
-
-    if (environmentVariableParts.length === 2) {
-      // Add both the given name and value to the formatted list
-      formattedEnvironmentVariables[environmentVariableParts[0]] = environmentVariableParts[1];
-    } else if (environmentVariableParts.length === 1) {
-      // Treat the single argument as the name and push an empty string as the value
-      formattedEnvironmentVariables[environmentVariableParts[0]] = "";
-    }
-  }
-
-  return formattedEnvironmentVariables;
-}
-
 async function run() {
   try {
     // Checking if docker is installed
@@ -155,9 +136,6 @@ async function run() {
 
     if (useConfigFile) updates = parseConfigFile();
     else updates = getConfigFromInputs();
-
-    // Get extraEnvironmentVariable list
-    let extraEnvironmentVariables = extractExtraEnvironmentVariables(tl.getDelimitedInput("extraEnvironmentVariables", ";", false));
 
     // For each update run docker container
     for (const update of updates) {
@@ -245,8 +223,8 @@ async function run() {
       }
 
       // Add in extra environment variables
-      Object.entries(extraEnvironmentVariables).map(([name, value]) => {
-        dockerRunner.arg(["-e", `${name}=${value}`]);
+      tl.getDelimitedInput("extraEnvironmentVariables", ";", false).forEach(extraEnvVar => {
+        dockerRunner.arg(["-e", extraEnvVar]);
       });
 
       const dockerImage = `tingle/dependabot-azure-devops:${dockerImageTag}`;
