@@ -37,6 +37,8 @@ interface ISharedVariables {
   ignoreOvr: string;
   /** Flag used to check if to use dependabot.yml or task inputs */
   useConfigFile: boolean;
+  /** Semicolon delimited list of environment variables */
+  extraEnvironmentVariables: string[];
 }
 
 /**
@@ -80,6 +82,13 @@ export default function getSharedVariables(): ISharedVariables {
   // Check if to use dependabot.yml or task inputs
   let useConfigFile: boolean = getBoolInput("useConfigFile", false);
 
+  // prepare extra env variables
+  let extraEnvironmentVariables = getDelimitedInput(
+    "extraEnvironmentVariables",
+    ";",
+    false
+  );
+
   return {
     protocol,
     hostname,
@@ -101,5 +110,6 @@ export default function getSharedVariables(): ISharedVariables {
     allowOvr,
     ignoreOvr,
     useConfigFile,
+    extraEnvironmentVariables,
   };
 }

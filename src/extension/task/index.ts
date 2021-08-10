@@ -105,7 +105,7 @@ async function run() {
       }
 
       // Add in extra environment variables
-      tl.getDelimitedInput("extraEnvironmentVariables", ";", false).forEach(extraEnvVar => {
+      variables.extraEnvironmentVariables.forEach(extraEnvVar => {
         dockerRunner.arg(["-e", extraEnvVar]);
       });
 
