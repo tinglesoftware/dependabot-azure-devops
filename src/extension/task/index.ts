@@ -1,76 +1,13 @@
 import tl = require("azure-pipelines-task-lib/task");
 import tr = require("azure-pipelines-task-lib/toolrunner");
 import { IDependabotUpdate } from "./models/IDependabotUpdate";
+import extractOrganization from "./utils/extractOrganization";
+import extractVirtualDirectory from "./utils/extractVirtualDirectory";
+import getAzureDevOpsAccessToken from "./utils/getAzureDevOpsAccessToken";
 import getConfigFromInputs from "./utils/getConfigFromInputs";
+import getGithubAccessToken from "./utils/getGithubAccessToken";
+import getTargetRepository from "./utils/getTargetRepository";
 import parseConfigFile from "./utils/parseConfigFile";
-
-function getGithubEndPointToken(githubEndpoint: string): string {
-  const githubEndpointObject = tl.getEndpointAuthorization(
-    githubEndpoint,
-    false
-  );
-  let githubEndpointToken: string = null;
-
-  if (!!githubEndpointObject) {
-    tl.debug("Endpoint scheme: " + githubEndpointObject.scheme);
-
-    if (githubEndpointObject.scheme === "PersonalAccessToken") {
-      githubEndpointToken = githubEndpointObject.parameters.accessToken;
-    } else if (githubEndpointObject.scheme === "OAuth") {
-      githubEndpointToken = githubEndpointObject.parameters.AccessToken;
-    } else if (githubEndpointObject.scheme === "Token") {
-      githubEndpointToken = githubEndpointObject.parameters.AccessToken;
-    } else if (githubEndpointObject.scheme) {
-      throw new Error(
-        tl.loc("InvalidEndpointAuthScheme", githubEndpointObject.scheme)
-      );
-    }
-  }
-
-  if (!githubEndpointToken) {
-    throw new Error(tl.loc("InvalidGitHubEndpoint", githubEndpoint));
-  }
-
-  return githubEndpointToken;
-}
-
-function extractVirtualDirectory(organizationUrl: URL): string {
-  let path = organizationUrl.pathname.split("/");
-  // Virtual Directories are sometimes used in on-premises
-  // URLs tipically are like this: https://server.domain.com/tfs/x/
-  if (path.length == 4) {
-    return path[1];
-  }
-  return "";
-}
-
-function extractOrganization(organizationUrl: string): string {
-  let parts = organizationUrl.split("/");
-
-  // Check for on-premise style: https://server.domain.com/tfs/x/
-  if (parts.length === 6) {
-    return parts[4];
-  }
-
-  // Check for new style: https://dev.azure.com/x/
-  if (parts.length === 5) {
-    return parts[3];
-  }
-
-  // Check for old style: https://x.visualstudio.com/
-  if (parts.length === 4) {
-    // Get x.visualstudio.com part.
-    let part = parts[2];
-
-    // Return organization part (x).
-    return part.split(".")[0];
-  }
-
-  tl.setResult(
-    tl.TaskResult.Failed,
-    `Error parsing organization from organization url: '${organizationUrl}'.`
-  );
-}
 
 async function run() {
   try {
@@ -97,34 +34,13 @@ async function run() {
     let dockerImageTag: string = tl.getInput('dockerImageTag'); // TODO: get the latest version to use from a given url
 
     // Prepare the github token, if one is provided
-    let githubAccessToken: string= tl.getInput("gitHubAccessToken");
-    if (!githubAccessToken) {
-      const githubEndpointId = tl.getInput("gitHubConnection");
-      if (githubEndpointId) {
-        tl.debug("GitHub connection supplied. A token shall be extracted from it.");
-        githubAccessToken = getGithubEndPointToken(githubEndpointId);
-      }
-    }
+    let githubAccessToken: string= getGithubAccessToken(); 
 
     // Prepare the access token for Azure DevOps Repos.
-    // If the user has not provided one, we use the one from the SystemVssConnection
-    let systemAccessToken: string = tl.getInput("azureDevOpsAccessToken");
-    if (!systemAccessToken) {
-      tl.debug("No custom token provided. The SystemVssConnection's AccessToken shall be used.");
-      systemAccessToken = tl.getEndpointAuthorizationParameter(
-        "SystemVssConnection",
-        "AccessToken",
-        false
-      );
-    }
+    let systemAccessToken: string = getAzureDevOpsAccessToken()
 
     // Prepare the repository
-    let repository: string = tl.getInput("targetRepositoryName");
-    if (!repository) {
-      tl.debug("No custom repository provided. The Pipeline Repository Name shall be used.");
-      repository = tl.getVariable("Build.Repository.Name");
-    }
-    repository = encodeURI(repository); // encode special characters like spaces
+    let repository: string = getTargetRepository();
 
     // Get the override values for allow and ignore
     let allowOvr = tl.getVariable("DEPENDABOT_ALLOW_CONDITIONS");
