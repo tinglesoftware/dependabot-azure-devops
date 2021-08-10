@@ -1,5 +1,12 @@
 import { setResult, TaskResult } from "azure-pipelines-task-lib";
 
+/**
+ * Extract organization name from organization URL
+ *
+ * @param organizationUrl
+ *
+ * @returns organization name
+ */
 export default function extractOrganization(organizationUrl: string): string {
   let parts = organizationUrl.split("/");
 
