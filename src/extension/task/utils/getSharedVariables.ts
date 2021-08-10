@@ -1,4 +1,9 @@
-import { getVariable, getBoolInput, getInput } from "azure-pipelines-task-lib";
+import {
+  getVariable,
+  getBoolInput,
+  getInput,
+  getDelimitedInput,
+} from "azure-pipelines-task-lib";
 import extractOrganization from "./extractOrganization";
 import extractVirtualDirectory from "./extractVirtualDirectory";
 import getAzureDevOpsAccessToken from "./getAzureDevOpsAccessToken";
@@ -17,13 +22,19 @@ interface ISharedVariables {
   /** Organization name */
   organization: string;
   project: string;
+  /** Determines if the pull requests that dependabot creates should have auto complete set */
   setAutoComplete: boolean;
+  /** Determines if the execution should fail when an exception occurs */
   failOnException: boolean;
   excludeRequirementsToUnlock: string;
+  /** Determines if the pull requests that dependabot creates should be automatically approved */
   autoApprove: boolean;
+  /** The email of the user that should approve the PR */
   autoApproveUserEmail: string;
+  /** A personal access token of the user that should approve the PR */
   autoApproveUserToken: string;
   extraCredentials: string;
+  /** Tag of the docker image to be pulled */
   dockerImageTag: string;
   /** the github token */
   githubAccessToken: string;
