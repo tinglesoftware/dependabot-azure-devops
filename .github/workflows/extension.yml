@@ -48,7 +48,7 @@ jobs:
       working-directory: '${{ github.workspace }}/src/extension'
 
     - name: Install tfx-cli
-      run: npm install -g tfx-cli@0.8.3
+      run: npm install -g tfx-cli@0.9.2
 
     - name: Replace tokens
       uses: cschleiden/replace-tokens@v1
@@ -109,7 +109,7 @@ jobs:
         node-version: '16.x'
 
     - name: Install tfx-cli
-      run: npm install -g tfx-cli@0.8.3
+      run: npm install -g tfx-cli@0.9.2
 
     - name: Publish to marketplace (dev)
       run: >
