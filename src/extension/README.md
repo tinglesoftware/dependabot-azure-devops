@@ -51,7 +51,7 @@ steps:
     versioningStrategy: 'auto'
 ```
 
-Since this task makes use of a docker image, it may take time to install the docker image. The user can choose to speed this up by using [Caching for Docker](https://docs.microsoft.com/en-us/azure/devops/pipelines/release/caching?view=azure-devops#docker-images) in Azure Pipelines. See the [source file](./src/extension/task/index.ts) for the exact image tag, e.g. `tingle/dependabot-azure-devops:0.4.0`. Subsequent dependabot tasks in a job will be faster after the first one pulls the image for the first time.
+Since this task makes use of a docker image, it may take time to install the docker image. You can leverage on Docker caching in Azure Pipelines. See the [#113](https://github.com/tinglesoftware/dependabot-azure-devops/issues/113#issuecomment-894771611). Subsequent dependabot tasks in a job will be faster after the first one pulls the image for the first time.
 
 ## Task Parameters
 
