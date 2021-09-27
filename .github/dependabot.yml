@@ -9,23 +9,23 @@ updates:
     directory: "/src/script" # Location of package manifests
     schedule:
       interval: "weekly"
-      time: "02:00"
+      time: "05:00"
     open-pull-requests-limit: 10
   - package-ecosystem: "docker" # See documentation for possible values
     directory: "/src/script" # Location of package manifests
     schedule:
       interval: "weekly"
-      time: "02:15"
+      time: "06:00"
     open-pull-requests-limit: 10
   - package-ecosystem: "npm" # See documentation for possible values
     directory: "/src/extension" # Location of package manifests
     schedule:
       interval: "weekly"
-      time: "02:30"
+      time: "07:00"
     open-pull-requests-limit: 10
   - package-ecosystem: "github-actions" # See documentation for possible values
     directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
-      time: "02:30"
+      time: "08:00"
     open-pull-requests-limit: 10
