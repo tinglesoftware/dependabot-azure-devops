@@ -38,12 +38,12 @@ jobs:
       with:
         useConfigFile: true
 
-    - name: Use Node.js 10.x
+    - name: Use Node.js 16.x
       uses: actions/setup-node@v2.4.0
       with:
-        node-version: '10.x'
+        node-version: '16.x'
 
-    - name: Install Node dependencies
+    - name: Build
       run: npm run build:prod
       working-directory: '${{ github.workspace }}/src/extension'
 
@@ -103,10 +103,10 @@ jobs:
       with:
         name: drop
 
-    - name: Use Node.js 10.x
+    - name: Use Node.js 16.x
       uses: actions/setup-node@v2.4.0
       with:
-        node-version: '10.x'
+        node-version: '16.x'
 
     - name: Install tfx-cli
       run: npm install -g tfx-cli@0.8.3
