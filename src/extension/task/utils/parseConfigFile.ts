@@ -20,7 +20,7 @@ export default function parseConfigFile(): IDependabotUpdate[] {
     "/.azuredevops/dependabot.yml"
   );
 
-  let config: string | number | object;
+  let config: any;
   config = load(fs.readFileSync(filePath, "utf-8"));
 
   // ensure the config object parsed is an object
