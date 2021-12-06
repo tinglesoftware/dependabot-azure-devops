@@ -4,6 +4,7 @@ import {
   getInput,
   getDelimitedInput,
 } from "azure-pipelines-task-lib";
+import extractHostname from "./extractHostname";
 import extractOrganization from "./extractOrganization";
 import extractVirtualDirectory from "./extractVirtualDirectory";
 import getAzureDevOpsAccessToken from "./getAzureDevOpsAccessToken";
@@ -62,7 +63,7 @@ export default function getSharedVariables(): ISharedVariables {
   let organizationUrl = getVariable("System.TeamFoundationCollectionUri");
   let parsedUrl = new URL(organizationUrl);
   let protocol: string = parsedUrl.protocol.slice(0, -1);
-  let hostname: string = parsedUrl.hostname;
+  let hostname: string = extractHostname(parsedUrl);
   let port: string = parsedUrl.port;
   let virtualDirectory: string = extractVirtualDirectory(parsedUrl);
   let organization: string = extractOrganization(organizationUrl);
