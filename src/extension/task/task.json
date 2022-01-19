@@ -44,6 +44,14 @@
       "helpMarkDown": "Determines if the task will pick config values specified from the yaml file located at `.azuredevops/dependabot.yml`"
     },
     {
+      "name": "forwardHostSshSocket",
+      "type": "boolean",
+      "label": "Forward the host ssh socket",
+      "defaultValue": "false",
+      "required": false,
+      "helpMarkDown": "Ensure that the host ssh socket is forwarded to the container to authenticate with ssh"
+    },
+    {
       "name": "packageManager",
       "type": "pickList",
       "label": "Package Ecosystem",
