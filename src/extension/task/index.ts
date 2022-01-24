@@ -112,7 +112,7 @@ async function run() {
       // Forward the host ssh socket
       if (variables.forwardHostSshSocket) {
         dockerRunner.arg(['-e', 'SSH_AUTH_SOCK=/ssh-agent']);
-        dockerRunner.arg(['--volume', '$SSH_AUTH_SOCK:/ssh-agent']);
+        dockerRunner.arg(['--volume', '${SSH_AUTH_SOCK}:/ssh-agent']);
       }
 
       const dockerImage = `tingle/dependabot-azure-devops:${variables.dockerImageTag}`;
