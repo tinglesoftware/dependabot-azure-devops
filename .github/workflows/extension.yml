@@ -39,7 +39,7 @@ jobs:
         useConfigFile: true
 
     - name: Use Node.js 16.x
-      uses: actions/setup-node@v2.5.1
+      uses: actions/setup-node@v3
       with:
         node-version: '16.x'
 
@@ -104,7 +104,7 @@ jobs:
         name: drop
 
     - name: Use Node.js 16.x
-      uses: actions/setup-node@v2.5.1
+      uses: actions/setup-node@v3
       with:
         node-version: '16.x'
 
