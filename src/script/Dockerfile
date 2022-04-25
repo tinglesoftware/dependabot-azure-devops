@@ -1,4 +1,4 @@
-FROM dependabot/dependabot-core:0.180.1
+FROM dependabot/dependabot-core:0.182.0
 
 # Copy the Gemfile and Gemfile.lock
 ARG CODE_DIR=/home/dependabot/dependabot-script
