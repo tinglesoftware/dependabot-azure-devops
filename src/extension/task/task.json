@@ -231,6 +231,21 @@
       "required": false,
       "defaultValue": "",
       "helpMarkDown": "A semicolon (`;`) delimited list of environment variables that are sent to the docker container. See possible use case [here](https://github.com/tinglesoftware/dependabot-azure-devops/issues/138)"
+    },
+    {
+      "name": "mergeStrategy",
+      "type": "pickList",
+      "groupName": "advanced",
+      "label": "Merge Strategy",
+      "defaultValue": "squash",
+      "required": true,
+      "helpMarkDown": "The merge strategy to use. Learn more [here](https://docs.microsoft.com/de-de/javascript/api/azure-devops-extension-api/gitpullrequestmergestrategy).",
+      "options": {
+        "1": "No fast forward",
+        "2": "Squash",
+        "3": "Rebase",
+        "4": "Rebase merge"
+      }
     }
   ],
   "dataSourceBindings": [],
