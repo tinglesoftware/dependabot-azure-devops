@@ -237,7 +237,7 @@
       "type": "pickList",
       "groupName": "advanced",
       "label": "Merge Strategy",
-      "defaultValue": "squash",
+      "defaultValue": "2",
       "required": true,
       "helpMarkDown": "The merge strategy to use. Learn more [here](https://docs.microsoft.com/de-de/javascript/api/azure-devops-extension-api/gitpullrequestmergestrategy).",
       "options": {
