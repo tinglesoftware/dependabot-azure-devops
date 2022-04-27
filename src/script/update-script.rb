@@ -53,6 +53,7 @@ $options = {
   auto_approve_pr: ENV["AZURE_AUTO_APPROVE_PR"] == "true",
   auto_approve_user_email: ENV["AZURE_AUTO_APPROVE_USER_EMAIL"],
   auto_approve_user_token: ENV["AZURE_AUTO_APPROVE_USER_TOKEN"],
+  merge_strategy: ENV["AZURE_SET_MERGE_STRATEGY"],
 }
 
 # Name of the package manager you'd like to do the update for. Options are:
@@ -471,7 +472,7 @@ dependencies.select(&:top_level?).each do |dep|
     if $options[:set_auto_complete]
       auto_complete_user_id = pull_request["createdBy"]["id"]
       puts "Setting auto complete on ##{pull_request_id}."
-      azure_client.pull_request_auto_complete(pull_request_id, auto_complete_user_id)
+      azure_client.pull_request_auto_complete(pull_request_id, auto_complete_user_id, merge_strategy)
     end
 
   rescue StandardError => e
