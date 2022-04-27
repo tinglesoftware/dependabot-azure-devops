@@ -53,6 +53,8 @@ interface ISharedVariables {
   forwardHostSshSocket: boolean;
   /** Semicolon delimited list of environment variables */
   extraEnvironmentVariables: string[];
+  /** Merge strategies which can be used to complete a pull request */
+  mergeStrategy: string;
 }
 
 /**
@@ -106,6 +108,9 @@ export default function getSharedVariables(): ISharedVariables {
     false
   );
 
+  // Get the selected merge strategy
+  let mergeStrategy = getInput("mergeStrategy", true);
+
   return {
     protocol,
     hostname,
@@ -129,5 +134,6 @@ export default function getSharedVariables(): ISharedVariables {
     useConfigFile,
     forwardHostSshSocket,
     extraEnvironmentVariables,
+    mergeStrategy
   };
 }
