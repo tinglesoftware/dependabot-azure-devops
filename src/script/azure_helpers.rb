@@ -58,14 +58,14 @@ module Dependabot
                 JSON.parse(response.body).fetch("value")
             end
 
-            def pull_request_auto_complete(pull_request_id, auto_complete_user_id)
+            def pull_request_auto_complete(pull_request_id, auto_complete_user_id, merge_strategy)
                 # https://docs.microsoft.com/en-us/rest/api/azure/devops/git/pull%20requests/update?view=azure-devops-rest-6.0
                 content = {
                     autoCompleteSetBy: {
                         id: auto_complete_user_id
                     },
                     completionOptions: {
-                        mergeStrategy: 2, # Setting "squash" seems to not work so instead, we set the value to 2 (as seen in Chrome's developer options)
+                        mergeStrategy: merge_strategy,
                         deleteSourceBranch: true,
                         transitionWorkItems: false
                     }
