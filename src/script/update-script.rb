@@ -53,7 +53,7 @@ $options = {
   auto_approve_pr: ENV["AZURE_AUTO_APPROVE_PR"] == "true",
   auto_approve_user_email: ENV["AZURE_AUTO_APPROVE_USER_EMAIL"],
   auto_approve_user_token: ENV["AZURE_AUTO_APPROVE_USER_TOKEN"],
-  merge_strategy: ENV["AZURE_SET_MERGE_STRATEGY"] || "2",
+  merge_strategy: ENV["AZURE_MERGE_STRATEGY"] || "2",
 }
 
 # Name of the package manager you'd like to do the update for. Options are:
