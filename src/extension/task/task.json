@@ -157,7 +157,7 @@
         "3": "Rebase",
         "4": "Rebase merge"
       },
-      "visibleRule": "autoApprove=true"
+      "visibleRule": "setAutoComplete=true"
     },
     {
       "name": "autoApprove",
