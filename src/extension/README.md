@@ -66,7 +66,7 @@ Since this task makes use of a docker image, it may take time to install the doc
 |failOnException|**_Optional_**. Determines if the execution should fail when an exception occurs. Defaults to `true`.|
 |milestone|**_Optional_**. The identifier of the work item to be linked to the Pull Requests that dependabot creates.|
 |setAutoComplete|**_Optional_**. Determines if the pull requests that dependabot creates should have auto complete set. When set to `true`, pull requests that pass all policies will be merged automatically.|
-|mergeStrategy|**_Optional_**. The merge strategy to use when auto complete is set. Learn more [here](https://docs.microsoft.com/de-de/javascript/api/azure-devops-extension-api/gitpullrequestmergestrategy). Defaults to `2` (Squash merge).|
+|mergeStrategy|**_Optional_**. The merge strategy to use when auto complete is set. Learn more [here](https://docs.microsoft.com/en-us/javascript/api/azure-devops-extension-api/gitpullrequestmergestrategy). Defaults to `2` (Squash merge).|
 |autoApprove|**_Optional_**. Determines if the pull requests that dependabot creates should be automatically completed. When set to `true`, pull requests will be approved automatically by the user specified in the `autoApproveUserEmail` field.|
 |autoApproveUserEmail|**_Optional_**. Email of the user that should be used to automatically approve pull requests. Required if `autoApprove` is set to `true`.|
 |autoApproveUserToken|**_Optional_**. A personal access token that is assigned to the user specified in `autoApproveUserEmail` to automatically approve the created PR. Required if `autoApprove` is set to `true`.|

@@ -239,7 +239,7 @@
       "label": "Merge Strategy",
       "defaultValue": "2",
       "required": true,
-      "helpMarkDown": "The merge strategy to use. Learn more [here](https://docs.microsoft.com/de-de/javascript/api/azure-devops-extension-api/gitpullrequestmergestrategy).",
+      "helpMarkDown": "The merge strategy to use. Learn more [here](https://docs.microsoft.com/en-us/javascript/api/azure-devops-extension-api/gitpullrequestmergestrategy).",
       "options": {
         "1": "No fast forward",
         "2": "Squash",
