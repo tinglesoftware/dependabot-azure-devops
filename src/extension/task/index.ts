@@ -40,6 +40,11 @@ async function run() {
       dockerRunner.arg(["-e", `AZURE_SET_AUTO_COMPLETE=${variables.setAutoComplete}`]); // Set auto complete, if set
       dockerRunner.arg(["-e", `AZURE_MERGE_STRATEGY=${variables.mergeStrategy}`]);
 
+      // Set Username
+      if (variables.systemAccessUser) {
+        dockerRunner.arg(["-e", `AZURE_ACCESS_USERNAME=${variables.systemAccessUser}`]);
+      }
+
       // Set the directory
       if (update.directory) {
         dockerRunner.arg(["-e", `DEPENDABOT_DIRECTORY=${update.directory}`]);

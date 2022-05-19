@@ -96,7 +96,7 @@ $package_manager = PACKAGE_ECOSYSTEM_MAPPING.fetch($package_manager, $package_ma
 $options[:credentials] << {
   "type" => "git_source",
   "host" => $options[:azure_hostname],
-  "username" => "x-access-token",
+  "username" => ENV["AZURE_ACCESS_USERNAME"] || "x-access-token",
   "password" => ENV["AZURE_ACCESS_TOKEN"]
 }
 unless ENV["GITHUB_ACCESS_TOKEN"].to_s.strip.empty?
