@@ -35,6 +35,10 @@ interface ISharedVariables {
   /** A personal access token of the user that should approve the PR */
   autoApproveUserToken: string;
   extraCredentials: string;
+  /** Registry of the docker image to be pulled */
+  dockerImageRegistry: string | undefined;
+  /** Repository of the docker image to be pulled */
+  dockerImageRepository: string;
   /** Tag of the docker image to be pulled */
   dockerImageTag: string;
   /** the github token */
@@ -80,6 +84,8 @@ export default function getSharedVariables(): ISharedVariables {
   let autoApproveUserEmail: string = getInput("autoApproveUserEmail");
   let autoApproveUserToken: string = getInput("autoApproveUserToken");
   let extraCredentials = getVariable("DEPENDABOT_EXTRA_CREDENTIALS");
+  let dockerImageRegistry: string | undefined = getInput('containerRegistry');
+  let dockerImageRepository: string = getInput('containerRepository', true);
   let dockerImageTag: string = getInput("dockerImageTag"); // TODO: get the latest version to use from a given url
 
   // Prepare the github token, if one is provided
@@ -125,6 +131,8 @@ export default function getSharedVariables(): ISharedVariables {
     autoApproveUserEmail,
     autoApproveUserToken,
     extraCredentials,
+    dockerImageRegistry,
+    dockerImageRepository,
     dockerImageTag,
     githubAccessToken,
     systemAccessToken,
