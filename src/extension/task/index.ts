@@ -116,7 +116,17 @@ async function run() {
         dockerRunner.arg(['--volume', '${SSH_AUTH_SOCK}:/ssh-agent']);
       }
 
-      const dockerImage = `tingle/dependabot-azure-devops:${variables.dockerImageTag}`;
+      let dockerImage : string = `${variables.dockerImageRepository}:${variables.dockerImageTag}`;
+
+      if (variables.dockerImageRegistry) {
+        if (variables.dockerImageRegistry[variables.dockerImageRegistry - 1] === "/") {
+          dockerImage = `${variables.dockerImageRegistry}${dockerImage}`;
+        }
+        else {
+          dockerImage = `${variables.dockerImageRegistry}/${dockerImage}`;
+        }
+      }
+
       tl.debug(`Running docker container -> '${dockerImage}' ...`);
       dockerRunner.arg([dockerImage]);
 
