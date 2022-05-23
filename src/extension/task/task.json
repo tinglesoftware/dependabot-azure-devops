@@ -231,13 +231,29 @@
       "helpMarkDown": "Exclude certain dependency updates requirements. See list of allowed values [here](https://github.com/dependabot/dependabot-core/issues/600#issuecomment-407808103). Useful if you have lots of dependencies and the update script too slow. The values provided are space-separated. Example: `own all` to only use the `none` version requirement."
     },
     {
+      "name": "containerRegistry",
+      "type": "connectedService:dockerregistry",
+      "label": "Container registry override",
+      "groupName": "advanced",
+      "helpMarkDown": "The docker registry to use when pulling the docker image used by the task if needed. By default this will use the docker engine default as configured on the host. This can be useful if the image needs to come from an internal docker registry mirror or alternative source for testing.",
+      "required": false
+    },
+    {
+      "name": "containerRepository",
+      "type": "string",
+      "helpMarkDown": "The container repository to use when pulling the docker image used by the task if needed. This can be useful if the default image requires customizations such as custom certs.",
+      "defaultValue": "tingle/dependabot-azure-devops",
+      "required": true,
+      "groupName": "advanced"
+    },
+    {
       "name": "dockerImageTag",
       "type": "string",
       "groupName": "advanced",
       "label": "Tag of the docker image to be pulled.",
       "required": false,
       "defaultValue": "0.6",
-      "helpMarkDown": "The image tag to use when pulling the docker container used by the task. A tag also defines the version. By default, the task decides which tag/version to use. This can be the latest or most stable version. You can also use `major.minor` format to get the latest patch"
+      "helpMarkDown": "The image tag to use when pulling the docker image used by the task. A tag also defines the version. By default, the task decides which tag/version to use. This can be the latest or most stable version. You can also use `major.minor` format to get the latest patch"
     },
     {
       "name": "extraEnvironmentVariables",
