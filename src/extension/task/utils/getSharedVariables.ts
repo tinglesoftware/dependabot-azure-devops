@@ -43,6 +43,8 @@ interface ISharedVariables {
   dockerImageTag: string;
   /** the github token */
   githubAccessToken: string;
+  /** the access User for Azure DevOps Repos */
+  systemAccessUser: string;
   /** the access token for Azure DevOps Repos */
   systemAccessToken: string;
   /** Dependabot's target repository */
@@ -91,6 +93,9 @@ export default function getSharedVariables(): ISharedVariables {
   // Prepare the github token, if one is provided
   let githubAccessToken: string = getGithubAccessToken();
 
+  // Prepare the Azure Devops User, if one is provided
+  let systemAccessUser: string = getInput("azureDevOpsUser");
+
   // Prepare the access token for Azure DevOps Repos.
   let systemAccessToken: string = getAzureDevOpsAccessToken();
 
@@ -135,6 +140,7 @@ export default function getSharedVariables(): ISharedVariables {
     dockerImageRepository,
     dockerImageTag,
     githubAccessToken,
+    systemAccessUser,
     systemAccessToken,
     repository,
     allowOvr,
