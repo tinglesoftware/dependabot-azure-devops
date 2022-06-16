@@ -87,7 +87,7 @@ export default function getSharedVariables(): ISharedVariables {
   let autoApproveUserToken: string = getInput("autoApproveUserToken");
   let extraCredentials = getVariable("DEPENDABOT_EXTRA_CREDENTIALS");
   let dockerImageRegistry: string | undefined = getInput('containerRegistry');
-  let dockerImageRepository: string = getInput('containerRepository', true);
+  let dockerImageRepository: string = getInput('dockerImageRepository', true);
   let dockerImageTag: string = getInput("dockerImageTag"); // TODO: get the latest version to use from a given url
 
   // Prepare the github token, if one is provided

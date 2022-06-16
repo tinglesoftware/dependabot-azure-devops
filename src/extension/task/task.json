@@ -239,10 +239,10 @@
       "required": false
     },
     {
-      "name": "containerRepository",
-      "label": "Container repository",
+      "name": "dockerImageRepository",
+      "label": "Docker Container repository",
       "type": "string",
-      "helpMarkDown": "The container repository to use when pulling the docker container used by the task if needed. This can be useful if the default container requires customizations such as custom certs.",
+      "helpMarkDown": "The docker container repository to use when pulling the docker container used by the task if needed. This can be useful if the default container requires customizations such as custom certs.",
       "defaultValue": "tingle/dependabot-azure-devops",
       "required": true,
       "groupName": "advanced"
