@@ -2,7 +2,7 @@ import { IDependabotUpdate } from "../models/IDependabotUpdate";
 import { load } from "js-yaml";
 import * as fs from "fs";
 import * as path from "path";
-import { getVariable } from "azure-pipelines-task-lib";
+import { getVariable } from "azure-pipelines-task-lib/task";
 
 /**
  * Parse the dependabot config YAML file to specify update(s) configuration

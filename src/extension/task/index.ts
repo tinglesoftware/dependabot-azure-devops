@@ -1,5 +1,5 @@
-import tl = require("azure-pipelines-task-lib/task");
-import tr = require("azure-pipelines-task-lib/toolrunner");
+import * as tl from "azure-pipelines-task-lib/task"
+import { ToolRunner } from "azure-pipelines-task-lib/toolrunner"
 import { IDependabotUpdate } from "./models/IDependabotUpdate";
 import getConfigFromInputs from "./utils/getConfigFromInputs";
 import getSharedVariables from "./utils/getSharedVariables";
@@ -22,7 +22,7 @@ async function run() {
     // For each update run docker container
     for (const update of updates) {
       // Prepare the docker task
-      let dockerRunner: tr.ToolRunner = tl.tool(tl.which("docker", true));
+      let dockerRunner: ToolRunner = tl.tool(tl.which("docker", true));
       dockerRunner.arg(["run"]); // run command
       dockerRunner.arg(["--rm"]); // remove after execution
       dockerRunner.arg(["-i"]); // attach pseudo tty

@@ -3,7 +3,7 @@ import {
   getEndpointAuthorization,
   getInput,
   loc,
-} from "azure-pipelines-task-lib";
+} from "azure-pipelines-task-lib/task";
 
 /**
  * Extract access token from Github endpoint
