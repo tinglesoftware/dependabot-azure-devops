@@ -121,15 +121,11 @@ async function run() {
         dockerRunner.arg(['--volume', '${SSH_AUTH_SOCK}:/ssh-agent']);
       }
 
+      // Form the docker image based on the repository and the tag, e.g. tingle/dependabot-azure-devops
+      // For custom/enterprise registries, prefix with the registry, e.g. contoso.azurecr.io/tingle/dependabot-azure-devops
       let dockerImage : string = `${variables.dockerImageRepository}:${variables.dockerImageTag}`;
-
       if (variables.dockerImageRegistry) {
-        if (variables.dockerImageRegistry[variables.dockerImageRegistry - 1] === "/") {
-          dockerImage = `${variables.dockerImageRegistry}${dockerImage}`;
-        }
-        else {
-          dockerImage = `${variables.dockerImageRegistry}/${dockerImage}`;
-        }
+        dockerImage = `${variables.dockerImageRegistry}/${dockerImage}`.replace("//", "/");
       }
 
       tl.debug(`Running docker container -> '${dockerImage}' ...`);
