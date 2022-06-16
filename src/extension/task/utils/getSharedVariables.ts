@@ -3,7 +3,7 @@ import {
   getBoolInput,
   getInput,
   getDelimitedInput,
-} from "azure-pipelines-task-lib";
+} from "azure-pipelines-task-lib/task";
 import extractHostname from "./extractHostname";
 import extractOrganization from "./extractOrganization";
 import extractVirtualDirectory from "./extractVirtualDirectory";

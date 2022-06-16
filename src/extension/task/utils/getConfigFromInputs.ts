@@ -1,4 +1,4 @@
-import { getInput, getVariable } from "azure-pipelines-task-lib";
+import { getInput } from "azure-pipelines-task-lib/task";
 import { IDependabotUpdate } from "../models/IDependabotUpdate";
 
 /**

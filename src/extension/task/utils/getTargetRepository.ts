@@ -1,4 +1,4 @@
-import { debug, getInput, getVariable } from "azure-pipelines-task-lib";
+import { debug, getInput, getVariable } from "azure-pipelines-task-lib/task";
 
 /**
  * Extract the target repository from the `targetRepositoryName` input
@@ -13,9 +13,7 @@ export default function getTargetRepository() {
   // Prepare the repository
   let repository: string = getInput("targetRepositoryName");
   if (!repository) {
-    debug(
-      "No custom repository provided. The Pipeline Repository Name shall be used."
-    );
+    debug("No custom repository provided. The Pipeline Repository Name shall be used.");
     repository = getVariable("Build.Repository.Name");
   }
 
