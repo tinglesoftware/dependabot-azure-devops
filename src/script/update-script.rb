@@ -128,12 +128,12 @@ end
 ##########################################
 # GitHub native implementation modifies some of the names in the config file
 unless ENV["DEPENDABOT_VERSIONING_STRATEGY"].to_s.strip.empty?
-  VERSIONING_STRATEGIES = { # [Hash<String, Symbol>]
-    "auto" => :auto,
-    "lockfile-only" => :lockfile_only,
-    "widen" => :widen_ranges,
-    "increase" => :bump_versions,
-    "increase-if-necessary" => :bump_versions_if_necessary
+  VERSIONING_STRATEGIES = { # [Hash<String, String>]
+    "auto" => "auto",
+    "lockfile-only" => "lockfile_only",
+    "widen" => "widen_ranges",
+    "increase" => "bump_versions",
+    "increase-if-necessary" => "bump_versions_if_necessary"
   }.freeze
   requirements_update_strategy_raw = ENV["DEPENDABOT_VERSIONING_STRATEGY"] || "auto"
   $options[:requirements_update_strategy] = VERSIONING_STRATEGIES.fetch(requirements_update_strategy_raw)
@@ -143,8 +143,8 @@ unless ENV["DEPENDABOT_VERSIONING_STRATEGY"].to_s.strip.empty?
   # https://github.com/dependabot/dependabot-core/blob/5926b243b2875ad0d8c0a52c09210c4f5f274c5e/composer/lib/dependabot/composer/update_checker/requirements_updater.rb#L23-L24
   if $package_manager == "npm_and_yarn" || $package_manager == "composer"
     strategy = $options[:requirements_update_strategy]
-    if strategy == :auto || strategy == :lockfile_only
-      $options[:requirements_update_strategy] = :bump_versions
+    if strategy == "auto" || strategy == "lockfile_only"
+      $options[:requirements_update_strategy] = "bump_versions"
     end
   end
 end
