@@ -3,7 +3,7 @@ import {
   getBoolInput,
   getInput,
   getDelimitedInput,
-} from "azure-pipelines-task-lib";
+} from "azure-pipelines-task-lib/task";
 import extractHostname from "./extractHostname";
 import extractOrganization from "./extractOrganization";
 import extractVirtualDirectory from "./extractVirtualDirectory";
@@ -43,6 +43,8 @@ interface ISharedVariables {
   dockerImageTag: string;
   /** the github token */
   githubAccessToken: string;
+  /** the access User for Azure DevOps Repos */
+  systemAccessUser: string;
   /** the access token for Azure DevOps Repos */
   systemAccessToken: string;
   /** Dependabot's target repository */
@@ -84,12 +86,15 @@ export default function getSharedVariables(): ISharedVariables {
   let autoApproveUserEmail: string = getInput("autoApproveUserEmail");
   let autoApproveUserToken: string = getInput("autoApproveUserToken");
   let extraCredentials = getVariable("DEPENDABOT_EXTRA_CREDENTIALS");
-  let dockerImageRegistry: string | undefined = getInput('containerRegistry');
-  let dockerImageRepository: string = getInput('containerRepository', true);
+  let dockerImageRegistry: string | undefined = getInput('dockerImageRegistry');
+  let dockerImageRepository: string = getInput('dockerImageRepository', true);
   let dockerImageTag: string = getInput("dockerImageTag"); // TODO: get the latest version to use from a given url
 
   // Prepare the github token, if one is provided
   let githubAccessToken: string = getGithubAccessToken();
+
+  // Prepare the Azure Devops User, if one is provided
+  let systemAccessUser: string = getInput("azureDevOpsUser");
 
   // Prepare the access token for Azure DevOps Repos.
   let systemAccessToken: string = getAzureDevOpsAccessToken();
@@ -135,6 +140,7 @@ export default function getSharedVariables(): ISharedVariables {
     dockerImageRepository,
     dockerImageTag,
     githubAccessToken,
+    systemAccessUser,
     systemAccessToken,
     repository,
     allowOvr,

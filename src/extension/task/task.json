@@ -41,7 +41,7 @@
       "label": "Use Dependabot YAML file",
       "defaultValue": "false",
       "required": false,
-      "helpMarkDown": "Determines if the task will pick config values specified from the yaml file located at `.azuredevops/dependabot.yml`"
+      "helpMarkDown": "Determines if the task will pick config values specified from the yaml file located at `.azuredevops/dependabot.yml` or `.github/dependabot.yml`"
     },
     {
       "name": "forwardHostSshSocket",
@@ -231,18 +231,19 @@
       "helpMarkDown": "Exclude certain dependency updates requirements. See list of allowed values [here](https://github.com/dependabot/dependabot-core/issues/600#issuecomment-407808103). Useful if you have lots of dependencies and the update script too slow. The values provided are space-separated. Example: `own all` to only use the `none` version requirement."
     },
     {
-      "name": "containerRegistry",
+      "name": "dockerImageRegistry",
       "type": "string",
       "label": "Container registry override",
       "groupName": "advanced",
-      "helpMarkDown": "The docker registry to use when pulling the docker container used by the task if needed. By default this will use the docker engine default as configured on the host. This can be useful if the container needs to come from an internal docker registry mirror or alternative source for testing. If the mirror requires authentication add a `docker login` task before this task.",
-      "required": false
+      "helpMarkDown": "The docker registry to use when pulling the docker container used by the task if needed. By default this will use docker hub. This can be useful if the container needs to come from an internal docker registry mirror or alternative source for testing. If the mirror requires authentication add a `docker login` task before this task. Example: `contoso.azurecr.io`",
+      "required": false,
+      "groupName": "advanced"
     },
     {
-      "name": "containerRepository",
-      "label": "Container repository",
+      "name": "dockerImageRepository",
+      "label": "Docker Container repository",
       "type": "string",
-      "helpMarkDown": "The container repository to use when pulling the docker container used by the task if needed. This can be useful if the default container requires customizations such as custom certs.",
+      "helpMarkDown": "The docker container repository to use when pulling the docker container used by the task if needed. This can be useful if the default container requires customizations such as custom certs.",
       "defaultValue": "tingle/dependabot-azure-devops",
       "required": true,
       "groupName": "advanced"
@@ -253,7 +254,7 @@
       "groupName": "advanced",
       "label": "Tag of the docker image to be pulled.",
       "required": false,
-      "defaultValue": "0.6",
+      "defaultValue": "0.7",
       "helpMarkDown": "The image tag to use when pulling the docker container used by the task. A tag also defines the version. By default, the task decides which tag/version to use. This can be the latest or most stable version. You can also use `major.minor` format to get the latest patch"
     },
     {

@@ -1,5 +1,5 @@
-import tl = require("azure-pipelines-task-lib/task");
-import tr = require("azure-pipelines-task-lib/toolrunner");
+import * as tl from "azure-pipelines-task-lib/task"
+import { ToolRunner } from "azure-pipelines-task-lib/toolrunner"
 import { IDependabotUpdate } from "./models/IDependabotUpdate";
 import getConfigFromInputs from "./utils/getConfigFromInputs";
 import getSharedVariables from "./utils/getSharedVariables";
@@ -17,12 +17,21 @@ async function run() {
     var updates: IDependabotUpdate[];
 
     if (variables.useConfigFile) updates = parseConfigFile();
-    else updates = getConfigFromInputs();
+    else {
+      tl.warning(
+        `
+        Using explicit inputs instead of a configuration file will be deprecated in the next minor release.\r\n
+        Migrate to using a config file at .azuredevops/dependabot.yml or .github/dependabot.yml.\r\n
+        See https://github.com/tinglesoftware/dependabot-azure-devops/tree/main/src/extension#usage for more information.
+        `
+      );
+      updates = getConfigFromInputs();
+    }
 
     // For each update run docker container
     for (const update of updates) {
       // Prepare the docker task
-      let dockerRunner: tr.ToolRunner = tl.tool(tl.which("docker", true));
+      let dockerRunner: ToolRunner = tl.tool(tl.which("docker", true));
       dockerRunner.arg(["run"]); // run command
       dockerRunner.arg(["--rm"]); // remove after execution
       dockerRunner.arg(["-i"]); // attach pseudo tty
@@ -39,6 +48,11 @@ async function run() {
       dockerRunner.arg(["-e", `AZURE_ACCESS_TOKEN=${variables.systemAccessToken}`]);
       dockerRunner.arg(["-e", `AZURE_SET_AUTO_COMPLETE=${variables.setAutoComplete}`]); // Set auto complete, if set
       dockerRunner.arg(["-e", `AZURE_MERGE_STRATEGY=${variables.mergeStrategy}`]);
+
+      // Set Username
+      if (variables.systemAccessUser) {
+        dockerRunner.arg(["-e", `AZURE_ACCESS_USERNAME=${variables.systemAccessUser}`]);
+      }
 
       // Set the directory
       if (update.directory) {
@@ -116,15 +130,11 @@ async function run() {
         dockerRunner.arg(['--volume', '${SSH_AUTH_SOCK}:/ssh-agent']);
       }
 
+      // Form the docker image based on the repository and the tag, e.g. tingle/dependabot-azure-devops
+      // For custom/enterprise registries, prefix with the registry, e.g. contoso.azurecr.io/tingle/dependabot-azure-devops
       let dockerImage : string = `${variables.dockerImageRepository}:${variables.dockerImageTag}`;
-
       if (variables.dockerImageRegistry) {
-        if (variables.dockerImageRegistry[variables.dockerImageRegistry - 1] === "/") {
-          dockerImage = `${variables.dockerImageRegistry}${dockerImage}`;
-        }
-        else {
-          dockerImage = `${variables.dockerImageRegistry}/${dockerImage}`;
-        }
+        dockerImage = `${variables.dockerImageRegistry}/${dockerImage}`.replace("//", "/");
       }
 
       tl.debug(`Running docker container -> '${dockerImage}' ...`);

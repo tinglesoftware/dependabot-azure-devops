@@ -2,7 +2,7 @@ import {
   debug,
   getEndpointAuthorizationParameter,
   getInput,
-} from "azure-pipelines-task-lib";
+} from "azure-pipelines-task-lib/task";
 
 /**
  * Prepare the access token for Azure DevOps Repos.
@@ -15,9 +15,7 @@ import {
 export default function getAzureDevOpsAccessToken() {
   let systemAccessToken: string = getInput("azureDevOpsAccessToken");
   if (!systemAccessToken) {
-    debug(
-      "No custom token provided. The SystemVssConnection's AccessToken shall be used."
-    );
+    debug("No custom token provided. The SystemVssConnection's AccessToken shall be used.");
     systemAccessToken = getEndpointAuthorizationParameter(
       "SystemVssConnection",
       "AccessToken",

@@ -1,4 +1,4 @@
-import { setResult, TaskResult } from "azure-pipelines-task-lib";
+import { setResult, TaskResult } from "azure-pipelines-task-lib/task";
 
 /**
  * Extract organization name from organization URL

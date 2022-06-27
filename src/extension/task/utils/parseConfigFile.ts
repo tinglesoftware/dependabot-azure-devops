@@ -2,7 +2,7 @@ import { IDependabotUpdate } from "../models/IDependabotUpdate";
 import { load } from "js-yaml";
 import * as fs from "fs";
 import * as path from "path";
-import { getVariable } from "azure-pipelines-task-lib";
+import { getVariable } from "azure-pipelines-task-lib/task";
 
 /**
  * Parse the dependabot config YAML file to specify update(s) configuration
@@ -15,15 +15,26 @@ import { getVariable } from "azure-pipelines-task-lib";
  * @returns {IDependabotUpdate[]} updates - array of dependency update configurations
  */
 export default function parseConfigFile(): IDependabotUpdate[] {
-  var filePath = path.join(
-    getVariable("Build.SourcesDirectory"),
-    "/.azuredevops/dependabot.yml"
-  );
+  let rootDir = getVariable("Build.SourcesDirectory");
+  var filePath = path.join(rootDir, "/.azuredevops/dependabot.yml");
+
+  /*
+   * If the file under the .azuredevops folder does not exist, check for one under the .github folder.
+   * Advantage of using the file under .github is support for intellisense.
+   */
+  if (!fs.existsSync(filePath)) {
+    filePath = path.join(rootDir, "/.github/dependabot.yml");
+  }
+
+  // Ensure we have the file. Otherwise throw a well readable error.
+  if (!fs.existsSync(filePath)) {
+    throw new Error("Configuration file not found at /.azuredevops/dependabot.yml or /.github/dependabot.yml");
+  }
 
   let config: any;
   config = load(fs.readFileSync(filePath, "utf-8"));
 
-  // ensure the config object parsed is an object
+  // Ensure the config object parsed is an object
   if (config === null || typeof config !== "object") {
     throw new Error("Invalid dependabot config object");
   }
@@ -31,10 +42,10 @@ export default function parseConfigFile(): IDependabotUpdate[] {
   const rawVersion = config["version"];
   let version = -1;
 
-  // ensure the version has been specified
+  // Ensure the version has been specified
   if(!!!rawVersion) throw new Error("The version must be specified in dependabot.yml");
 
-  //try convert the version to integer
+  // Try convert the version to integer
   try{
     version = parseInt(rawVersion, 10);
   }
@@ -42,21 +53,21 @@ export default function parseConfigFile(): IDependabotUpdate[] {
     throw new Error("Dependabot version specified must be a valid integer");
   }
 
-  //ensure the version is == 2
+  // Ensure the version is == 2
   if(version !== 2) throw new Error("Only version 2 of dependabot is supported. Version specified: " + version);
 
   var updates: IDependabotUpdate[] = [];
 
-  //check the updates parsed
+  // Check the updates parsed
   var rawUpdates = config["updates"];
 
-  //check if the array of updates exists
+  // Check if the array of updates exists
   if (!Array.isArray(rawUpdates))
     throw new Error(
       "Invalid dependabot config object: Dependency updates config array not found"
     );
 
-  // parse the value of each of the updates obtained from the file
+  // Parse the value of each of the updates obtained from the file
   rawUpdates.forEach((update) => {
     var dependabotUpdate: IDependabotUpdate = {
       packageEcosystem: update["package-ecosystem"],
