@@ -15,10 +15,16 @@ import { getVariable } from "azure-pipelines-task-lib/task";
  * @returns {IDependabotUpdate[]} updates - array of dependency update configurations
  */
 export default function parseConfigFile(): IDependabotUpdate[] {
-  var filePath = path.join(
-    getVariable("Build.SourcesDirectory"),
-    "/.azuredevops/dependabot.yml"
-  );
+  let rootDir = getVariable("Build.SourcesDirectory");
+  var filePath = path.join(rootDir, "/.azuredevops/dependabot.yml");
+
+  /*
+   * If the file under the .azuredevops folder does not exist, check for one under the .github folder.
+   * Advantage of using the file under .github is support for intellisense.
+   */
+  if (!fs.existsSync(filePath)) {
+    filePath = path.join(rootDir, "/.github/dependabot.yml");
+  }
 
   let config: any;
   config = load(fs.readFileSync(filePath, "utf-8"));
