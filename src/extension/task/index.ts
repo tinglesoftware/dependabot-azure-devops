@@ -17,7 +17,16 @@ async function run() {
     var updates: IDependabotUpdate[];
 
     if (variables.useConfigFile) updates = parseConfigFile();
-    else updates = getConfigFromInputs();
+    else {
+      tl.warning(
+        `
+        Using explicit inputs instead of a configuration file will be deprecated in the next minor release.\r\n
+        Migrate to using a config file at .azuredevops/dependabot.yml or .github/dependabot.yml.\r\n
+        See https://github.com/tinglesoftware/dependabot-azure-devops/tree/main/src/extension#usage for more information.
+        `
+      );
+      updates = getConfigFromInputs();
+    }
 
     // For each update run docker container
     for (const update of updates) {
