@@ -26,6 +26,11 @@ export default function parseConfigFile(): IDependabotUpdate[] {
     filePath = path.join(rootDir, "/.github/dependabot.yml");
   }
 
+  // Ensure we have the file. Otherwise throw a well readable error.
+  if (!fs.existsSync(filePath)) {
+    throw new Error("Configuration file not found at /.azuredevops/dependabot.yml or /.github/dependabot.yml");
+  }
+
   let config: any;
   config = load(fs.readFileSync(filePath, "utf-8"));
 
