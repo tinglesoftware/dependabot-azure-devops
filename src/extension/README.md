@@ -12,7 +12,7 @@ To use in a YAML pipeline:
     packageManager: 'nuget'
 ```
 
-You can also use a configuration file stored at `.azuredevops/dependabot.yml` conforming to the [official spec](https://docs.github.com/en/github/administering-a-repository/configuration-options-for-dependency-updates).
+You can also use a configuration file stored at `.azuredevops/dependabot.yml` or `.github/dependabot.yml` conforming to the [official spec](https://docs.github.com/en/github/administering-a-repository/configuration-options-for-dependency-updates).
 
 ```yaml
 - task: dependabot@1

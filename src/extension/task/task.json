@@ -41,7 +41,7 @@
       "label": "Use Dependabot YAML file",
       "defaultValue": "false",
       "required": false,
-      "helpMarkDown": "Determines if the task will pick config values specified from the yaml file located at `.azuredevops/dependabot.yml`"
+      "helpMarkDown": "Determines if the task will pick config values specified from the yaml file located at `.azuredevops/dependabot.yml` or `.github/dependabot.yml`"
     },
     {
       "name": "forwardHostSshSocket",
