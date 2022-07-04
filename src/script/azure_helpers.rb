@@ -74,7 +74,7 @@ module Dependabot
                 response = patch(source.api_endpoint +
                     source.organization + "/" + source.project +
                     "/_apis/git/repositories/" + source.unscoped_repo +
-                    "/pullrequests/#{pull_request_id}?api-version=6.0", content.to_json)
+                    "/pullrequests/#{pull_request_id}?api-version=5.0", content.to_json)
             end
 
             def pull_request_approve(pull_request_id, reviewer_email, reviewer_token)
