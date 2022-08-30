@@ -409,6 +409,10 @@ dependencies.select(&:top_level?).each do |dep|
         files: updated_files,
         credentials: $options[:credentials],
         pull_request_number: conflict_pull_request_id,
+        author_details: {
+          email: "noreply@github.com",
+          name: "dependabot[bot]"
+        }
       )
 
       print "Submitting pull request (##{conflict_pull_request_id}) update for #{dep.name}. "
