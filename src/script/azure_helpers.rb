@@ -79,7 +79,7 @@ module Dependabot
 
             def pull_request_approve(pull_request_id, reviewer_email, reviewer_token)
                 # https://docs.microsoft.com/en-us/rest/api/azure/devops/memberentitlementmanagement/user%20entitlements/search%20user%20entitlements?view=azure-devops-rest-6.0
-                response = get("https://vsaex.dev.azure.com/" + source.organization + "/_apis/userentitlements?$filter=name eq '#{reviewer_email}'&api-version=6.0-preview.3")
+                response = get(source.api_endpoint + source.organization + "/_apis/userentitlements?$filter=name eq '#{reviewer_email}'&api-version=6.0-preview.3")
 
                 user_id = JSON.parse(response.body).fetch("members")[0]['id']
 
