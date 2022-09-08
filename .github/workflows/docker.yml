@@ -42,17 +42,17 @@ jobs:
         useConfigFile: true
 
     - name: Pull Docker base image & warm Docker cache
-      run: docker pull "tingle/$IMAGE_NAME:latest"
+      run: docker pull "angelwang1234567/$IMAGE_NAME:latest"
 
     - name: Build image
       run: |
         docker build \
         -f src/script/Dockerfile \
-        -t "tingle/$IMAGE_NAME:latest" \
-        -t "tingle/$IMAGE_NAME:$GITVERSION_FULLSEMVER" \
-        -t "tingle/$IMAGE_NAME:$GITVERSION_MAJOR.$GITVERSION_MINOR" \
-        -t "tingle/$IMAGE_NAME:$GITVERSION_MAJOR" \
-        --cache-from tingle/$IMAGE_NAME:latest \
+        -t "angelwang1234567/$IMAGE_NAME:latest" \
+        -t "angelwang1234567/$IMAGE_NAME:$GITVERSION_FULLSEMVER" \
+        -t "angelwang1234567/$IMAGE_NAME:$GITVERSION_MAJOR.$GITVERSION_MINOR" \
+        -t "angelwang1234567/$IMAGE_NAME:$GITVERSION_MAJOR" \
+        --cache-from angelwang1234567/$IMAGE_NAME:latest \
         --build-arg BUILDKIT_INLINE_CACHE=1 \
         src/script
 
