@@ -225,7 +225,7 @@ $api_endpoint = "#{$options[:azure_protocol]}://#{$options[:azure_hostname]}:#{$
 $api_endpoint = $api_endpoint + "#{$options[:azure_virtual_directory]}/" if !$options[:azure_virtual_directory].empty?
 puts "Using '#{$api_endpoint}' as API endpoint"
 puts "Pull Requests shall be linked to work item #{$options[:work_item_id]}" if $options[:work_item_id]
-puts "Pull Requests shall be labelled #{$options[:custom_labels]}" if $options[:custom_labels]
+puts "Pull Requests shall be labelled #{$options[:custom_labels]}" if $options[:custom_labels].length > 0
 
 # Full name of the repo targeted.
 $repo_name = "#{$options[:azure_organization]}/#{$options[:azure_project]}/_git/#{$options[:azure_repository]}"
@@ -437,8 +437,8 @@ dependencies.select(&:top_level?).each do |dep|
           email: "noreply@github.com",
           name: "dependabot[bot]"
         },
-        label_language: true,
         custom_labels: $options[:custom_labels],
+        label_language: $options[:custom_labels].length > 0 ? false : true,
         provider_metadata: {
           work_item: $options[:work_item_id],
         }
