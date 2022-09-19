@@ -30,7 +30,7 @@ $options = {
   ignore_conditions: [],
   fail_on_exception: ENV['DEPENDABOT_FAIL_ON_EXCEPTION'] == "true", # Stop the job if an exception occurs
   pull_requests_limit: ENV["DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT"].to_i || 5,
-  custom_labels: [],
+  custom_labels: nil, # nil instead of empty array to ensure default labels are passed
 
   # See description of requirements here:
   # https://github.com/dependabot/dependabot-core/issues/600#issuecomment-407808103
@@ -234,7 +234,7 @@ $api_endpoint = "#{$options[:azure_protocol]}://#{$options[:azure_hostname]}:#{$
 $api_endpoint = $api_endpoint + "#{$options[:azure_virtual_directory]}/" if !$options[:azure_virtual_directory].empty?
 puts "Using '#{$api_endpoint}' as API endpoint"
 puts "Pull Requests shall be linked to work item #{$options[:work_item_id]}" if $options[:work_item_id]
-puts "Pull Requests shall be labeled #{$options[:custom_labels]}" if $options[:custom_labels].length > 0
+puts "Pull Requests shall be labeled #{$options[:custom_labels]}" if $options[:custom_labels]
 
 # Full name of the repo targeted.
 $repo_name = "#{$options[:azure_organization]}/#{$options[:azure_project]}/_git/#{$options[:azure_repository]}"
