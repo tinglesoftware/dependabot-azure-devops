@@ -53,6 +53,8 @@ interface ISharedVariables {
   allowOvr: string;
   /** override value for ignore */
   ignoreOvr: string;
+  /** override value for labels */
+  labelsOvr: string;
   /** Flag used to check if to use dependabot.yml or task inputs */
   useConfigFile: boolean;
   /** Flag used to forward the host ssh socket */
@@ -102,9 +104,10 @@ export default function getSharedVariables(): ISharedVariables {
   // Prepare the repository
   let repository: string = getTargetRepository();
 
-  // Get the override values for allow and ignore
+  // Get the override values for allow, ignore, and labels
   let allowOvr = getVariable("DEPENDABOT_ALLOW_CONDITIONS");
   let ignoreOvr = getVariable("DEPENDABOT_IGNORE_CONDITIONS");
+  let labelsOvr = getVariable("DEPENDABOT_LABELS");
 
   // Check if to use dependabot.yml or task inputs
   let useConfigFile: boolean = getBoolInput("useConfigFile", false);
@@ -145,6 +148,7 @@ export default function getSharedVariables(): ISharedVariables {
     repository,
     allowOvr,
     ignoreOvr,
+    labelsOvr,
     useConfigFile,
     forwardHostSshSocket,
     extraEnvironmentVariables,
