@@ -22,6 +22,10 @@ export interface IDependabotUpdate {
    */
   ignore?: string;
   /**
+   * Ignore certain dependencies or versions.
+   */
+   labels?: string;
+  /**
    * 	Limit number of open pull requests for version updates.
    */
   openPullRequestLimit?: number;

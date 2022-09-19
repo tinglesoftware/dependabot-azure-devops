@@ -90,6 +90,12 @@ async function run() {
         dockerRunner.arg(["-e", `DEPENDABOT_IGNORE_CONDITIONS=${ignore}`]);
       }
 
+      // Set the dependencies to ignore
+      let labels = update.labels || variables.labelsOvr;
+      if (labels) {
+        dockerRunner.arg(["-e", `DEPENDABOT_LABELS=${labels}`]);
+      }
+
       // Set the extra credentials
       if (variables.extraCredentials) {
         dockerRunner.arg(["-e", `DEPENDABOT_EXTRA_CREDENTIALS=${variables.extraCredentials}`]);
