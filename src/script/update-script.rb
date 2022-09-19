@@ -30,7 +30,7 @@ $options = {
   ignore_conditions: [],
   fail_on_exception: ENV['DEPENDABOT_FAIL_ON_EXCEPTION'] == "true", # Stop the job if an exception occurs
   pull_requests_limit: ENV["DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT"].to_i || 5,
-  custom_labels: ENV["DEPENDABOT_CUSTOM_LABELS"]&.split(",") || [],
+  custom_labels: [],
 
   # See description of requirements here:
   # https://github.com/dependabot/dependabot-core/issues/600#issuecomment-407808103
@@ -200,6 +200,15 @@ unless ENV["DEPENDABOT_IGNORE_CONDITIONS"].to_s.strip.empty?
   # For example:
   # [{"dependency-name":"ruby","versions":[">= 3.a", "< 4"]}]
   $options[:ignore_conditions] = JSON.parse(ENV["DEPENDABOT_IGNORE_CONDITIONS"])
+end
+
+###########################
+# Setup Labels #
+###########################
+unless ENV["DEPENDABOT_LABELS"].to_s.strip.empty?
+  # For example:
+  # ["npm dependencies","triage-board"]
+  $options[:custom_labels] = JSON.parse(ENV["DEPENDABOT_LABELS"])
 end
 
 # Get ignore versions for a dependency
