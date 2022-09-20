@@ -82,7 +82,6 @@ export default function parseConfigFile(): IDependabotUpdate[] {
 
       // Convert to JSON and shorten the names as required by the script
       allow: update["allow"] ? JSON.stringify(update["allow"]) : undefined,
-      commitMessage: update["commit-message"] ? JSON.stringify(update["commit-message"]) : undefined,
       ignore: update["ignore"] ? JSON.stringify(update["ignore"]) : undefined,
       labels: update["labels"] ? JSON.stringify(update["labels"]) : undefined,
     };

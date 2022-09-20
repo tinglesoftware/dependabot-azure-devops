@@ -26,7 +26,6 @@ $options = {
   branch: ENV["DEPENDABOT_TARGET_BRANCH"] || nil, # Branch against which to create PRs
 
   allow_conditions: [],
-  commit_message_options: {},
   requirements_update_strategy: nil,
   ignore_conditions: [],
   fail_on_exception: ENV['DEPENDABOT_FAIL_ON_EXCEPTION'] == "true", # Stop the job if an exception occurs
@@ -180,15 +179,6 @@ unless ENV["DEPENDABOT_ALLOW_CONDITIONS"].to_s.strip.empty?
   $options[:allow_conditions] = JSON.parse(ENV["DEPENDABOT_ALLOW_CONDITIONS"])
 end
 
-################################
-# Setup Commit Message Options #
-################################
-unless ENV["DEPENDABOT_COMMIT_MESSAGE_OPTIONS"].to_s.strip.empty?
-  # For example:
-  # {"prefix":"pip prod","prefix-development":"pip dev","include":"scope"}
-  $options[:commit_message_options] = JSON.parse(ENV["DEPENDABOT_COMMIT_MESSAGE_OPTIONS"])
-end
-
 # Get allow versions for a dependency
 TYPE_HANDLERS = { # [Hash<String, Proc>] handlers for type allow rules
   "all" => proc { true },
@@ -259,8 +249,22 @@ $source = Dependabot::Source.new(
   branch: $options[:branch],
 )
 
-## Make an empty update_config
-$config_file = Dependabot::Config::File.new(updates: [])
+## Read the update configuration if present
+fetcher_args = {
+  source: $source,
+  credentials: $options[:credentials],
+  options: {
+    # TODO: consider using experiments feature if
+    # merged https://github.com/dependabot/dependabot-core/pull/5755
+    kubernetes_updates: true,
+  },
+}
+$config_file = begin
+  cfg_file = Dependabot::Config::FileFetcher.new(**fetcher_args).config_file
+  Dependabot::Config::File.parse(cfg_file.content)
+rescue Dependabot::RepoNotFound, Dependabot::DependencyFileNotFound
+  Dependabot::Config::File.new(updates: [])
+end
 $update_config = $config_file.update_config(
   $package_manager,
   directory: $options[:directory],
@@ -273,15 +277,7 @@ $update_config = $config_file.update_config(
 puts "Fetching #{$package_manager} dependency files for #{$repo_name}"
 puts "Targeting '#{$options[:branch] || 'default'}' branch under '#{$options[:directory]}' directory"
 puts "Using '#{$options[:requirements_update_strategy]}' requirements update strategy" if $options[:requirements_update_strategy]
-fetcher = Dependabot::FileFetchers.for_package_manager($package_manager).new(
-  source: $source,
-  credentials: $options[:credentials],
-  options: {
-    # TODO: consider using experiments feature if merged https://github.com/dependabot/dependabot-core/pull/5755
-    kubernetes_updates: true,
-  }
-)
-
+fetcher = Dependabot::FileFetchers.for_package_manager($package_manager).new(**fetcher_args)
 files = fetcher.files
 commit = fetcher.commit
 
@@ -461,7 +457,7 @@ dependencies.select(&:top_level?).each do |dep|
           email: "noreply@github.com",
           name: "dependabot[bot]"
         },
-        commit_message_options: $options[:commit_message_options],
+        commit_message_options: $update_config.commit_message_options.to_h,
         custom_labels: $options[:custom_labels],
         milestone: milestone,
         branch_name_separator: $options[:branch_name_separator],
