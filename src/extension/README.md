@@ -100,6 +100,7 @@ variables:
   DEPENDABOT_ALLOW_CONDITIONS: '[{\"dependency-name\":"django*",\"dependency-type\":\"direct\"}]' # packages allowed to be updated
   DEPENDABOT_IGNORE_CONDITIONS: '[{\"dependency-name\":\"express\",\"versions\":[\"4.x\",\"5.x\"]}]' # packages to be ignored
   DEPENDABOT_LABELS: '[\"npm dependencies\",\"triage-board\"]' # labels to be used
+  # DEPENDABOT_BRANCH_NAME_SEPARATOR: '/' # You can change the default separator here
 
 pool:
   vmImage: 'ubuntu-latest' # requires macos or ubuntu (windows is not supported)

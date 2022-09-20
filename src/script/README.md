@@ -28,6 +28,7 @@ docker run --rm -t \
            -e DEPENDABOT_ALLOW_CONDITIONS=<your-allowed-packages> \
            -e DEPENDABOT_IGNORE_CONDITIONS=<your-ignore-packages> \
            -e DEPENDABOT_LABELS=<your-custom-labels> \
+           -e DEPENDABOT_BRANCH_NAME_SEPARATOR=<your-custom-separator> \
            -e DEPENDABOT_MILESTONE=<your-work-item-id> \
            -e AZURE_SET_AUTO_COMPLETE=<true/false> \
            -e AZURE_AUTO_APPROVE_PR=<true/false> \
@@ -55,6 +56,7 @@ docker run --rm -t \
            -e DEPENDABOT_ALLOW_CONDITIONS='[{\"dependency-name\":"django*",\"dependency-type\":\"direct\"}]' \
            -e DEPENDABOT_IGNORE_CONDITIONS='[{\"dependency-name\":\"express\",\"versions\":[\"4.x\",\"5.x\"]}]' \
            -e DEPENDABOT_LABELS='[\"npm dependencies\",\"triage-board\"]' \
+           -e DEPENDABOT_BRANCH_NAME_SEPARATOR='/' \
            -e DEPENDABOT_MILESTONE=123 \
            -e AZURE_SET_AUTO_COMPLETE=true \
            -e AZURE_AUTO_APPROVE_PR=true \
@@ -85,6 +87,7 @@ docker run --rm -t \
            -e DEPENDABOT_ALLOW_CONDITIONS='[{\"dependency-name\":"django*",\"dependency-type\":\"direct\"}]' \
            -e DEPENDABOT_IGNORE_CONDITIONS='[{\"dependency-name\":\"express\",\"versions\":[\"4.x\",\"5.x\"]}]' \
            -e DEPENDABOT_LABELS='[\"npm dependencies\",\"triage-board\"]' \
+           -e DEPENDABOT_BRANCH_NAME_SEPARATOR='/' \
            -e DEPENDABOT_MILESTONE=123 \
            -e AZURE_SET_AUTO_COMPLETE=true \
            -e AZURE_AUTO_APPROVE_PR=true \
@@ -118,6 +121,7 @@ To run the script, some environment variables are required.
 |DEPENDABOT_ALLOW_CONDITIONS|**_Optional_**. The dependencies whose updates are allowed, in JSON format. This can be used to control which packages can be updated. For example: `[{\"dependency-name\":"django*",\"dependency-type\":\"direct\"}]`. See [official docs](https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/configuration-options-for-dependency-updates#allow) for more.|
 |DEPENDABOT_IGNORE_CONDITIONS|**_Optional_**. The dependencies to be ignored, in JSON format. This can be used to control which packages can be updated. For example: `[{\"dependency-name\":\"express\",\"versions\":[\"4.x\",\"5.x\"]}]`. See [official docs](https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/configuration-options-for-dependency-updates#ignore) for more.|
 |DEPENDABOT_LABELS|**_Optional_**. The custom labels to be used, in JSON format. This can be used to override the default values. For example: `[\"npm dependencies\",\"triage-board\"]`. See [official docs](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/customizing-dependency-updates#setting-custom-labels) for more.|
+|DEPENDABOT_BRANCH_NAME_SEPARATOR|**_Optional_**. The separator to use in created branches. For example: `-`. See [official docs](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#pull-request-branch-nameseparator) for more.|
 |DEPENDABOT_FAIL_ON_EXCEPTION|**_Optional_**. Determines if the execution should fail when an exception occurs. Defaults to `true`.|
 |DEPENDABOT_EXCLUDE_REQUIREMENTS_TO_UNLOCK|**_Optional_**. Exclude certain dependency updates requirements. See list of allowed values [here](https://github.com/dependabot/dependabot-core/issues/600#issuecomment-407808103). Useful if you have lots of dependencies and the update script too slow. The values provided are space-separated. Example: `own all` to only use the `none` version requirement.|
 |DEPENDABOT_MILESTONE|**_Optional_**. The identifier of the work item to be linked to the Pull Requests that dependabot creates.|
