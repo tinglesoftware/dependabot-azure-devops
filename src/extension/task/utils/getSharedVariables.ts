@@ -51,6 +51,8 @@ interface ISharedVariables {
   repository: string;
   /** override value for allow */
   allowOvr: string;
+  /** override value for commit message */
+  commitMessageOvr: string;
   /** override value for ignore */
   ignoreOvr: string;
   /** override value for labels */
@@ -107,6 +109,7 @@ export default function getSharedVariables(): ISharedVariables {
   // Get the override values for allow, ignore, and labels
   let allowOvr = getVariable("DEPENDABOT_ALLOW_CONDITIONS");
   let ignoreOvr = getVariable("DEPENDABOT_IGNORE_CONDITIONS");
+  let commitMessageOvr = getVariable("DEPENDABOT_COMMIT_MESSAGE_OPTIONS");
   let labelsOvr = getVariable("DEPENDABOT_LABELS");
 
   // Check if to use dependabot.yml or task inputs
@@ -148,6 +151,7 @@ export default function getSharedVariables(): ISharedVariables {
     repository,
     allowOvr,
     ignoreOvr,
+    commitMessageOvr,
     labelsOvr,
     useConfigFile,
     forwardHostSshSocket,

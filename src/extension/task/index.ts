@@ -73,15 +73,21 @@ async function run() {
         dockerRunner.arg(["-e", `DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT=${update.openPullRequestLimit}`]);
       }
 
+      // Set the milestone, if provided
+      if (update.milestone) {
+        dockerRunner.arg(["-e", `DEPENDABOT_MILESTONE=${update.milestone}`]);
+      }
+
       // Set the dependencies to allow
       let allow = update.allow || variables.allowOvr;
       if (allow) {
         dockerRunner.arg(["-e", `DEPENDABOT_ALLOW_CONDITIONS=${allow}`]);
       }
 
-      // Set the milestone, if provided
-      if (update.milestone) {
-        dockerRunner.arg(["-e", `DEPENDABOT_MILESTONE=${update.milestone}`]);
+      // Set the dependencies to allow
+      let commitMessage = update.commitMessage || variables.commitMessageOvr;
+      if (commitMessage) {
+        dockerRunner.arg(["-e", `DEPENDABOT_COMMIT_MESSAGE_OPTIONS=${commitMessage}`]);
       }
 
       // Set the dependencies to ignore
