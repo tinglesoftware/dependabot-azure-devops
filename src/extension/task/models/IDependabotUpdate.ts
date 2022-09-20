@@ -24,7 +24,11 @@ export interface IDependabotUpdate {
   /**
    * Ignore certain dependencies or versions.
    */
-   labels?: string;
+  labels?: string;
+  /**
+   * The milestone to associate pull requests with.
+   */
+  milestone?: string;
   /**
    * 	Limit number of open pull requests for version updates.
    */
@@ -41,10 +45,6 @@ export interface IDependabotUpdate {
    * How to update manifest version requirements.
    */
   versioningStrategy?: string;
-  /**
-   * The milestone to associate pull requests with.
-   */
-   milestone?: string;
 }
 
 export interface IDependabotUpdateSchedule {
