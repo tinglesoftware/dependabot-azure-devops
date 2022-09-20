@@ -25,6 +25,8 @@ Using `.github/dependabot.yml` or `.github/dependabot.yaml` instead of `.azurede
 1. Intellisense support in VS Code (and may be other IDEs).
 2. The docker container checks for the configuration file in this location to configure `commit-message` and `ignore` options.
 
+> Using the .azuredevops folder is deprecated and will be removed in version `0.10.0`.
+
 ## Credentials for private registries and feeds
 
 Besides accessing the repository, sometimes, private feeds/registries may need to be accessed. For example a private NuGet feed or a company internal docker registry. Adding credentials is currently done via the `DEPENDABOT_EXTRA_CREDENTIALS` environment variable. The value is supplied in JSON hence allowing any type of credentials even if they are not for private feeds/registries.

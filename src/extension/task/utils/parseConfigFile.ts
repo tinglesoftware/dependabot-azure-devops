@@ -44,6 +44,7 @@ export default function parseConfigFile(): IDependabotUpdate[] {
       tl.warning(
         `
         The docker container used to run this task checks for a configuration file in the .github folder. Migrate to it.
+        Using the .azuredevops folder is deprecated and will be removed in version 0.10.0.\r\n
 
         See https://github.com/tinglesoftware/dependabot-azure-devops#using-a-configuration-file for more information.
         `
