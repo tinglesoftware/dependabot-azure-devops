@@ -26,6 +26,7 @@ $options = {
   branch: ENV["DEPENDABOT_TARGET_BRANCH"] || nil, # Branch against which to create PRs
 
   allow_conditions: [],
+  commit_message_options: {},
   requirements_update_strategy: nil,
   ignore_conditions: [],
   fail_on_exception: ENV['DEPENDABOT_FAIL_ON_EXCEPTION'] == "true", # Stop the job if an exception occurs
@@ -177,6 +178,15 @@ unless ENV["DEPENDABOT_ALLOW_CONDITIONS"].to_s.strip.empty?
   # For example:
   # [{"dependency-name":"sphinx","dependency-type":"production"}]
   $options[:allow_conditions] = JSON.parse(ENV["DEPENDABOT_ALLOW_CONDITIONS"])
+end
+
+################################
+# Setup Commit Message Options #
+################################
+unless ENV["DEPENDABOT_COMMIT_MESSAGE_OPTIONS"].to_s.strip.empty?
+  # For example:
+  # {"prefix":"pip prod","prefix-development":"pip dev","include":"scope"}
+  $options[:commit_message_options] = JSON.parse(ENV["DEPENDABOT_COMMIT_MESSAGE_OPTIONS"])
 end
 
 # Get allow versions for a dependency
@@ -447,6 +457,7 @@ dependencies.select(&:top_level?).each do |dep|
           email: "noreply@github.com",
           name: "dependabot[bot]"
         },
+        commit_message_options: $options[:commit_message_options],
         custom_labels: $options[:custom_labels],
         milestone: milestone,
         branch_name_separator: $options[:branch_name_separator],
