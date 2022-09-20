@@ -64,8 +64,6 @@ spec:
               value: '{{dependabot_extra_credentials}}'
             - name: DEPENDABOT_ALLOW_CONDITIONS
               value: '{{dependabot_allow_conditions}}'
-            - name: DEPENDABOT_COMMIT_MESSAGE_OPTIONS
-              value: '{{dependabot_commit_message_options}}'
             - name: DEPENDABOT_IGNORE_CONDITIONS
               value: '{{dependabot_ignore_conditions}}'
             - name: DEPENDABOT_LABELS

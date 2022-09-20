@@ -18,10 +18,6 @@ export interface IDependabotUpdate {
    */
   allow?: string;
   /**
-   * Options for the commit message.
-   */
-  commitMessage?: string;
-  /**
    * Ignore certain dependencies or versions.
    */
   ignore?: string;
