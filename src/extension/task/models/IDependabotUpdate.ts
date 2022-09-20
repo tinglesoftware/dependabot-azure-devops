@@ -22,13 +22,17 @@ export interface IDependabotUpdate {
    */
   ignore?: string;
   /**
-   * Ignore certain dependencies or versions.
+   * Custom labels/tags.
    */
   labels?: string;
   /**
    * The milestone to associate pull requests with.
    */
   milestone?: string;
+  /**
+   * Separator for the branches created.
+   */
+  branchNameSeparator?: string;
   /**
    * 	Limit number of open pull requests for version updates.
    */

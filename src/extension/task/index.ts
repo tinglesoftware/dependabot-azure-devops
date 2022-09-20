@@ -90,10 +90,15 @@ async function run() {
         dockerRunner.arg(["-e", `DEPENDABOT_IGNORE_CONDITIONS=${ignore}`]);
       }
 
-      // Set the dependencies to ignore
+      // Set the custom labels/tags
       let labels = update.labels || variables.labelsOvr;
       if (labels) {
         dockerRunner.arg(["-e", `DEPENDABOT_LABELS=${labels}`]);
+      }
+
+      // Set the PR branch separator
+      if (update.branchNameSeparator) {
+        dockerRunner.arg(["-e", `DEPENDABOT_BRANCH_NAME_SEPARATOR=${update.branchNameSeparator}`]);
       }
 
       // Set the extra credentials
