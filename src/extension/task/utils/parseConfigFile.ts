@@ -2,12 +2,13 @@ import { IDependabotUpdate } from "../models/IDependabotUpdate";
 import { load } from "js-yaml";
 import * as fs from "fs";
 import * as path from "path";
+import * as tl from "azure-pipelines-task-lib/task"
 import { getVariable } from "azure-pipelines-task-lib/task";
 
 /**
  * Parse the dependabot config YAML file to specify update(s) configuration
  *
- * The file should be located in '/.azuredevops/dependabot.yml' at the root of your repository
+ * The file should be located in '/.github/dependabot.yml' at the root of your repository
  *
  * To view YAML file format, visit
  * https://docs.github.com/en/github/administering-a-repository/configuration-options-for-dependency-updates#allow
@@ -40,6 +41,16 @@ export default function parseConfigFile(): IDependabotUpdate[] {
   // Ensure we have the file. Otherwise throw a well readable error.
   if (!filePath) {
     throw new Error(`Configuration file not found at possible locations: ${possibleFilePaths.join(', ')}`);
+  }
+
+  if (filePath.includes(".azuredevops/dependabot")) {
+    tl.warning(
+      `
+      The docker container used to run this task checks for a configuration file in the .github folder. Migrate to it.
+
+      See https://github.com/tinglesoftware/dependabot-azure-devops#using-a-configuration-file for more information.
+      `
+    );
   }
 
   let config: any;
