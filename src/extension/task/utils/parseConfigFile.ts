@@ -15,20 +15,31 @@ import { getVariable } from "azure-pipelines-task-lib/task";
  * @returns {IDependabotUpdate[]} updates - array of dependency update configurations
  */
 export default function parseConfigFile(): IDependabotUpdate[] {
-  let rootDir = getVariable("Build.SourcesDirectory");
-  var filePath = path.join(rootDir, "/.azuredevops/dependabot.yml");
 
   /*
    * If the file under the .azuredevops folder does not exist, check for one under the .github folder.
    * Advantage of using the file under .github is support for intellisense.
    */
-  if (!fs.existsSync(filePath)) {
-    filePath = path.join(rootDir, "/.github/dependabot.yml");
-  }
+  const possibleFilePaths = [
+    "/.azuredevops/dependabot.yml",
+    "/.azuredevops/dependabot.yaml",
+    "/.github/dependabot.yml",
+    "/.github/dependabot.yaml",
+  ];
+
+  // Find configuration file
+  let filePath: string;
+  let rootDir = getVariable("Build.SourcesDirectory");
+  possibleFilePaths.forEach(fp => {
+    var fullPath = path.join(rootDir, fp);
+    if (fs.existsSync(fullPath)) {
+      filePath = fullPath;
+    }
+  });
 
   // Ensure we have the file. Otherwise throw a well readable error.
-  if (!fs.existsSync(filePath)) {
-    throw new Error("Configuration file not found at /.azuredevops/dependabot.yml or /.github/dependabot.yml");
+  if (!filePath) {
+    throw new Error(`Configuration file not found at possible locations: ${possibleFilePaths.join(', ')}`);
   }
 
   let config: any;
