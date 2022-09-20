@@ -55,10 +55,6 @@ The hosted version ([source code](https://github.com/tinglesoftware/zote)) for A
 5. Auto resolving of merge conflicts using webhooks.
 6. Viewing the most recent runs for each repository, project and organization configured.
 
-## Still using the old `*.visualstudio.com` URL?
-
-The new URL in the format `https://dev.azure.com/{organization}` is recommended. If you are still using the older `{organization}.visualstudio.com` URL, you need to toggle on the new URL. As far as out testing has gone, we have not had any issues using both the new and old URL. It is possible to keep both. The [core implementation](https://github.com/dependabot/dependabot-core) will only support the new one. See [#27](https://github.com/tinglesoftware/dependabot-azure-devops/issues/27#issuecomment-768054722) for more explanation. For someone really looking to use dependabot to keep dependencies up to date, migrating to the new URL should really be a no-brainer.
-
 ### Acknowledgements
 
 The work in this repository is based on inspired and occasionally guided by some predecessors in the same area:
