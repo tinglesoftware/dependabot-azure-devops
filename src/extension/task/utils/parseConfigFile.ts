@@ -18,14 +18,13 @@ import { getVariable } from "azure-pipelines-task-lib/task";
 export default function parseConfigFile(): IDependabotUpdate[] {
 
   /*
-   * If the file under the .azuredevops folder does not exist, check for one under the .github folder.
-   * Advantage of using the file under .github is support for intellisense.
+   * If the file under the .github folder does not exist, check for one under the .azuredevops folder.
    */
   const possibleFilePaths = [
-    "/.azuredevops/dependabot.yml",
-    "/.azuredevops/dependabot.yaml",
     "/.github/dependabot.yml",
     "/.github/dependabot.yaml",
+    "/.azuredevops/dependabot.yml",
+    "/.azuredevops/dependabot.yaml",
   ];
 
   // Find configuration file
