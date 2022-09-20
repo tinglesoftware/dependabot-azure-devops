@@ -31,6 +31,7 @@ $options = {
   fail_on_exception: ENV['DEPENDABOT_FAIL_ON_EXCEPTION'] == "true", # Stop the job if an exception occurs
   pull_requests_limit: ENV["DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT"].to_i || 5,
   custom_labels: nil, # nil instead of empty array to ensure default labels are passed
+  branch_name_separator: ENV["DEPENDABOT_BRANCH_NAME_SEPARATOR"] || "/", # Separator used for created branches.
 
   # See description of requirements here:
   # https://github.com/dependabot/dependabot-core/issues/600#issuecomment-407808103
@@ -448,6 +449,7 @@ dependencies.select(&:top_level?).each do |dep|
         },
         custom_labels: $options[:custom_labels],
         milestone: milestone,
+        branch_name_separator: $options[:branch_name_separator],
         label_language: true,
         automerge_candidate: $options[:set_auto_complete],
         provider_metadata: {

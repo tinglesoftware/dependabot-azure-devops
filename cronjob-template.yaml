@@ -68,5 +68,7 @@ spec:
               value: '{{dependabot_ignore_conditions}}'
             - name: DEPENDABOT_LABELS
               value: '{{dependabot_labels}}'
+            - name: DEPENDABOT_BRANCH_NAME_SEPARATOR
+              value: '{{dependabot_branch_name_separator}}'
             - name: DEPENDABOT_FAIL_ON_EXCEPTION
               value: '{{dependabot_fail_on_exception}}'
