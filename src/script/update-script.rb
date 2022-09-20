@@ -249,7 +249,7 @@ $source = Dependabot::Source.new(
   branch: $options[:branch],
 )
 
-## Make an update_config
+## Read the update configuration if present
 fetcher_args = {
   source: $source,
   credentials: $options[:credentials],
