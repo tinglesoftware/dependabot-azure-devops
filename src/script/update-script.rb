@@ -276,6 +276,10 @@ puts "Using '#{$options[:requirements_update_strategy]}' requirements update str
 fetcher = Dependabot::FileFetchers.for_package_manager($package_manager).new(
   source: $source,
   credentials: $options[:credentials],
+  options: {
+    # TODO: consider using experiments feature if merged https://github.com/dependabot/dependabot-core/pull/5755
+    kubernetes_updates: true,
+  }
 )
 
 files = fetcher.files
