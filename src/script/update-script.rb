@@ -259,8 +259,22 @@ $source = Dependabot::Source.new(
   branch: $options[:branch],
 )
 
-## Make an empty update_config
-$config_file = Dependabot::Config::File.new(updates: [])
+## Make an update_config
+fetcher_args = {
+  source: $source,
+  credentials: $options[:credentials],
+  options: {
+    # TODO: consider using experiments feature if
+    # merged https://github.com/dependabot/dependabot-core/pull/5755
+    kubernetes_updates: true,
+  },
+}
+$config_file = begin
+  cfg_file = Dependabot::Config::FileFetcher.new(**fetcher_args).config_file
+  Dependabot::Config::File.parse(cfg_file.content)
+rescue Dependabot::RepoNotFound, Dependabot::DependencyFileNotFound
+  Dependabot::Config::File.new(updates: [])
+end
 $update_config = $config_file.update_config(
   $package_manager,
   directory: $options[:directory],
@@ -273,15 +287,7 @@ $update_config = $config_file.update_config(
 puts "Fetching #{$package_manager} dependency files for #{$repo_name}"
 puts "Targeting '#{$options[:branch] || 'default'}' branch under '#{$options[:directory]}' directory"
 puts "Using '#{$options[:requirements_update_strategy]}' requirements update strategy" if $options[:requirements_update_strategy]
-fetcher = Dependabot::FileFetchers.for_package_manager($package_manager).new(
-  source: $source,
-  credentials: $options[:credentials],
-  options: {
-    # TODO: consider using experiments feature if merged https://github.com/dependabot/dependabot-core/pull/5755
-    kubernetes_updates: true,
-  }
-)
-
+fetcher = Dependabot::FileFetchers.for_package_manager($package_manager).new(**fetcher_args)
 files = fetcher.files
 commit = fetcher.commit
 
