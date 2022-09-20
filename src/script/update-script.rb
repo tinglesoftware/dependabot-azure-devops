@@ -461,7 +461,7 @@ dependencies.select(&:top_level?).each do |dep|
         },
         commit_message_options: $update_config.commit_message_options.to_h,
         custom_labels: $options[:custom_labels],
-        milestone: milestone,
+        milestone: $options[:milestone],
         branch_name_separator: $options[:branch_name_separator],
         label_language: true,
         automerge_candidate: $options[:set_auto_complete],
