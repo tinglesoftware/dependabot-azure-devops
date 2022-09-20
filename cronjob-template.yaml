@@ -12,6 +12,7 @@ metadata:
     dependabot.com/directory: '{{dependabot_directory}}'
 spec:
   schedule: '{{k8s_schedule}}' # (See https://en.wikipedia.org/wiki/Cron for format)
+  timeZone: '{{k8s_timezone}}' # (See https://en.wikipedia.org/wiki/List_of_tz_database_time_zones for valid values)
   successfulJobsHistoryLimit: 1
   failedJobsHistoryLimit: 1
   jobTemplate:

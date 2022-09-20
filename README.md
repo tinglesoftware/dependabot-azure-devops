@@ -44,12 +44,11 @@ Use the [template provided](./cronjob-template.yaml) and replace the parameters 
 
 ### Notes
 
-1. Timezone support is not yet available in Kubernetes ([Issue 1](https://github.com/kubernetes/kubernetes/issues/47202), [Issue 2](https://github.com/kubernetes/kubernetes/issues/78795)). If this is important to you, consider using [cronjobber](https://github.com/hiddeco/cronjobber).
-2. History for successful and failed jobs is restricted to 1 (change to suit you).
-3. Jobs are removed after 2 days (`ttlSecondsAfterFinished: 172800`). No need keep it for too long.
-4. Jobs run duration is capped at 1 hour (`activeDeadlineSeconds: 3600`). This should be enough time.
-5. Labels can be used to find cronjobs created.
-6. Annotations can be used to store extra data for comparison but not searching/finding e.g. package ecosystem.
+1. History for successful and failed jobs is restricted to 1 (change to suit you).
+2. Jobs are removed after 2 days (`ttlSecondsAfterFinished: 172800`). No need keep it for too long.
+3. Jobs run duration is capped at 1 hour (`activeDeadlineSeconds: 3600`). This should be enough time.
+4. Labels can be used to find cronjobs created.
+5. Annotations can be used to store extra data for comparison but not searching/finding e.g. package ecosystem.
 
 ## Hosted version
 
