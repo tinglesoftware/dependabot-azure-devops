@@ -448,6 +448,7 @@ dependencies.select(&:top_level?).each do |dep|
         },
         custom_labels: $options[:custom_labels],
         label_language: true,
+        automerge_candidate: $options[:set_auto_complete],
         provider_metadata: {
           work_item: $options[:work_item_id],
         }
