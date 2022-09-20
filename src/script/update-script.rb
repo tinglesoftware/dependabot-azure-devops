@@ -46,7 +46,7 @@ $options = {
   azure_port: nil,
   azure_virtual_directory: ENV["AZURE_VIRTUAL_DIRECTORY"] || "",
 
-  work_item_id: ENV['DEPENDABOT_MILESTONE'] || nil, # Get the work item to attach
+  milestone: ENV['DEPENDABOT_MILESTONE'] || nil, # Get the work item to attach
 
   set_auto_complete: ENV["AZURE_SET_AUTO_COMPLETE"] == "true", # Set auto complete on created pull requests
   merge_strategy: ENV["AZURE_MERGE_STRATEGY"] || "2", # default to squash merge
@@ -233,7 +233,7 @@ end
 $api_endpoint = "#{$options[:azure_protocol]}://#{$options[:azure_hostname]}:#{$options[:azure_port]}/"
 $api_endpoint = $api_endpoint + "#{$options[:azure_virtual_directory]}/" if !$options[:azure_virtual_directory].empty?
 puts "Using '#{$api_endpoint}' as API endpoint"
-puts "Pull Requests shall be linked to work item #{$options[:work_item_id]}" if $options[:work_item_id]
+puts "Pull Requests shall be linked to milestone (work item) #{$options[:milestone]}" if $options[:milestone]
 puts "Pull Requests shall be labeled #{$options[:custom_labels]}" if $options[:custom_labels]
 
 # Full name of the repo targeted.
@@ -447,10 +447,11 @@ dependencies.select(&:top_level?).each do |dep|
           name: "dependabot[bot]"
         },
         custom_labels: $options[:custom_labels],
+        milestone: milestone,
         label_language: true,
         automerge_candidate: $options[:set_auto_complete],
         provider_metadata: {
-          work_item: $options[:work_item_id],
+          work_item: $options[:milestone],
         }
       )
 
