@@ -79,14 +79,16 @@ $package_manager = ENV["DEPENDABOT_PACKAGE_MANAGER"] || "bundler"
 # GitHub native implementation modifies some of the names in the config file
 # https://docs.github.com/en/github/administering-a-repository/configuration-options-for-dependency-updates#package-ecosystem
 PACKAGE_ECOSYSTEM_MAPPING = { # [Hash<String, String>]
+  "github-actions" => "github_actions",
+  "gitsubmodule" => "submodules",
+  "gomod" => "go_modules",
+  "mix" => "hex",
   "npm" => "npm_and_yarn",
+  # Additional ones
   "yarn" => "npm_and_yarn",
   "pipenv" => "pip",
   "pip-compile" => "pip",
   "poetry" => "pip",
-  "gomod" => "go_modules",
-  "gitsubmodule" => "submodules",
-  "mix" => "hex"
 }.freeze
 $package_manager = PACKAGE_ECOSYSTEM_MAPPING.fetch($package_manager, $package_manager)
 
