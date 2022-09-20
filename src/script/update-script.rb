@@ -465,6 +465,7 @@ dependencies.select(&:top_level?).each do |dep|
         branch_name_separator: $options[:branch_name_separator],
         label_language: true,
         automerge_candidate: $options[:set_auto_complete],
+        github_redirection_service: Dependabot::PullRequestCreator::DEFAULT_GITHUB_REDIRECTION_SERVICE,
         provider_metadata: {
           work_item: $options[:milestone],
         }
