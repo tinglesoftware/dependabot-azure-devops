@@ -39,18 +39,19 @@ export default function parseConfigFile(): IDependabotUpdate[] {
   });
 
   // Ensure we have the file. Otherwise throw a well readable error.
-  if (!filePath) {
+  if (filePath) {
+    tl.debug(`Found configuration file at ${filePath}`);
+    if (filePath.includes(".azuredevops/dependabot")) {
+      tl.warning(
+        `
+        The docker container used to run this task checks for a configuration file in the .github folder. Migrate to it.
+
+        See https://github.com/tinglesoftware/dependabot-azure-devops#using-a-configuration-file for more information.
+        `
+      );
+    }
+  } else {
     throw new Error(`Configuration file not found at possible locations: ${possibleFilePaths.join(', ')}`);
-  }
-
-  if (filePath.includes(".azuredevops/dependabot")) {
-    tl.warning(
-      `
-      The docker container used to run this task checks for a configuration file in the .github folder. Migrate to it.
-
-      See https://github.com/tinglesoftware/dependabot-azure-devops#using-a-configuration-file for more information.
-      `
-    );
   }
 
   let config: any;
