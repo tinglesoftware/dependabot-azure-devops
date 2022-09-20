@@ -2,12 +2,13 @@ import { IDependabotUpdate } from "../models/IDependabotUpdate";
 import { load } from "js-yaml";
 import * as fs from "fs";
 import * as path from "path";
+import * as tl from "azure-pipelines-task-lib/task"
 import { getVariable } from "azure-pipelines-task-lib/task";
 
 /**
  * Parse the dependabot config YAML file to specify update(s) configuration
  *
- * The file should be located in '/.azuredevops/dependabot.yml' at the root of your repository
+ * The file should be located in '/.github/dependabot.yml' at the root of your repository
  *
  * To view YAML file format, visit
  * https://docs.github.com/en/github/administering-a-repository/configuration-options-for-dependency-updates#allow
@@ -15,20 +16,42 @@ import { getVariable } from "azure-pipelines-task-lib/task";
  * @returns {IDependabotUpdate[]} updates - array of dependency update configurations
  */
 export default function parseConfigFile(): IDependabotUpdate[] {
-  let rootDir = getVariable("Build.SourcesDirectory");
-  var filePath = path.join(rootDir, "/.azuredevops/dependabot.yml");
 
   /*
-   * If the file under the .azuredevops folder does not exist, check for one under the .github folder.
-   * Advantage of using the file under .github is support for intellisense.
+   * If the file under the .github folder does not exist, check for one under the .azuredevops folder.
    */
-  if (!fs.existsSync(filePath)) {
-    filePath = path.join(rootDir, "/.github/dependabot.yml");
-  }
+  const possibleFilePaths = [
+    "/.github/dependabot.yml",
+    "/.github/dependabot.yaml",
+    "/.azuredevops/dependabot.yml",
+    "/.azuredevops/dependabot.yaml",
+  ];
+
+  // Find configuration file
+  let filePath: string;
+  let rootDir = getVariable("Build.SourcesDirectory");
+  possibleFilePaths.forEach(fp => {
+    var fullPath = path.join(rootDir, fp);
+    if (fs.existsSync(fullPath)) {
+      filePath = fullPath;
+    }
+  });
 
   // Ensure we have the file. Otherwise throw a well readable error.
-  if (!fs.existsSync(filePath)) {
-    throw new Error("Configuration file not found at /.azuredevops/dependabot.yml or /.github/dependabot.yml");
+  if (filePath) {
+    tl.debug(`Found configuration file at ${filePath}`);
+    if (filePath.includes(".azuredevops/dependabot")) {
+      tl.warning(
+        `
+        The docker container used to run this task checks for a configuration file in the .github folder. Migrate to it.
+        Using the .azuredevops folder is deprecated and will be removed in version 0.10.0.\r\n
+
+        See https://github.com/tinglesoftware/dependabot-azure-devops#using-a-configuration-file for more information.
+        `
+      );
+    }
+  } else {
+    throw new Error(`Configuration file not found at possible locations: ${possibleFilePaths.join(', ')}`);
   }
 
   let config: any;
