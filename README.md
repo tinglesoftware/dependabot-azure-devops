@@ -14,7 +14,6 @@ In this repository you'll find:
 2. Dockerfile and build/image for running the script via Docker [here](./src/script/Dockerfile).
 3. Azure DevOps [Extension](https://marketplace.visualstudio.com/items?itemName=tingle-software.dependabot) and [source](./src/extension).
 4. Kubernetes CronJob [template](#kubernetes-cronjob).
-5. Hosted versions: [fully hosted](#hosted-version), self hosted (source code and instructions coming soon).
 
 ## Using a configuration file
 
@@ -51,17 +50,6 @@ Use the [template provided](./cronjob-template.yaml) and replace the parameters 
 3. Jobs run duration is capped at 1 hour (`activeDeadlineSeconds: 3600`). This should be enough time.
 4. Labels can be used to find cronjobs created.
 5. Annotations can be used to store extra data for comparison but not searching/finding e.g. package ecosystem.
-
-## Hosted version
-
-The hosted version ([source code](https://github.com/tinglesoftware/zote)) for Azure DevOps work almost similar to the native version of dependabot on GitHub, hosted in your own Kubernetes cluster. It supports:
-
-1. Pulling configuration from a file located at `.github/dependabot.yml`.
-2. Adding/updating the file, triggers a run.
-3. Extra credentials for private registries, feeds and package repositories.
-4. Hosted on Kubernetes; easier compared to using Azure build agents.
-5. Auto resolving of merge conflicts using webhooks.
-6. Viewing the most recent runs for each repository, project and organization configured.
 
 ### Acknowledgements
 
