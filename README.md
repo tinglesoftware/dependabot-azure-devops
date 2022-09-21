@@ -20,7 +20,7 @@ In this repository you'll find:
 
 Similar to the GitHub native version where you add a `.github/dependabot.yml` file, this repository adds support for the same official [configuration options](https://help.github.com/github/administering-a-repository/configuration-options-for-dependency-updates) via a file located at `.github/dependabot.yml`. This support is only available in the Azure DevOps extension and the [managed version](https://managed-dependabot.com). However, the extension does not currently support automatically picking up the file, a pipeline is still required. See [docs](./src/extension/README.md#usage).
 
-> Using a configuration file over explicit inputs will not work with repositories other than the one in the pipeline. This means no shared pipeline.
+> Using a configuration file over explicit inputs will not work with repositories other than the one in the pipeline. This means no shared pipeline. Instead consider the [managed version](https://managed-dependabot.com).
 
 Using `.github/dependabot.yml` or `.github/dependabot.yaml` instead of `.azuredevops/dependabot.yml` is better for 2 reasons:
 

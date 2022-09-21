@@ -29,6 +29,17 @@ async function run() {
       updates = getConfigFromInputs();
     }
 
+    if (variables.useConfigFile && tl.getInput("targetRepositoryName")) {
+      tl.warning(
+        `
+        Using targetRepositoryName input does not work when useConfigFile is set to true.
+        This is not a bug, but a feature limitation.
+        Either use a pipeline for each repository or consider using the [managed version](https://managed-dependabot.com).
+        Using targetRepositoryName will be deprecated and removed in a future minor release.\r\n
+        `
+      );
+    }
+
     // For each update run docker container
     for (const update of updates) {
       // Prepare the docker task
