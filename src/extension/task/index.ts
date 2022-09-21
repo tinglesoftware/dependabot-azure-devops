@@ -20,7 +20,7 @@ async function run() {
     else {
       tl.warning(
         `
-        Using explicit inputs instead of a configuration file is deprecated and will be removed in version 0.10.0.\r\n
+        Using explicit inputs instead of a configuration file is deprecated and will be removed in version 0.11.0.\r\n
         No new features will be added to the use of explicit inputs that can also be specified in the configuration file.\r\n\r\n
         Migrate to using a config file at .azuredevops/dependabot.yml or .github/dependabot.yml.\r\n
         See https://github.com/tinglesoftware/dependabot-azure-devops/tree/main/src/extension#usage for more information.
