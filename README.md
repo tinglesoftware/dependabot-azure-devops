@@ -14,18 +14,19 @@ In this repository you'll find:
 2. Dockerfile and build/image for running the script via Docker [here](./src/script/Dockerfile).
 3. Azure DevOps [Extension](https://marketplace.visualstudio.com/items?itemName=tingle-software.dependabot) and [source](./src/extension).
 4. Kubernetes CronJob [template](#kubernetes-cronjob).
-5. Hosted versions: [fully hosted](#hosted-version), self hosted (source code and instructions coming soon).
 
 ## Using a configuration file
 
 Similar to the GitHub native version where you add a `.github/dependabot.yml` file, this repository adds support for the same official [configuration options](https://help.github.com/github/administering-a-repository/configuration-options-for-dependency-updates) via a file located at `.github/dependabot.yml`. This support is only available in the Azure DevOps extension and the [managed version](https://managed-dependabot.com). However, the extension does not currently support automatically picking up the file, a pipeline is still required. See [docs](./src/extension/README.md#usage).
+
+> Using a configuration file over explicit inputs will not work with repositories other than the one in the pipeline. This means no shared pipeline. Instead consider the [managed version](https://managed-dependabot.com).
 
 Using `.github/dependabot.yml` or `.github/dependabot.yaml` instead of `.azuredevops/dependabot.yml` is better for 2 reasons:
 
 1. Intellisense support in VS Code (and may be other IDEs).
 2. The docker container checks for the configuration file in this location to configure `commit-message` and `ignore` options.
 
-> Using the .azuredevops folder is deprecated and will be removed in version `0.10.0`.
+> Using the .azuredevops folder is deprecated and will be removed in version `0.11.0`.
 
 ## Credentials for private registries and feeds
 
@@ -49,17 +50,6 @@ Use the [template provided](./cronjob-template.yaml) and replace the parameters 
 3. Jobs run duration is capped at 1 hour (`activeDeadlineSeconds: 3600`). This should be enough time.
 4. Labels can be used to find cronjobs created.
 5. Annotations can be used to store extra data for comparison but not searching/finding e.g. package ecosystem.
-
-## Hosted version
-
-The hosted version ([source code](https://github.com/tinglesoftware/zote)) for Azure DevOps work almost similar to the native version of dependabot on GitHub, hosted in your own Kubernetes cluster. It supports:
-
-1. Pulling configuration from a file located at `.github/dependabot.yml`.
-2. Adding/updating the file, triggers a run.
-3. Extra credentials for private registries, feeds and package repositories.
-4. Hosted on Kubernetes; easier compared to using Azure build agents.
-5. Auto resolving of merge conflicts using webhooks.
-6. Viewing the most recent runs for each repository, project and organization configured.
 
 ### Acknowledgements
 
