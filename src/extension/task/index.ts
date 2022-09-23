@@ -33,7 +33,6 @@ async function run() {
       tl.warning(
         `
         Using targetRepositoryName input does not work when useConfigFile is set to true.
-        This is not a bug, but a feature limitation.
         Either use a pipeline for each repository or consider using the [managed version](https://managed-dependabot.com).
         Using targetRepositoryName will be deprecated and removed in a future minor release.\r\n
         `
