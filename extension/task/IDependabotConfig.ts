@@ -3,10 +3,21 @@
  *
  * https://docs.github.com/en/github/administering-a-repository/configuration-options-for-dependency-updates#configuration-options-for-dependabotyml
  */
-export interface IDependabotConfig {
+ export interface IDependabotConfig {
+  /**
+   *  Mandatory. configuration file version.
+   **/
   version: number;
+ /**
+  *  Mandatory. Configure how Dependabot updates the versions or project dependencies.
+  *  Each entry configures the update settings for a particular package manager.
+  */
   updates: IDependabotUpdate[];
-}
+  /**
+   *  Optional. Specify authentication details to access private package registries.
+   */
+  registries?: IDependabotRegistry[];
+ }
 
 export interface IDependabotUpdate {
   /**
@@ -77,6 +88,41 @@ export interface IDependabotUpdateSchedule {
    * 	How often to check for updates
    */
   interval: string;
+}
+
+export interface IDependabotRegistry {
+  /**
+   * Identifies the type of registry
+   */
+   type: string;
+  /**
+   * The URL to use to access the dependencies in this registry.
+   * The protocol is optional. If not specified, `https://` is assumed.
+   * Dependabot adds or ignores trailing slashes as required.
+   */
+   url: string;
+  /**
+   * The username to access the registry
+   */
+   username?: string;
+  /**
+   *  A password for the username to access this registry
+   */
+   password?: string;
+  /**
+   *  An access key for this registry
+   */
+   key?: string;
+  /**
+   *  An access token for this registry
+   */
+   token?: string;
+  /**
+   * 	For registries with type: python-index,
+   *  if the boolean value is `true`, pip resolves dependencies by using the specified URL
+   *  rather than the base URL of the Python Package Index (by default https://pypi.org/simple).
+   */
+   "replaces-base"?: string;
 }
 
 export type DependabotDependencyType =

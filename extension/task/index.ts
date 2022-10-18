@@ -15,9 +15,9 @@ async function run() {
     const variables = getSharedVariables();
 
     var config: IDependabotConfig;
-
-    if (variables.useConfigFile) config = parseConfigFile();
-    else {
+    if (variables.useConfigFile) {
+      config = parseConfigFile();
+    } else {
       tl.warning(
         `
         Using explicit inputs instead of a configuration file is deprecated and will be removed in version 0.11.0.
@@ -121,6 +121,9 @@ async function run() {
       // Set the extra credentials
       if (variables.extraCredentials) {
         dockerRunner.arg(["-e", `DEPENDABOT_EXTRA_CREDENTIALS=${variables.extraCredentials}`]);
+      } else if (config.registries != undefined) {
+        let extraCredentials = JSON.stringify(config.registries);
+        dockerRunner.arg(["-e", `DEPENDABOT_EXTRA_CREDENTIALS=${extraCredentials}`]);
       }
 
       // Set the github token, if one is provided
