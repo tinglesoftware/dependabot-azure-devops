@@ -120,6 +120,7 @@ async function run() {
 
       // Set the extra credentials
       if (variables.extraCredentials) {
+        //TODO remove variables.extraCredentials in future in favor default yml configuration.
         dockerRunner.arg(["-e", `DEPENDABOT_EXTRA_CREDENTIALS=${variables.extraCredentials}`]);
       } else if (config.registries != undefined) {
         let extraCredentials = JSON.stringify(config.registries);
