@@ -170,7 +170,7 @@ async function run() {
       }
 
       tl.debug(`Running docker container -> '${dockerImage}' ...`);
-      dockerRunner.arg([dockerImage]);
+      dockerRunner.arg(dockerImage);
 
       // Now execute using docker
       await dockerRunner.exec();
