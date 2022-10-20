@@ -58,13 +58,15 @@ module Dependabot
                 JSON.parse(response.body).fetch("value")
             end
 
-            def pull_request_auto_complete(pull_request_id, auto_complete_user_id, merge_strategy)
+            def pull_request_auto_complete(pull_request_id, pull_request_title, auto_complete_user_id, merge_strategy)
                 # https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-requests/update?view=azure-devops-rest-6.0
                 content = {
                     autoCompleteSetBy: {
                         id: auto_complete_user_id
                     },
                     completionOptions: {
+                        autoCompleteIgnoreConfigIds: [93], # ignore optional "work items must be linked" policy
+                        mergeCommitMessage: "Merged PR #{pull_request_id}: #{pull_request_title}",
                         mergeStrategy: merge_strategy,
                         deleteSourceBranch: true,
                         transitionWorkItems: false
