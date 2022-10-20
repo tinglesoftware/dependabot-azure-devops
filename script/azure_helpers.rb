@@ -59,7 +59,7 @@ module Dependabot
             end
 
             def pull_request_auto_complete(pull_request_id, auto_complete_user_id, merge_strategy)
-                # https://docs.microsoft.com/en-us/rest/api/azure/devops/git/pull%20requests/update?view=azure-devops-rest-6.0
+                # https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-requests/update?view=azure-devops-rest-6.0
                 content = {
                     autoCompleteSetBy: {
                         id: auto_complete_user_id
@@ -74,16 +74,16 @@ module Dependabot
                 response = patch(source.api_endpoint +
                     source.organization + "/" + source.project +
                     "/_apis/git/repositories/" + source.unscoped_repo +
-                    "/pullrequests/#{pull_request_id}?api-version=5.0", content.to_json)
+                    "/pullrequests/#{pull_request_id}?api-version=6.0", content.to_json)
             end
 
             def pull_request_approve(pull_request_id, reviewer_email, reviewer_token)
-                # https://docs.microsoft.com/en-us/rest/api/azure/devops/memberentitlementmanagement/user%20entitlements/search%20user%20entitlements?view=azure-devops-rest-6.0
+                # https://learn.microsoft.com/en-us/rest/api/azure/devops/memberentitlementmanagement/user-entitlements/search-user-entitlements?view=azure-devops-rest-6.0
                 response = get("https://vsaex.dev.azure.com/" + source.organization + "/_apis/userentitlements?$filter=name eq '#{reviewer_email}'&api-version=6.0-preview.3")
 
                 user_id = JSON.parse(response.body).fetch("members")[0]['id']
 
-                # https://docs.microsoft.com/en-us/rest/api/azure/devops/git/pull%20request%20reviewers/create%20pull%20request%20reviewer?view=azure-devops-rest-6.0
+                # https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-reviewers/create-pull-request-reviewers?view=azure-devops-rest-6.0
                 content = {
                     # 10 - approved 5 - approved with suggestions 0 - no vote -5 - waiting for author -10 - rejected
                     vote: 10
