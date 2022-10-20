@@ -520,10 +520,11 @@ dependencies.select(&:top_level?).each do |dep|
     # Pull requests that pass all policies will be merged automatically.
     if $options[:set_auto_complete]
       auto_complete_user_id = pull_request['createdBy']['id']
+      pull_request_title = pull_request['title']
       merge_strategy = $options[:merge_strategy]
       auto_complete_ignore_config_ids = $options[:auto_complete_ignore_config_ids]
       puts "Setting auto complete on ##{pull_request_id}."
-      azure_client.pull_request_auto_complete(pull_request_id, auto_complete_user_id, merge_strategy, auto_complete_ignore_config_ids)
+      azure_client.pull_request_auto_complete(pull_request_id, pull_request_title, auto_complete_user_id, merge_strategy, auto_complete_ignore_config_ids)
     end
 
   rescue StandardError => e
