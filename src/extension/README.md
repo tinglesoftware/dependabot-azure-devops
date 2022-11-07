@@ -1,6 +1,6 @@
 # Dependabot Azure DevOps Extension
 
-This is the unofficial [dependabot](https://github.com/Dependabot/dependabot-core) extension for [Azure DevOps](https://azure.microsoft.com/en-gb/services/devops/). It will allow you to run Dependabot inside a build pipeline. You will find it [here in the Visual Studio marketplace](https://marketplace.visualstudio.com/items?itemName=tingle-software.dependabot). You need to install it before running dependabot in your pipeline.
+This is the unofficial [dependabot](https://github.com/Dependabot/dependabot-core) extension for [Azure DevOps](https://azure.microsoft.com/en-gb/services/devops/). It will allow you to run Dependabot inside a build pipeline and is accessible[here in the Visual Studio marketplace](https://marketplace.visualstudio.com/items?itemName=tingle-software.dependabot). The extension first has to be installed before you can run it in your pipeline.
 
 ## Usage
 
@@ -20,7 +20,7 @@ You can also use a configuration file stored at `.github/dependabot.yml` conform
     useConfigFile: true
 ```
 
-It's up to the user to schedule the pipeline in whatever is correct for their solution.
+You can schedule the pipeline as is appropriate for your solution.
 
 An example of a YAML pipeline:
 
@@ -51,7 +51,7 @@ steps:
     versioningStrategy: 'auto'
 ```
 
-Since this task makes use of a docker image, it may take time to install the docker image. You can leverage on Docker caching in Azure Pipelines. See the [#113](https://github.com/tinglesoftware/dependabot-azure-devops/issues/113#issuecomment-894771611). Subsequent dependabot tasks in a job will be faster after the first one pulls the image for the first time.
+This task makes use of a docker image, which may take time to install. Subsequent dependabot tasks in a job will be faster after initially pulling the image using the first task. An alternative way to run your pipelines faster is by leveraging Docker caching in Azure Pipelines (See [#113](https://github.com/tinglesoftware/dependabot-azure-devops/issues/113#issuecomment-894771611)). 
 
 ## Task Parameters
 
@@ -80,7 +80,7 @@ Since this task makes use of a docker image, it may take time to install the doc
 
 ## Advanced
 
-In some situations you might want to override the docker image tag that is pulled. For example, to get the latest bits for testing. This is discouraged. Declare a global variable, for example:
+In some situations, such as when getting the latest bits for testing, you might want to override the docker image tag that is pulled. Even though doing so is discouraged you can declare a global variable, for example:
 
 ```yaml
 trigger: none # Disable CI trigger
