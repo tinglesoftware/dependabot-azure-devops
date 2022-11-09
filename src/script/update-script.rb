@@ -112,20 +112,9 @@ unless ENV["GITHUB_ACCESS_TOKEN"].to_s.strip.empty?
     "password" => ENV["GITHUB_ACCESS_TOKEN"] # A GitHub access token with read access to public repos
   }
 end
-unless ENV["DEPENDABOT_EXTRA_CREDENTIALS"].to_s.strip.empty?
-  # For example:
-  # "[{\"type\":\"npm_registry\",\"registry\":\
-  #     "registry.npmjs.org\",\"token\":\"123\"}]"
-  $options[:credentials].concat(JSON.parse(ENV["DEPENDABOT_EXTRA_CREDENTIALS"]))
-
-  # Adding custom private feed removes the public onces so we have to create it
-  if $package_manager == "nuget"
-    $options[:credentials] << {
-      "type" => "nuget_feed",
-      "url" => "https://api.nuget.org/v3/index.json",
-    }
-  end
-end
+# DEPENDABOT_EXTRA_CREDENTIALS, for example:
+# "[{\"type\":\"npm_registry\",\"registry\":\"registry.npmjs.org\",\"token\":\"123\"}]"
+$options[:credentials] += JSON.parse(ENV["DEPENDABOT_EXTRA_CREDENTIALS"]) unless ENV["DEPENDABOT_EXTRA_CREDENTIALS"].to_s.strip.empty?
 
 ##########################################
 # Setup the requirements update strategy #
