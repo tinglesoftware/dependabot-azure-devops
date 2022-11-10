@@ -411,6 +411,8 @@ dependencies.select(&:top_level?).each do |dep|
 
     pull_request = nil
     pull_request_id = nil
+    pull_request_author_email = ENV["GIT_AUTHOR_EMAIL"] || "noreply@github.com"
+    pull_request_author_name = ENV["GIT_AUTHOR_NAME"] || "dependabot[bot]"
     if conflict_pull_request_commit_id && conflict_pull_request_id
       ##############################################
       # Update pull request with conflict resolved #
@@ -423,8 +425,8 @@ dependencies.select(&:top_level?).each do |dep|
         credentials: $options[:credentials],
         pull_request_number: conflict_pull_request_id,
         author_details: {
-          email: "noreply@github.com",
-          name: "dependabot[bot]"
+          email: pull_request_author_email,
+          name: pull_request_author_name
         }
       )
 
@@ -445,8 +447,8 @@ dependencies.select(&:top_level?).each do |dep|
         credentials: $options[:credentials],
         # assignees: assignees,
         author_details: {
-          email: "noreply@github.com",
-          name: "dependabot[bot]"
+          email: pull_request_author_email,
+          name: pull_request_author_name
         },
         commit_message_options: $update_config.commit_message_options.to_h,
         custom_labels: $options[:custom_labels],
