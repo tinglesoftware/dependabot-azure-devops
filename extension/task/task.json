@@ -153,6 +153,15 @@
       "helpMarkDown": "Learn more [here](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#insecure-external-code-execution)."
     },
     {
+      "name": "autoCompleteIgnoreConfigIds",
+      "type": "string",
+      "groupName": "approval_completion",
+      "label": "Semicolon delimited list of any policy configuration Id's which auto-complete should not wait for.",
+      "defaultValue": "",
+      "required": false,
+      "helpMarkDown": "A semicolon (`;`) delimited list of any policy configuration Id's which auto-complete should not wait for. Only applies to optional policies (isBlocking == false). Auto-complete always waits for required policies (isBlocking == true)."
+    },
+    {
       "name": "mergeStrategy",
       "type": "pickList",
       "groupName": "approval_completion",

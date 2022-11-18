@@ -133,6 +133,7 @@ To run the script, some environment variables are required.
 |DEPENDABOT_MILESTONE|**_Optional_**. The identifier of the work item to be linked to the Pull Requests that dependabot creates.|
 |DEPENDABOT_UPDATER_OPTIONS|**_Optional_**. Comma separated list of updater options; available options depend on PACKAGE_MANAGER. Example: `goprivate=true,kubernetes_updates=true`.|
 |AZURE_SET_AUTO_COMPLETE|**_Optional_**. Determines if the pull requests that dependabot creates should have auto complete set. When set to `true`, pull requests that pass all policies will be merged automatically|
+|AZURE_AUTO_COMPLETE_IGNORE_CONFIG_IDS|**_Optional_**. List of any policy configuration Id's which auto-complete should not wait for. Only applies to optional policies. Auto-complete always waits for required (blocking) policies.|
 |AZURE_AUTO_APPROVE_PR|**_Optional_**. Determines if the pull requests that dependabot creates should be automatically completed. When set to `true`, pull requests will be approved automatically by the user specified in the `AZURE_AUTO_APPROVE_USER_EMAIL` environment variable.|
 |AZURE_AUTO_APPROVE_USER_EMAIL|**_Optional_**. Email of the user that should be used to automatically approve pull requests. Required if `AZURE_AUTO_APPROVE_PR` is set to `true`.|
 |AZURE_AUTO_APPROVE_USER_TOKEN|**_Optional_**. A personal access token that is assigned to the user specified in `AZURE_AUTO_APPROVE_USER_EMAIL` to automatically approve the created PR. Required if `AZURE_AUTO_APPROVE_PR` is set to `true`.|

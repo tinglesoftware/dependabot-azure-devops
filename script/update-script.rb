@@ -56,6 +56,7 @@ $options = {
   milestone: ENV['DEPENDABOT_MILESTONE'] || nil, # Get the work item to attach
 
   set_auto_complete: ENV["AZURE_SET_AUTO_COMPLETE"] == "true", # Set auto complete on created pull requests
+  auto_complete_ignore_config_ids: JSON.parse(ENV['AZURE_AUTO_COMPLETE_IGNORE_CONFIG_IDS'] || '[]'), # default to empty array
   merge_strategy: ENV["AZURE_MERGE_STRATEGY"] || "2", # default to squash merge
 
   # Automatically Approve the PR
@@ -518,11 +519,12 @@ dependencies.select(&:top_level?).each do |dep|
     # Set auto complete for this Pull Request
     # Pull requests that pass all policies will be merged automatically.
     if $options[:set_auto_complete]
-      auto_complete_user_id = pull_request["createdBy"]["id"]
-      pull_request_title = pull_request["title"]
+      auto_complete_user_id = pull_request['createdBy']['id']
+      pull_request_title = pull_request['title']
       merge_strategy = $options[:merge_strategy]
+      auto_complete_ignore_config_ids = $options[:auto_complete_ignore_config_ids]
       puts "Setting auto complete on ##{pull_request_id}."
-      azure_client.pull_request_auto_complete(pull_request_id, pull_request_title, auto_complete_user_id, merge_strategy)
+      azure_client.pull_request_auto_complete(pull_request_id, pull_request_title, auto_complete_user_id, merge_strategy, auto_complete_ignore_config_ids)
     end
 
   rescue StandardError => e

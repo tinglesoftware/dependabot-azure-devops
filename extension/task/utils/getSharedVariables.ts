@@ -26,6 +26,8 @@ interface ISharedVariables {
   project: string;
   /** Determines if the pull requests that dependabot creates should have auto complete set */
   setAutoComplete: boolean;
+  /** List of any policy configuration Id's which auto-complete should not wait for */
+  autoCompleteIgnoreConfigIds: number[];
   /** Determines if the execution should fail when an exception occurs */
   failOnException: boolean;
   excludeRequirementsToUnlock: string;
@@ -61,7 +63,7 @@ interface ISharedVariables {
   useConfigFile: boolean;
   /** Flag used to forward the host ssh socket */
   forwardHostSshSocket: boolean;
-  /** Semicolon delimited list of environment variables */
+  /** List of extra environment variables */
   extraEnvironmentVariables: string[];
   /** Merge strategies which can be used to complete a pull request */
   mergeStrategy: string;
@@ -83,6 +85,11 @@ export default function getSharedVariables(): ISharedVariables {
   let organization: string = extractOrganization(organizationUrl);
   let project: string = encodeURI(getVariable("System.TeamProject")); // encode special characters like spaces
   let setAutoComplete = getBoolInput("setAutoComplete", false);
+  let autoCompleteIgnoreConfigIds = getDelimitedInput(
+    "autoCompleteIgnoreConfigIds",
+    ";",
+    false
+  ).map(Number);
   let failOnException = getBoolInput("failOnException", true);
   let excludeRequirementsToUnlock = getInput("excludeRequirementsToUnlock") || "";
   let updaterOptions = getInput("updaterOptions");
@@ -135,6 +142,7 @@ export default function getSharedVariables(): ISharedVariables {
     organization,
     project,
     setAutoComplete,
+    autoCompleteIgnoreConfigIds,
     failOnException,
     excludeRequirementsToUnlock,
     updaterOptions: updaterOptions,
