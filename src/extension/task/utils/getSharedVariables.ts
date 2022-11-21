@@ -57,6 +57,8 @@ interface ISharedVariables {
   labelsOvr: string;
   /** Flag used to check if to use dependabot.yml or task inputs */
   useConfigFile: boolean;
+  /** override value for configPath */
+  configFilePath: string;
   /** Flag used to forward the host ssh socket */
   forwardHostSshSocket: boolean;
   /** Semicolon delimited list of environment variables */
@@ -111,6 +113,7 @@ export default function getSharedVariables(): ISharedVariables {
 
   // Check if to use dependabot.yml or task inputs
   let useConfigFile: boolean = getBoolInput("useConfigFile", false);
+  let configFilePath = getInput("configFilePath")
 
   // Check if the host ssh socket needs to be forwarded to the container
   let forwardHostSshSocket: boolean = getBoolInput("forwardHostSshSocket", false);
@@ -150,6 +153,7 @@ export default function getSharedVariables(): ISharedVariables {
     ignoreOvr,
     labelsOvr,
     useConfigFile,
+    configFilePath,
     forwardHostSshSocket,
     extraEnvironmentVariables,
     mergeStrategy

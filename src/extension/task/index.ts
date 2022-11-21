@@ -16,7 +16,7 @@ async function run() {
 
     var updates: IDependabotUpdate[];
 
-    if (variables.useConfigFile) updates = parseConfigFile();
+    if (variables.useConfigFile) updates = parseConfigFile(variables.configFilePath);
     else {
       tl.warning(
         `

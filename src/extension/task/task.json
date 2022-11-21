@@ -44,6 +44,14 @@
       "helpMarkDown": "Determines if the task will pick config values specified from the yaml file located at `.github/dependabot.yml`"
     },
     {
+      "name": "confgiFilePath",
+      "type": "boolean",
+      "label": "Use Dependabot YAML file",
+      "defaultValue": "false",
+      "required": false,
+      "helpMarkDown": "Determines where the task will find the config file located. If not set `.github/dependabot.yml` is used"
+    },
+    {
       "name": "forwardHostSshSocket",
       "type": "boolean",
       "label": "Forward the host ssh socket",

@@ -15,7 +15,7 @@ import { getVariable } from "azure-pipelines-task-lib/task";
  *
  * @returns {IDependabotUpdate[]} updates - array of dependency update configurations
  */
-export default function parseConfigFile(): IDependabotUpdate[] {
+export default function parseConfigFile(configFilePath: string): IDependabotUpdate[] {
 
   /*
    * If the file under the .github folder does not exist, check for one under the .azuredevops folder.
@@ -30,12 +30,20 @@ export default function parseConfigFile(): IDependabotUpdate[] {
   // Find configuration file
   let filePath: string;
   let rootDir = getVariable("Build.SourcesDirectory");
-  possibleFilePaths.forEach(fp => {
-    var fullPath = path.join(rootDir, fp);
+  if(configFilePath) {
+    var fullPath = path.join(rootDir, configFilePath);
     if (fs.existsSync(fullPath)) {
       filePath = fullPath;
     }
-  });
+  }
+  else {
+    possibleFilePaths.forEach(fp => {
+      var fullPath = path.join(rootDir, fp);
+      if (fs.existsSync(fullPath)) {
+        filePath = fullPath;
+      }
+    });
+  }
 
   // Ensure we have the file. Otherwise throw a well readable error.
   if (filePath) {
@@ -51,7 +59,7 @@ export default function parseConfigFile(): IDependabotUpdate[] {
       );
     }
   } else {
-    throw new Error(`Configuration file not found at possible locations: ${possibleFilePaths.join(', ')}`);
+    throw new Error(`Configuration file not found at possible locations: ${configFilePath ?? possibleFilePaths.join(', ')}`);
   }
 
   let config: any;
