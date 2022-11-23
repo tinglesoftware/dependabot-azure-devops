@@ -7,14 +7,14 @@ on:
     tags:
       - '*'
     paths:
-      - "src/script/**"
+      - "script/**"
       - ".github/workflows/docker.yml"
   pull_request:
     branches:
       # Only trigger for PRs against `main` branch.
       - main
     paths:
-      - "src/script/**"
+      - "script/**"
       - ".github/workflows/docker.yml"
 
 jobs:
@@ -47,14 +47,14 @@ jobs:
     - name: Build image
       run: |
         docker build \
-        -f src/script/Dockerfile \
+        -f script/Dockerfile \
         -t "tingle/$IMAGE_NAME:latest" \
         -t "tingle/$IMAGE_NAME:$GITVERSION_FULLSEMVER" \
         -t "tingle/$IMAGE_NAME:$GITVERSION_MAJOR.$GITVERSION_MINOR" \
         -t "tingle/$IMAGE_NAME:$GITVERSION_MAJOR" \
         --cache-from tingle/$IMAGE_NAME:latest \
         --build-arg BUILDKIT_INLINE_CACHE=1 \
-        src/script
+        script
 
     - name: Log into registry (Docker Hub)
       if: ${{ (github.ref == 'refs/heads/main') || (!startsWith(github.ref, 'refs/pull')) || startsWith(github.ref, 'refs/tags') }}

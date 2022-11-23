@@ -10,14 +10,14 @@ This repository contains convenience tool(s) for updating dependencies in Azure 
 
 In this repository you'll find:
 
-1. Dependabot's [Update script](./src/script/update-script.rb) in Ruby.
-2. Dockerfile and build/image for running the script via Docker [here](./src/script/Dockerfile).
-3. Azure DevOps [Extension](https://marketplace.visualstudio.com/items?itemName=tingle-software.dependabot) and [source](./src/extension).
+1. Dependabot's [Update script](./script/update-script.rb) in Ruby.
+2. Dockerfile and build/image for running the script via Docker [here](./script/Dockerfile).
+3. Azure DevOps [Extension](https://marketplace.visualstudio.com/items?itemName=tingle-software.dependabot) and [source](./extension).
 4. Kubernetes CronJob [template](#kubernetes-cronjob).
 
 ## Using a configuration file
 
-Similar to the GitHub native version where you add a `.github/dependabot.yml` file, this repository adds support for the same official [configuration options](https://help.github.com/github/administering-a-repository/configuration-options-for-dependency-updates) via a file located at `.github/dependabot.yml`. This support is only available in the Azure DevOps extension and the [managed version](https://managed-dependabot.com). However, the extension does not currently support automatically picking up the file, a pipeline is still required. See [docs](./src/extension/README.md#usage).
+Similar to the GitHub native version where you add a `.github/dependabot.yml` file, this repository adds support for the same official [configuration options](https://help.github.com/github/administering-a-repository/configuration-options-for-dependency-updates) via a file located at `.github/dependabot.yml`. This support is only available in the Azure DevOps extension and the [managed version](https://managed-dependabot.com). However, the extension does not currently support automatically picking up the file, a pipeline is still required. See [docs](./extension/README.md#usage).
 
 > Using a configuration file over explicit inputs will not work with repositories other than the one in the pipeline. This means no shared pipeline. Instead consider the [managed version](https://managed-dependabot.com).
 
@@ -39,7 +39,7 @@ When working with Azure Artifacts, some extra steps need to be done:
 
 ## Kubernetes CronJob
 
-A Kubernetes CronJobs is a useful resource for running tasks (a.k.a Jobs) on a recurring schedule. For more information on them read the [documentation](https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/). Using the Docker image, we can create a CronJob and have it run periodically. The [environment variables](./src/script/README.md#environment-variables) are supplied in the job template but can be stored in a [ConfigMap](https://kubernetes.io/docs/concepts/configuration/configmap/) for ease of reuse.
+A Kubernetes CronJobs is a useful resource for running tasks (a.k.a Jobs) on a recurring schedule. For more information on them read the [documentation](https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/). Using the Docker image, we can create a CronJob and have it run periodically. The [environment variables](./script/README.md#environment-variables) are supplied in the job template but can be stored in a [ConfigMap](https://kubernetes.io/docs/concepts/configuration/configmap/) for ease of reuse.
 
 Use the [template provided](./cronjob-template.yaml) and replace the parameters in curly braces (e.g. replace `{{azure_organization}}` with the actual value for your organization), then deploy it. Be sure to replace the `{{k8s_schedule}}` variable with the desired schedule as per the [Cron format](https://en.wikipedia.org/wiki/Cron).
 
