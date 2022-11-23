@@ -135,6 +135,13 @@
       "helpMarkDown": "The identifier of the work item to be linked to the Pull Requests that dependabot creates."
     },
     {
+      "name": "updaterOptions",
+      "type": "string",
+      "label": "Comma separated list of updater options.",
+      "required": false,
+      "helpMarkDown": "Set a list of updater options in CSV format. Available options depend on the ecosystem. Example: `goprivate=true,kubernetes_updates=true`."
+    },
+    {
       "name": "setAutoComplete",
       "type": "boolean",
       "groupName": "approval_completion",

@@ -28,6 +28,7 @@ interface ISharedVariables {
   /** Determines if the execution should fail when an exception occurs */
   failOnException: boolean;
   excludeRequirementsToUnlock: string;
+  updaterOptions: string;
   /** Determines if the pull requests that dependabot creates should be automatically approved */
   autoApprove: boolean;
   /** The email of the user that should approve the PR */
@@ -82,8 +83,8 @@ export default function getSharedVariables(): ISharedVariables {
   let project: string = encodeURI(getVariable("System.TeamProject")); // encode special characters like spaces
   let setAutoComplete = getBoolInput("setAutoComplete", false);
   let failOnException = getBoolInput("failOnException", true);
-  let excludeRequirementsToUnlock =
-    getInput("excludeRequirementsToUnlock") || "";
+  let excludeRequirementsToUnlock = getInput("excludeRequirementsToUnlock") || "";
+  let updaterOptions = getInput("updaterOptions");
   let autoApprove: boolean = getBoolInput("autoApprove", false);
   let autoApproveUserEmail: string = getInput("autoApproveUserEmail");
   let autoApproveUserToken: string = getInput("autoApproveUserToken");
@@ -135,6 +136,7 @@ export default function getSharedVariables(): ISharedVariables {
     setAutoComplete,
     failOnException,
     excludeRequirementsToUnlock,
+    updaterOptions: updaterOptions,
     autoApprove,
     autoApproveUserEmail,
     autoApproveUserToken,

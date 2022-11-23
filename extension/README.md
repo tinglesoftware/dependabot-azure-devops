@@ -53,6 +53,7 @@ This task makes use of a docker image, which may take time to install. Subsequen
 |versioningStrategy|**_Optional_**. The versioning strategy to use. See the [official docs](https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/configuration-options-for-dependency-updates#versioning-strategy). Defaults to `auto`.|
 |failOnException|**_Optional_**. Determines if the execution should fail when an exception occurs. Defaults to `true`.|
 |milestone|**_Optional_**. The identifier of the work item to be linked to the Pull Requests that dependabot creates.|
+|updaterOptions|**_Optional_**. Comma separated list of updater options; available options depend on the ecosystem. Example: `goprivate=true,kubernetes_updates=true`.|
 |setAutoComplete|**_Optional_**. Determines if the pull requests that dependabot creates should have auto complete set. When set to `true`, pull requests that pass all policies will be merged automatically.|
 |mergeStrategy|**_Optional_**. The merge strategy to use when auto complete is set. Learn more [here](https://docs.microsoft.com/en-us/javascript/api/azure-devops-extension-api/gitpullrequestmergestrategy). Defaults to `2` (Squash merge).|
 |autoApprove|**_Optional_**. Determines if the pull requests that dependabot creates should be automatically completed. When set to `true`, pull requests will be approved automatically by the user specified in the `autoApproveUserEmail` field.|

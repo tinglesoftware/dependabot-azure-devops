@@ -127,7 +127,7 @@ To run the script, some environment variables are required.
 |DEPENDABOT_FAIL_ON_EXCEPTION|**_Optional_**. Determines if the execution should fail when an exception occurs. Defaults to `true`.|
 |DEPENDABOT_EXCLUDE_REQUIREMENTS_TO_UNLOCK|**_Optional_**. Exclude certain dependency updates requirements. See list of allowed values [here](https://github.com/dependabot/dependabot-core/issues/600#issuecomment-407808103). Useful if you have lots of dependencies and the update script too slow. The values provided are space-separated. Example: `own all` to only use the `none` version requirement.|
 |DEPENDABOT_MILESTONE|**_Optional_**. The identifier of the work item to be linked to the Pull Requests that dependabot creates.|
-|DEPENDABOT_UPDATER_OPTIONS|**_Optional_**. Comma separated list of updater options; available options depend on PACKAGE_MANAGER. Example: `goprivate=true,kubernetes_updates=true`|
+|DEPENDABOT_UPDATER_OPTIONS|**_Optional_**. Comma separated list of updater options; available options depend on PACKAGE_MANAGER. Example: `goprivate=true,kubernetes_updates=true`.|
 |AZURE_SET_AUTO_COMPLETE|**_Optional_**. Determines if the pull requests that dependabot creates should have auto complete set. When set to `true`, pull requests that pass all policies will be merged automatically|
 |AZURE_AUTO_APPROVE_PR|**_Optional_**. Determines if the pull requests that dependabot creates should be automatically completed. When set to `true`, pull requests will be approved automatically by the user specified in the `AZURE_AUTO_APPROVE_USER_EMAIL` environment variable.|
 |AZURE_AUTO_APPROVE_USER_EMAIL|**_Optional_**. Email of the user that should be used to automatically approve pull requests. Required if `AZURE_AUTO_APPROVE_PR` is set to `true`.|
