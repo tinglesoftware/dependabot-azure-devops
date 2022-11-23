@@ -47,8 +47,8 @@ $options = {
   azure_port: nil,
   azure_virtual_directory: ENV["AZURE_VIRTUAL_DIRECTORY"] || "",
 
-  pr_author_email: ENV["GIT_AUTHOR_EMAIL"] || "noreply@github.com"
-  pr_author_name: ENV["GIT_AUTHOR_NAME"] || "dependabot[bot]"
+  pr_author_email: ENV["GIT_AUTHOR_EMAIL"] || "noreply@github.com",
+  pr_author_name: ENV["GIT_AUTHOR_NAME"] || "dependabot[bot]",
 
   milestone: ENV['DEPENDABOT_MILESTONE'] || nil, # Get the work item to attach
 
