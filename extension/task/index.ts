@@ -89,6 +89,11 @@ async function run() {
         dockerRunner.arg(["-e", `DEPENDABOT_MILESTONE=${update.milestone}`]);
       }
 
+      // Set the PR branch separator
+      if (update.branchNameSeparator) {
+        dockerRunner.arg(["-e", `DEPENDABOT_BRANCH_NAME_SEPARATOR=${update.branchNameSeparator}`]);
+      }
+
       // Set the dependencies to allow
       let allow = update.allow || variables.allowOvr;
       if (allow) {
@@ -107,9 +112,9 @@ async function run() {
         dockerRunner.arg(["-e", `DEPENDABOT_LABELS=${labels}`]);
       }
 
-      // Set the PR branch separator
-      if (update.branchNameSeparator) {
-        dockerRunner.arg(["-e", `DEPENDABOT_BRANCH_NAME_SEPARATOR=${update.branchNameSeparator}`]);
+      // Set the updater options, if provided
+      if (variables.updaterOptions) {
+        dockerRunner.arg(["-e", `DEPENDABOT_UPDATER_OPTIONS=${variables.updaterOptions}`]);
       }
 
       // Set the extra credentials

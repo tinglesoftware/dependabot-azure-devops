@@ -38,6 +38,8 @@ $options = {
   # https://github.com/wemake-services/kira-dependencies/pull/210
   excluded_requirements: ENV['DEPENDABOT_EXCLUDE_REQUIREMENTS_TO_UNLOCK']&.split(" ")&.map(&:to_sym) || [],
 
+  updater_options: {},
+
   # Details on the location of the repository
   azure_organization: ENV["AZURE_ORGANIZATION"],
   azure_project: ENV["AZURE_PROJECT"],
@@ -224,6 +226,26 @@ def ignored_versions_for(dep)
   end
 end
 
+# Parse the options e.g. goprivate=true,kubernetes_updates=true
+$options[:updater_options] = (ENV["DEPENDABOT_UPDATER_OPTIONS"] || "").split(",").to_h do |o|
+  if o.include?("=") # key/value pair, e.g. goprivate=true
+    o.split("=", 2).map.with_index do |v, i|
+      if i.zero?
+        v.strip.downcase.to_sym
+      else
+        v.strip
+      end
+    end
+  else # just a key, e.g. "vendor"
+    [o.strip.downcase.to_sym, true]
+  end
+end
+
+# Register the options as experiments e.g. kubernetes_updates=true
+$options[:updater_options].each do |name, val|
+  puts "Registering exepriment '#{name}=#{val}'"
+  Dependabot::Experiments.register(name, val)
+end
 
 $api_endpoint = "#{$options[:azure_protocol]}://#{$options[:azure_hostname]}:#{$options[:azure_port]}/"
 $api_endpoint = $api_endpoint + "#{$options[:azure_virtual_directory]}/" if !$options[:azure_virtual_directory].empty?
@@ -247,11 +269,7 @@ $source = Dependabot::Source.new(
 fetcher_args = {
   source: $source,
   credentials: $options[:credentials],
-  options: {
-    # TODO: consider using experiments feature if
-    # merged https://github.com/dependabot/dependabot-core/pull/5755
-    kubernetes_updates: true,
-  },
+  options: $options[:updater_options]
 }
 $config_file = begin
   cfg_file = Dependabot::Config::FileFetcher.new(**fetcher_args).config_file
