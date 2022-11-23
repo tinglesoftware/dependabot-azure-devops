@@ -7,14 +7,14 @@ on:
     tags:
       - '*'
     paths:
-      - "src/extension/**"
+      - "extension/**"
       - ".github/workflows/extension.yml"
   pull_request:
     branches:
       # Only trigger for PRs against `main` branch.
       - main
     paths:
-      - "src/extension/**"
+      - "extension/**"
       - ".github/workflows/extension.yml"
 
 jobs:
@@ -45,7 +45,7 @@ jobs:
 
     - name: Build
       run: npm run build:prod
-      working-directory: '${{ github.workspace }}/src/extension'
+      working-directory: '${{ github.workspace }}/extension'
 
     - name: Install tfx-cli
       run: npm install -g tfx-cli@0.9.2
@@ -53,39 +53,39 @@ jobs:
     - name: Replace tokens
       uses: cschleiden/replace-tokens@v1
       with:
-        files: '["${{ github.workspace }}/src/extension/overrides*.json"]'
+        files: '["${{ github.workspace }}/extension/overrides*.json"]'
 
     - name: Update extension version.Minor
       uses: jossef/action-set-json-field@v2
       with:
-        file: 'src/extension/task/task.json'
+        file: 'extension/task/task.json'
         field: 'version.Minor'
         value: ${{ steps.gitversion.outputs.minor }}
 
     - name: Update extension version.Patch
       uses: jossef/action-set-json-field@v2
       with:
-        file: 'src/extension/task/task.json'
+        file: 'extension/task/task.json'
         field: 'version.Patch'
         value: ${{ github.run_number }}
 
     - name: Create Extension (dev)
       run: >
         tfx extension create
-        --root src/extension
+        --root extension
         --manifest-globs vss-extension.json
         --output-path $GITHUB_WORKSPACE/drop/dev
         --json5
-        --overrides-file $GITHUB_WORKSPACE/src/extension/overrides.dev.json
+        --overrides-file $GITHUB_WORKSPACE/extension/overrides.dev.json
 
     - name: Create Extension (prod)
       run: >
         tfx extension create
-        --root src/extension
+        --root extension
         --manifest-globs vss-extension.json
         --output-path $GITHUB_WORKSPACE/drop/prod
         --json5
-        --overrides-file $GITHUB_WORKSPACE/src/extension/overrides.prod.json
+        --overrides-file $GITHUB_WORKSPACE/extension/overrides.prod.json
 
     - name: Publish Artifact
       uses: actions/upload-artifact@v3
