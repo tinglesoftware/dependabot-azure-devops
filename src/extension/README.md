@@ -4,15 +4,9 @@ This is the unofficial [dependabot](https://github.com/Dependabot/dependabot-cor
 
 ## Usage
 
+Add a configuration file stored at `.github/dependabot.yml` or  `.github/dependabot.yaml` conforming to the [official spec](https://docs.github.com/en/github/administering-a-repository/configuration-options-for-dependency-updates).
+
 To use in a YAML pipeline:
-
-```yaml
-- task: dependabot@1
-  inputs:
-    packageManager: 'nuget'
-```
-
-You can also use a configuration file stored at `.github/dependabot.yml` conforming to the [official spec](https://docs.github.com/en/github/administering-a-repository/configuration-options-for-dependency-updates).
 
 ```yaml
 - task: dependabot@1
@@ -42,13 +36,7 @@ pool:
 steps:
 - task: dependabot@1
   inputs:
-    packageManager: 'nuget'
-- task: dependabot@1
-  inputs:
-    packageManager: 'docker'
-    directory: '/docker'
-    openPullRequestsLimit: 10
-    versioningStrategy: 'auto'
+    useConfigFile: true
 ```
 
 This task makes use of a docker image, which may take time to install. Subsequent dependabot tasks in a job will be faster after initially pulling the image using the first task. An alternative way to run your pipelines faster is by leveraging Docker caching in Azure Pipelines (See [#113](https://github.com/tinglesoftware/dependabot-azure-devops/issues/113#issuecomment-894771611)). 
@@ -106,12 +94,7 @@ pool:
 steps:
 - task: dependabot@1
   inputs:
-    packageManager: 'nuget'
-- task: dependabot@1
-  inputs:
-    packageManager: 'docker'
-    directory: '/docker'
-    openPullRequestsLimit: 10
+    useConfigFile: true
 ```
 
 Check the logs for the image that is pulled.
