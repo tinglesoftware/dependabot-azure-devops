@@ -3,6 +3,11 @@
  *
  * https://docs.github.com/en/github/administering-a-repository/configuration-options-for-dependency-updates#configuration-options-for-dependabotyml
  */
+export interface IDependabotConfig {
+  version: number;
+  updates: IDependabotUpdate[];
+}
+
 export interface IDependabotUpdate {
   /**
    * Location of package manifests.

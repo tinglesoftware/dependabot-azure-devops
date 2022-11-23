@@ -1,4 +1,4 @@
-import { IDependabotUpdate } from "../models/IDependabotUpdate";
+import { IDependabotConfig, IDependabotUpdate } from "../IDependabotConfig";
 import { load } from "js-yaml";
 import * as fs from "fs";
 import * as path from "path";
@@ -6,16 +6,16 @@ import * as tl from "azure-pipelines-task-lib/task"
 import { getVariable } from "azure-pipelines-task-lib/task";
 
 /**
- * Parse the dependabot config YAML file to specify update(s) configuration
+ * Parse the dependabot config YAML file to specify update configuration
  *
- * The file should be located in '/.github/dependabot.yml' at the root of your repository
+ * The file should be located at '/.github/dependabot.yml' or '/.github/dependabot.yaml'
  *
  * To view YAML file format, visit
  * https://docs.github.com/en/github/administering-a-repository/configuration-options-for-dependency-updates#allow
  *
- * @returns {IDependabotUpdate[]} updates - array of dependency update configurations
+ * @returns {IDependabotConfig} update configuration
  */
-export default function parseConfigFile(): IDependabotUpdate[] {
+export default function parseConfigFile(): IDependabotConfig {
 
   /*
    * If the file under the .github folder does not exist, check for one under the .azuredevops folder.
@@ -124,5 +124,8 @@ export default function parseConfigFile(): IDependabotUpdate[] {
     updates.push(dependabotUpdate);
   });
 
-  return updates;
+  return {
+    version: version,
+    updates: updates,
+  };
 }

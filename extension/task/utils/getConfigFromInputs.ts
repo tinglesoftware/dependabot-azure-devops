@@ -1,5 +1,5 @@
 import { getInput } from "azure-pipelines-task-lib/task";
-import { IDependabotUpdate } from "../models/IDependabotUpdate";
+import { IDependabotConfig } from "../IDependabotConfig";
 
 /**
  * Get dependency update configuration from inputs provided in the task
@@ -7,19 +7,22 @@ import { IDependabotUpdate } from "../models/IDependabotUpdate";
  * To view YAML file format, visit
  * https://docs.github.com/en/github/administering-a-repository/configuration-options-for-dependency-updates#allow
  *
- * @returns {IDependabotUpdate[]} updates - array of dependency update configurations
+ * @returns {IDependabotConfig} update configuration
  */
-export default function getConfigFromInputs() {
-  var dependabotUpdate: IDependabotUpdate = {
-    packageEcosystem: getInput("packageManager", true),
-    directory: getInput("directory", false),
+export default function getConfigFromInputs() : IDependabotConfig{
+  var dependabotConfig: IDependabotConfig = {
+    version: 2,
+    updates: [{
+      packageEcosystem: getInput("packageManager", true),
+      directory: getInput("directory", false),
 
-    openPullRequestLimit: parseInt(getInput("openPullRequestsLimit", true)),
+      openPullRequestLimit: parseInt(getInput("openPullRequestsLimit", true)),
 
-    targetBranch: getInput("targetBranch", false),
-    versioningStrategy: getInput("versioningStrategy", true),
-    milestone: getInput("milestone"),
+      targetBranch: getInput("targetBranch", false),
+      versioningStrategy: getInput("versioningStrategy", true),
+      milestone: getInput("milestone"),
+    }]
   };
 
-  return [dependabotUpdate];
+  return dependabotConfig;
 }
