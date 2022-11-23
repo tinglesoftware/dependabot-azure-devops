@@ -33,6 +33,13 @@ $options = {
   custom_labels: nil, # nil instead of empty array to ensure default labels are passed
   branch_name_separator: ENV["DEPENDABOT_BRANCH_NAME_SEPARATOR"] || "/", # Separator used for created branches.
 
+  # updater_options: {},
+  updater_options: {
+    # TODO: consider using experiments feature if
+    # merged https://github.com/dependabot/dependabot-core/pull/5755
+    kubernetes_updates: true,
+  },
+
   # See description of requirements here:
   # https://github.com/dependabot/dependabot-core/issues/600#issuecomment-407808103
   # https://github.com/wemake-services/kira-dependencies/pull/210
@@ -247,11 +254,7 @@ $source = Dependabot::Source.new(
 fetcher_args = {
   source: $source,
   credentials: $options[:credentials],
-  options: {
-    # TODO: consider using experiments feature if
-    # merged https://github.com/dependabot/dependabot-core/pull/5755
-    kubernetes_updates: true,
-  },
+  options: $options[:updater_options]
 }
 $config_file = begin
   cfg_file = Dependabot::Config::FileFetcher.new(**fetcher_args).config_file
