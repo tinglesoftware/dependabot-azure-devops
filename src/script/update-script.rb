@@ -47,6 +47,9 @@ $options = {
   azure_port: nil,
   azure_virtual_directory: ENV["AZURE_VIRTUAL_DIRECTORY"] || "",
 
+  pr_author_email: ENV["GIT_AUTHOR_EMAIL"] || "noreply@github.com"
+  pr_author_name: ENV["GIT_AUTHOR_NAME"] || "dependabot[bot]"
+
   milestone: ENV['DEPENDABOT_MILESTONE'] || nil, # Get the work item to attach
 
   set_auto_complete: ENV["AZURE_SET_AUTO_COMPLETE"] == "true", # Set auto complete on created pull requests
@@ -55,7 +58,7 @@ $options = {
   # Automatically Approve the PR
   auto_approve_pr: ENV["AZURE_AUTO_APPROVE_PR"] == "true",
   auto_approve_user_email: ENV["AZURE_AUTO_APPROVE_USER_EMAIL"],
-  auto_approve_user_token: ENV["AZURE_AUTO_APPROVE_USER_TOKEN"],
+  auto_approve_user_token: ENV["AZURE_AUTO_APPROVE_USER_TOKEN"] || ENV["AZURE_ACCESS_TOKEN"],
 }
 
 # Name of the package manager you'd like to do the update for. Options are:
@@ -411,8 +414,6 @@ dependencies.select(&:top_level?).each do |dep|
 
     pull_request = nil
     pull_request_id = nil
-    pull_request_author_email = ENV["GIT_AUTHOR_EMAIL"] || "noreply@github.com"
-    pull_request_author_name = ENV["GIT_AUTHOR_NAME"] || "dependabot[bot]"
     if conflict_pull_request_commit_id && conflict_pull_request_id
       ##############################################
       # Update pull request with conflict resolved #
@@ -425,8 +426,8 @@ dependencies.select(&:top_level?).each do |dep|
         credentials: $options[:credentials],
         pull_request_number: conflict_pull_request_id,
         author_details: {
-          email: pull_request_author_email,
-          name: pull_request_author_name
+          email: $options[:pr_author_email],
+          name: $options[:pr_author_name]
         }
       )
 
@@ -447,8 +448,8 @@ dependencies.select(&:top_level?).each do |dep|
         credentials: $options[:credentials],
         # assignees: assignees,
         author_details: {
-          email: pull_request_author_email,
-          name: pull_request_author_name
+          email: $options[:pr_author_email],
+          name: $options[:pr_author_name]
         },
         commit_message_options: $update_config.commit_message_options.to_h,
         custom_labels: $options[:custom_labels],
@@ -492,11 +493,6 @@ dependencies.select(&:top_level?).each do |dep|
 
     if $options[:auto_approve_pr]
       puts "Auto Approving PR for user #{$options[:auto_approve_user_email]}"
-
-      if not $options[:auto_approve_user_token]
-        puts "No dedicated token set for auto approve - using regular Access Token"
-        $options[:auto_approve_user_token] = ENV["AZURE_ACCESS_TOKEN"]
-      end
 
       azure_client.pull_request_approve(
         pull_request_id,
