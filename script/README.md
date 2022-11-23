@@ -30,6 +30,7 @@ docker run --rm -t \
            -e DEPENDABOT_LABELS=<your-custom-labels> \
            -e DEPENDABOT_BRANCH_NAME_SEPARATOR=<your-custom-separator> \
            -e DEPENDABOT_MILESTONE=<your-work-item-id> \
+           -e DEPENDABOT_UPDATER_OPTIONS=<your-updater-options> \
            -e AZURE_SET_AUTO_COMPLETE=<true/false> \
            -e AZURE_AUTO_APPROVE_PR=<true/false> \
            -e AZURE_AUTO_APPROVE_USER_EMAIL=<approving-user-email> \
@@ -58,6 +59,7 @@ docker run --rm -t \
            -e DEPENDABOT_LABELS='[\"npm dependencies\",\"triage-board\"]' \
            -e DEPENDABOT_BRANCH_NAME_SEPARATOR='/' \
            -e DEPENDABOT_MILESTONE=123 \
+           -e DEPENDABOT_UPDATER_OPTIONS='goprivate=true,kubernetes_updates=true' \
            -e AZURE_SET_AUTO_COMPLETE=true \
            -e AZURE_AUTO_APPROVE_PR=true \
            -e AZURE_AUTO_APPROVE_USER_EMAIL=supervisor@contoso.com \
@@ -89,6 +91,7 @@ docker run --rm -t \
            -e DEPENDABOT_LABELS='[\"npm dependencies\",\"triage-board\"]' \
            -e DEPENDABOT_BRANCH_NAME_SEPARATOR='/' \
            -e DEPENDABOT_MILESTONE=123 \
+           -e DEPENDABOT_UPDATER_OPTIONS='goprivate=true,kubernetes_updates=true' \
            -e AZURE_SET_AUTO_COMPLETE=true \
            -e AZURE_AUTO_APPROVE_PR=true \
            -e AZURE_AUTO_APPROVE_USER_EMAIL=supervisor@contoso.com \
