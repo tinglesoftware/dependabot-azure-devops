@@ -23,6 +23,13 @@ COPY --chown=dependabot:dependabot update-script.rb ${CODE_DIR}
 COPY --chown=dependabot:dependabot azure_helpers.rb ${CODE_DIR}
 COPY --chown=dependabot:dependabot --chmod=755 entrypoint.sh ${CODE_DIR}
 
-# Run update script
+# This entrypoint exists to solve specific setup problems.
+# It is only used with the extension and directly on Docker.
+# Hosted version does not allow this.
+#
+# If you have trouble when running locally, recreate the file to fix the line endings.
+# Ideally should not happen, but it does at times. Oops! This is just to help you, ninja!
 ENTRYPOINT ["./entrypoint.sh"]
+
+# Run update script
 CMD ["bundle", "exec", "ruby", "./update-script.rb"]
