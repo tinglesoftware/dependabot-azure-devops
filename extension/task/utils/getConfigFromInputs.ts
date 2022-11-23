@@ -1,5 +1,5 @@
 import { getInput } from "azure-pipelines-task-lib/task";
-import { IDependabotConfig } from "../models/IDependabotConfig";
+import { IDependabotConfig } from "../IDependabotConfig";
 
 /**
  * Get dependency update configuration from inputs provided in the task

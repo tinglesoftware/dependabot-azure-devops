@@ -1,4 +1,4 @@
-import { IDependabotConfig, IDependabotUpdate } from "../models/IDependabotConfig";
+import { IDependabotConfig, IDependabotUpdate } from "../IDependabotConfig";
 import { load } from "js-yaml";
 import * as fs from "fs";
 import * as path from "path";

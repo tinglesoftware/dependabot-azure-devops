@@ -1,6 +1,6 @@
 import * as tl from "azure-pipelines-task-lib/task"
 import { ToolRunner } from "azure-pipelines-task-lib/toolrunner"
-import { IDependabotConfig } from "./models/IDependabotConfig";
+import { IDependabotConfig } from "./IDependabotConfig";
 import getConfigFromInputs from "./utils/getConfigFromInputs";
 import getSharedVariables from "./utils/getSharedVariables";
 import parseConfigFile from "./utils/parseConfigFile";
