@@ -3,19 +3,19 @@ name: Docker
 on:
   push:
     branches:
-      - main
+    - main
     tags:
-      - '*'
+    - '*'
     paths:
-      - "script/**"
-      - ".github/workflows/docker.yml"
+    - "script/**"
+    - ".github/workflows/docker.yml"
   pull_request:
     branches:
-      # Only trigger for PRs against `main` branch.
-      - main
+    # Only trigger for PRs against `main` branch.
+    - main
     paths:
-      - "script/**"
-      - ".github/workflows/docker.yml"
+    - "script/**"
+    - ".github/workflows/docker.yml"
 
 jobs:
   dockerize:

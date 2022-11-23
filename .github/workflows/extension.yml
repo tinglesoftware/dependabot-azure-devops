@@ -3,19 +3,19 @@ name: Extension
 on:
   push:
     branches:
-      - main
+    - main
     tags:
-      - '*'
+    - '*'
     paths:
-      - "extension/**"
-      - ".github/workflows/extension.yml"
+    - "extension/**"
+    - ".github/workflows/extension.yml"
   pull_request:
     branches:
-      # Only trigger for PRs against `main` branch.
-      - main
+    # Only trigger for PRs against `main` branch.
+    - main
     paths:
-      - "extension/**"
-      - ".github/workflows/extension.yml"
+    - "extension/**"
+    - ".github/workflows/extension.yml"
 
 jobs:
   Build:
