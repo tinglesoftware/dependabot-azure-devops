@@ -1,6 +1,6 @@
 import * as tl from "azure-pipelines-task-lib/task"
 import { ToolRunner } from "azure-pipelines-task-lib/toolrunner"
-import { IDependabotUpdate } from "./models/IDependabotUpdate";
+import { IDependabotConfig } from "./models/IDependabotConfig";
 import getConfigFromInputs from "./utils/getConfigFromInputs";
 import getSharedVariables from "./utils/getSharedVariables";
 import parseConfigFile from "./utils/parseConfigFile";
@@ -14,9 +14,9 @@ async function run() {
     // prepare the shared variables
     const variables = getSharedVariables();
 
-    var updates: IDependabotUpdate[];
+    var config: IDependabotConfig;
 
-    if (variables.useConfigFile) updates = parseConfigFile();
+    if (variables.useConfigFile) config = parseConfigFile();
     else {
       tl.warning(
         `
@@ -26,7 +26,7 @@ async function run() {
         See https://github.com/tinglesoftware/dependabot-azure-devops/tree/main/extension#usage for more information.
         `
       );
-      updates = getConfigFromInputs();
+      config = getConfigFromInputs();
     }
 
     if (variables.useConfigFile && tl.getInput("targetRepositoryName")) {
@@ -40,7 +40,7 @@ async function run() {
     }
 
     // For each update run docker container
-    for (const update of updates) {
+    for (const update of config.updates) {
       // Prepare the docker task
       let dockerRunner: ToolRunner = tl.tool(tl.which("docker", true));
       dockerRunner.arg(["run"]); // run command
@@ -154,7 +154,7 @@ async function run() {
 
       // Form the docker image based on the repository and the tag, e.g. tingle/dependabot-azure-devops
       // For custom/enterprise registries, prefix with the registry, e.g. contoso.azurecr.io/tingle/dependabot-azure-devops
-      let dockerImage : string = `${variables.dockerImageRepository}:${variables.dockerImageTag}`;
+      let dockerImage: string = `${variables.dockerImageRepository}:${variables.dockerImageTag}`;
       if (variables.dockerImageRegistry) {
         dockerImage = `${variables.dockerImageRegistry}/${dockerImage}`.replace("//", "/");
       }
