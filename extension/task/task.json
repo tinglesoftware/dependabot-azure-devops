@@ -261,7 +261,7 @@
       "groupName": "advanced",
       "label": "Tag of the docker image to be pulled.",
       "required": false,
-      "defaultValue": "0.9",
+      "defaultValue": "0.10",
       "helpMarkDown": "The image tag to use when pulling the docker container used by the task. A tag also defines the version. By default, the task decides which tag/version to use. This can be the latest or most stable version. You can also use `major.minor` format to get the latest patch"
     },
     {
