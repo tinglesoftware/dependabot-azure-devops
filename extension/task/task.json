@@ -135,13 +135,6 @@
       "helpMarkDown": "The identifier of the work item to be linked to the Pull Requests that dependabot creates."
     },
     {
-      "name": "updaterOptions",
-      "type": "string",
-      "label": "Comma separated list of updater options.",
-      "required": false,
-      "helpMarkDown": "Set a list of updater options in CSV format. Available options depend on the ecosystem. Example: `goprivate=true,kubernetes_updates=true`."
-    },
-    {
       "name": "setAutoComplete",
       "type": "boolean",
       "groupName": "approval_completion",
@@ -228,6 +221,14 @@
       "label": "Target Repository Name",
       "required": false,
       "helpMarkDown": "The name of the repository to target for processing. If this value is not supplied then the Build Repository Name is used. Supplying this value allows creation of a single pipeline that runs Dependablot against multiple repositories."
+    },
+    {
+      "name": "updaterOptions",
+      "type": "string",
+      "groupName": "advanced",
+      "label": "Comma separated list of updater options.",
+      "required": false,
+      "helpMarkDown": "Set a list of updater options in CSV format. Available options depend on the ecosystem. Example: `goprivate=true,kubernetes_updates=true`."
     },
     {
       "name": "excludeRequirementsToUnlock",
