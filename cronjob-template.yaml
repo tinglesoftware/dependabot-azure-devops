@@ -36,7 +36,7 @@ spec:
           activeDeadlineSeconds: 3600
           containers:
           - name: dependabot
-            image: 'tingle/dependabot-azure-devops:0.8.4' # Use a specific tag otherwise the image may be cached already
+            image: 'tingle/dependabot-azure-devops:0.10' # Use a specific tag otherwise the image may be cached already
             resources: {} # decide based on your usage
             env:
             - name: GITHUB_ACCESS_TOKEN

@@ -135,13 +135,6 @@
       "helpMarkDown": "The identifier of the work item to be linked to the Pull Requests that dependabot creates."
     },
     {
-      "name": "updaterOptions",
-      "type": "string",
-      "label": "Comma separated list of updater options.",
-      "required": false,
-      "helpMarkDown": "Set a list of updater options in CSV format. Available options depend on the ecosystem. Example: `goprivate=true,kubernetes_updates=true`."
-    },
-    {
       "name": "setAutoComplete",
       "type": "boolean",
       "groupName": "approval_completion",
@@ -230,6 +223,14 @@
       "helpMarkDown": "The name of the repository to target for processing. If this value is not supplied then the Build Repository Name is used. Supplying this value allows creation of a single pipeline that runs Dependablot against multiple repositories."
     },
     {
+      "name": "updaterOptions",
+      "type": "string",
+      "groupName": "advanced",
+      "label": "Comma separated list of updater options.",
+      "required": false,
+      "helpMarkDown": "Set a list of updater options in CSV format. Available options depend on the ecosystem. Example: `goprivate=true,kubernetes_updates=true`."
+    },
+    {
       "name": "excludeRequirementsToUnlock",
       "type": "string",
       "groupName": "advanced",
@@ -243,8 +244,7 @@
       "label": "Container registry override",
       "groupName": "advanced",
       "helpMarkDown": "The docker registry to use when pulling the docker container used by the task if needed. By default this will use docker hub. This can be useful if the container needs to come from an internal docker registry mirror or alternative source for testing. If the mirror requires authentication add a `docker login` task before this task. Example: `contoso.azurecr.io`",
-      "required": false,
-      "groupName": "advanced"
+      "required": false
     },
     {
       "name": "dockerImageRepository",
@@ -261,7 +261,7 @@
       "groupName": "advanced",
       "label": "Tag of the docker image to be pulled.",
       "required": false,
-      "defaultValue": "0.9",
+      "defaultValue": "0.10",
       "helpMarkDown": "The image tag to use when pulling the docker container used by the task. A tag also defines the version. By default, the task decides which tag/version to use. This can be the latest or most stable version. You can also use `major.minor` format to get the latest patch"
     },
     {
