@@ -8,6 +8,7 @@ import extractHostname from "./extractHostname";
 import extractOrganization from "./extractOrganization";
 import extractVirtualDirectory from "./extractVirtualDirectory";
 import getAzureDevOpsAccessToken from "./getAzureDevOpsAccessToken";
+import getDockerImageTag from "./getDockerImageTag";
 import getGithubAccessToken from "./getGithubAccessToken";
 import getTargetRepository from "./getTargetRepository";
 
@@ -91,7 +92,7 @@ export default function getSharedVariables(): ISharedVariables {
   let extraCredentials = getVariable("DEPENDABOT_EXTRA_CREDENTIALS");
   let dockerImageRegistry: string | undefined = getInput('dockerImageRegistry');
   let dockerImageRepository: string = getInput('dockerImageRepository', true);
-  let dockerImageTag: string = getInput("dockerImageTag"); // TODO: get the latest version to use from a given url
+  let dockerImageTag: string = getDockerImageTag();
 
   // Prepare the github token, if one is provided
   let githubAccessToken: string = getGithubAccessToken();
