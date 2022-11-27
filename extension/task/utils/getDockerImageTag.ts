@@ -14,7 +14,7 @@ export default function getDockerImageTag(): string {
     tl.debug("Getting dockerImageTag from task.json file. If you want to override, specify the dockerImageTag input");
 
     // Ensure we have the file. Otherwise throw a well readable error.
-    const filePath = path.join(__dirname, "task.json");
+    const filePath = path.join(__dirname, "..", "task.json");
     if (!fs.existsSync(filePath)) {
       throw new Error(`task.json could not be found at '${filePath}'`);
     }
