@@ -20,9 +20,9 @@ async function run() {
     else {
       tl.warning(
         `
-        Using explicit inputs instead of a configuration file is deprecated and will be removed in version 0.11.0.\r\n
-        No new features will be added to the use of explicit inputs that can also be specified in the configuration file.\r\n\r\n
-        Migrate to using a config file at .github/dependabot.yml.\r\n
+        Using explicit inputs instead of a configuration file is deprecated and will be removed in version 0.11.0.
+        No new features will be added to the use of explicit inputs that can also be specified in the configuration file.\r\n
+        Migrate to using a config file at .github/dependabot.yml.
         See https://github.com/tinglesoftware/dependabot-azure-devops/tree/main/extension#usage for more information.
         `
       );
@@ -34,7 +34,7 @@ async function run() {
         `
         Using targetRepositoryName input does not work when useConfigFile is set to true.
         Either use a pipeline for each repository or consider using the [managed version](https://managed-dependabot.com).
-        Using targetRepositoryName will be deprecated and removed in a future minor release.\r\n
+        Using targetRepositoryName will be deprecated and removed in a future minor release.
         `
       );
     }
