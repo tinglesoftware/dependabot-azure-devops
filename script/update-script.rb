@@ -166,14 +166,12 @@ end
 $options[:azure_port] = ENV["AZURE_PORT"] || ($options[:azure_protocol] == "http" ? "80" : "443")
 puts "Using hostname = '#{$options[:azure_hostname]}', protocol = '#{$options[:azure_protocol]}', port = '#{$options[:azure_port]}'."
 
-##########################
-# Setup Allow conditions #
-##########################
-unless ENV["DEPENDABOT_ALLOW_CONDITIONS"].to_s.strip.empty?
-  # For example:
-  # [{"dependency-name":"sphinx","dependency-type":"production"}]
-  $options[:allow_conditions] = JSON.parse(ENV["DEPENDABOT_ALLOW_CONDITIONS"])
-end
+#################################################################
+#                     Setup Allow conditions                    #
+# DEPENDABOT_ALLOW_CONDITIONS Example:
+# [{"dependency-name":"sphinx","dependency-type":"production"}]
+#################################################################
+$options[:allow_conditions] = JSON.parse(ENV["DEPENDABOT_ALLOW_CONDITIONS"]) unless ENV["DEPENDABOT_ALLOW_CONDITIONS"].to_s.strip.empty?
 
 # Get allow versions for a dependency
 TYPE_HANDLERS = { # [Hash<String, Proc>] handlers for type allow rules
@@ -190,23 +188,19 @@ def allow_conditions_for(dep)
   found ? found['dependency-type'] : nil
 end
 
-###########################
-# Setup Ignore conditions #
-###########################
-unless ENV["DEPENDABOT_IGNORE_CONDITIONS"].to_s.strip.empty?
-  # For example:
-  # [{"dependency-name":"ruby","versions":[">= 3.a", "< 4"]}]
-  $options[:ignore_conditions] = JSON.parse(ENV["DEPENDABOT_IGNORE_CONDITIONS"])
-end
+#################################################################
+#                    Setup Ignore conditions                    #
+# DEPENDABOT_IGNORE_CONDITIONS Example:
+# [{"dependency-name":"ruby","versions":[">= 3.a", "< 4"]}]
+#################################################################
+$options[:ignore_conditions] = JSON.parse(ENV["DEPENDABOT_IGNORE_CONDITIONS"]) unless ENV["DEPENDABOT_IGNORE_CONDITIONS"].to_s.strip.empty?
 
-###########################
-# Setup Labels #
-###########################
-unless ENV["DEPENDABOT_LABELS"].to_s.strip.empty?
-  # For example:
-  # ["npm dependencies","triage-board"]
-  $options[:custom_labels] = JSON.parse(ENV["DEPENDABOT_LABELS"])
-end
+######################################
+#           Setup Labels             #
+# DEPENDABOT_LABELS Example:
+# ["npm dependencies","triage-board"]
+######################################
+$options[:custom_labels] = JSON.parse(ENV["DEPENDABOT_LABELS"]) unless ENV["DEPENDABOT_LABELS"].to_s.strip.empty?
 
 # Get ignore versions for a dependency
 def ignored_versions_for(dep)
