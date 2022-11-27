@@ -25,11 +25,13 @@ export default function getDockerImageTag(): string {
       throw new Error("Invalid dependabot config object");
     }
 
-    const versionMajor = obj["version"]["Major"];
+    // we only pull the minor version, the major is fixed for two reasons:
+    // 1. The docker version and the task version are not aligned
+    // 2. Major docker changes mostly require major changes in the task
     const versionMinor = obj["version"]["Minor"];
-    if (!!!versionMajor || !!!versionMinor) throw new Error("Version could not be parsed from the file");
+    if (!!!versionMinor) throw new Error("Minor version could not be parsed from the file");
 
-    dockerImageTag = `${versionMajor}.${versionMinor}`;
+    dockerImageTag = `0.${versionMinor}`;
   }
 
   return dockerImageTag;
