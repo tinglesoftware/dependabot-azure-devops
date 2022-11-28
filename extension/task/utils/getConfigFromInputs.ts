@@ -1,4 +1,4 @@
-import { getInput } from "azure-pipelines-task-lib/task";
+import { getBoolInput, getInput } from "azure-pipelines-task-lib/task";
 import { IDependabotConfig } from "../IDependabotConfig";
 
 /**
@@ -21,6 +21,7 @@ export default function getConfigFromInputs() : IDependabotConfig{
       targetBranch: getInput("targetBranch", false),
       versioningStrategy: getInput("versioningStrategy", true),
       milestone: getInput("milestone"),
+      rejectExternalCode: getBoolInput("rejectExternalCode", false),
     }]
   };
 

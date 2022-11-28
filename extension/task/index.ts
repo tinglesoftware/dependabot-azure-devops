@@ -50,6 +50,7 @@ async function run() {
       // Set env variables in the runner
       dockerRunner.arg(["-e", `DEPENDABOT_PACKAGE_MANAGER=${update.packageEcosystem}`]);
       dockerRunner.arg(["-e", `DEPENDABOT_FAIL_ON_EXCEPTION=${variables.failOnException}`]); // Set exception behaviour
+      dockerRunner.arg(["-e", `DEPENDABOT_REJECT_EXTERNAL_CODE=${update.rejectExternalCode}`]);
       dockerRunner.arg(["-e", `DEPENDABOT_EXCLUDE_REQUIREMENTS_TO_UNLOCK=${variables.excludeRequirementsToUnlock}`]);
       dockerRunner.arg(["-e", `AZURE_PROTOCOL=${variables.protocol}`]);
       dockerRunner.arg(["-e", `AZURE_HOSTNAME=${variables.hostname}`]);
