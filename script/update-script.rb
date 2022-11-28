@@ -26,6 +26,7 @@ $options = {
   branch: ENV["DEPENDABOT_TARGET_BRANCH"] || nil, # Branch against which to create PRs
 
   allow_conditions: [],
+  reject_external_code: ENV['DEPENDABOT_REJECT_EXTERNAL_CODE'] == "true",
   requirements_update_strategy: nil,
   ignore_conditions: [],
   fail_on_exception: ENV['DEPENDABOT_FAIL_ON_EXCEPTION'] == "true", # Stop the job if an exception occurs
@@ -295,6 +296,7 @@ parser = Dependabot::FileParsers.for_package_manager($package_manager).new(
   dependency_files: files,
   source: $source,
   credentials: $options[:credentials],
+  reject_external_code: $options[:reject_external_code]
 )
 
 dependencies = parser.parse
