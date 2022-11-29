@@ -56,6 +56,7 @@ This task makes use of a docker image, which may take time to install. Subsequen
 |updaterOptions|**_Optional_**. Comma separated list of updater options; available options depend on the ecosystem. Example: `goprivate=true,kubernetes_updates=true`.|
 |setAutoComplete|**_Optional_**. Determines if the pull requests that dependabot creates should have auto complete set. When set to `true`, pull requests that pass all policies will be merged automatically.|
 |mergeStrategy|**_Optional_**. The merge strategy to use when auto complete is set. Learn more [here](https://docs.microsoft.com/en-us/javascript/api/azure-devops-extension-api/gitpullrequestmergestrategy). Defaults to `2` (Squash merge).|
+|rejectExternalCode|**_Optional_**. See official docs [here](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#insecure-external-code-execution).|
 |autoApprove|**_Optional_**. Determines if the pull requests that dependabot creates should be automatically completed. When set to `true`, pull requests will be approved automatically by the user specified in the `autoApproveUserEmail` field.|
 |autoApproveUserEmail|**_Optional_**. Email of the user that should be used to automatically approve pull requests. Required if `autoApprove` is set to `true`.|
 |autoApproveUserToken|**_Optional_**. A personal access token that is assigned to the user specified in `autoApproveUserEmail` to automatically approve the created PR. Required if `autoApprove` is set to `true`.|

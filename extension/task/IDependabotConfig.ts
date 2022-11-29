@@ -39,6 +39,10 @@ export interface IDependabotUpdate {
    */
   branchNameSeparator?: string;
   /**
+   * Whether to reject external code
+   */
+  rejectExternalCode: boolean;
+  /**
    * 	Limit number of open pull requests for version updates.
    */
   openPullRequestLimit?: number;
