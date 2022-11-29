@@ -232,6 +232,18 @@ unless ENV["DEPENDABOT_ASSIGNEES"].to_s.strip.empty?
   $options[:assignees] = JSON.parse(ENV["DEPENDABOT_ASSIGNEES"])
 end
 
+# Create an update checker
+def update_checker_for(dependency, files)
+  Dependabot::UpdateCheckers.for_package_manager($package_manager).new(
+    dependency: dependency,
+    dependency_files: files,
+    credentials: $options[:credentials],
+    requirements_update_strategy: $options[:requirements_update_strategy],
+    ignored_versions: ignored_versions_for(dependency),
+    security_advisories: security_advisories,
+  )
+end
+
 # Get ignore versions for a dependency
 def ignored_versions_for(dep)
   if $options[:ignore_conditions].any?
@@ -403,15 +415,8 @@ dependencies.select(&:top_level?).each do |dep|
     # Get update details for the dependency #
     #########################################
     puts "Checking if #{dep.name} #{dep.version} needs updating"
+    checker = update_checker_for(dep, files)
 
-    checker = Dependabot::UpdateCheckers.for_package_manager($package_manager).new(
-      dependency: dep,
-      dependency_files: files,
-      credentials: $options[:credentials],
-      requirements_update_strategy: $options[:requirements_update_strategy],
-      ignored_versions: ignored_versions_for(dep),
-      security_advisories: security_advisories
-    )
 
     if checker.up_to_date?
       puts "No update needed for #{dep.name} #{dep.version}"
