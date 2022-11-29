@@ -156,6 +156,11 @@ async function run() {
         dockerRunner.arg(["-e", 'DEPENDABOT_SKIP_PULL_REQUESTS=true']);
       }
 
+      // Set the security advisories
+      if (variables.securityAdvisories) {
+        dockerRunner.arg(["-e", `DEPENDABOT_SECURITY_ADVISORIES=${variables.securityAdvisories}`]);
+      }
+
       /*
        * Set env variables in the runner for Azure
        */
