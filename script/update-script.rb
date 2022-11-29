@@ -249,6 +249,23 @@ def ignored_versions_for(dep)
   end
 end
 
+def security_advisories
+  $options[:security_advisories].map do |adv|
+    vulnerable_versions = adv["affected-versions"] || []
+    safe_versions = (adv["patched-versions"] || []) +
+                    (adv["unaffected-versions"] || [])
+
+    # Handle case mismatches between advisory name and parsed dependency name
+    dependency_name = adv["dependency-name"].downcase
+    Dependabot::SecurityAdvisory.new(
+      dependency_name: dependency_name,
+      package_manager: $package_manager,
+      vulnerable_versions: vulnerable_versions,
+      safe_versions: safe_versions
+    )
+  end
+end
+
 # Parse the options e.g. goprivate=true,kubernetes_updates=true
 $options[:updater_options] = (ENV["DEPENDABOT_UPDATER_OPTIONS"] || "").split(",").to_h do |o|
   if o.include?("=") # key/value pair, e.g. goprivate=true
