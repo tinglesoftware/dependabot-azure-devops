@@ -28,6 +28,7 @@ $options = {
   allow_conditions: [],
   reject_external_code: ENV['DEPENDABOT_REJECT_EXTERNAL_CODE'] == "true",
   requirements_update_strategy: nil,
+  security_updates_only: false,
   ignore_conditions: [],
   pull_requests_limit: ENV["DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT"]&.to_i || 5,
   custom_labels: nil, # nil instead of empty array to ensure default labels are passed
@@ -233,9 +234,8 @@ def ignored_versions_for(dep)
         update_types: ic["update-types"]
       )
     end
-    # Dependabot::Config::UpdateConfig.new(ignore_conditions: ignore_conditions).
-    #   ignored_versions_for(dep, security_updates_only: $options[:security_updates_only])
-    Dependabot::Config::UpdateConfig.new(ignore_conditions: ignore_conditions).ignored_versions_for(dep)
+    Dependabot::Config::UpdateConfig.new(ignore_conditions: ignore_conditions).
+      ignored_versions_for(dep, security_updates_only: $options[:security_updates_only])
   else
     $update_config.ignored_versions_for(dep)
   end
