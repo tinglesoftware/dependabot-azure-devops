@@ -262,6 +262,11 @@ $options[:updater_options].each do |name, val|
   Dependabot::Experiments.register(name, val)
 end
 
+if $options[:pull_requests_limit] == 0
+  puts "Pull requests limit is set to zero. Security only updates are implied."
+  $options[:security_updates_only] = true
+end
+
 ####################################################
 # Setup the hostname, protocol and port to be used #
 ####################################################
