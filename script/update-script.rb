@@ -28,6 +28,7 @@ $options = {
   allow_conditions: [],
   reject_external_code: ENV['DEPENDABOT_REJECT_EXTERNAL_CODE'] == "true",
   requirements_update_strategy: nil,
+  security_advisories: [],
   security_updates_only: false,
   ignore_conditions: [],
   pull_requests_limit: ENV["DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT"]&.to_i || 5,
@@ -191,6 +192,13 @@ def allow_conditions_for(dep)
   found = $options[:allow_conditions].find { |al| dep.name.match?(al['dependency-name']) }
   found ? found['dependency-type'] : nil
 end
+
+#################################################################
+#                   Setup Security Advisories                   #
+# DEPENDABOT_SECURITY_ADVISORIES Example:
+# [{"dependency-name":"name","patched-versions":[],"unaffected-versions":[],"affected-versions":["< 0.10.0"]}]
+#################################################################
+$options[:security_advisories] += JSON.parse(ENV["DEPENDABOT_SECURITY_ADVISORIES"]) unless ENV["DEPENDABOT_SECURITY_ADVISORIES"].to_s.strip.empty?
 
 ##################################################################################################
 #                                     Setup Ignore conditions                                   #
