@@ -410,6 +410,7 @@ dependencies.select(&:top_level?).each do |dep|
       credentials: $options[:credentials],
       requirements_update_strategy: $options[:requirements_update_strategy],
       ignored_versions: ignored_versions_for(dep),
+      security_advisories: security_advisories
     )
 
     if checker.up_to_date?
