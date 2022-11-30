@@ -1,9 +1,10 @@
-import { IDependabotConfig, IDependabotUpdate } from "../IDependabotConfig";
+import { IDependabotConfig, IDependabotRegistry, IDependabotUpdate } from "../IDependabotConfig";
 import { load } from "js-yaml";
 import * as fs from "fs";
 import * as path from "path";
 import * as tl from "azure-pipelines-task-lib/task"
 import { getVariable } from "azure-pipelines-task-lib/task";
+import convertPlaceholder from "./convertPlaceholder";
 
 /**
  * Parse the dependabot config YAML file to specify update configuration
@@ -13,7 +14,7 @@ import { getVariable } from "azure-pipelines-task-lib/task";
  * To view YAML file format, visit
  * https://docs.github.com/en/github/administering-a-repository/configuration-options-for-dependency-updates#allow
  *
- * @returns {IDependabotConfig} update configuration
+ * @returns {IDependabotConfig} config - the dependabot configuration
  */
 export default function parseConfigFile(): IDependabotConfig {
 
@@ -79,6 +80,17 @@ export default function parseConfigFile(): IDependabotConfig {
   // Ensure the version is == 2
   if(version !== 2) throw new Error("Only version 2 of dependabot is supported. Version specified: " + version);
 
+  var dependabotConfig: IDependabotConfig = {
+    version: version,
+    updates: parseUpdates(config),
+    registries: parseRegistries(config),
+  }
+
+  return dependabotConfig;
+}
+
+
+function parseUpdates(config: any) : IDependabotUpdate[] {
   var updates: IDependabotUpdate[] = [];
 
   // Check the updates parsed
@@ -124,9 +136,47 @@ export default function parseConfigFile(): IDependabotConfig {
 
     updates.push(dependabotUpdate);
   });
-
-  return {
-    version: version,
-    updates: updates,
-  };
+  return updates;
 }
+
+function parseRegistries(config: any) : IDependabotRegistry[] {
+  var registries : IDependabotRegistry[] = [];
+
+  var rawRegistries = config["registries"];
+
+  if (rawRegistries == undefined)
+    return registries;
+
+  // Parse the value of each of the registries obtained from the file
+  Object.entries(rawRegistries).forEach((item) => {
+    var registryConfigKey = item[0];
+    var registryConfig = item[1];
+    var dependabotRegistry: IDependabotRegistry = {
+      type: registryConfig["type"]?.replace("-", "_"),
+      url: registryConfig["url"],
+
+      username: registryConfig["username"],
+      password: convertPlaceholder(registryConfig["password"]),
+      key: convertPlaceholder(registryConfig["key"]),
+      token: convertPlaceholder(registryConfig["token"]),
+
+      "replaces-base": registryConfig["replaces-base"]
+    };
+
+    if (!dependabotRegistry.type) {
+      throw new Error(
+        `The value for 'type' in dependency registry config '${registryConfigKey}' is missing`
+      );
+    }
+
+    if (!dependabotRegistry.url) {
+      throw new Error(
+        `The value 'url' in dependency registry config '${registryConfigKey}' is missing`
+      );
+    }
+
+    registries.push(dependabotRegistry);
+  });
+  return registries;
+}
+

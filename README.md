@@ -30,9 +30,44 @@ Using `.github/dependabot.yml` or `.github/dependabot.yaml` instead of `.azurede
 
 ## Credentials for private registries and feeds
 
-Besides accessing the repository, sometimes, private feeds/registries may need to be accessed. For example a private NuGet feed or a company internal docker registry. Adding credentials is currently done via the `DEPENDABOT_EXTRA_CREDENTIALS` environment variable. The value is supplied in JSON hence allowing any type of credentials even if they are not for private feeds/registries.
+Besides accessing the repository only, sometimes private feeds/registries may need to be accessed.
+For example a private NuGet feed or a company internal docker registry.
 
-When working with Azure Artifacts, some extra steps need to be done:
+Adding configuration options for private registries is setup in `dependabot.yml`
+according to the dependabot [description](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#configuration-options-for-private-registries).
+
+Example:
+
+```yml
+version: 2
+registries:
+  my-Extern@Release:
+    type: nuget-feed
+    url: https://dev.azure.com/organization1/_packaging/my-Extern@Release/nuget/v3/index.json
+    token: PAT:${{MY_DEPENDABOT_ADO_PAT}}
+  my-analyzers:
+    type: nuget-feed
+    url: https://dev.azure.com/organization2/_packaging/my-analyzers/nuget/v3/index.json
+    token: PAT:${{ANOTHER_PAT}}
+  artifactory:
+    type: nuget-feed
+    url: https://artifactory.com/api/nuget/v3/myfeed
+    token: PAT:${{DEPENDABOT_ARTIFACTORY_PAT}}
+updates:
+...
+```
+
+Note:
+
+1. `${{VARIABLE_NAME}}` notation is used liked described [here](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/managing-encrypted-secrets-for-dependabot)
+BUT the values will be used from Environment Variables.
+
+2. When using a token see the special notation of `PAT:${{..`. Otherwise the wrong authentication mechanism is used by dependabot, see [here](https://github.com/tinglesoftware/dependabot-azure-devops/issues/50).
+
+Adding credentials via the `DEPENDABOT_EXTRA_CREDENTIALS` environment variable overwrites the yml configuration, this option will be removed in future releases. 
+The value is supplied in JSON hence allowing any type of credentials even if they are not for private feeds/registries.
+
+When working with Azure Artifacts, some extra permission steps need to be done:
 
 1. The PAT should have *Packaging Read* permission.
 2. The user owning the PAT must be granted permissions to access the feed either directly or via a group. An easy way for this is to give `Contributor` permissions the `[{project_name}]\Contributors` group under the `Feed Settings -> Permissions` page. The page has the url format: `https://dev.azure.com/{organization}/{project}/_packaging?_a=settings&feed={feed-name}&view=permissions`.

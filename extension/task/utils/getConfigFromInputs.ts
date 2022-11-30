@@ -9,7 +9,7 @@ import { IDependabotConfig } from "../IDependabotConfig";
  *
  * @returns {IDependabotConfig} update configuration
  */
-export default function getConfigFromInputs() : IDependabotConfig{
+export default function getConfigFromInputs() : IDependabotConfig {
   var dependabotConfig: IDependabotConfig = {
     version: 2,
     updates: [{
