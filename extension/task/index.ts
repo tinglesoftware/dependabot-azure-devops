@@ -59,6 +59,7 @@ async function run() {
       dockerRunner.arg(["-e", `AZURE_REPOSITORY=${variables.repository}`]);
       dockerRunner.arg(["-e", `AZURE_ACCESS_TOKEN=${variables.systemAccessToken}`]);
       dockerRunner.arg(["-e", `AZURE_SET_AUTO_COMPLETE=${variables.setAutoComplete}`]); // Set auto complete, if set
+      dockerRunner.arg(["-e", `AZURE_AUTO_COMPLETE_IGNORE_CONFIG_IDS=${JSON.stringify(variables.autoCompleteIgnoreConfigIds)}`]); 
       dockerRunner.arg(["-e", `AZURE_MERGE_STRATEGY=${variables.mergeStrategy}`]);
 
       // Set Username
