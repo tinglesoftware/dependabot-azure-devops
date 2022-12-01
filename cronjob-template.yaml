@@ -65,8 +65,6 @@ spec:
               value: '{{dependabot_extra_credentials}}'
             - name: DEPENDABOT_ALLOW_CONDITIONS
               value: '{{dependabot_allow_conditions}}'
-            - name: DEPENDABOT_IGNORE_CONDITIONS
-              value: '{{dependabot_ignore_conditions}}'
             - name: DEPENDABOT_LABELS
               value: '{{dependabot_labels}}'
             - name: DEPENDABOT_BRANCH_NAME_SEPARATOR
