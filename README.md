@@ -60,12 +60,12 @@ updates:
 Note:
 
 1. `${{VARIABLE_NAME}}` notation is used liked described [here](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/managing-encrypted-secrets-for-dependabot)
-BUT the values will be used from Environment Variables.
+BUT the values will be used from Environment Variables in the pipeline/environment.
 
-2. When using a token see the special notation of `PAT:${{..`. Otherwise the wrong authentication mechanism is used by dependabot, see [here](https://github.com/tinglesoftware/dependabot-azure-devops/issues/50).
+2. When using a token the notation should be `PAT:${{VARIABLE_NAME}}`. Otherwise the wrong authentication mechanism is used by dependabot, see [here](https://github.com/tinglesoftware/dependabot-azure-devops/issues/50).
 
-Adding credentials via the `DEPENDABOT_EXTRA_CREDENTIALS` environment variable overwrites the yml configuration, this option will be removed in future releases. 
-The value is supplied in JSON hence allowing any type of credentials even if they are not for private feeds/registries.
+Adding credentials can also be done via the `DEPENDABOT_EXTRA_CREDENTIALS` environment variable which overrides the registries in the configuration file. The value is supplied in JSON hence allowing any type of credentials even if they are not for private feeds/registries.
+Using this ENV directly will be removed in a future release.
 
 When working with Azure Artifacts, some extra permission steps need to be done:
 
