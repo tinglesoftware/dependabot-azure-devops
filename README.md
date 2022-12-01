@@ -26,7 +26,7 @@ Using `.github/dependabot.yml` or `.github/dependabot.yaml` instead of `.azurede
 1. Intellisense support in VS Code (and may be other IDEs).
 2. The docker container checks for the configuration file in this location to configure `commit-message` and `ignore` options.
 
-> Using the .azuredevops folder is deprecated and will be removed in version `0.11.0`.
+> Using the .azuredevops folder is deprecated and will be removed in version `0.13.0`.
 
 ## Credentials for private registries and feeds
 
