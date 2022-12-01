@@ -102,10 +102,9 @@ async function run() {
         dockerRunner.arg(["-e", `DEPENDABOT_ALLOW_CONDITIONS=${allow}`]);
       }
 
-      // Set the dependencies to ignore
-      let ignore = update.ignore || variables.ignoreOvr;
-      if (ignore) {
-        dockerRunner.arg(["-e", `DEPENDABOT_IGNORE_CONDITIONS=${ignore}`]);
+      // Set the dependencies to ignore only when not using the config file
+      if (!variables.useConfigFile && variables.ignoreOvr) {
+        dockerRunner.arg(["-e", `DEPENDABOT_IGNORE_CONDITIONS=${variables.ignoreOvr}`]);
       }
 
       // Set the custom labels/tags

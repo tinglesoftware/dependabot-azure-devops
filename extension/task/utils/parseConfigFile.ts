@@ -118,7 +118,6 @@ function parseUpdates(config: any) : IDependabotUpdate[] {
 
       // Convert to JSON and shorten the names as required by the script
       allow: update["allow"] ? JSON.stringify(update["allow"]) : undefined,
-      ignore: update["ignore"] ? JSON.stringify(update["ignore"]) : undefined,
       labels: update["labels"] ? JSON.stringify(update["labels"]) : undefined,
     };
 
