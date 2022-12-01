@@ -34,10 +34,6 @@ export interface IDependabotUpdate {
    */
   allow?: string;
   /**
-   * Ignore certain dependencies or versions.
-   */
-  ignore?: string;
-  /**
    * Custom labels/tags.
    */
   labels?: string;
