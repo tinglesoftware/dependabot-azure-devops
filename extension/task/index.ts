@@ -20,7 +20,7 @@ async function run() {
     } else {
       tl.warning(
         `
-        Using explicit inputs instead of a configuration file is deprecated and will be removed in version 0.11.0.
+        Using explicit inputs instead of a configuration file is deprecated and will be removed in version 0.13.0.
         No new features will be added to the use of explicit inputs that can also be specified in the configuration file.\r\n
         Migrate to using a config file at .github/dependabot.yml.
         See https://github.com/tinglesoftware/dependabot-azure-devops/tree/main/extension#usage for more information.
@@ -59,7 +59,7 @@ async function run() {
       dockerRunner.arg(["-e", `AZURE_REPOSITORY=${variables.repository}`]);
       dockerRunner.arg(["-e", `AZURE_ACCESS_TOKEN=${variables.systemAccessToken}`]);
       dockerRunner.arg(["-e", `AZURE_SET_AUTO_COMPLETE=${variables.setAutoComplete}`]); // Set auto complete, if set
-      dockerRunner.arg(["-e", `AZURE_AUTO_COMPLETE_IGNORE_CONFIG_IDS=${JSON.stringify(variables.autoCompleteIgnoreConfigIds)}`]); 
+      dockerRunner.arg(["-e", `AZURE_AUTO_COMPLETE_IGNORE_CONFIG_IDS=${JSON.stringify(variables.autoCompleteIgnoreConfigIds)}`]);
       dockerRunner.arg(["-e", `AZURE_MERGE_STRATEGY=${variables.mergeStrategy}`]);
 
       // Set Username
