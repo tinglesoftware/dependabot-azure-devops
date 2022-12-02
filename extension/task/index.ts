@@ -122,6 +122,9 @@ async function run() {
       }
 
       // Set the extra credentials
+      if (variables.useConfigFile && variables.extraCredentials) {
+        tl.warning(`Using 'DEPENDABOT_EXTRA_CREDENTIALS' is not recommended when using a config file. Specify the same values in the registries section of .github/dependabot.yml file.`);
+      }
       if (variables.extraCredentials) {
         //TODO remove variables.extraCredentials in future in favor default yml configuration.
         dockerRunner.arg(["-e", `DEPENDABOT_EXTRA_CREDENTIALS=${variables.extraCredentials}`]);
