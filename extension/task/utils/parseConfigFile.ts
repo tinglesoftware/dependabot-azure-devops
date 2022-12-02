@@ -164,10 +164,14 @@ function parseRegistries(config: any): IDependabotRegistry[] {
       );
     }
 
+    // In Ruby, the some credentials use 'registry' property/field name instead of 'url'
+    var useRegistryProperty = type.includes("npm") || type.includes("docker"); // This may also apply for terraform but we don't have enough tests to know
 
     var dependabotRegistry: IDependabotRegistry = {
       type: type,
-      url: url,
+
+      url: useRegistryProperty ? null : url,
+      registry: useRegistryProperty ? url : null,
 
       username: registryConfig["username"],
       password: convertPlaceholder(registryConfig["password"]),
