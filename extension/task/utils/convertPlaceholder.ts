@@ -1,10 +1,7 @@
 import { getVariable } from "azure-pipelines-task-lib/task";
 
 export default function convertPlaceholder(input: string): string {
-  const variableNameExp : string = "[a-zA-Z_]+[a-zA-Z0-9_]*"
-  const variableLeftExp : string = "\\${{"
-  const variableRightExp : string = "}}"
-  const regexp : RegExp = new RegExp(variableLeftExp + "\\s*(" + variableNameExp + ")\\s*" + variableRightExp, 'g');
+  const regexp: RegExp = new RegExp("\\${{\\s*([a-zA-Z_]+[a-zA-Z0-9_]*)\\s*}}", 'g');
 
   let result: string = input;
   const matches = matchAll(input, regexp);
