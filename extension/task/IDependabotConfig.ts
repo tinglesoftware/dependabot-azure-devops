@@ -96,7 +96,13 @@ export interface IDependabotRegistry {
    * The protocol is optional. If not specified, `https://` is assumed.
    * Dependabot adds or ignores trailing slashes as required.
    */
-  url: string;
+  url?: string;
+  /**
+   * The URL of the registry to use to access the dependencies in this registry.
+   * The protocol is optional. If not specified, `https://` is assumed.
+   * Dependabot adds or ignores trailing slashes as required.
+   */
+  registry?: string;
   /**
    * The username to access the registry
    */

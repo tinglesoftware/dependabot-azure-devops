@@ -86,7 +86,6 @@ schedules:
 
 # variables declared below can be put in one or more Variable Groups for sharing across pipelines
 variables:
-  DEPENDABOT_EXTRA_CREDENTIALS: '[{\"type\":\"npm_registry\",\"token\":\"<redacted>\",\"registry\":\"npm.fontawesome.com\"}]' # put the credentials for private registries and feeds
   DEPENDABOT_ALLOW_CONDITIONS: '[{\"dependency-name\":"django*",\"dependency-type\":\"direct\"}]' # packages allowed to be updated
 
 pool:
