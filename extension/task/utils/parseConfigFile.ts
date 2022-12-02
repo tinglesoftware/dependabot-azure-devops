@@ -67,18 +67,18 @@ export default function parseConfigFile(): IDependabotConfig {
   let version = -1;
 
   // Ensure the version has been specified
-  if(!!!rawVersion) throw new Error("The version must be specified in dependabot.yml");
+  if (!!!rawVersion) throw new Error("The version must be specified in dependabot.yml");
 
   // Try convert the version to integer
-  try{
+  try {
     version = parseInt(rawVersion, 10);
   }
-  catch(e) {
+  catch (e) {
     throw new Error("Dependabot version specified must be a valid integer");
   }
 
   // Ensure the version is == 2
-  if(version !== 2) throw new Error("Only version 2 of dependabot is supported. Version specified: " + version);
+  if (version !== 2) throw new Error("Only version 2 of dependabot is supported. Version specified: " + version);
 
   var dependabotConfig: IDependabotConfig = {
     version: version,
@@ -90,7 +90,7 @@ export default function parseConfigFile(): IDependabotConfig {
 }
 
 
-function parseUpdates(config: any) : IDependabotUpdate[] {
+function parseUpdates(config: any): IDependabotUpdate[] {
   var updates: IDependabotUpdate[] = [];
 
   // Check the updates parsed
@@ -138,8 +138,8 @@ function parseUpdates(config: any) : IDependabotUpdate[] {
   return updates;
 }
 
-function parseRegistries(config: any) : IDependabotRegistry[] {
-  var registries : IDependabotRegistry[] = [];
+function parseRegistries(config: any): IDependabotRegistry[] {
+  var registries: IDependabotRegistry[] = [];
 
   var rawRegistries = config["registries"];
 
