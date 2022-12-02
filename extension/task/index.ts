@@ -103,6 +103,9 @@ async function run() {
       }
 
       // Set the dependencies to ignore only when not using the config file
+      if (variables.useConfigFile && variables.ignoreOvr) {
+        tl.warning(`Using 'DEPENDABOT_IGNORE_CONDITIONS' is not supported when using a config file. Specify the same values in the .github/dependabot.yml file.`);
+      }
       if (!variables.useConfigFile && variables.ignoreOvr) {
         dockerRunner.arg(["-e", `DEPENDABOT_IGNORE_CONDITIONS=${variables.ignoreOvr}`]);
       }
