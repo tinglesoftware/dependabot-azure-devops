@@ -150,9 +150,24 @@ function parseRegistries(config: any): IDependabotRegistry[] {
   Object.entries(rawRegistries).forEach((item) => {
     var registryConfigKey = item[0];
     var registryConfig = item[1];
+    var type = registryConfig["type"]?.replace("-", "_");
+    if (!type) { // Consider checking against known values for the field
+      throw new Error(
+        `The value for 'type' in dependency registry config '${registryConfigKey}' is missing`
+      );
+    }
+
+    var url = registryConfig["url"];
+    if (!url) {
+      throw new Error(
+        `The value 'url' in dependency registry config '${registryConfigKey}' is missing`
+      );
+    }
+
+
     var dependabotRegistry: IDependabotRegistry = {
-      type: registryConfig["type"]?.replace("-", "_"),
-      url: registryConfig["url"],
+      type: type,
+      url: url,
 
       username: registryConfig["username"],
       password: convertPlaceholder(registryConfig["password"]),
@@ -161,18 +176,6 @@ function parseRegistries(config: any): IDependabotRegistry[] {
 
       "replaces-base": registryConfig["replaces-base"]
     };
-
-    if (!dependabotRegistry.type) {
-      throw new Error(
-        `The value for 'type' in dependency registry config '${registryConfigKey}' is missing`
-      );
-    }
-
-    if (!dependabotRegistry.url) {
-      throw new Error(
-        `The value 'url' in dependency registry config '${registryConfigKey}' is missing`
-      );
-    }
 
     registries.push(dependabotRegistry);
   });
