@@ -165,5 +165,8 @@ DEPENDENCIES
   dependabot-omnibus (~> 0.214.0)
   irb
 
+RUBY VERSION
+   ruby 3.1.3p185
+
 BUNDLED WITH
    2.3.22
