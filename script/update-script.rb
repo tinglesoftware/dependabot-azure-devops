@@ -539,7 +539,7 @@ dependencies.select(&:top_level?).each do |dep|
 
   rescue StandardError => e
     raise e if $options[:fail_on_exception]
-    puts "Error updating #{dep.name} from #{dep.version} to #{checker.latest_version} (continuing)"
+    puts "Error working on updates for #{dep.name} #{dep.version} (continuing)"
     puts e.full_message
   end
 end
