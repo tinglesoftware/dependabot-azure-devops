@@ -135,8 +135,8 @@ unless ENV["DEPENDABOT_VERSIONING_STRATEGY"].to_s.strip.empty?
     "increase" => :bump_versions,
     "increase-if-necessary" => :bump_versions_if_necessary
   }.freeze
-  requirements_update_strategy_raw = ENV["DEPENDABOT_VERSIONING_STRATEGY"] || "auto"
-  $options[:requirements_update_strategy] = VERSIONING_STRATEGIES.fetch(requirements_update_strategy_raw)
+  strategy_raw = ENV["DEPENDABOT_VERSIONING_STRATEGY"] || "auto"
+  $options[:requirements_update_strategy] = VERSIONING_STRATEGIES.fetch(strategy_raw)
 
   # For npm_and_yarn & composer, we must correct the strategy to one allowed
   # https://github.com/dependabot/dependabot-core/blob/5ec858331d11253a30aa15fab25ae22fbdecdee0/npm_and_yarn/lib/dependabot/npm_and_yarn/update_checker/requirements_updater.rb#L18-L19
@@ -310,7 +310,7 @@ azure_client = Dependabot::Clients::Azure.for_source(
   credentials: $options[:credentials],
 )
 default_branch_name = azure_client.fetch_default_branch($source.repo)
-active_pull_requests_for_this_repo = azure_client.pull_requests_active(default_branch_name)
+active_pull_requests = azure_client.pull_requests_active(default_branch_name)
 
 pull_requests_count = 0
 
@@ -381,10 +381,10 @@ dependencies.select(&:top_level?).each do |dep|
     ###################################
     # Find out if a PR already exists #
     ###################################
-    conflict_pull_request_commit_id = nil
+    conflict_pull_request_commit = nil
     conflict_pull_request_id = nil
     existing_pull_request = nil
-    active_pull_requests_for_this_repo.each do |pr|
+    active_pull_requests.each do |pr|
       pr_id = pr["pullRequestId"]
       title = pr["title"]
       sourceRefName = pr["sourceRefName"]
@@ -420,7 +420,7 @@ dependencies.select(&:top_level?).each do |dep|
           # ignore pull request manully edited
           next if azure_client.pull_request_commits(pr_id).length > 1
           # keep pull request
-          conflict_pull_request_commit_id = pr["lastMergeSourceCommit"]["commitId"]
+          conflict_pull_request_commit = pr["lastMergeSourceCommit"]["commitId"]
           conflict_pull_request_id = pr_id
           break
         end
@@ -429,14 +429,14 @@ dependencies.select(&:top_level?).each do |dep|
 
     pull_request = nil
     pull_request_id = nil
-    if conflict_pull_request_commit_id && conflict_pull_request_id
+    if conflict_pull_request_commit && conflict_pull_request_id
       ##############################################
       # Update pull request with conflict resolved #
       ##############################################
       pr_updater = Dependabot::PullRequestUpdater.new(
         source: $source,
         base_commit: commit,
-        old_commit: conflict_pull_request_commit_id,
+        old_commit: conflict_pull_request_commit,
         files: updated_files,
         credentials: $options[:credentials],
         pull_request_number: conflict_pull_request_id,
