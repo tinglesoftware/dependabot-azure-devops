@@ -423,7 +423,7 @@ dependencies.select(&:top_level?).each do |dep|
         # we need to resolve the merge conflicts
         existing_pull_request = pr
         if pr["mergeStatus"] != "succeeded"
-          # ignore pull request manully edited
+          # ignore pull request manually edited
           next if azure_client.pull_request_commits(pr_id).length > 1
           # keep pull request
           conflict_pull_request_commit = pr["lastMergeSourceCommit"]["commitId"]
