@@ -403,34 +403,36 @@ dependencies.select(&:top_level?).each do |dep|
       # Ensure the title contains the current dependency version
       # Sometimes, the dep.version might be null such as in npm
       # when the package.lock.json is not checked into source.
-      if title.include?(dep.name) && dep.version && title.include?(dep.version)
-        # If the title does not contain the updated version,
-        # we need to close the PR and delete it's branch,
-        # because there is a newer version available
-        #
-        # Sample Titles:
-        # Bump Tingle.Extensions.Logging.LogAnalytics from 3.4.2-ci0005 to 3.4.2-ci0006
-        # chore(deps): bump dotenv from 9.0.1 to 9.0.2 in /server
-        if !title.include?("#{updated_deps[0].version} ") && !title.end_with?(updated_deps[0].version)
-          # Close old version PR
-          azure_client.pull_request_abandon(pr_id)
-          azure_client.branch_delete(source_ref_name)
-          puts "Closed Pull Request ##{pr_id}"
-          next
-        end
+      next unless title.include?(dep.name) && dep.version && title.include?(dep.version)
 
-        # If the merge status of the current PR is not successful,
-        # we need to resolve the merge conflicts
-        existing_pull_request = pr
-        if pr["mergeStatus"] != "succeeded"
-          # ignore pull request manually edited
-          next if azure_client.pull_request_commits(pr_id).length > 1
-          # keep pull request
-          conflict_pull_request_commit = pr["lastMergeSourceCommit"]["commitId"]
-          conflict_pull_request_id = pr_id
-          break
-        end
+      # If the title does not contain the updated version,
+      # we need to close the PR and delete it's branch,
+      # because there is a newer version available
+      #
+      # Sample Titles:
+      # Bump Tingle.Extensions.Logging.LogAnalytics from 3.4.2-ci0005 to 3.4.2-ci0006
+      # chore(deps): bump dotenv from 9.0.1 to 9.0.2 in /server
+      if !title.include?("#{updated_deps[0].version} ") && !title.end_with?(updated_deps[0].version)
+        # Close old version PR
+        azure_client.pull_request_abandon(pr_id)
+        azure_client.branch_delete(source_ref_name)
+        puts "Closed Pull Request ##{pr_id}"
+        next
       end
+
+      existing_pull_request = pr
+
+      # If the merge status of the current PR is not succeeded,
+      # we need to resolve the merge conflicts
+      next unless pr["mergeStatus"] != "succeeded"
+
+      # ignore pull request manually edited
+      next if azure_client.pull_request_commits(pr_id).length > 1
+
+      # keep pull request for updating later
+      conflict_pull_request_commit = pr["lastMergeSourceCommit"]["commitId"]
+      conflict_pull_request_id = pr_id
+      break
     end
 
     pull_request = nil
