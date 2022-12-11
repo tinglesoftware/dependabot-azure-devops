@@ -250,7 +250,7 @@ end
 ####################################################
 $options[:azure_port] = ENV["AZURE_PORT"] || ($options[:azure_protocol] == "http" ? "80" : "443")
 $api_endpoint = "#{$options[:azure_protocol]}://#{$options[:azure_hostname]}:#{$options[:azure_port]}/"
-$api_endpoint = $api_endpoint + "#{$options[:azure_virtual_directory]}/" if !$options[:azure_virtual_directory].empty?
+$api_endpoint = $api_endpoint + "#{$options[:azure_virtual_directory]}/" unless $options[:azure_virtual_directory].empty?
 puts "Using '#{$api_endpoint}' as API endpoint"
 puts "Pull Requests shall be linked to milestone (work item) #{$options[:milestone]}" if $options[:milestone]
 puts "Pull Requests shall be labeled #{$options[:custom_labels]}" if $options[:custom_labels]
@@ -363,7 +363,7 @@ dependencies.select(&:top_level?).each do |dep|
     # Check if the dependency is allowed
     allow_type = allow_conditions_for(dep)
     allowed = checker.vulnerable? || $options[:allow_conditions].empty? || (allow_type && TYPE_HANDLERS[allow_type].call(dep, checker))
-    if !allowed
+    unless allowed
       puts "Updating #{dep.name} is not allowed"
       next
     end
@@ -398,7 +398,7 @@ dependencies.select(&:top_level?).each do |dep|
       # Filter those containing " #{dep.name} "
       # The prefix " " and suffix " " avoids taking PRS for dependencies named the same
       # e.g. Tingle.EventBus and Tingle.EventBus.Transports.Azure.ServiceBus
-      next if !title.include?(" #{dep.name} ")
+      next unless title.include?(" #{dep.name} ")
 
       # Ensure the title contains the current dependency version
       # Sometimes, the dep.version might be null such as in npm
