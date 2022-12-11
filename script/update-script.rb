@@ -121,7 +121,9 @@ unless ENV["GITHUB_ACCESS_TOKEN"].to_s.strip.empty?
 end
 # DEPENDABOT_EXTRA_CREDENTIALS, for example:
 # "[{\"type\":\"npm_registry\",\"registry\":\"registry.npmjs.org\",\"token\":\"123\"}]"
-$options[:credentials] += JSON.parse(ENV["DEPENDABOT_EXTRA_CREDENTIALS"]) unless ENV["DEPENDABOT_EXTRA_CREDENTIALS"].to_s.strip.empty?
+unless ENV["DEPENDABOT_EXTRA_CREDENTIALS"].to_s.strip.empty?
+  $options[:credentials] += JSON.parse(ENV["DEPENDABOT_EXTRA_CREDENTIALS"])
+end
 
 ##########################################
 # Setup the requirements update strategy #
@@ -166,14 +168,16 @@ end
 # Setup the hostname, protocol and port to be used #
 ####################################################
 $options[:azure_port] = ENV["AZURE_PORT"] || ($options[:azure_protocol] == "http" ? "80" : "443")
-puts "Using hostname = '#{$options[:azure_hostname]}', protocol = '#{$options[:azure_protocol]}', port = '#{$options[:azure_port]}'."
+puts "Using #{$options[:azure_protocol]}://#{$options[:azure_hostname]}:#{$options[:azure_port]}"
 
 #################################################################
 #                     Setup Allow conditions                    #
 # DEPENDABOT_ALLOW_CONDITIONS Example:
 # [{"dependency-name":"sphinx","dependency-type":"production"}]
 #################################################################
-$options[:allow_conditions] = JSON.parse(ENV["DEPENDABOT_ALLOW_CONDITIONS"]) unless ENV["DEPENDABOT_ALLOW_CONDITIONS"].to_s.strip.empty?
+unless ENV["DEPENDABOT_ALLOW_CONDITIONS"].to_s.strip.empty?
+  $options[:allow_conditions] = JSON.parse(ENV["DEPENDABOT_ALLOW_CONDITIONS"])
+end
 
 # Get allow versions for a dependency
 TYPE_HANDLERS = { # [Hash<String, Proc>] handlers for type allow rules
@@ -195,14 +199,18 @@ end
 # DEPENDABOT_IGNORE_CONDITIONS Example:
 # [{"dependency-name":"ruby","versions":[">= 3.a", "< 4"]}]
 #################################################################
-$options[:ignore_conditions] = JSON.parse(ENV["DEPENDABOT_IGNORE_CONDITIONS"]) unless ENV["DEPENDABOT_IGNORE_CONDITIONS"].to_s.strip.empty?
+unless ENV["DEPENDABOT_IGNORE_CONDITIONS"].to_s.strip.empty?
+  $options[:ignore_conditions] = JSON.parse(ENV["DEPENDABOT_IGNORE_CONDITIONS"])
+end
 
 ######################################
 #           Setup Labels             #
 # DEPENDABOT_LABELS Example:
 # ["npm dependencies","triage-board"]
 ######################################
-$options[:custom_labels] = JSON.parse(ENV["DEPENDABOT_LABELS"]) unless ENV["DEPENDABOT_LABELS"].to_s.strip.empty?
+unless ENV["DEPENDABOT_LABELS"].to_s.strip.empty?
+  $options[:custom_labels] = JSON.parse(ENV["DEPENDABOT_LABELS"])
+end
 
 # Get ignore versions for a dependency
 def ignored_versions_for(dep)
@@ -523,7 +531,12 @@ dependencies.select(&:top_level?).each do |dep|
       merge_strategy = $options[:merge_strategy]
       auto_complete_ignore_config_ids = $options[:auto_complete_ignore_config_ids]
       puts "Setting auto complete on ##{pull_request_id}."
-      azure_client.pull_request_auto_complete(pull_request_id, auto_complete_user_id, merge_strategy, auto_complete_ignore_config_ids)
+      azure_client.pull_request_auto_complete(
+        pull_request_id,
+        auto_complete_user_id,
+        merge_strategy,
+        auto_complete_ignore_config_ids
+      )
     end
 
   rescue StandardError => e
