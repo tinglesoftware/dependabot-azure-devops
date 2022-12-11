@@ -512,6 +512,7 @@ dependencies.select(&:top_level?).each do |dep|
     pull_requests_count += 1
     next unless pull_request_id
 
+    # Auto approve this Pull Request
     if $options[:auto_approve_pr]
       puts "Auto Approving PR for user #{$options[:auto_approve_user_email]}"
 
@@ -524,6 +525,7 @@ dependencies.select(&:top_level?).each do |dep|
 
     # Set auto complete for this Pull Request
     # Pull requests that pass all policies will be merged automatically.
+    # Optional policies can be ignored by passing their identifiers
     if $options[:set_auto_complete]
       auto_complete_user_id = pull_request['createdBy']['id']
       puts "Setting auto complete on ##{pull_request_id}."
