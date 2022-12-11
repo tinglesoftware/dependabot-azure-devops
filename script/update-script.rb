@@ -393,7 +393,7 @@ dependencies.select(&:top_level?).each do |dep|
     active_pull_requests.each do |pr|
       pr_id = pr["pullRequestId"]
       title = pr["title"]
-      sourceRefName = pr["sourceRefName"]
+      source_ref_name = pr["sourceRefName"]
 
       # Filter those containing " #{dep.name} "
       # The prefix " " and suffix " " avoids taking PRS for dependencies named the same
@@ -414,7 +414,7 @@ dependencies.select(&:top_level?).each do |dep|
         if !title.include?("#{updated_deps[0].version} ") && !title.end_with?(updated_deps[0].version)
           # Close old version PR
           azure_client.pull_request_abandon(pr_id)
-          azure_client.branch_delete(sourceRefName)
+          azure_client.branch_delete(source_ref_name)
           puts "Closed Pull Request ##{pr_id}"
           next
         end
