@@ -164,12 +164,6 @@ unless ENV["DEPENDABOT_VERSIONING_STRATEGY"].to_s.strip.empty?
   end
 end
 
-####################################################
-# Setup the hostname, protocol and port to be used #
-####################################################
-$options[:azure_port] = ENV["AZURE_PORT"] || ($options[:azure_protocol] == "http" ? "80" : "443")
-puts "Using #{$options[:azure_protocol]}://#{$options[:azure_hostname]}:#{$options[:azure_port]}"
-
 #################################################################
 #                     Setup Allow conditions                    #
 # DEPENDABOT_ALLOW_CONDITIONS Example:
@@ -251,6 +245,10 @@ $options[:updater_options].each do |name, val|
   Dependabot::Experiments.register(name, val)
 end
 
+####################################################
+# Setup the hostname, protocol and port to be used #
+####################################################
+$options[:azure_port] = ENV["AZURE_PORT"] || ($options[:azure_protocol] == "http" ? "80" : "443")
 $api_endpoint = "#{$options[:azure_protocol]}://#{$options[:azure_hostname]}:#{$options[:azure_port]}/"
 $api_endpoint = $api_endpoint + "#{$options[:azure_virtual_directory]}/" if !$options[:azure_virtual_directory].empty?
 puts "Using '#{$api_endpoint}' as API endpoint"
