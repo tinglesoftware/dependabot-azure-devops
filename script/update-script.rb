@@ -29,17 +29,21 @@ $options = {
   reject_external_code: ENV['DEPENDABOT_REJECT_EXTERNAL_CODE'] == "true",
   requirements_update_strategy: nil,
   ignore_conditions: [],
-  fail_on_exception: ENV['DEPENDABOT_FAIL_ON_EXCEPTION'] == "true", # Stop the job if an exception occurs
   pull_requests_limit: ENV["DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT"].to_i || 5,
   custom_labels: nil, # nil instead of empty array to ensure default labels are passed
   branch_name_separator: ENV["DEPENDABOT_BRANCH_NAME_SEPARATOR"] || "/", # Separator used for created branches.
+  milestone: ENV['DEPENDABOT_MILESTONE'] || nil, # Get the work item to attach
+  updater_options: {},
+  author_details: {
+    email: ENV["DEPENDABOT_AUTHOR_EMAIL"] || "noreply@github.com",
+    name: ENV["DEPENDABOT_AUTHOR_NAME"] || "dependabot[bot]",
+  }
+  fail_on_exception: ENV['DEPENDABOT_FAIL_ON_EXCEPTION'] == "true", # Stop the job if an exception occurs
 
   # See description of requirements here:
   # https://github.com/dependabot/dependabot-core/issues/600#issuecomment-407808103
   # https://github.com/wemake-services/kira-dependencies/pull/210
   excluded_requirements: ENV['DEPENDABOT_EXCLUDE_REQUIREMENTS_TO_UNLOCK']&.split(" ")&.map(&:to_sym) || [],
-
-  updater_options: {},
 
   # Details on the location of the repository
   azure_organization: ENV["AZURE_ORGANIZATION"],
@@ -50,16 +54,12 @@ $options = {
   azure_port: nil,
   azure_virtual_directory: ENV["AZURE_VIRTUAL_DIRECTORY"] || "",
 
-  pr_author_email: ENV["GIT_AUTHOR_EMAIL"] || "noreply@github.com",
-  pr_author_name: ENV["GIT_AUTHOR_NAME"] || "dependabot[bot]",
-
-  milestone: ENV['DEPENDABOT_MILESTONE'] || nil, # Get the work item to attach
-
+  # Automatic completion
   set_auto_complete: ENV["AZURE_SET_AUTO_COMPLETE"] == "true", # Set auto complete on created pull requests
   auto_complete_ignore_config_ids: JSON.parse(ENV['AZURE_AUTO_COMPLETE_IGNORE_CONFIG_IDS'] || '[]'), # default to empty array
   merge_strategy: ENV["AZURE_MERGE_STRATEGY"] || "2", # default to squash merge
 
-  # Automatically Approve the PR
+  # Automatic Approval
   auto_approve_pr: ENV["AZURE_AUTO_APPROVE_PR"] == "true",
   auto_approve_user_email: ENV["AZURE_AUTO_APPROVE_USER_EMAIL"],
   auto_approve_user_token: ENV["AZURE_AUTO_APPROVE_USER_TOKEN"] || ENV["AZURE_ACCESS_TOKEN"],
@@ -448,10 +448,7 @@ dependencies.select(&:top_level?).each do |dep|
         files: updated_files,
         credentials: $options[:credentials],
         pull_request_number: conflict_pull_request_id,
-        author_details: {
-          email: $options[:pr_author_email],
-          name: $options[:pr_author_name]
-        }
+        author_details: $options[:author_details],
       )
 
       print "Submitting pull request (##{conflict_pull_request_id}) update for #{dep.name}. "
@@ -470,10 +467,7 @@ dependencies.select(&:top_level?).each do |dep|
         files: updated_files,
         credentials: $options[:credentials],
         # assignees: assignees,
-        author_details: {
-          email: $options[:pr_author_email],
-          name: $options[:pr_author_name]
-        },
+        author_details: $options[:author_details],
         commit_message_options: $update_config.commit_message_options.to_h,
         custom_labels: $options[:custom_labels],
         milestone: $options[:milestone],

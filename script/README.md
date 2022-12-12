@@ -11,14 +11,6 @@ Next create and run a container from the image:
 ```bash
 docker run --rm -t \
            -e GITHUB_ACCESS_TOKEN=<your-github-token-here> \
-           -e AZURE_PROTOCOL=<your-azure-devops-installation-transport-protocol> \
-           -e AZURE_HOSTNAME=<your-azure-devops-installation-hostname> \
-           -e AZURE_PORT=<your-azure-devops-installation-port> \
-           -e AZURE_VIRTUAL_DIRECTORY=<your-azure-devops-installation-virtual-directory> \
-           -e AZURE_ACCESS_TOKEN=<your-devops-token-here> \
-           -e AZURE_ORGANIZATION=<your-organization-here> \
-           -e AZURE_PROJECT=<your-project-here> \
-           -e AZURE_REPOSITORY=<your-repository-here> \
            -e DEPENDABOT_PACKAGE_MANAGER=<your-package-manager-here> \
            -e DEPENDABOT_DIRECTORY=/ \
            -e DEPENDABOT_TARGET_BRANCH=<your-target-branch> \
@@ -29,6 +21,14 @@ docker run --rm -t \
            -e DEPENDABOT_BRANCH_NAME_SEPARATOR=<your-custom-separator> \
            -e DEPENDABOT_MILESTONE=<your-work-item-id> \
            -e DEPENDABOT_UPDATER_OPTIONS=<your-updater-options> \
+           -e AZURE_PROTOCOL=<your-azure-devops-installation-transport-protocol> \
+           -e AZURE_HOSTNAME=<your-azure-devops-installation-hostname> \
+           -e AZURE_PORT=<your-azure-devops-installation-port> \
+           -e AZURE_VIRTUAL_DIRECTORY=<your-azure-devops-installation-virtual-directory> \
+           -e AZURE_ACCESS_TOKEN=<your-devops-token-here> \
+           -e AZURE_ORGANIZATION=<your-organization-here> \
+           -e AZURE_PROJECT=<your-project-here> \
+           -e AZURE_REPOSITORY=<your-repository-here> \
            -e AZURE_SET_AUTO_COMPLETE=<true/false> \
            -e AZURE_AUTO_APPROVE_PR=<true/false> \
            -e AZURE_AUTO_APPROVE_USER_EMAIL=<approving-user-email> \
@@ -41,11 +41,6 @@ An example, for Azure DevOps Services:
 ```bash
 docker run --rm -t \
            -e GITHUB_ACCESS_TOKEN=ijkl..mnop \
-           -e AZURE_HOSTNAME=dev.azure.com \
-           -e AZURE_ACCESS_TOKEN=abcd..efgh \
-           -e AZURE_ORGANIZATION=tinglesoftware \
-           -e AZURE_PROJECT=oss \
-           -e AZURE_REPOSITORY=dependabot-azure-devops \
            -e DEPENDABOT_PACKAGE_MANAGER=nuget \
            -e DEPENDABOT_DIRECTORY=/ \
            -e DEPENDABOT_TARGET_BRANCH=main \
@@ -56,6 +51,11 @@ docker run --rm -t \
            -e DEPENDABOT_BRANCH_NAME_SEPARATOR='/' \
            -e DEPENDABOT_MILESTONE=123 \
            -e DEPENDABOT_UPDATER_OPTIONS='goprivate=true,kubernetes_updates=true' \
+           -e AZURE_HOSTNAME=dev.azure.com \
+           -e AZURE_ACCESS_TOKEN=abcd..efgh \
+           -e AZURE_ORGANIZATION=tinglesoftware \
+           -e AZURE_PROJECT=oss \
+           -e AZURE_REPOSITORY=dependabot-azure-devops \
            -e AZURE_SET_AUTO_COMPLETE=true \
            -e AZURE_AUTO_APPROVE_PR=true \
            -e AZURE_AUTO_APPROVE_USER_EMAIL=supervisor@contoso.com \
@@ -68,14 +68,6 @@ An example, for Azure DevOps Server:
 ```bash
 docker run --rm -t \
            -e GITHUB_ACCESS_TOKEN=ijkl..mnop \
-           -e AZURE_PROTOCOL=http \
-           -e AZURE_HOSTNAME=my-devops.com \
-           -e AZURE_PORT=8080 \
-           -e AZURE_VIRTUAL_DIRECTORY=tfs \
-           -e AZURE_ACCESS_TOKEN=abcd..efgh \
-           -e AZURE_ORGANIZATION=tinglesoftware \
-           -e AZURE_PROJECT=oss \
-           -e AZURE_REPOSITORY=dependabot-azure-devops \
            -e DEPENDABOT_PACKAGE_MANAGER=nuget \
            -e DEPENDABOT_DIRECTORY=/ \
            -e DEPENDABOT_TARGET_BRANCH=main \
@@ -86,6 +78,14 @@ docker run --rm -t \
            -e DEPENDABOT_BRANCH_NAME_SEPARATOR='/' \
            -e DEPENDABOT_MILESTONE=123 \
            -e DEPENDABOT_UPDATER_OPTIONS='goprivate=true,kubernetes_updates=true' \
+           -e AZURE_PROTOCOL=http \
+           -e AZURE_HOSTNAME=my-devops.com \
+           -e AZURE_PORT=8080 \
+           -e AZURE_VIRTUAL_DIRECTORY=tfs \
+           -e AZURE_ACCESS_TOKEN=abcd..efgh \
+           -e AZURE_ORGANIZATION=tinglesoftware \
+           -e AZURE_PROJECT=oss \
+           -e AZURE_REPOSITORY=dependabot-azure-devops \
            -e AZURE_SET_AUTO_COMPLETE=true \
            -e AZURE_AUTO_APPROVE_PR=true \
            -e AZURE_AUTO_APPROVE_USER_EMAIL=supervisor@contoso.com \
@@ -99,18 +99,7 @@ To run the script, some environment variables are required.
 
 |Variable Name|Description|
 |--|--|
-|GIT_AUTHOR_EMAIL|**_Optional_**. The email address to use for the change commit author, can be used e.g. in private Azure DevOps Server deployments to associate the committer with an existing account, to provide a profile picture.|
-|GIT_AUTHOR_NAME|**_Optional_**. The display name to use for the change commit author.|
 |GITHUB_ACCESS_TOKEN|**_Optional_**. The GitHub token for authenticating requests against GitHub public repositories. This is useful to avoid rate limiting errors. The token must include permissions to read public repositories. See the [documentation](https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token) for more on Personal Access Tokens.|
-|AZURE_PROTOCOL|**_Optional_**. The transport protocol (`http` or `https`) used by your Azure DevOps installation. Defaults to `https`.|
-|AZURE_HOSTNAME|**_Optional_**. The hostname of the where the organization is hosted. Defaults to `dev.azure.com` but for older organizations this may have the format `xxx.visualstudio.com`. Check the url on the browser. For Azure DevOps Server, this may be the unexposed one e.g. `localhost` or one that you have exposed publicly via DNS.|
-|AZURE_PORT|**_Optional_**. The TCP port used by your Azure DevOps installation. Defaults to `80` or `443`, depending on the indicated protocol.|
-|AZURE_VIRTUAL_DIRECTORY|**_Optional_**. Some Azure DevOps Server installations are hosted in an IIS virtual directory, traditionally named tfs. This variable can be used to define the name of that virtual directory. By default, this is not set.|
-|AZURE_ACCESS_USERNAME|**_Optional_**. This Variable can be used together with the User Password in the Access Token Variable to use basic Auth when connecting to Azure Dev Ops. By default, this is not set.|
-|AZURE_ACCESS_TOKEN|**_Required_**. The Personal Access in Azure DevOps for accessing the repository and creating pull requests. The required permissions are: <br/>-&nbsp;Code (Full)<br/>-&nbsp;Pull Requests Threads (Read & Write).<br/>See the [documentation](https://docs.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate?view=azure-devops&tabs=preview-page#create-a-pat) to know more about creating a Personal Access Token|
-|AZURE_ORGANIZATION|**_Required_**. The name of the Azure DevOps Organization. This is can be extracted from the URL of the home page. https://dev.azure.com/{organization}/|
-|AZURE_PROJECT|**_Required_**. The name of the Azure DevOps Project within the above organization. This can be extracted them the URL too. https://dev.azure.com/{organization}/{project}/|
-|AZURE_REPOSITORY|**_Required_**. The name of the Azure DevOps Repository within the above project to run Dependabot against. This can be extracted from the URL of the repository. https://dev.azure.com/{organization}/{project}/_git/{repository}/|
 |DEPENDABOT_PACKAGE_MANAGER|**_Required_**. The type of packages to check for dependency upgrades. Examples: `nuget`, `maven`, `gradle`, `npm_and_yarn`, etc. See the [updated-script](./script/update-script.rb) or [docs](https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/configuration-options-for-dependency-updates#package-ecosystem) for more.|
 |DEPENDABOT_DIRECTORY|**_Optional_**. The directory in which dependencies are to be checked. When not specified, the root of the repository (denoted as '/') is used.|
 |DEPENDABOT_TARGET_BRANCH|**_Optional_**. The branch to be targeted when creating a pull request. When not specified, Dependabot will resolve the default branch of the repository.|
@@ -126,6 +115,17 @@ To run the script, some environment variables are required.
 |DEPENDABOT_EXCLUDE_REQUIREMENTS_TO_UNLOCK|**_Optional_**. Exclude certain dependency updates requirements. See list of allowed values [here](https://github.com/dependabot/dependabot-core/issues/600#issuecomment-407808103). Useful if you have lots of dependencies and the update script too slow. The values provided are space-separated. Example: `own all` to only use the `none` version requirement.|
 |DEPENDABOT_MILESTONE|**_Optional_**. The identifier of the work item to be linked to the Pull Requests that dependabot creates.|
 |DEPENDABOT_UPDATER_OPTIONS|**_Optional_**. Comma separated list of updater options; available options depend on PACKAGE_MANAGER. Example: `goprivate=true,kubernetes_updates=true`.|
+|DEPENDABOT_AUTHOR_EMAIL|**_Optional_**. The email address to use for the change commit author, can be used e.g. in private Azure DevOps Server deployments to associate the committer with an existing account, to provide a profile picture.|
+|DEPENDABOT_AUTHOR_NAME|**_Optional_**. The display name to use for the change commit author.|
+|AZURE_PROTOCOL|**_Optional_**. The transport protocol (`http` or `https`) used by your Azure DevOps installation. Defaults to `https`.|
+|AZURE_HOSTNAME|**_Optional_**. The hostname of the where the organization is hosted. Defaults to `dev.azure.com` but for older organizations this may have the format `xxx.visualstudio.com`. Check the url on the browser. For Azure DevOps Server, this may be the unexposed one e.g. `localhost` or one that you have exposed publicly via DNS.|
+|AZURE_PORT|**_Optional_**. The TCP port used by your Azure DevOps installation. Defaults to `80` or `443`, depending on the indicated protocol.|
+|AZURE_VIRTUAL_DIRECTORY|**_Optional_**. Some Azure DevOps Server installations are hosted in an IIS virtual directory, traditionally named tfs. This variable can be used to define the name of that virtual directory. By default, this is not set.|
+|AZURE_ACCESS_USERNAME|**_Optional_**. This Variable can be used together with the User Password in the Access Token Variable to use basic Auth when connecting to Azure Dev Ops. By default, this is not set.|
+|AZURE_ACCESS_TOKEN|**_Required_**. The Personal Access in Azure DevOps for accessing the repository and creating pull requests. The required permissions are: <br/>-&nbsp;Code (Full)<br/>-&nbsp;Pull Requests Threads (Read & Write).<br/>See the [documentation](https://docs.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate?view=azure-devops&tabs=preview-page#create-a-pat) to know more about creating a Personal Access Token|
+|AZURE_ORGANIZATION|**_Required_**. The name of the Azure DevOps Organization. This is can be extracted from the URL of the home page. https://dev.azure.com/{organization}/|
+|AZURE_PROJECT|**_Required_**. The name of the Azure DevOps Project within the above organization. This can be extracted them the URL too. https://dev.azure.com/{organization}/{project}/|
+|AZURE_REPOSITORY|**_Required_**. The name of the Azure DevOps Repository within the above project to run Dependabot against. This can be extracted from the URL of the repository. https://dev.azure.com/{organization}/{project}/_git/{repository}/|
 |AZURE_SET_AUTO_COMPLETE|**_Optional_**. Determines if the pull requests that dependabot creates should have auto complete set. When set to `true`, pull requests that pass all policies will be merged automatically|
 |AZURE_AUTO_COMPLETE_IGNORE_CONFIG_IDS|**_Optional_**. List of any policy configuration Id's which auto-complete should not wait for. Only applies to optional policies. Auto-complete always waits for required (blocking) policies.|
 |AZURE_AUTO_APPROVE_PR|**_Optional_**. Determines if the pull requests that dependabot creates should be automatically completed. When set to `true`, pull requests will be approved automatically by the user specified in the `AZURE_AUTO_APPROVE_USER_EMAIL` environment variable.|

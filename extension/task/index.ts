@@ -47,18 +47,10 @@ async function run() {
       dockerRunner.arg(["--rm"]); // remove after execution
       dockerRunner.arg(["-i"]); // attach pseudo tty
 
-      // Set env variables in the runner
+      /*
+       * Set env variables in the runner for Dependabot
+       */
       dockerRunner.arg(["-e", `DEPENDABOT_PACKAGE_MANAGER=${update.packageEcosystem}`]);
-      dockerRunner.arg(["-e", `AZURE_ORGANIZATION=${variables.organization}`]); // Set the organization
-      dockerRunner.arg(["-e", `AZURE_PROJECT=${variables.project}`]); // Set the project
-      dockerRunner.arg(["-e", `AZURE_REPOSITORY=${variables.repository}`]);
-      dockerRunner.arg(["-e", `AZURE_ACCESS_TOKEN=${variables.systemAccessToken}`]);
-      dockerRunner.arg(["-e", `AZURE_MERGE_STRATEGY=${variables.mergeStrategy}`]);
-
-      // Set Username
-      if (variables.systemAccessUser) {
-        dockerRunner.arg(["-e", `AZURE_ACCESS_USERNAME=${variables.systemAccessUser}`]);
-      }
 
       // Set the directory
       if (update.directory) {
@@ -142,6 +134,21 @@ async function run() {
       // Set exception behaviour if true
       if (variables.failOnException === true) {
         dockerRunner.arg(["-e", 'DEPENDABOT_FAIL_ON_EXCEPTION=true']);
+      }
+
+
+      /*
+       * Set env variables in the runner for Azure
+       */
+      dockerRunner.arg(["-e", `AZURE_ORGANIZATION=${variables.organization}`]); // Set the organization
+      dockerRunner.arg(["-e", `AZURE_PROJECT=${variables.project}`]); // Set the project
+      dockerRunner.arg(["-e", `AZURE_REPOSITORY=${variables.repository}`]);
+      dockerRunner.arg(["-e", `AZURE_ACCESS_TOKEN=${variables.systemAccessToken}`]);
+      dockerRunner.arg(["-e", `AZURE_MERGE_STRATEGY=${variables.mergeStrategy}`]);
+
+      // Set Username
+      if (variables.systemAccessUser) {
+        dockerRunner.arg(["-e", `AZURE_ACCESS_USERNAME=${variables.systemAccessUser}`]);
       }
 
       // Set the github token, if one is provided
