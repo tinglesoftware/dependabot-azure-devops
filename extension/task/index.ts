@@ -53,7 +53,6 @@ async function run() {
       dockerRunner.arg(["-e", `AZURE_PROJECT=${variables.project}`]); // Set the project
       dockerRunner.arg(["-e", `AZURE_REPOSITORY=${variables.repository}`]);
       dockerRunner.arg(["-e", `AZURE_ACCESS_TOKEN=${variables.systemAccessToken}`]);
-      dockerRunner.arg(["-e", `AZURE_SET_AUTO_COMPLETE=${variables.setAutoComplete}`]); // Set auto complete, if set
       dockerRunner.arg(["-e", `AZURE_MERGE_STRATEGY=${variables.mergeStrategy}`]);
 
       // Set Username
@@ -130,10 +129,14 @@ async function run() {
       }
       if (variables.extraCredentials) {
         //TODO remove variables.extraCredentials in future in favor default yml configuration.
-        dockerRunner.arg(["-e", `DEPENDABOT_EXTRA_CREDENTIALS=${variables.extraCredentials}`]);
+        if (variables.extraCredentials.length > 0 && variables.extraCredentials !== '[]') {
+          dockerRunner.arg(["-e", `DEPENDABOT_EXTRA_CREDENTIALS=${variables.extraCredentials}`]);
+        }
       } else if (config.registries != undefined) {
-        let extraCredentials = JSON.stringify(config.registries);
-        dockerRunner.arg(["-e", `DEPENDABOT_EXTRA_CREDENTIALS=${extraCredentials}`]);
+        if (config.registries.length > 0) {
+          let extraCredentials = JSON.stringify(config.registries);
+          dockerRunner.arg(["-e", `DEPENDABOT_EXTRA_CREDENTIALS=${extraCredentials}`]);
+        }
       }
 
       // Set exception behaviour if true
@@ -156,9 +159,14 @@ async function run() {
         dockerRunner.arg(["-e", `AZURE_HOSTNAME=${variables.hostname}`]);
       }
 
-      // Set the ignore config IDs for auto complete if not the default value
-      if (variables.autoCompleteIgnoreConfigIds.length > 0) {
-        dockerRunner.arg(["-e", `AZURE_AUTO_COMPLETE_IGNORE_CONFIG_IDS=${JSON.stringify(variables.autoCompleteIgnoreConfigIds)}`]);
+      // Set auto complete, if set
+      if (variables.setAutoComplete === true) {
+        dockerRunner.arg(["-e", 'AZURE_SET_AUTO_COMPLETE=true']);
+
+        // Set the ignore config IDs for auto complete if not the default value
+        if (variables.autoCompleteIgnoreConfigIds.length > 0) {
+          dockerRunner.arg(["-e", `AZURE_AUTO_COMPLETE_IGNORE_CONFIG_IDS=${JSON.stringify(variables.autoCompleteIgnoreConfigIds)}`]);
+        }
       }
 
       // Set the port
@@ -172,12 +180,18 @@ async function run() {
       }
 
       // Set auto approve
-      dockerRunner.arg(["-e", `AZURE_AUTO_APPROVE_PR=${variables.autoApprove}`]);
-      if (variables.autoApproveUserEmail) {
-        dockerRunner.arg(["-e", `AZURE_AUTO_APPROVE_USER_EMAIL=${variables.autoApproveUserEmail}`]);
-      }
-      if (variables.autoApproveUserToken) {
-        dockerRunner.arg(["-e", `AZURE_AUTO_APPROVE_USER_TOKEN=${variables.autoApproveUserToken}`]);
+      if (variables.autoApprove === true) {
+        dockerRunner.arg(["-e", 'AZURE_AUTO_APPROVE_PR=true']);
+
+        // Set the email to use for auto approve if provided
+        if (variables.autoApproveUserEmail) {
+          dockerRunner.arg(["-e", `AZURE_AUTO_APPROVE_USER_EMAIL=${variables.autoApproveUserEmail}`]);
+        }
+
+        // Set the token to use for auto approve if provided
+        if (variables.autoApproveUserToken) {
+          dockerRunner.arg(["-e", `AZURE_AUTO_APPROVE_USER_TOKEN=${variables.autoApproveUserToken}`]);
+        }
       }
 
       // Add in extra environment variables
