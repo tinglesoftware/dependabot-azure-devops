@@ -242,7 +242,7 @@ end
 
 # Register the options as experiments e.g. kubernetes_updates=true
 $options[:updater_options].each do |name, val|
-  puts "Registering exepriment '#{name}=#{val}'"
+  puts "Registering experiment '#{name}=#{val}'"
   Dependabot::Experiments.register(name, val)
 end
 
@@ -274,10 +274,13 @@ fetcher_args = {
   credentials: $options[:credentials],
   options: $options[:updater_options]
 }
+puts "Looking for configuration file in the repository ..."
 $config_file = begin
   cfg_file = Dependabot::Config::FileFetcher.new(**fetcher_args).config_file
+  puts "Using configuration file at '#{cfg_file.path}' 😎"
   Dependabot::Config::File.parse(cfg_file.content)
 rescue Dependabot::RepoNotFound, Dependabot::DependencyFileNotFound
+  puts "Configuration file was not found, a default config will be used. 😔"
   Dependabot::Config::File.new(updates: [])
 end
 $update_config = $config_file.update_config(
@@ -293,8 +296,11 @@ puts "Fetching #{$package_manager} dependency files for #{$repo_name}"
 puts "Targeting '#{$options[:branch] || 'default'}' branch under '#{$options[:directory]}' directory"
 puts "Using '#{$options[:requirements_update_strategy]}' requirements update strategy" if $options[:requirements_update_strategy]
 fetcher = Dependabot::FileFetchers.for_package_manager($package_manager).new(**fetcher_args)
+puts "Fetching dependency files ..."
 files = fetcher.files
 commit = fetcher.commit
+puts "Found #{files.length} dependency file(s) at commit #{commit}"
+files.each { |f| puts " - #{f.path}" }
 
 ##############################
 # Parse the dependency files #
@@ -308,6 +314,8 @@ parser = Dependabot::FileParsers.for_package_manager($package_manager).new(
 )
 
 dependencies = parser.parse
+puts "Found #{dependencies.length} dependencies"
+dependencies.each { |d| puts " - #{d.name} (#{d.version})" }
 
 ################################################
 # Get active pull requests for this repository #
@@ -385,7 +393,7 @@ dependencies.select(&:top_level?).each do |dep|
 
     # Skip creating/updating PR
     if $options[:skip_pull_requests]
-      puts "Skipping creating/updating Pull Request as instructed."
+      puts "Skipping creating/updating Pull Request for #{dep.name} as instructed."
       next
     end
 
