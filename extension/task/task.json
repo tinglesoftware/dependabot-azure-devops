@@ -41,8 +41,9 @@
       "label": "Use Dependabot YAML file",
       "defaultValue": "false",
       "required": false,
-      "helpMarkDown": "Determines if the task will pick config values specified from the yaml file located at `.github/dependabot.yml`"
+      "helpMarkDown": "Determines if the task will pick config values specified from the yaml file located at `.github/dependabot.yml` or `.github/dependabot.yaml`"
     },
+
     {
       "name": "packageManager",
       "type": "pickList",
