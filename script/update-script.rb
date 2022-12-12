@@ -391,7 +391,7 @@ dependencies.select(&:top_level?).each do |dep|
 
     # Skip creating/updating PR
     if $options[:skip_pull_requests]
-      puts "Skipping creating/updating Pull Request as instructed."
+      puts "Skipping creating/updating Pull Request for #{dep.name} as instructed."
       next
     end
 
