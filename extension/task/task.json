@@ -153,6 +153,15 @@
       "helpMarkDown": "Learn more [here](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#insecure-external-code-execution)."
     },
     {
+      "name": "skipPullRequests",
+      "type": "boolean",
+      "groupName": "advanced",
+      "label": "Whether to skip creation and updating of pull requests.",
+      "defaultValue": false,
+      "required": false,
+      "helpMarkDown": "When set to `true` the logic to update the dependencies is executed but the actual Pull Requests are not created/updated. Defaults to `false`."
+    },
+    {
       "name": "autoCompleteIgnoreConfigIds",
       "type": "string",
       "groupName": "approval_completion",
