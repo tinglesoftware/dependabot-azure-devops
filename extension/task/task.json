@@ -120,28 +120,11 @@
       "visibleRule": "useConfigFile=false"
     },
     {
-      "name": "failOnException",
-      "type": "boolean",
-      "label": "Determines if the execution should fail when an exception occurs. Defaults to `true`",
-      "defaultValue": true,
-      "required": false,
-      "helpMarkDown": "When set to true, a failure in updating a single dependency will cause the container execution to fail thereby causing the task to fail. This is important when you want a single failure to prevent trying to update other dependencies."
-    },
-    {
       "name": "milestone",
       "type": "string",
       "label": "Work item identifier to be linked to the Pull Requests.",
       "required": false,
       "helpMarkDown": "The identifier of the work item to be linked to the Pull Requests that dependabot creates."
-    },
-    {
-      "name": "setAutoComplete",
-      "type": "boolean",
-      "groupName": "approval_completion",
-      "label": "Determines if the pull requests that dependabot creates should have auto complete set.",
-      "defaultValue": false,
-      "required": false,
-      "helpMarkDown": "When set to `true`, pull requests that pass all policies will be merged automatically. Defaults to `false`."
     },
     {
       "name": "rejectExternalCode",
@@ -152,6 +135,15 @@
       "required": false,
       "helpMarkDown": "Learn more [here](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#insecure-external-code-execution). Defaults to `false`."
     },
+
+    {
+      "name": "failOnException",
+      "type": "boolean",
+      "label": "Determines if the execution should fail when an exception occurs. Defaults to `true`",
+      "defaultValue": true,
+      "required": false,
+      "helpMarkDown": "When set to true, a failure in updating a single dependency will cause the container execution to fail thereby causing the task to fail. This is important when you want a single failure to prevent trying to update other dependencies."
+    },
     {
       "name": "skipPullRequests",
       "type": "boolean",
@@ -161,14 +153,15 @@
       "required": false,
       "helpMarkDown": "When set to `true` the logic to update the dependencies is executed but the actual Pull Requests are not created/updated. Defaults to `false`."
     },
+
     {
-      "name": "autoCompleteIgnoreConfigIds",
-      "type": "string",
+      "name": "setAutoComplete",
+      "type": "boolean",
       "groupName": "approval_completion",
-      "label": "Semicolon delimited list of any policy configuration Id's which auto-complete should not wait for.",
-      "defaultValue": "",
+      "label": "Determines if the pull requests that dependabot creates should have auto complete set.",
+      "defaultValue": false,
       "required": false,
-      "helpMarkDown": "A semicolon (`;`) delimited list of any policy configuration Id's which auto-complete should not wait for. Only applies to optional policies (isBlocking == false). Auto-complete always waits for required policies (isBlocking == true)."
+      "helpMarkDown": "When set to `true`, pull requests that pass all policies will be merged automatically. Defaults to `false`."
     },
     {
       "name": "mergeStrategy",
@@ -185,6 +178,15 @@
         "4": "Rebase merge"
       },
       "visibleRule": "setAutoComplete=true"
+    },
+    {
+      "name": "autoCompleteIgnoreConfigIds",
+      "type": "string",
+      "groupName": "approval_completion",
+      "label": "Semicolon delimited list of any policy configuration Id's which auto-complete should not wait for.",
+      "defaultValue": "",
+      "required": false,
+      "helpMarkDown": "A semicolon (`;`) delimited list of any policy configuration Id's which auto-complete should not wait for. Only applies to optional policies (isBlocking == false). Auto-complete always waits for required policies (isBlocking == true)."
     },
     {
       "name": "autoApprove",
@@ -215,6 +217,7 @@
       "helpMarkDown": "A personal access token of the user of that shall be used to approve the created PR automatically. The token must belong to the user which was specified by email. If the same user that creates the PR should approve, this can be left empty. This won't work with if the Build Service with the build service account!",
       "visibleRule": "autoApprove=true"
     },
+
     {
       "name": "gitHubConnection",
       "type": "connectedService:github:OAuth,PersonalAccessToken,InstallationToken,Token",
@@ -233,6 +236,7 @@
       "required": false,
       "helpMarkDown": "The raw Personal Access Token for accessing GitHub repositories. Use this in place of `gitHubConnection` such as when it is not possible to create a service connection."
     },
+
     {
       "name": "azureDevOpsAccessToken",
       "type": "string",
