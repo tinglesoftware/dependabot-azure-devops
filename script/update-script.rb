@@ -39,6 +39,7 @@ $options = {
     name: ENV["DEPENDABOT_AUTHOR_NAME"] || "dependabot[bot]",
   }
   fail_on_exception: ENV['DEPENDABOT_FAIL_ON_EXCEPTION'] == "true", # Stop the job if an exception occurs
+  skip_pull_requests: ENV['DEPENDABOT_SKIP_PULL_REQUESTS'] == "true", # Skip creating/updating Pull Requests
 
   # See description of requirements here:
   # https://github.com/dependabot/dependabot-core/issues/600#issuecomment-407808103
@@ -381,6 +382,12 @@ dependencies.select(&:top_level?).each do |dep|
       dependency_files: files,
       credentials: $options[:credentials],
     )
+
+    # Skip creating/updating PR
+    if $options[:skip_pull_requests]
+      puts "Skipping creating/updating Pull Request as instructed."
+      next
+    end
 
     updated_files = updater.updated_dependency_files
 
