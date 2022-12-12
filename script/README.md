@@ -26,7 +26,6 @@ docker run --rm -t \
            -e DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT=10 \
            -e DEPENDABOT_EXTRA_CREDENTIALS=<your-extra-credentials> \
            -e DEPENDABOT_ALLOW_CONDITIONS=<your-allowed-packages> \
-           -e DEPENDABOT_LABELS=<your-custom-labels> \
            -e DEPENDABOT_BRANCH_NAME_SEPARATOR=<your-custom-separator> \
            -e DEPENDABOT_MILESTONE=<your-work-item-id> \
            -e DEPENDABOT_UPDATER_OPTIONS=<your-updater-options> \
@@ -54,7 +53,6 @@ docker run --rm -t \
            -e DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT=10 \
            -e DEPENDABOT_EXTRA_CREDENTIALS='[{\"type\":\"npm_registry\",\"token\":\"<redacted>\",\"registry\":\"npm.fontawesome.com\"}]' \
            -e DEPENDABOT_ALLOW_CONDITIONS='[{\"dependency-name\":"django*",\"dependency-type\":\"direct\"}]' \
-           -e DEPENDABOT_LABELS='[\"npm dependencies\",\"triage-board\"]' \
            -e DEPENDABOT_BRANCH_NAME_SEPARATOR='/' \
            -e DEPENDABOT_MILESTONE=123 \
            -e DEPENDABOT_UPDATER_OPTIONS='goprivate=true,kubernetes_updates=true' \
@@ -85,7 +83,6 @@ docker run --rm -t \
            -e DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT=10 \
            -e DEPENDABOT_EXTRA_CREDENTIALS='[{\"type\":\"npm_registry\",\"token\":\"<redacted>\",\"registry\":\"npm.fontawesome.com\"}]' \
            -e DEPENDABOT_ALLOW_CONDITIONS='[{\"dependency-name\":"django*",\"dependency-type\":\"direct\"}]' \
-           -e DEPENDABOT_LABELS='[\"npm dependencies\",\"triage-board\"]' \
            -e DEPENDABOT_BRANCH_NAME_SEPARATOR='/' \
            -e DEPENDABOT_MILESTONE=123 \
            -e DEPENDABOT_UPDATER_OPTIONS='goprivate=true,kubernetes_updates=true' \

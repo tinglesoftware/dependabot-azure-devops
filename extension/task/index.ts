@@ -115,9 +115,8 @@ async function run() {
       }
 
       // Set the custom labels/tags
-      let labels = update.labels || variables.labelsOvr;
-      if (labels) {
-        dockerRunner.arg(["-e", `DEPENDABOT_LABELS=${labels}`]);
+      if (update.labels) {
+        dockerRunner.arg(["-e", `DEPENDABOT_LABELS=${update.labels}`]);
       }
 
       // Set the updater options, if provided
