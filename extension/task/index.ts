@@ -162,10 +162,11 @@ async function run() {
       // Set auto complete, if set
       if (variables.setAutoComplete === true) {
         dockerRunner.arg(["-e", 'AZURE_SET_AUTO_COMPLETE=true']);
-      }
-      // Set the ignore config IDs for auto complete if not the default value
-      if (variables.autoCompleteIgnoreConfigIds.length > 0) {
-        dockerRunner.arg(["-e", `AZURE_AUTO_COMPLETE_IGNORE_CONFIG_IDS=${JSON.stringify(variables.autoCompleteIgnoreConfigIds)}`]);
+
+        // Set the ignore config IDs for auto complete if not the default value
+        if (variables.autoCompleteIgnoreConfigIds.length > 0) {
+          dockerRunner.arg(["-e", `AZURE_AUTO_COMPLETE_IGNORE_CONFIG_IDS=${JSON.stringify(variables.autoCompleteIgnoreConfigIds)}`]);
+        }
       }
 
       // Set the port
@@ -181,12 +182,16 @@ async function run() {
       // Set auto approve
       if (variables.autoApprove === true) {
         dockerRunner.arg(["-e", 'AZURE_AUTO_APPROVE_PR=true']);
-      }
-      if (variables.autoApproveUserEmail) {
-        dockerRunner.arg(["-e", `AZURE_AUTO_APPROVE_USER_EMAIL=${variables.autoApproveUserEmail}`]);
-      }
-      if (variables.autoApproveUserToken) {
-        dockerRunner.arg(["-e", `AZURE_AUTO_APPROVE_USER_TOKEN=${variables.autoApproveUserToken}`]);
+
+        // Set the email to use for auto approve if provided
+        if (variables.autoApproveUserEmail) {
+          dockerRunner.arg(["-e", `AZURE_AUTO_APPROVE_USER_EMAIL=${variables.autoApproveUserEmail}`]);
+        }
+
+        // Set the token to use for auto approve if provided
+        if (variables.autoApproveUserToken) {
+          dockerRunner.arg(["-e", `AZURE_AUTO_APPROVE_USER_TOKEN=${variables.autoApproveUserToken}`]);
+        }
       }
 
       // Add in extra environment variables
