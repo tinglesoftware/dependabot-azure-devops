@@ -49,17 +49,11 @@ async function run() {
 
       // Set env variables in the runner
       dockerRunner.arg(["-e", `DEPENDABOT_PACKAGE_MANAGER=${update.packageEcosystem}`]);
-      dockerRunner.arg(["-e", `DEPENDABOT_FAIL_ON_EXCEPTION=${variables.failOnException}`]); // Set exception behaviour
-      dockerRunner.arg(["-e", `DEPENDABOT_REJECT_EXTERNAL_CODE=${update.rejectExternalCode}`]);
-      dockerRunner.arg(["-e", `DEPENDABOT_EXCLUDE_REQUIREMENTS_TO_UNLOCK=${variables.excludeRequirementsToUnlock}`]);
-      dockerRunner.arg(["-e", `AZURE_PROTOCOL=${variables.protocol}`]);
-      dockerRunner.arg(["-e", `AZURE_HOSTNAME=${variables.hostname}`]);
       dockerRunner.arg(["-e", `AZURE_ORGANIZATION=${variables.organization}`]); // Set the organization
       dockerRunner.arg(["-e", `AZURE_PROJECT=${variables.project}`]); // Set the project
       dockerRunner.arg(["-e", `AZURE_REPOSITORY=${variables.repository}`]);
       dockerRunner.arg(["-e", `AZURE_ACCESS_TOKEN=${variables.systemAccessToken}`]);
       dockerRunner.arg(["-e", `AZURE_SET_AUTO_COMPLETE=${variables.setAutoComplete}`]); // Set auto complete, if set
-      dockerRunner.arg(["-e", `AZURE_AUTO_COMPLETE_IGNORE_CONFIG_IDS=${JSON.stringify(variables.autoCompleteIgnoreConfigIds)}`]);
       dockerRunner.arg(["-e", `AZURE_MERGE_STRATEGY=${variables.mergeStrategy}`]);
 
       // Set Username
@@ -96,10 +90,20 @@ async function run() {
         dockerRunner.arg(["-e", `DEPENDABOT_BRANCH_NAME_SEPARATOR=${update.branchNameSeparator}`]);
       }
 
+      // Set exception behaviour if true
+      if (update.rejectExternalCode === true) {
+        dockerRunner.arg(["-e", 'DEPENDABOT_REJECT_EXTERNAL_CODE=true']);
+      }
+
       // Set the dependencies to allow
       let allow = update.allow || variables.allowOvr;
       if (allow) {
         dockerRunner.arg(["-e", `DEPENDABOT_ALLOW_CONDITIONS=${allow}`]);
+      }
+
+      // Set the requirements that should not be unlocked
+      if (variables.excludeRequirementsToUnlock) {
+        dockerRunner.arg(["-e", `DEPENDABOT_EXCLUDE_REQUIREMENTS_TO_UNLOCK=${variables.excludeRequirementsToUnlock}`]);
       }
 
       // Set the dependencies to ignore only when not using the config file
@@ -133,9 +137,29 @@ async function run() {
         dockerRunner.arg(["-e", `DEPENDABOT_EXTRA_CREDENTIALS=${extraCredentials}`]);
       }
 
+      // Set exception behaviour if true
+      if (variables.failOnException === true) {
+        dockerRunner.arg(["-e", 'DEPENDABOT_FAIL_ON_EXCEPTION=true']);
+      }
+
       // Set the github token, if one is provided
       if (variables.githubAccessToken) {
         dockerRunner.arg(["-e", `GITHUB_ACCESS_TOKEN=${variables.githubAccessToken}`]);
+      }
+
+      // Set the protocol if not the default value
+      if (variables.protocol !== 'https') {
+        dockerRunner.arg(["-e", `AZURE_PROTOCOL=${variables.protocol}`]);
+      }
+
+      // Set the host name if not the default value
+      if (variables.hostname !== "dev.azure.com") {
+        dockerRunner.arg(["-e", `AZURE_HOSTNAME=${variables.hostname}`]);
+      }
+
+      // Set the ignore config IDs for auto complete if not the default value
+      if (variables.autoCompleteIgnoreConfigIds.length > 0) {
+        dockerRunner.arg(["-e", `AZURE_AUTO_COMPLETE_IGNORE_CONFIG_IDS=${JSON.stringify(variables.autoCompleteIgnoreConfigIds)}`]);
       }
 
       // Set the port
@@ -148,7 +172,7 @@ async function run() {
         dockerRunner.arg(["-e", `AZURE_VIRTUAL_DIRECTORY=${variables.virtualDirectory}`]);
       }
 
-      // Set auto complete
+      // Set auto approve
       dockerRunner.arg(["-e", `AZURE_AUTO_APPROVE_PR=${variables.autoApprove}`]);
       if (variables.autoApproveUserEmail) {
         dockerRunner.arg(["-e", `AZURE_AUTO_APPROVE_USER_EMAIL=${variables.autoApproveUserEmail}`]);
