@@ -242,7 +242,7 @@ end
 
 # Register the options as experiments e.g. kubernetes_updates=true
 $options[:updater_options].each do |name, val|
-  puts "Registering exepriment '#{name}=#{val}'"
+  puts "Registering experiment '#{name}=#{val}'"
   Dependabot::Experiments.register(name, val)
 end
 
