@@ -57,7 +57,6 @@ async function run() {
       dockerRunner.arg(["-e", `AZURE_REPOSITORY=${variables.repository}`]);
       dockerRunner.arg(["-e", `AZURE_ACCESS_TOKEN=${variables.systemAccessToken}`]);
       dockerRunner.arg(["-e", `AZURE_SET_AUTO_COMPLETE=${variables.setAutoComplete}`]); // Set auto complete, if set
-      dockerRunner.arg(["-e", `AZURE_AUTO_COMPLETE_IGNORE_CONFIG_IDS=${JSON.stringify(variables.autoCompleteIgnoreConfigIds)}`]);
       dockerRunner.arg(["-e", `AZURE_MERGE_STRATEGY=${variables.mergeStrategy}`]);
 
       // Set Username
@@ -136,11 +135,19 @@ async function run() {
         dockerRunner.arg(["-e", `GITHUB_ACCESS_TOKEN=${variables.githubAccessToken}`]);
       }
 
+      // Set the protocol if not the default value
       if (variables.protocol !== 'https') {
         dockerRunner.arg(["-e", `AZURE_PROTOCOL=${variables.protocol}`]);
       }
+
+      // Set the host name if not the default value
       if (variables.hostname !== "dev.azure.com") {
         dockerRunner.arg(["-e", `AZURE_HOSTNAME=${variables.hostname}`]);
+      }
+
+      // Set the ignore config IDs for auto complete if not the default value
+      if (variables.autoCompleteIgnoreConfigIds.length > 0) {
+        dockerRunner.arg(["-e", `AZURE_AUTO_COMPLETE_IGNORE_CONFIG_IDS=${JSON.stringify(variables.autoCompleteIgnoreConfigIds)}`]);
       }
 
       // Set the port
