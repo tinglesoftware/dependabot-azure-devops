@@ -136,6 +136,10 @@ async function run() {
         dockerRunner.arg(["-e", 'DEPENDABOT_FAIL_ON_EXCEPTION=true']);
       }
 
+      // Set skip pull requests if true
+      if (variables.skipPullRequests === true) {
+        dockerRunner.arg(["-e", 'DEPENDABOT_SKIP_PULL_REQUESTS=true']);
+      }
 
       /*
        * Set env variables in the runner for Azure

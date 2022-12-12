@@ -65,6 +65,8 @@ interface ISharedVariables {
   extraEnvironmentVariables: string[];
   /** Merge strategies which can be used to complete a pull request */
   mergeStrategy: string;
+  /** Determines whether to skip creating/updating pull requests */
+  skipPullRequests: boolean;
 }
 
 /**
@@ -131,6 +133,9 @@ export default function getSharedVariables(): ISharedVariables {
   // Get the selected merge strategy
   let mergeStrategy = getInput("mergeStrategy", true);
 
+  // Check if to skip creating/updating pull requests
+  let skipPullRequests: boolean = getBoolInput("skipPullRequests", false);
+
   return {
     protocol,
     hostname,
@@ -159,6 +164,7 @@ export default function getSharedVariables(): ISharedVariables {
     useConfigFile,
     forwardHostSshSocket,
     extraEnvironmentVariables,
-    mergeStrategy
+    mergeStrategy,
+    skipPullRequests,
   };
 }
