@@ -276,7 +276,23 @@ fetcher_args = {
 }
 puts "Looking for configuration file in the repository ..."
 $config_file = begin
-  cfg_file = Dependabot::Config::FileFetcher.new(**fetcher_args).config_file
+  # Using fetcher_args as before or in the examples will result in the
+  # config file not being found if the directory specified is not the root.
+  # This happens because the files are checked relative to the supplied directory.
+  # https://github.com/dependabot/dependabot-core/blob/c5cd618812b07ece4a4b53ea18d80ad213b077e7/common/lib/dependabot/config/file_fetcher.rb#L29
+  #
+  # To solve this, the FileFetcher for the Config should have its own source
+  # with the directory pointing to the root. Cloning makes it much easier
+  # since we are only making the change for fetching the config file.
+  #
+  # See https://github.com/tinglesoftware/dependabot-azure-devops/issues/399
+  cfg_source = $source.clone
+  cfg_source.directory = "/"
+  cfg_file = Dependabot::Config::FileFetcher.new(
+    source: cfg_source,
+    credentials: $options[:credentials],
+    options: $options[:updater_options],
+  ).config_file
   puts "Using configuration file at '#{cfg_file.path}' 😎"
   Dependabot::Config::File.parse(cfg_file.content)
 rescue Dependabot::RepoNotFound, Dependabot::DependencyFileNotFound
