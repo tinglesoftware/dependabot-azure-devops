@@ -34,8 +34,10 @@ $options = {
   branch_name_separator: ENV["DEPENDABOT_BRANCH_NAME_SEPARATOR"] || "/", # Separator used for created branches.
   milestone: ENV['DEPENDABOT_MILESTONE'] || nil, # Get the work item to attach
   updater_options: {},
-  pr_author_email: ENV["DEPENDABOT_AUTHOR_EMAIL"] || "noreply@github.com",
-  pr_author_name: ENV["DEPENDABOT_AUTHOR_NAME"] || "dependabot[bot]",
+  author_details: {
+    email: ENV["DEPENDABOT_AUTHOR_EMAIL"] || "noreply@github.com",
+    name: ENV["DEPENDABOT_AUTHOR_NAME"] || "dependabot[bot]",
+  }
   fail_on_exception: ENV['DEPENDABOT_FAIL_ON_EXCEPTION'] == "true", # Stop the job if an exception occurs
 
   # See description of requirements here:
@@ -446,10 +448,7 @@ dependencies.select(&:top_level?).each do |dep|
         files: updated_files,
         credentials: $options[:credentials],
         pull_request_number: conflict_pull_request_id,
-        author_details: {
-          email: $options[:pr_author_email],
-          name: $options[:pr_author_name]
-        }
+        author_details: $options[:author_details],
       )
 
       print "Submitting pull request (##{conflict_pull_request_id}) update for #{dep.name}. "
@@ -468,10 +467,7 @@ dependencies.select(&:top_level?).each do |dep|
         files: updated_files,
         credentials: $options[:credentials],
         # assignees: assignees,
-        author_details: {
-          email: $options[:pr_author_email],
-          name: $options[:pr_author_name]
-        },
+        author_details: $options[:author_details],
         commit_message_options: $update_config.commit_message_options.to_h,
         custom_labels: $options[:custom_labels],
         milestone: $options[:milestone],
