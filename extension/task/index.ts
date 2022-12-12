@@ -52,8 +52,6 @@ async function run() {
       dockerRunner.arg(["-e", `DEPENDABOT_FAIL_ON_EXCEPTION=${variables.failOnException}`]); // Set exception behaviour
       dockerRunner.arg(["-e", `DEPENDABOT_REJECT_EXTERNAL_CODE=${update.rejectExternalCode}`]);
       dockerRunner.arg(["-e", `DEPENDABOT_EXCLUDE_REQUIREMENTS_TO_UNLOCK=${variables.excludeRequirementsToUnlock}`]);
-      dockerRunner.arg(["-e", `AZURE_PROTOCOL=${variables.protocol}`]);
-      dockerRunner.arg(["-e", `AZURE_HOSTNAME=${variables.hostname}`]);
       dockerRunner.arg(["-e", `AZURE_ORGANIZATION=${variables.organization}`]); // Set the organization
       dockerRunner.arg(["-e", `AZURE_PROJECT=${variables.project}`]); // Set the project
       dockerRunner.arg(["-e", `AZURE_REPOSITORY=${variables.repository}`]);
@@ -136,6 +134,13 @@ async function run() {
       // Set the github token, if one is provided
       if (variables.githubAccessToken) {
         dockerRunner.arg(["-e", `GITHUB_ACCESS_TOKEN=${variables.githubAccessToken}`]);
+      }
+
+      if (variables.protocol !== 'https') {
+        dockerRunner.arg(["-e", `AZURE_PROTOCOL=${variables.protocol}`]);
+      }
+      if (variables.hostname !== "dev.azure.com") {
+        dockerRunner.arg(["-e", `AZURE_HOSTNAME=${variables.hostname}`]);
       }
 
       // Set the port
