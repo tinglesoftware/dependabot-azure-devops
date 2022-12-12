@@ -53,7 +53,6 @@ async function run() {
       dockerRunner.arg(["-e", `AZURE_PROJECT=${variables.project}`]); // Set the project
       dockerRunner.arg(["-e", `AZURE_REPOSITORY=${variables.repository}`]);
       dockerRunner.arg(["-e", `AZURE_ACCESS_TOKEN=${variables.systemAccessToken}`]);
-      dockerRunner.arg(["-e", `AZURE_SET_AUTO_COMPLETE=${variables.setAutoComplete}`]); // Set auto complete, if set
       dockerRunner.arg(["-e", `AZURE_MERGE_STRATEGY=${variables.mergeStrategy}`]);
 
       // Set Username
@@ -160,6 +159,10 @@ async function run() {
         dockerRunner.arg(["-e", `AZURE_HOSTNAME=${variables.hostname}`]);
       }
 
+      // Set auto complete, if set
+      if (variables.setAutoComplete === true) {
+        dockerRunner.arg(["-e", 'AZURE_SET_AUTO_COMPLETE=true']);
+      }
       // Set the ignore config IDs for auto complete if not the default value
       if (variables.autoCompleteIgnoreConfigIds.length > 0) {
         dockerRunner.arg(["-e", `AZURE_AUTO_COMPLETE_IGNORE_CONFIG_IDS=${JSON.stringify(variables.autoCompleteIgnoreConfigIds)}`]);
