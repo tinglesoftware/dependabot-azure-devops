@@ -121,7 +121,9 @@ unless ENV["GITHUB_ACCESS_TOKEN"].to_s.strip.empty?
 end
 # DEPENDABOT_EXTRA_CREDENTIALS, for example:
 # "[{\"type\":\"npm_registry\",\"registry\":\"registry.npmjs.org\",\"token\":\"123\"}]"
-$options[:credentials] += JSON.parse(ENV["DEPENDABOT_EXTRA_CREDENTIALS"]) unless ENV["DEPENDABOT_EXTRA_CREDENTIALS"].to_s.strip.empty?
+unless ENV["DEPENDABOT_EXTRA_CREDENTIALS"].to_s.strip.empty?
+  $options[:credentials] += JSON.parse(ENV["DEPENDABOT_EXTRA_CREDENTIALS"])
+end
 
 ##########################################
 # Setup the requirements update strategy #
@@ -135,8 +137,8 @@ unless ENV["DEPENDABOT_VERSIONING_STRATEGY"].to_s.strip.empty?
     "increase" => :bump_versions,
     "increase-if-necessary" => :bump_versions_if_necessary
   }.freeze
-  requirements_update_strategy_raw = ENV["DEPENDABOT_VERSIONING_STRATEGY"] || "auto"
-  $options[:requirements_update_strategy] = VERSIONING_STRATEGIES.fetch(requirements_update_strategy_raw)
+  strategy_raw = ENV["DEPENDABOT_VERSIONING_STRATEGY"] || "auto"
+  $options[:requirements_update_strategy] = VERSIONING_STRATEGIES.fetch(strategy_raw)
 
   # For npm_and_yarn & composer, we must correct the strategy to one allowed
   # https://github.com/dependabot/dependabot-core/blob/5ec858331d11253a30aa15fab25ae22fbdecdee0/npm_and_yarn/lib/dependabot/npm_and_yarn/update_checker/requirements_updater.rb#L18-L19
@@ -162,18 +164,14 @@ unless ENV["DEPENDABOT_VERSIONING_STRATEGY"].to_s.strip.empty?
   end
 end
 
-####################################################
-# Setup the hostname, protocol and port to be used #
-####################################################
-$options[:azure_port] = ENV["AZURE_PORT"] || ($options[:azure_protocol] == "http" ? "80" : "443")
-puts "Using hostname = '#{$options[:azure_hostname]}', protocol = '#{$options[:azure_protocol]}', port = '#{$options[:azure_port]}'."
-
 #################################################################
 #                     Setup Allow conditions                    #
 # DEPENDABOT_ALLOW_CONDITIONS Example:
 # [{"dependency-name":"sphinx","dependency-type":"production"}]
 #################################################################
-$options[:allow_conditions] = JSON.parse(ENV["DEPENDABOT_ALLOW_CONDITIONS"]) unless ENV["DEPENDABOT_ALLOW_CONDITIONS"].to_s.strip.empty?
+unless ENV["DEPENDABOT_ALLOW_CONDITIONS"].to_s.strip.empty?
+  $options[:allow_conditions] = JSON.parse(ENV["DEPENDABOT_ALLOW_CONDITIONS"])
+end
 
 # Get allow versions for a dependency
 TYPE_HANDLERS = { # [Hash<String, Proc>] handlers for type allow rules
@@ -195,14 +193,18 @@ end
 # DEPENDABOT_IGNORE_CONDITIONS Example:
 # [{"dependency-name":"ruby","versions":[">= 3.a", "< 4"]}]
 #################################################################
-$options[:ignore_conditions] = JSON.parse(ENV["DEPENDABOT_IGNORE_CONDITIONS"]) unless ENV["DEPENDABOT_IGNORE_CONDITIONS"].to_s.strip.empty?
+unless ENV["DEPENDABOT_IGNORE_CONDITIONS"].to_s.strip.empty?
+  $options[:ignore_conditions] = JSON.parse(ENV["DEPENDABOT_IGNORE_CONDITIONS"])
+end
 
 ######################################
 #           Setup Labels             #
 # DEPENDABOT_LABELS Example:
 # ["npm dependencies","triage-board"]
 ######################################
-$options[:custom_labels] = JSON.parse(ENV["DEPENDABOT_LABELS"]) unless ENV["DEPENDABOT_LABELS"].to_s.strip.empty?
+unless ENV["DEPENDABOT_LABELS"].to_s.strip.empty?
+  $options[:custom_labels] = JSON.parse(ENV["DEPENDABOT_LABELS"])
+end
 
 # Get ignore versions for a dependency
 def ignored_versions_for(dep)
@@ -243,8 +245,12 @@ $options[:updater_options].each do |name, val|
   Dependabot::Experiments.register(name, val)
 end
 
+####################################################
+# Setup the hostname, protocol and port to be used #
+####################################################
+$options[:azure_port] = ENV["AZURE_PORT"] || ($options[:azure_protocol] == "http" ? "80" : "443")
 $api_endpoint = "#{$options[:azure_protocol]}://#{$options[:azure_hostname]}:#{$options[:azure_port]}/"
-$api_endpoint = $api_endpoint + "#{$options[:azure_virtual_directory]}/" if !$options[:azure_virtual_directory].empty?
+$api_endpoint = $api_endpoint + "#{$options[:azure_virtual_directory]}/" unless $options[:azure_virtual_directory].empty?
 puts "Using '#{$api_endpoint}' as API endpoint"
 puts "Pull Requests shall be linked to milestone (work item) #{$options[:milestone]}" if $options[:milestone]
 puts "Pull Requests shall be labeled #{$options[:custom_labels]}" if $options[:custom_labels]
@@ -310,7 +316,7 @@ azure_client = Dependabot::Clients::Azure.for_source(
   credentials: $options[:credentials],
 )
 default_branch_name = azure_client.fetch_default_branch($source.repo)
-active_pull_requests_for_this_repo = azure_client.pull_requests_active(default_branch_name)
+active_pull_requests = azure_client.pull_requests_active(default_branch_name)
 
 pull_requests_count = 0
 
@@ -357,7 +363,7 @@ dependencies.select(&:top_level?).each do |dep|
     # Check if the dependency is allowed
     allow_type = allow_conditions_for(dep)
     allowed = checker.vulnerable? || $options[:allow_conditions].empty? || (allow_type && TYPE_HANDLERS[allow_type].call(dep, checker))
-    if !allowed
+    unless allowed
       puts "Updating #{dep.name} is not allowed"
       next
     end
@@ -381,62 +387,64 @@ dependencies.select(&:top_level?).each do |dep|
     ###################################
     # Find out if a PR already exists #
     ###################################
-    conflict_pull_request_commit_id = nil
+    conflict_pull_request_commit = nil
     conflict_pull_request_id = nil
     existing_pull_request = nil
-    active_pull_requests_for_this_repo.each do |pr|
+    active_pull_requests.each do |pr|
       pr_id = pr["pullRequestId"]
       title = pr["title"]
-      sourceRefName = pr["sourceRefName"]
+      source_ref_name = pr["sourceRefName"]
 
       # Filter those containing " #{dep.name} "
       # The prefix " " and suffix " " avoids taking PRS for dependencies named the same
       # e.g. Tingle.EventBus and Tingle.EventBus.Transports.Azure.ServiceBus
-      next if !title.include?(" #{dep.name} ")
+      next unless title.include?(" #{dep.name} ")
 
       # Ensure the title contains the current dependency version
       # Sometimes, the dep.version might be null such as in npm
       # when the package.lock.json is not checked into source.
-      if title.include?(dep.name) && dep.version && title.include?(dep.version)
-        # If the title does not contain the updated version,
-        # we need to close the PR and delete it's branch,
-        # because there is a newer version available
-        #
-        # Sample Titles:
-        # Bump Tingle.Extensions.Logging.LogAnalytics from 3.4.2-ci0005 to 3.4.2-ci0006
-        # chore(deps): bump dotenv from 9.0.1 to 9.0.2 in /server
-        if !title.include?("#{updated_deps[0].version} ") && !title.end_with?(updated_deps[0].version)
-          # Close old version PR
-          azure_client.pull_request_abandon(pr_id)
-          azure_client.branch_delete(sourceRefName)
-          puts "Closed Pull Request ##{pr_id}"
-          next
-        end
+      next unless title.include?(dep.name) && dep.version && title.include?(dep.version)
 
-        # If the merge status of the current PR is not successful,
-        # we need to resolve the merge conflicts
-        existing_pull_request = pr
-        if pr["mergeStatus"] != "succeeded"
-          # ignore pull request manully edited
-          next if azure_client.pull_request_commits(pr_id).length > 1
-          # keep pull request
-          conflict_pull_request_commit_id = pr["lastMergeSourceCommit"]["commitId"]
-          conflict_pull_request_id = pr_id
-          break
-        end
+      # If the title does not contain the updated version,
+      # we need to close the PR and delete it's branch,
+      # because there is a newer version available
+      #
+      # Sample Titles:
+      # Bump Tingle.Extensions.Logging.LogAnalytics from 3.4.2-ci0005 to 3.4.2-ci0006
+      # chore(deps): bump dotenv from 9.0.1 to 9.0.2 in /server
+      if !title.include?("#{updated_deps[0].version} ") && !title.end_with?(updated_deps[0].version)
+        # Close old version PR
+        azure_client.pull_request_abandon(pr_id)
+        azure_client.branch_delete(source_ref_name)
+        puts "Closed Pull Request ##{pr_id}"
+        next
       end
+
+      existing_pull_request = pr
+
+      # If the merge status of the current PR is not succeeded,
+      # we need to resolve the merge conflicts
+      next unless pr["mergeStatus"] != "succeeded"
+
+      # ignore pull request manually edited
+      next if azure_client.pull_request_commits(pr_id).length > 1
+
+      # keep pull request for updating later
+      conflict_pull_request_commit = pr["lastMergeSourceCommit"]["commitId"]
+      conflict_pull_request_id = pr_id
+      break
     end
 
     pull_request = nil
     pull_request_id = nil
-    if conflict_pull_request_commit_id && conflict_pull_request_id
+    if conflict_pull_request_commit && conflict_pull_request_id
       ##############################################
       # Update pull request with conflict resolved #
       ##############################################
       pr_updater = Dependabot::PullRequestUpdater.new(
         source: $source,
         base_commit: commit,
-        old_commit: conflict_pull_request_commit_id,
+        old_commit: conflict_pull_request_commit,
         files: updated_files,
         credentials: $options[:credentials],
         pull_request_number: conflict_pull_request_id,
@@ -506,29 +514,34 @@ dependencies.select(&:top_level?).each do |dep|
     pull_requests_count += 1
     next unless pull_request_id
 
+    # Auto approve this Pull Request
     if $options[:auto_approve_pr]
       puts "Auto Approving PR for user #{$options[:auto_approve_user_email]}"
 
       azure_client.pull_request_approve(
-        pull_request_id,
-        $options[:auto_approve_user_email],
-        $options[:auto_approve_user_token]
+        pull_request_id: pull_request_id,
+        reviewer_email: $options[:auto_approve_user_email],
+        reviewer_token: $options[:auto_approve_user_token]
       )
     end
 
     # Set auto complete for this Pull Request
     # Pull requests that pass all policies will be merged automatically.
+    # Optional policies can be ignored by passing their identifiers
     if $options[:set_auto_complete]
       auto_complete_user_id = pull_request['createdBy']['id']
-      merge_strategy = $options[:merge_strategy]
-      auto_complete_ignore_config_ids = $options[:auto_complete_ignore_config_ids]
       puts "Setting auto complete on ##{pull_request_id}."
-      azure_client.pull_request_auto_complete(pull_request_id, auto_complete_user_id, merge_strategy, auto_complete_ignore_config_ids)
+      azure_client.pull_request_auto_complete(
+        pull_request_id: pull_request_id,
+        user_id: auto_complete_user_id,
+        merge_strategy: $options[:merge_strategy],
+        ignore_config_ids: $options[:auto_complete_ignore_config_ids]
+      )
     end
 
   rescue StandardError => e
     raise e if $options[:fail_on_exception]
-    puts "Error updating #{dep.name} from #{dep.version} to #{checker.latest_version} (continuing)"
+    puts "Error working on updates for #{dep.name} #{dep.version} (continuing)"
     puts e.full_message
   end
 end
