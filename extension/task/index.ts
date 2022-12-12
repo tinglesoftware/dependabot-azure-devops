@@ -130,10 +130,14 @@ async function run() {
       }
       if (variables.extraCredentials) {
         //TODO remove variables.extraCredentials in future in favor default yml configuration.
-        dockerRunner.arg(["-e", `DEPENDABOT_EXTRA_CREDENTIALS=${variables.extraCredentials}`]);
+        if (variables.extraCredentials.length > 0 && variables.extraCredentials !== '[]') {
+          dockerRunner.arg(["-e", `DEPENDABOT_EXTRA_CREDENTIALS=${variables.extraCredentials}`]);
+        }
       } else if (config.registries != undefined) {
-        let extraCredentials = JSON.stringify(config.registries);
-        dockerRunner.arg(["-e", `DEPENDABOT_EXTRA_CREDENTIALS=${extraCredentials}`]);
+        if (config.registries.length > 0) {
+          let extraCredentials = JSON.stringify(config.registries);
+          dockerRunner.arg(["-e", `DEPENDABOT_EXTRA_CREDENTIALS=${extraCredentials}`]);
+        }
       }
 
       // Set exception behaviour if true
