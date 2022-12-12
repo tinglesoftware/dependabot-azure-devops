@@ -47,6 +47,11 @@ async function run() {
       dockerRunner.arg(["--rm"]); // remove after execution
       dockerRunner.arg(["-i"]); // attach pseudo tty
 
+      // Set the github token, if one is provided
+      if (variables.githubAccessToken) {
+        dockerRunner.arg(["-e", `GITHUB_ACCESS_TOKEN=${variables.githubAccessToken}`]);
+      }
+
       /*
        * Set env variables in the runner for Dependabot
        */
@@ -153,11 +158,6 @@ async function run() {
       // Set Username
       if (variables.systemAccessUser) {
         dockerRunner.arg(["-e", `AZURE_ACCESS_USERNAME=${variables.systemAccessUser}`]);
-      }
-
-      // Set the github token, if one is provided
-      if (variables.githubAccessToken) {
-        dockerRunner.arg(["-e", `GITHUB_ACCESS_TOKEN=${variables.githubAccessToken}`]);
       }
 
       // Set the protocol if not the default value
