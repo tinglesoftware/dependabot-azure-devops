@@ -29,7 +29,7 @@ $options = {
   reject_external_code: ENV['DEPENDABOT_REJECT_EXTERNAL_CODE'] == "true",
   requirements_update_strategy: nil,
   ignore_conditions: [],
-  pull_requests_limit: ENV["DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT"].to_i || 5,
+  pull_requests_limit: ENV["DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT"]&.to_i || 5,
   custom_labels: nil, # nil instead of empty array to ensure default labels are passed
   branch_name_separator: ENV["DEPENDABOT_BRANCH_NAME_SEPARATOR"] || "/", # Separator used for created branches.
   milestone: ENV['DEPENDABOT_MILESTONE'] || nil, # Get the work item to attach
@@ -407,13 +407,29 @@ dependencies.select(&:top_level?).each do |dep|
       credentials: $options[:credentials],
     )
 
+    updated_files = updater.updated_dependency_files
+
     # Skip creating/updating PR
     if $options[:skip_pull_requests]
-      puts "Skipping creating/updating Pull Request for #{dep.name} as instructed."
+      # We are building a message as a way to test if commit-message in the config
+      # and commit_message_options.to_h work correctly when testing issue
+      # https://github.com/tinglesoftware/dependabot-azure-devops/issues/410
+      # In the future this will be replaced with the simpler line below:
+      #
+      # puts "Skipping creating/updating Pull Request for #{dep.name} as instructed."
+
+      msg = Dependabot::PullRequestCreator::MessageBuilder.new(
+        dependencies: updated_deps,
+        files: updated_files,
+        credentials: $options[:credentials],
+        source: $source,
+        commit_message_options: $update_config.commit_message_options.to_h,
+        github_redirection_service: Dependabot::PullRequestCreator::DEFAULT_GITHUB_REDIRECTION_SERVICE
+      ).message
+      puts "Skipping creating/updating Pull Request. Title: #{msg.pr_name}"
+      pull_requests_count += 1
       next
     end
-
-    updated_files = updater.updated_dependency_files
 
     ###################################
     # Find out if a PR already exists #
