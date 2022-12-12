@@ -49,7 +49,6 @@ async function run() {
 
       // Set env variables in the runner
       dockerRunner.arg(["-e", `DEPENDABOT_PACKAGE_MANAGER=${update.packageEcosystem}`]);
-      dockerRunner.arg(["-e", `DEPENDABOT_EXCLUDE_REQUIREMENTS_TO_UNLOCK=${variables.excludeRequirementsToUnlock}`]);
       dockerRunner.arg(["-e", `AZURE_ORGANIZATION=${variables.organization}`]); // Set the organization
       dockerRunner.arg(["-e", `AZURE_PROJECT=${variables.project}`]); // Set the project
       dockerRunner.arg(["-e", `AZURE_REPOSITORY=${variables.repository}`]);
@@ -100,6 +99,11 @@ async function run() {
       let allow = update.allow || variables.allowOvr;
       if (allow) {
         dockerRunner.arg(["-e", `DEPENDABOT_ALLOW_CONDITIONS=${allow}`]);
+      }
+
+      // Set the requirements that should not be unlocked
+      if (variables.excludeRequirementsToUnlock) {
+        dockerRunner.arg(["-e", `DEPENDABOT_EXCLUDE_REQUIREMENTS_TO_UNLOCK=${variables.excludeRequirementsToUnlock}`]);
       }
 
       // Set the dependencies to ignore only when not using the config file
