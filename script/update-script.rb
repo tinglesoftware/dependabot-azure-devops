@@ -300,7 +300,7 @@ puts "Fetching dependency files ..."
 files = fetcher.files
 commit = fetcher.commit
 puts "Found #{files.length} dependency file(s) at commit #{commit}"
-files.each { |f| puts "   - #{f.path}" }
+files.each { |f| puts " - #{f.path}" }
 
 ##############################
 # Parse the dependency files #
@@ -314,6 +314,8 @@ parser = Dependabot::FileParsers.for_package_manager($package_manager).new(
 )
 
 dependencies = parser.parse
+puts "Found #{dependencies.length} dependencies"
+dependencies.each { |d| puts " - #{d.name} (#{d.version})" }
 
 ################################################
 # Get active pull requests for this repository #
