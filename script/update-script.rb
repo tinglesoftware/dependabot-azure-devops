@@ -29,7 +29,7 @@ $options = {
   reject_external_code: ENV['DEPENDABOT_REJECT_EXTERNAL_CODE'] == "true",
   requirements_update_strategy: nil,
   ignore_conditions: [],
-  pull_requests_limit: ENV["DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT"].to_i || 5,
+  pull_requests_limit: ENV["DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT"]&.to_i || 5,
   custom_labels: nil, # nil instead of empty array to ensure default labels are passed
   branch_name_separator: ENV["DEPENDABOT_BRANCH_NAME_SEPARATOR"] || "/", # Separator used for created branches.
   milestone: ENV['DEPENDABOT_MILESTONE'] || nil, # Get the work item to attach
