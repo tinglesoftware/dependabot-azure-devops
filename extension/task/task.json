@@ -44,14 +44,6 @@
       "helpMarkDown": "Determines if the task will pick config values specified from the yaml file located at `.github/dependabot.yml`"
     },
     {
-      "name": "forwardHostSshSocket",
-      "type": "boolean",
-      "label": "Forward the host ssh socket",
-      "defaultValue": "false",
-      "required": false,
-      "helpMarkDown": "Ensure that the host ssh socket is forwarded to the container to authenticate with ssh"
-    },
-    {
       "name": "packageManager",
       "type": "pickList",
       "label": "Package Ecosystem",
@@ -302,6 +294,15 @@
       "required": false,
       "defaultValue": "",
       "helpMarkDown": "A semicolon (`;`) delimited list of environment variables that are sent to the docker container. See possible use case [here](https://github.com/tinglesoftware/dependabot-azure-devops/issues/138)"
+    },
+    {
+      "name": "forwardHostSshSocket",
+      "type": "boolean",
+      "groupName": "advanced",
+      "label": "Forward the host ssh socket",
+      "defaultValue": "false",
+      "required": false,
+      "helpMarkDown": "Ensure that the host ssh socket is forwarded to the container to authenticate with ssh"
     }
   ],
   "dataSourceBindings": [],
