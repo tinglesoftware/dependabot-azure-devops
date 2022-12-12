@@ -153,7 +153,7 @@ async function run() {
         dockerRunner.arg(["-e", `AZURE_VIRTUAL_DIRECTORY=${variables.virtualDirectory}`]);
       }
 
-      // Set auto complete
+      // Set auto approve
       dockerRunner.arg(["-e", `AZURE_AUTO_APPROVE_PR=${variables.autoApprove}`]);
       if (variables.autoApproveUserEmail) {
         dockerRunner.arg(["-e", `AZURE_AUTO_APPROVE_USER_EMAIL=${variables.autoApproveUserEmail}`]);
