@@ -34,8 +34,8 @@ $options = {
   branch_name_separator: ENV["DEPENDABOT_BRANCH_NAME_SEPARATOR"] || "/", # Separator used for created branches.
   milestone: ENV['DEPENDABOT_MILESTONE'] || nil, # Get the work item to attach
   updater_options: {},
-  pr_author_email: ENV["GIT_AUTHOR_EMAIL"] || "noreply@github.com",
-  pr_author_name: ENV["GIT_AUTHOR_NAME"] || "dependabot[bot]",
+  pr_author_email: ENV["DEPENDABOT_AUTHOR_EMAIL"] || "noreply@github.com",
+  pr_author_name: ENV["DEPENDABOT_AUTHOR_NAME"] || "dependabot[bot]",
   fail_on_exception: ENV['DEPENDABOT_FAIL_ON_EXCEPTION'] == "true", # Stop the job if an exception occurs
 
   # See description of requirements here:
