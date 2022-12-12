@@ -296,8 +296,11 @@ puts "Fetching #{$package_manager} dependency files for #{$repo_name}"
 puts "Targeting '#{$options[:branch] || 'default'}' branch under '#{$options[:directory]}' directory"
 puts "Using '#{$options[:requirements_update_strategy]}' requirements update strategy" if $options[:requirements_update_strategy]
 fetcher = Dependabot::FileFetchers.for_package_manager($package_manager).new(**fetcher_args)
+puts "Fetching dependency files ..."
 files = fetcher.files
 commit = fetcher.commit
+puts "Found #{files.length} dependency file(s) at commit #{commit}"
+files.each { |f| puts "   - #{f.path}" }
 
 ##############################
 # Parse the dependency files #
