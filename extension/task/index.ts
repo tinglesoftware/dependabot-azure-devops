@@ -49,7 +49,6 @@ async function run() {
 
       // Set env variables in the runner
       dockerRunner.arg(["-e", `DEPENDABOT_PACKAGE_MANAGER=${update.packageEcosystem}`]);
-      dockerRunner.arg(["-e", `DEPENDABOT_FAIL_ON_EXCEPTION=${variables.failOnException}`]); // Set exception behaviour
       dockerRunner.arg(["-e", `DEPENDABOT_REJECT_EXTERNAL_CODE=${update.rejectExternalCode}`]);
       dockerRunner.arg(["-e", `DEPENDABOT_EXCLUDE_REQUIREMENTS_TO_UNLOCK=${variables.excludeRequirementsToUnlock}`]);
       dockerRunner.arg(["-e", `AZURE_ORGANIZATION=${variables.organization}`]); // Set the organization
@@ -128,6 +127,11 @@ async function run() {
       } else if (config.registries != undefined) {
         let extraCredentials = JSON.stringify(config.registries);
         dockerRunner.arg(["-e", `DEPENDABOT_EXTRA_CREDENTIALS=${extraCredentials}`]);
+      }
+
+      // Set exception behaviour if true
+      if (variables.failOnException === true) {
+        dockerRunner.arg(["-e", 'DEPENDABOT_FAIL_ON_EXCEPTION=true']);
       }
 
       // Set the github token, if one is provided
