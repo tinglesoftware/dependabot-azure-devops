@@ -37,7 +37,7 @@ $options = {
   author_details: {
     email: ENV["DEPENDABOT_AUTHOR_EMAIL"] || "noreply@github.com",
     name: ENV["DEPENDABOT_AUTHOR_NAME"] || "dependabot[bot]",
-  }
+  },
   fail_on_exception: ENV['DEPENDABOT_FAIL_ON_EXCEPTION'] == "true", # Stop the job if an exception occurs
   skip_pull_requests: ENV['DEPENDABOT_SKIP_PULL_REQUESTS'] == "true", # Skip creating/updating Pull Requests
 
