@@ -276,7 +276,12 @@ fetcher_args = {
 }
 puts "Looking for configuration file in the repository ..."
 $config_file = begin
-  cfg_file = Dependabot::Config::FileFetcher.new(**fetcher_args).config_file
+  cfg_source = $source.clone
+  cfg_file = Dependabot::Config::FileFetcher.new(
+    source: cfg_source,
+    credentials: $options[:credentials],
+    options: $options[:updater_options],
+  ).config_file
   puts "Using configuration file at '#{cfg_file.path}' 😎"
   Dependabot::Config::File.parse(cfg_file.content)
 rescue Dependabot::RepoNotFound, Dependabot::DependencyFileNotFound
