@@ -379,11 +379,19 @@ dependencies.select(&:top_level?).each do |dep|
         end
       elsif !$options[:excluded_requirements].include?(:own) && checker.can_update?(requirements_to_unlock: :own) then :own
       elsif !$options[:excluded_requirements].include?(:all) && checker.can_update?(requirements_to_unlock: :all) then :all
-      else :update_not_possible
       end
 
     puts "Requirements to unlock #{requirements_to_unlock}"
-    next if requirements_to_unlock == :update_not_possible
+    if requirements_to_unlock == :update_not_possible
+      # Log conflicting dependencies preventing updates
+      conflicting_dependencies = checker.conflicting_dependencies
+      if conflicting_dependencies.any?
+        puts "The update is not possible because of the following conflicting dependencies:"
+        conflicting_dependencies.each { |conflicting_dep| puts " - #{conflicting_dep['explanation']}" }
+      end
+
+      next
+    end
 
     # Check if the dependency is allowed
     allow_type = allow_conditions_for(dep)
