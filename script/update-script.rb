@@ -395,6 +395,7 @@ dependencies.select(&:top_level?).each do |dep|
         end
       elsif !$options[:excluded_requirements].include?(:own) && checker.can_update?(requirements_to_unlock: :own) then :own
       elsif !$options[:excluded_requirements].include?(:all) && checker.can_update?(requirements_to_unlock: :all) then :all
+      else :update_not_possible
       end
 
     puts "Requirements to unlock #{requirements_to_unlock}"
