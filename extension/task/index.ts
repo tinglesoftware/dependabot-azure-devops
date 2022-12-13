@@ -159,7 +159,7 @@ async function run() {
       // Set the security advisories
       if (variables.securityAdvisoriesEnabled) {
         if (variables.securityAdvisoriesJson) { // TODO: remove this once we migrate fully to files
-          dockerRunner.arg(["-e", `DEPENDABOT_SECURITY_ADVISORIES=${variables.securityAdvisoriesJson}`]);
+          dockerRunner.arg(["-e", `DEPENDABOT_SECURITY_ADVISORIES_JSON=${variables.securityAdvisoriesJson}`]);
         }
         else if (variables.securityAdvisoriesFile) { // TODO: remove this once we have files on CDN/GitHub repo
           const containerPath = "/mnt/security_advisories.json"
