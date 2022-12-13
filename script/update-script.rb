@@ -241,6 +241,7 @@ def update_checker_for(dependency, files)
     requirements_update_strategy: $options[:requirements_update_strategy],
     ignored_versions: ignored_versions_for(dependency),
     security_advisories: security_advisories,
+    options: $options[:updater_options],
   )
 end
 
