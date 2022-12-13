@@ -199,8 +199,10 @@ end
 # [{"dependency-name":"name","patched-versions":[],"unaffected-versions":[],"affected-versions":["< 0.10.0"]}]
 #################################################################
 unless ENV["DEPENDABOT_SECURITY_ADVISORIES_FILE"].to_s.strip.empty?
-  security_advisories_file = File.read(ENV["DEPENDABOT_SECURITY_ADVISORIES_FILE"])
-  $options[:security_advisories] += JSON.parse(security_advisories_file)
+  security_advisories_file_name = ENV["DEPENDABOT_SECURITY_ADVISORIES_FILE"]
+  if File.exists?(security_advisories_file_name)
+    $options[:security_advisories] += JSON.parse(File.read(security_advisories_file_name))
+  end
 end
 unless ENV["DEPENDABOT_SECURITY_ADVISORIES"].to_s.strip.empty?
   $options[:security_advisories] += JSON.parse(ENV["DEPENDABOT_SECURITY_ADVISORIES"])
