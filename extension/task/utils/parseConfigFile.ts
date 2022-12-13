@@ -116,9 +116,11 @@ function parseUpdates(config: any): IDependabotUpdate[] {
       branchNameSeparator: update["pull-request-branch-name"] ? update["pull-request-branch-name"]["separator"] : undefined,
       rejectExternalCode: update["insecure-external-code-execution"] === 'deny',
 
-      // Convert to JSON and shorten the names as required by the script
+      // Convert to JSON or as required by the script
       allow: update["allow"] ? JSON.stringify(update["allow"]) : undefined,
       labels: update["labels"] ? JSON.stringify(update["labels"]) : undefined,
+      reviewers: update["reviewers"] ? JSON.stringify(update["reviewers"]) : undefined,
+      assignees: update["assignees"] ? JSON.stringify(update["assignees"]) : undefined,
     };
 
     if (!dependabotUpdate.packageEcosystem) {
