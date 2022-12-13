@@ -19,6 +19,11 @@
   "minimumAgentVersion": "2.105.0",
   "groups": [
     {
+      "name": "security_updates",
+      "displayName": "Security advisories, vulnerabilities, and updates.",
+      "isExpanded": false
+    },
+    {
       "name": "approval_completion",
       "displayName": "Auto Approval and Auto Completion or PRs",
       "isExpanded": false
@@ -231,6 +236,25 @@
     },
 
     {
+      "name": "securityAdvisories",
+      "type": "boolean",
+      "label": "Whether to add logic for security advisories",
+      "groupName": "security_updates",
+      "defaultValue": "true",
+      "required": false,
+      "helpMarkDown": "Determines if the task will add necessary logic to handle security advisories, vulnerabilities, and updates."
+    },
+    {
+      "name": "securityAdvisoriesFile",
+      "type": "filePath",
+      "label": "Path for the file containing security advisories in JSON format.",
+      "groupName": "security_updates",
+      "helpMarkDown": "The file containing security advisories.",
+      "required": false,
+      "visibleRule": "securityAdvisories=false"
+    },
+
+    {
       "name": "azureDevOpsAccessToken",
       "type": "string",
       "groupName": "advanced",
@@ -261,14 +285,6 @@
       "label": "Space-separated list of dependency updates requirements to be excluded.",
       "required": false,
       "helpMarkDown": "Exclude certain dependency updates requirements. See list of allowed values [here](https://github.com/dependabot/dependabot-core/issues/600#issuecomment-407808103). Useful if you have lots of dependencies and the update script too slow. The values provided are space-separated. Example: `own all` to only use the `none` version requirement."
-    },
-    {
-      "name": "securityAdvisoriesFile",
-      "type": "filePath",
-      "label": "Path for the file containing security advisories in JSON format.",
-      "groupName": "advanced",
-      "helpMarkDown": "The file containing security advisories.",
-      "required": false
     },
     {
       "name": "dockerImageRegistry",

@@ -39,8 +39,9 @@ interface ISharedVariables {
   /** A personal access token of the user that should approve the PR */
   autoApproveUserToken: string;
   extraCredentials: string;
-  securityAdvisories: string;
-  securityAdvisoriesFile: string;
+  securityAdvisoriesEnabled: boolean;
+  securityAdvisoriesFile: string | undefined;
+  securityAdvisoriesJson: string | undefined;
   /** Registry of the docker image to be pulled */
   dockerImageRegistry: string | undefined;
   /** Repository of the docker image to be pulled */
@@ -99,8 +100,9 @@ export default function getSharedVariables(): ISharedVariables {
   let autoApproveUserEmail: string = getInput("autoApproveUserEmail");
   let autoApproveUserToken: string = getInput("autoApproveUserToken");
   let extraCredentials = getVariable("DEPENDABOT_EXTRA_CREDENTIALS");
-  let securityAdvisories = getVariable("DEPENDABOT_SECURITY_ADVISORIES");
+  let securityAdvisoriesEnabled = getBoolInput("securityAdvisories", false);
   let securityAdvisoriesFile: string | undefined = getInput('securityAdvisoriesFile');
+  let securityAdvisoriesJson = getVariable("DEPENDABOT_SECURITY_ADVISORIES");
   let dockerImageRegistry: string | undefined = getInput('dockerImageRegistry');
   let dockerImageRepository: string = getInput('dockerImageRepository', true);
   let dockerImageTag: string = getDockerImageTag();
@@ -156,8 +158,9 @@ export default function getSharedVariables(): ISharedVariables {
     autoApproveUserEmail,
     autoApproveUserToken,
     extraCredentials,
-    securityAdvisories,
+    securityAdvisoriesEnabled,
     securityAdvisoriesFile,
+    securityAdvisoriesJson,
     dockerImageRegistry,
     dockerImageRepository,
     dockerImageTag,

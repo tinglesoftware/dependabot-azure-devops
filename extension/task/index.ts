@@ -157,15 +157,22 @@ async function run() {
       }
 
       // Set the security advisories
-      if (variables.securityAdvisories) {
-        dockerRunner.arg(["-e", `DEPENDABOT_SECURITY_ADVISORIES=${variables.securityAdvisories}`]);
-      }
-
-      // Set the security advisories file
-      if (variables.securityAdvisoriesFile) {
-        const containerPath = "/mnt/security_advisories.json"
-        dockerRunner.arg(['--mount', `type=bind,source=${variables.securityAdvisoriesFile},target=${containerPath}`]);
-        dockerRunner.arg(["-e", `DEPENDABOT_SECURITY_ADVISORIES_FILE=${containerPath}`]);
+      if (variables.securityAdvisoriesEnabled) {
+        if (variables.securityAdvisoriesJson) { // TODO: remove this once we migrate fully to files
+          dockerRunner.arg(["-e", `DEPENDABOT_SECURITY_ADVISORIES=${variables.securityAdvisoriesJson}`]);
+        }
+        else if (variables.securityAdvisoriesFile) { // TODO: remove this once we have files on CDN/GitHub repo
+          const containerPath = "/mnt/security_advisories.json"
+          dockerRunner.arg(['--mount', `type=bind,source=${variables.securityAdvisoriesFile},target=${containerPath}`]);
+          dockerRunner.arg(["-e", `DEPENDABOT_SECURITY_ADVISORIES_FILE=${containerPath}`]);
+        } else {
+          // TODO: consider downloading a file from Azure CDN for the current ecosystem
+          // For example:
+          // download from https://contoso.azureedge.net/security_advisories/nuget.json
+          //            to $(Pipeline.Workspace)/security_advisories/nuget.json
+          //
+          // Then pass this via a mount and ENV
+        }
       }
 
       /*
