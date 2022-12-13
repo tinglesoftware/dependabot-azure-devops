@@ -198,7 +198,9 @@ end
 # DEPENDABOT_SECURITY_ADVISORIES Example:
 # [{"dependency-name":"name","patched-versions":[],"unaffected-versions":[],"affected-versions":["< 0.10.0"]}]
 #################################################################
-$options[:security_advisories] += JSON.parse(ENV["DEPENDABOT_SECURITY_ADVISORIES"]) unless ENV["DEPENDABOT_SECURITY_ADVISORIES"].to_s.strip.empty?
+unless ENV["DEPENDABOT_SECURITY_ADVISORIES"].to_s.strip.empty?
+  $options[:security_advisories] += JSON.parse(ENV["DEPENDABOT_SECURITY_ADVISORIES"])
+end
 
 ##################################################################################################
 #                                     Setup Ignore conditions                                   #
