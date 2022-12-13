@@ -31,6 +31,8 @@ $options = {
   ignore_conditions: [],
   pull_requests_limit: ENV["DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT"]&.to_i || 5,
   custom_labels: nil, # nil instead of empty array to ensure default labels are passed
+  reviewers: nil, # nil instead of empty array to avoid API rejection
+  assignees: nil, # nil instead of empty array to avoid API rejection
   branch_name_separator: ENV["DEPENDABOT_BRANCH_NAME_SEPARATOR"] || "/", # Separator used for created branches.
   milestone: ENV['DEPENDABOT_MILESTONE'] || nil, # Get the work item to attach
   updater_options: {},
@@ -189,22 +191,36 @@ def allow_conditions_for(dep)
   found ? found['dependency-type'] : nil
 end
 
-#################################################################
-#                    Setup Ignore conditions                    #
-# DEPENDABOT_IGNORE_CONDITIONS Example:
-# [{"dependency-name":"ruby","versions":[">= 3.a", "< 4"]}]
-#################################################################
+##################################################################################################
+#                                     Setup Ignore conditions                                   #
+# DEPENDABOT_IGNORE_CONDITIONS Example: [{"dependency-name":"ruby","versions":[">= 3.a", "< 4"]}]
+##################################################################################################
 unless ENV["DEPENDABOT_IGNORE_CONDITIONS"].to_s.strip.empty?
   $options[:ignore_conditions] = JSON.parse(ENV["DEPENDABOT_IGNORE_CONDITIONS"])
 end
 
-######################################
-#           Setup Labels             #
-# DEPENDABOT_LABELS Example:
-# ["npm dependencies","triage-board"]
-######################################
+#################################################################
+#                        Setup Labels                           #
+# DEPENDABOT_LABELS Example: ["npm dependencies","triage-board"]
+#################################################################
 unless ENV["DEPENDABOT_LABELS"].to_s.strip.empty?
   $options[:custom_labels] = JSON.parse(ENV["DEPENDABOT_LABELS"])
+end
+
+#########################################################################
+#                         Setup Reviewers                               #
+# DEPENDABOT_REVIEWERS Example: ["be9321e2-f404-4ffa-8d6b-44efddb04865"]
+#########################################################################
+unless ENV["DEPENDABOT_REVIEWERS"].to_s.strip.empty?
+  $options[:reviewers] = JSON.parse(ENV["DEPENDABOT_REVIEWERS"])
+end
+
+#########################################################################
+#                           Setup Assignees                             #
+# DEPENDABOT_ASSIGNEES Example: ["be9321e2-f404-4ffa-8d6b-44efddb04865"]
+#########################################################################
+unless ENV["DEPENDABOT_ASSIGNEES"].to_s.strip.empty?
+  $options[:assignees] = JSON.parse(ENV["DEPENDABOT_ASSIGNEES"])
 end
 
 # Get ignore versions for a dependency
