@@ -161,6 +161,11 @@ async function run() {
         dockerRunner.arg(["-e", `DEPENDABOT_SECURITY_ADVISORIES=${variables.securityAdvisories}`]);
       }
 
+      // Set the security advisories file
+      if (variables.securityAdvisoriesFile) {
+        dockerRunner.arg(["-e", `DEPENDABOT_SECURITY_ADVISORIES_FILE=${variables.securityAdvisoriesFile}`]);
+      }
+
       /*
        * Set env variables in the runner for Azure
        */
