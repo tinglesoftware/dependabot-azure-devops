@@ -38,6 +38,14 @@ export interface IDependabotUpdate {
    */
   labels?: string;
   /**
+   * Reviewers.
+   */
+  reviewers?: string;
+  /**
+   * Assignees.
+   */
+  assignees?: string;
+  /**
    * The milestone to associate pull requests with.
    */
   milestone?: string;

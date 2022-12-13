@@ -115,6 +115,16 @@ async function run() {
         dockerRunner.arg(["-e", `DEPENDABOT_LABELS=${update.labels}`]);
       }
 
+      // Set the reviewers
+      if (update.reviewers) {
+        dockerRunner.arg(["-e", `DEPENDABOT_REVIEWERS=${update.reviewers}`]);
+      }
+
+      // Set the assignees
+      if (update.assignees) {
+        dockerRunner.arg(["-e", `DEPENDABOT_ASSIGNEES=${update.assignees}`]);
+      }
+
       // Set the updater options, if provided
       if (variables.updaterOptions) {
         dockerRunner.arg(["-e", `DEPENDABOT_UPDATER_OPTIONS=${variables.updaterOptions}`]);
