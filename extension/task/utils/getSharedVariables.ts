@@ -40,6 +40,7 @@ interface ISharedVariables {
   autoApproveUserToken: string;
   extraCredentials: string;
   securityAdvisories: string;
+  securityAdvisoriesFile: string;
   /** Registry of the docker image to be pulled */
   dockerImageRegistry: string | undefined;
   /** Repository of the docker image to be pulled */
@@ -99,6 +100,7 @@ export default function getSharedVariables(): ISharedVariables {
   let autoApproveUserToken: string = getInput("autoApproveUserToken");
   let extraCredentials = getVariable("DEPENDABOT_EXTRA_CREDENTIALS");
   let securityAdvisories = getVariable("DEPENDABOT_SECURITY_ADVISORIES");
+  let securityAdvisoriesFile: string | undefined = getInput('securityAdvisoriesFile');
   let dockerImageRegistry: string | undefined = getInput('dockerImageRegistry');
   let dockerImageRepository: string = getInput('dockerImageRepository', true);
   let dockerImageTag: string = getDockerImageTag();
@@ -155,6 +157,7 @@ export default function getSharedVariables(): ISharedVariables {
     autoApproveUserToken,
     extraCredentials,
     securityAdvisories,
+    securityAdvisoriesFile,
     dockerImageRegistry,
     dockerImageRepository,
     dockerImageTag,
