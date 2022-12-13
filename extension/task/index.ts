@@ -163,7 +163,9 @@ async function run() {
 
       // Set the security advisories file
       if (variables.securityAdvisoriesFile) {
-        dockerRunner.arg(["-e", `DEPENDABOT_SECURITY_ADVISORIES_FILE=${variables.securityAdvisoriesFile}`]);
+        const containerPath = "/mnt/security_advisories.json"
+        dockerRunner.arg(['--mount', `type=bind,source=${variables.securityAdvisoriesFile},target=${containerPath}`]);
+        dockerRunner.arg(["-e", `DEPENDABOT_SECURITY_ADVISORIES_FILE=${containerPath}`]);
       }
 
       /*
