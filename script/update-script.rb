@@ -240,19 +240,6 @@ unless ENV["DEPENDABOT_ASSIGNEES"].to_s.strip.empty?
   $options[:assignees] = JSON.parse(ENV["DEPENDABOT_ASSIGNEES"])
 end
 
-# Create an update checker
-def update_checker_for(dependency, files)
-  Dependabot::UpdateCheckers.for_package_manager($package_manager).new(
-    dependency: dependency,
-    dependency_files: files,
-    credentials: $options[:credentials],
-    requirements_update_strategy: $options[:requirements_update_strategy],
-    ignored_versions: ignored_versions_for(dependency),
-    security_advisories: security_advisories,
-    options: $options[:updater_options],
-  )
-end
-
 # Get ignore versions for a dependency
 def ignored_versions_for(dep)
   if $options[:ignore_conditions].any?
@@ -285,6 +272,19 @@ def security_advisories
       safe_versions: safe_versions
     )
   end
+end
+
+# Create an update checker
+def update_checker_for(dependency, files)
+  Dependabot::UpdateCheckers.for_package_manager($package_manager).new(
+    dependency: dependency,
+    dependency_files: files,
+    credentials: $options[:credentials],
+    requirements_update_strategy: $options[:requirements_update_strategy],
+    ignored_versions: ignored_versions_for(dependency),
+    security_advisories: security_advisories,
+    options: $options[:updater_options],
+    )
 end
 
 # Parse the options e.g. goprivate=true,kubernetes_updates=true
