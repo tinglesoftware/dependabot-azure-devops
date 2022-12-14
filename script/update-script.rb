@@ -257,16 +257,18 @@ def ignored_versions_for(dep)
   end
 end
 
-def security_advisories
-  $options[:security_advisories].map do |adv|
+def security_advisories_for(dep)
+  relevant_advisories =
+    $options[:security_advisories].
+      select { |adv| adv.fetch("dependency-name").casecmp(dep.name).zero? }
+
+  relevant_advisories.map do |adv|
     vulnerable_versions = adv["affected-versions"] || []
     safe_versions = (adv["patched-versions"] || []) +
                     (adv["unaffected-versions"] || [])
 
-    # Handle case mismatches between advisory name and parsed dependency name
-    dependency_name = adv["dependency-name"].downcase
     Dependabot::SecurityAdvisory.new(
-      dependency_name: dependency_name,
+      dependency_name: dep.name,
       package_manager: $package_manager,
       vulnerable_versions: vulnerable_versions,
       safe_versions: safe_versions
@@ -282,7 +284,7 @@ def update_checker_for(dependency, files)
     credentials: $options[:credentials],
     requirements_update_strategy: $options[:requirements_update_strategy],
     ignored_versions: ignored_versions_for(dependency),
-    security_advisories: security_advisories,
+    security_advisories: security_advisories_for(dependency),
     options: $options[:updater_options],
     )
 end
@@ -297,7 +299,7 @@ def log_conflicting_dependencies(conflicting)
 end
 
 def security_fix?(dependency)
-  security_advisories.any? do |advisory|
+  security_advisories_for(dependency).any? do |advisory|
     advisory.fixed_by?(dependency)
   end
 end
