@@ -287,6 +287,21 @@ def update_checker_for(dependency, files)
     )
 end
 
+def log_conflicting_dependencies(conflicting)
+  return unless conflicting.any?
+
+  puts "The update is not possible because of the following conflicting dependencies:"
+  conflicting.each do |conflicting_dep|
+    puts " - #{conflicting_dep['explanation']}"
+  end
+end
+
+def security_fix?(dependency)
+  security_advisories.any? do |advisory|
+    advisory.fixed_by?(dependency)
+  end
+end
+
 # Parse the options e.g. goprivate=true,kubernetes_updates=true
 $options[:updater_options] = (ENV["DEPENDABOT_UPDATER_OPTIONS"] || "").split(",").to_h do |o|
   if o.include?("=") # key/value pair, e.g. goprivate=true
@@ -454,11 +469,14 @@ dependencies.select(&:top_level?).each do |dep|
 
     requirements_to_unlock =
       if !checker.requirements_unlocked_or_can_be?
-        if !$options[:excluded_requirements].include?(:none) && checker.can_update?(requirements_to_unlock: :none) then :none
+        if !$options[:excluded_requirements].include?(:none) &&
+          checker.can_update?(requirements_to_unlock: :none) then :none
         else :update_not_possible
         end
-      elsif !$options[:excluded_requirements].include?(:own) && checker.can_update?(requirements_to_unlock: :own) then :own
-      elsif !$options[:excluded_requirements].include?(:all) && checker.can_update?(requirements_to_unlock: :all) then :all
+      elsif !$options[:excluded_requirements].include?(:own) &&
+        checker.can_update?(requirements_to_unlock: :own) then :own
+      elsif !$options[:excluded_requirements].include?(:all) &&
+        checker.can_update?(requirements_to_unlock: :all) then :all
       else :update_not_possible
       end
 
@@ -468,13 +486,8 @@ dependencies.select(&:top_level?).each do |dep|
     end
 
     if requirements_to_unlock == :update_not_possible
-      # Log conflicting dependencies preventing updates
-      conflicting_dependencies = checker.conflicting_dependencies
-      if conflicting_dependencies.any?
-        puts "The update is not possible because of the following conflicting dependencies:"
-        conflicting_dependencies.each { |conflicting_dep| puts " - #{conflicting_dep['explanation']}" }
-      end
-
+      # TODO: log impossible update for security-only updates
+      log_conflicting_dependencies(checker.conflicting_dependencies)
       next
     end
 
@@ -489,6 +502,12 @@ dependencies.select(&:top_level?).each do |dep|
     updated_deps = checker.updated_dependencies(
       requirements_to_unlock: requirements_to_unlock
     )
+
+    if $options[:security_updates_only] && updated_deps.none? { |d| security_fix?(d) }
+      puts "Updated version is still vulnerable 🚨"
+      log_conflicting_dependencies(checker.conflicting_dependencies)
+      next
+    end
 
     #####################################
     # Generate updated dependency files #
