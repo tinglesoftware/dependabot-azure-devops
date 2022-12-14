@@ -427,6 +427,14 @@ dependencies.select(&:top_level?).each do |dep|
     puts "Checking if #{dep.name} #{dep.version} needs updating"
     checker = update_checker_for(dep, files)
 
+    # For security only updates, skip dependencies that are not vulnerable
+    if $options[:security_updates_only] && !checker.vulnerable?
+      unless checker.version_class.correct?(checker.dependency.version)
+        puts "Unable to update vulnerable dependencies for projects without " \
+             "a lockfile as the currently installed version isn't known "
+      end
+      next
+    end
 
     if checker.up_to_date?
       puts "No update needed for #{dep.name} #{dep.version}"
