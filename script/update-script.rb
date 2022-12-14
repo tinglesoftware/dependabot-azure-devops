@@ -21,6 +21,7 @@ require_relative "azure_helpers"
 $options = {
   credentials: [],
   provider: "azure",
+  github_token: nil,
 
   directory: ENV["DEPENDABOT_DIRECTORY"] || "/", # Directory where the base dependency files are.
   branch: ENV["DEPENDABOT_TARGET_BRANCH"] || nil, # Branch against which to create PRs
@@ -117,11 +118,12 @@ $options[:credentials] << {
 }
 unless ENV["GITHUB_ACCESS_TOKEN"].to_s.strip.empty?
   puts "GitHub access token has been provided."
+  $options[:github_token] = ENV["GITHUB_ACCESS_TOKEN"] # A GitHub access token with read access to public repos
   $options[:credentials] << {
     "type" => "git_source",
     "host" => "github.com",
     "username" => "x-access-token",
-    "password" => ENV["GITHUB_ACCESS_TOKEN"] # A GitHub access token with read access to public repos
+    "password" => $options[:github_token]
   }
 end
 # DEPENDABOT_EXTRA_CREDENTIALS, for example:
