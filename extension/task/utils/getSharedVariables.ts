@@ -41,7 +41,6 @@ interface ISharedVariables {
   extraCredentials: string;
   securityAdvisoriesEnabled: boolean;
   securityAdvisoriesFile: string | undefined;
-  securityAdvisoriesJson: string | undefined;
   /** Registry of the docker image to be pulled */
   dockerImageRegistry: string | undefined;
   /** Repository of the docker image to be pulled */
@@ -102,7 +101,6 @@ export default function getSharedVariables(): ISharedVariables {
   let extraCredentials = getVariable("DEPENDABOT_EXTRA_CREDENTIALS");
   let securityAdvisoriesEnabled = getBoolInput("securityAdvisories", false);
   let securityAdvisoriesFile: string | undefined = getInput('securityAdvisoriesFile');
-  let securityAdvisoriesJson = getVariable("DEPENDABOT_SECURITY_ADVISORIES_JSON");
   let dockerImageRegistry: string | undefined = getInput('dockerImageRegistry');
   let dockerImageRepository: string = getInput('dockerImageRepository', true);
   let dockerImageTag: string = getDockerImageTag();
@@ -160,7 +158,6 @@ export default function getSharedVariables(): ISharedVariables {
     extraCredentials,
     securityAdvisoriesEnabled,
     securityAdvisoriesFile,
-    securityAdvisoriesJson,
     dockerImageRegistry,
     dockerImageRepository,
     dockerImageTag,

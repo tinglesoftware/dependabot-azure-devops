@@ -195,7 +195,7 @@ end
 
 #################################################################
 #                   Setup Security Advisories                   #
-# DEPENDABOT_SECURITY_ADVISORIES_JSON Example:
+# File contents example:
 # [{"dependency-name":"name","patched-versions":[],"unaffected-versions":[],"affected-versions":["< 0.10.0"]}]
 #################################################################
 unless ENV["DEPENDABOT_SECURITY_ADVISORIES_FILE"].to_s.strip.empty?
@@ -203,9 +203,6 @@ unless ENV["DEPENDABOT_SECURITY_ADVISORIES_FILE"].to_s.strip.empty?
   if File.exists?(security_advisories_file_name)
     $options[:security_advisories] += JSON.parse(File.read(security_advisories_file_name))
   end
-end
-unless ENV["DEPENDABOT_SECURITY_ADVISORIES_JSON"].to_s.strip.empty?
-  $options[:security_advisories] += JSON.parse(ENV["DEPENDABOT_SECURITY_ADVISORIES_JSON"])
 end
 
 ##################################################################################################
