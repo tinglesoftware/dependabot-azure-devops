@@ -14,6 +14,7 @@ require "dependabot/config/file_fetcher"
 require "dependabot/omnibus"
 
 require_relative "azure_helpers"
+require_relative "vulnerabilities"
 
 # These options try to follow the dry-run.rb script.
 # https://github.com/dependabot/dependabot-core/blob/main/bin/dry-run.rb
@@ -22,6 +23,7 @@ $options = {
   credentials: [],
   provider: "azure",
   github_token: nil,
+  vulnerabilities_fetcher: nil,
 
   directory: ENV["DEPENDABOT_DIRECTORY"] || "/", # Directory where the base dependency files are.
   branch: ENV["DEPENDABOT_TARGET_BRANCH"] || nil, # Branch against which to create PRs
@@ -29,6 +31,7 @@ $options = {
   allow_conditions: [],
   reject_external_code: ENV['DEPENDABOT_REJECT_EXTERNAL_CODE'] == "true",
   requirements_update_strategy: nil,
+  security_advisories_graphql: ENV['DEPENDABOT_SECURITY_ADVISORIES_GRAPHQL'] == "true",
   security_advisories: [],
   security_updates_only: false,
   ignore_conditions: [],
@@ -258,6 +261,13 @@ def ignored_versions_for(dep)
       dep,
       security_updates_only: $options[:security_updates_only])
   end
+end
+
+def vulnerabilities_fetcher
+  return nil unless $options[:github_token]
+  return nil unless $options[:security_advisories_graphql]
+  $options[:vulnerabilities_fetcher] ||=
+    Dependabot::Vulnerabilities::Fetcher.new($package_manager, $options[:github_token])
 end
 
 def security_advisories_for(dep)
