@@ -276,7 +276,7 @@ def security_advisories_for(dep)
       select { |adv| adv.fetch("dependency-name").casecmp(dep.name).zero? }
 
   # add relevant advisories from GitHub's GraphQL if present
-  relevant_advisories += vulnerabilities_fetcher&.fetch(dep.name)
+  relevant_advisories += vulnerabilities_fetcher&.fetch(dep.name) || []
 
   relevant_advisories.map do |adv|
     vulnerable_versions = adv["affected-versions"] || []
