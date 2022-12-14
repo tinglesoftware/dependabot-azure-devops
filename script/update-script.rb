@@ -514,7 +514,10 @@ dependencies.select(&:top_level?).each do |dep|
     #####################################
     # Generate updated dependency files #
     #####################################
-    puts "Updating #{dep.name} from #{dep.version} to #{checker.latest_version}"
+    latest_allowed_version = checker.vulnerable? ?
+                               checker.lowest_resolvable_security_fix_version
+                               : checker.latest_resolvable_version
+    puts "Updating #{dep.name} from #{dep.version} to #{latest_allowed_version}"
     updater = Dependabot::FileUpdaters.for_package_manager($package_manager).new(
       dependencies: updated_deps,
       dependency_files: files,
