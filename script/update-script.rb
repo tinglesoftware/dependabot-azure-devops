@@ -441,14 +441,14 @@ dependencies.select(&:top_level?).each do |dep|
     #########################################
     # Get update details for the dependency #
     #########################################
-    puts "Checking if #{dep.name} #{dep.version} needs updating"
+    puts "Checking if #{dep.name} #{dep.version} #{$options[:security_updates_only] ? 'is vulnerable' : 'needs updating'}"
     checker = update_checker_for(dep, files)
-
-    puts "#{dep.name} #{dep.version} is vulnerable" if checker.vulnerable?
 
     # For security only updates, skip dependencies that are not vulnerable
     if $options[:security_updates_only] && !checker.vulnerable?
-      unless checker.version_class.correct?(checker.dependency.version)
+      if checker.version_class.correct?(checker.dependency.version)
+        puts "#{dep.name} #{dep.version} is not vulnerable"
+      else
         puts "Unable to update vulnerable dependencies for projects without " \
              "a lockfile as the currently installed version isn't known "
       end
@@ -457,10 +457,11 @@ dependencies.select(&:top_level?).each do |dep|
 
     # For vulnerable dependencies
     if checker.vulnerable?
+      print "#{dep.name} #{dep.version} is vulnerable. "
       if checker.lowest_security_fix_version
-        puts "Earliest available non-vulnerable version is #{checker.lowest_security_fix_version}"
+        puts "Earliest non-vulnerable is #{checker.lowest_security_fix_version}"
       else
-        puts "There is no available non-vulnerable version"
+        puts "Can't find non-vulnerable version. 🚨"
       end
     end
 
@@ -482,7 +483,7 @@ dependencies.select(&:top_level?).each do |dep|
       else :update_not_possible
       end
 
-    puts "Requirements to unlock #{requirements_to_unlock}"
+    puts "Requirements to unlock #{requirements_to_unlock}" unless $options[:security_updates_only]
     if checker.respond_to?(:requirements_update_strategy)
       puts "Requirements update strategy #{checker.requirements_update_strategy}"
     end
