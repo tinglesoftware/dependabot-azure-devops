@@ -251,9 +251,13 @@ def ignored_versions_for(dep)
       )
     end
     Dependabot::Config::UpdateConfig.new(ignore_conditions: ignore_conditions).
-      ignored_versions_for(dep, security_updates_only: $options[:security_updates_only])
+      ignored_versions_for(
+        dep,
+        security_updates_only: $options[:security_updates_only])
   else
-    $update_config.ignored_versions_for(dep)
+    $update_config.ignored_versions_for(
+      dep,
+      security_updates_only: $options[:security_updates_only])
   end
 end
 
