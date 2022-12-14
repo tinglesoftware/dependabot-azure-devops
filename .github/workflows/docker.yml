@@ -22,7 +22,6 @@ on:
 jobs:
   dockerize:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.draft == false
 
     env:
       IMAGE_NAME: 'dependabot-azure-devops'
