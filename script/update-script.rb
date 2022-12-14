@@ -493,7 +493,6 @@ dependencies.select(&:top_level?).each do |dep|
     end
 
     if requirements_to_unlock == :update_not_possible
-      # TODO: log impossible update for security-only updates
       log_conflicting_dependencies(checker.conflicting_dependencies)
       next
     end
