@@ -541,7 +541,7 @@ dependencies.select(&:top_level?).each do |dep|
         author_details: $options[:author_details],
         commit_message_options: $update_config.commit_message_options.to_h,
         custom_labels: $options[:custom_labels],
-        reviewers: $options[:@reviewers],
+        reviewers: $options[:reviewers],
         assignees: $options[:assignees],
         milestone: $options[:milestone],
         branch_name_separator: $options[:branch_name_separator],
