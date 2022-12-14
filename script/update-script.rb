@@ -398,6 +398,10 @@ dependencies.select(&:top_level?).each do |dep|
       end
 
     puts "Requirements to unlock #{requirements_to_unlock}"
+    if checker.respond_to?(:requirements_update_strategy)
+      puts "Requirements update strategy #{checker.requirements_update_strategy}"
+    end
+
     if requirements_to_unlock == :update_not_possible
       # Log conflicting dependencies preventing updates
       conflicting_dependencies = checker.conflicting_dependencies
