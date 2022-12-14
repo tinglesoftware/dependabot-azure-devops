@@ -156,6 +156,25 @@ async function run() {
         dockerRunner.arg(["-e", 'DEPENDABOT_SKIP_PULL_REQUESTS=true']);
       }
 
+      // Set the security advisories
+      if (variables.securityAdvisoriesEnabled) {
+        if (variables.securityAdvisoriesJson) { // TODO: remove this once we migrate fully to files
+          dockerRunner.arg(["-e", `DEPENDABOT_SECURITY_ADVISORIES_JSON=${variables.securityAdvisoriesJson}`]);
+        }
+        else if (variables.securityAdvisoriesFile) { // TODO: remove this once we have files on CDN/GitHub repo
+          const containerPath = "/mnt/security_advisories.json"
+          dockerRunner.arg(['--mount', `type=bind,source=${variables.securityAdvisoriesFile},target=${containerPath}`]);
+          dockerRunner.arg(["-e", `DEPENDABOT_SECURITY_ADVISORIES_FILE=${containerPath}`]);
+        } else {
+          // TODO: consider downloading a file from Azure CDN for the current ecosystem
+          // For example:
+          // download from https://contoso.azureedge.net/security_advisories/nuget.json
+          //            to $(Pipeline.Workspace)/security_advisories/nuget.json
+          //
+          // Then pass this via a mount and ENV
+        }
+      }
+
       /*
        * Set env variables in the runner for Azure
        */

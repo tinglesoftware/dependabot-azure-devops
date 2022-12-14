@@ -72,6 +72,12 @@ When working with Azure Artifacts, some extra permission steps need to be done:
 1. The PAT should have *Packaging Read* permission.
 2. The user owning the PAT must be granted permissions to access the feed either directly or via a group. An easy way for this is to give `Contributor` permissions the `[{project_name}]\Contributors` group under the `Feed Settings -> Permissions` page. The page has the url format: `https://dev.azure.com/{organization}/{project}/_packaging?_a=settings&feed={feed-name}&view=permissions`.
 
+## Security Advisories, Vulnerabilities, and Updates
+
+Security-only updates ia a mechanism to only create pull requests for dependencies with vulnerabilities by updating them to the earliest available non-vulnerable version. Security updates are supported in the same way as the GitHub-hosted version with an exception to how the vulnerabilities are sourced. Currently, these can only be provided via an environment variable in JSON format e.g. `: '[{"dependency-name":"name","patched-versions":[],"unaffected-versions":[],"affected-versions":["< 0.10.0"]}]'` or via a JSON file via the `securityAdvisoriesFile` input e.g. `securityAdvisoriesFile: '$(Pipeline.Workspace)/advisories.json`. A file example is available [here](./security_advisories-example.json).
+
+Except for when you are using the hosted version, you are responsible for keeping the data up to date using GitHub's GraphQL API for `securityAdvisories`. Querying in the pipeline delays the update process.
+
 ## Kubernetes CronJob
 
 A Kubernetes CronJobs is a useful resource for running tasks (a.k.a Jobs) on a recurring schedule. For more information on them read the [documentation](https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/). Using the Docker image, we can create a CronJob and have it run periodically. The [environment variables](./script/README.md#environment-variables) are supplied in the job template but can be stored in a [ConfigMap](https://kubernetes.io/docs/concepts/configuration/configmap/) for ease of reuse.

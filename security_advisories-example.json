@@ -1,0 +1,12 @@
+[
+    {
+        "dependency-name": "Newtonsoft.Json",
+        "patched-versions": [
+            "13.0.1"
+        ],
+        "unaffected-versions": [],
+        "affected-versions": [
+            "< 13.0.1"
+        ]
+    }
+]

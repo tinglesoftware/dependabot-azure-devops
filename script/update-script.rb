@@ -28,6 +28,8 @@ $options = {
   allow_conditions: [],
   reject_external_code: ENV['DEPENDABOT_REJECT_EXTERNAL_CODE'] == "true",
   requirements_update_strategy: nil,
+  security_advisories: [],
+  security_updates_only: false,
   ignore_conditions: [],
   pull_requests_limit: ENV["DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT"]&.to_i || 5,
   custom_labels: nil, # nil instead of empty array to ensure default labels are passed
@@ -191,6 +193,21 @@ def allow_conditions_for(dep)
   found ? found['dependency-type'] : nil
 end
 
+#################################################################
+#                   Setup Security Advisories                   #
+# DEPENDABOT_SECURITY_ADVISORIES_JSON Example:
+# [{"dependency-name":"name","patched-versions":[],"unaffected-versions":[],"affected-versions":["< 0.10.0"]}]
+#################################################################
+unless ENV["DEPENDABOT_SECURITY_ADVISORIES_FILE"].to_s.strip.empty?
+  security_advisories_file_name = ENV["DEPENDABOT_SECURITY_ADVISORIES_FILE"]
+  if File.exists?(security_advisories_file_name)
+    $options[:security_advisories] += JSON.parse(File.read(security_advisories_file_name))
+  end
+end
+unless ENV["DEPENDABOT_SECURITY_ADVISORIES_JSON"].to_s.strip.empty?
+  $options[:security_advisories] += JSON.parse(ENV["DEPENDABOT_SECURITY_ADVISORIES_JSON"])
+end
+
 ##################################################################################################
 #                                     Setup Ignore conditions                                   #
 # DEPENDABOT_IGNORE_CONDITIONS Example: [{"dependency-name":"ruby","versions":[">= 3.a", "< 4"]}]
@@ -233,11 +250,61 @@ def ignored_versions_for(dep)
         update_types: ic["update-types"]
       )
     end
-    # Dependabot::Config::UpdateConfig.new(ignore_conditions: ignore_conditions).
-    #   ignored_versions_for(dep, security_updates_only: $options[:security_updates_only])
-    Dependabot::Config::UpdateConfig.new(ignore_conditions: ignore_conditions).ignored_versions_for(dep)
+    Dependabot::Config::UpdateConfig.new(ignore_conditions: ignore_conditions).
+      ignored_versions_for(
+        dep,
+        security_updates_only: $options[:security_updates_only])
   else
-    $update_config.ignored_versions_for(dep)
+    $update_config.ignored_versions_for(
+      dep,
+      security_updates_only: $options[:security_updates_only])
+  end
+end
+
+def security_advisories_for(dep)
+  relevant_advisories =
+    $options[:security_advisories].
+      select { |adv| adv.fetch("dependency-name").casecmp(dep.name).zero? }
+
+  relevant_advisories.map do |adv|
+    vulnerable_versions = adv["affected-versions"] || []
+    safe_versions = (adv["patched-versions"] || []) +
+                    (adv["unaffected-versions"] || [])
+
+    Dependabot::SecurityAdvisory.new(
+      dependency_name: dep.name,
+      package_manager: $package_manager,
+      vulnerable_versions: vulnerable_versions,
+      safe_versions: safe_versions
+    )
+  end
+end
+
+# Create an update checker
+def update_checker_for(dependency, files)
+  Dependabot::UpdateCheckers.for_package_manager($package_manager).new(
+    dependency: dependency,
+    dependency_files: files,
+    credentials: $options[:credentials],
+    requirements_update_strategy: $options[:requirements_update_strategy],
+    ignored_versions: ignored_versions_for(dependency),
+    security_advisories: security_advisories_for(dependency),
+    options: $options[:updater_options],
+    )
+end
+
+def log_conflicting_dependencies(conflicting)
+  return unless conflicting.any?
+
+  puts "The update is not possible because of the following conflicting dependencies:"
+  conflicting.each do |conflicting_dep|
+    puts " - #{conflicting_dep['explanation']}"
+  end
+end
+
+def security_fix?(dependency)
+  security_advisories_for(dependency).any? do |advisory|
+    advisory.fixed_by?(dependency)
   end
 end
 
@@ -260,6 +327,12 @@ end
 $options[:updater_options].each do |name, val|
   puts "Registering experiment '#{name}=#{val}'"
   Dependabot::Experiments.register(name, val)
+end
+
+# Enable security only updates if not enabled and limits is zero
+if !$options[:security_updates_only] && $options[:pull_requests_limit] == 0
+  puts "Pull requests limit is set to zero. Security only updates are implied."
+  $options[:security_updates_only] = true
 end
 
 ####################################################
@@ -372,15 +445,29 @@ dependencies.select(&:top_level?).each do |dep|
     #########################################
     # Get update details for the dependency #
     #########################################
-    puts "Checking if #{dep.name} #{dep.version} needs updating"
+    puts "Checking if #{dep.name} #{dep.version} #{$options[:security_updates_only] ? 'is vulnerable' : 'needs updating'}"
+    checker = update_checker_for(dep, files)
 
-    checker = Dependabot::UpdateCheckers.for_package_manager($package_manager).new(
-      dependency: dep,
-      dependency_files: files,
-      credentials: $options[:credentials],
-      requirements_update_strategy: $options[:requirements_update_strategy],
-      ignored_versions: ignored_versions_for(dep),
-    )
+    # For security only updates, skip dependencies that are not vulnerable
+    if $options[:security_updates_only] && !checker.vulnerable?
+      if checker.version_class.correct?(checker.dependency.version)
+        puts "#{dep.name} #{dep.version} is not vulnerable"
+      else
+        puts "Unable to update vulnerable dependencies for projects without " \
+             "a lockfile as the currently installed version isn't known "
+      end
+      next
+    end
+
+    # For vulnerable dependencies
+    if checker.vulnerable?
+      print "#{dep.name} #{dep.version} is vulnerable. "
+      if checker.lowest_security_fix_version
+        puts "Earliest non-vulnerable is #{checker.lowest_security_fix_version}"
+      else
+        puts "Can't find non-vulnerable version. 🚨"
+      end
+    end
 
     if checker.up_to_date?
       puts "No update needed for #{dep.name} #{dep.version}"
@@ -389,27 +476,24 @@ dependencies.select(&:top_level?).each do |dep|
 
     requirements_to_unlock =
       if !checker.requirements_unlocked_or_can_be?
-        if !$options[:excluded_requirements].include?(:none) && checker.can_update?(requirements_to_unlock: :none) then :none
+        if !$options[:excluded_requirements].include?(:none) &&
+          checker.can_update?(requirements_to_unlock: :none) then :none
         else :update_not_possible
         end
-      elsif !$options[:excluded_requirements].include?(:own) && checker.can_update?(requirements_to_unlock: :own) then :own
-      elsif !$options[:excluded_requirements].include?(:all) && checker.can_update?(requirements_to_unlock: :all) then :all
+      elsif !$options[:excluded_requirements].include?(:own) &&
+        checker.can_update?(requirements_to_unlock: :own) then :own
+      elsif !$options[:excluded_requirements].include?(:all) &&
+        checker.can_update?(requirements_to_unlock: :all) then :all
       else :update_not_possible
       end
 
-    puts "Requirements to unlock #{requirements_to_unlock}"
+    puts "Requirements to unlock #{requirements_to_unlock}" unless $options[:security_updates_only]
     if checker.respond_to?(:requirements_update_strategy)
       puts "Requirements update strategy #{checker.requirements_update_strategy}"
     end
 
     if requirements_to_unlock == :update_not_possible
-      # Log conflicting dependencies preventing updates
-      conflicting_dependencies = checker.conflicting_dependencies
-      if conflicting_dependencies.any?
-        puts "The update is not possible because of the following conflicting dependencies:"
-        conflicting_dependencies.each { |conflicting_dep| puts " - #{conflicting_dep['explanation']}" }
-      end
-
+      log_conflicting_dependencies(checker.conflicting_dependencies)
       next
     end
 
@@ -425,10 +509,19 @@ dependencies.select(&:top_level?).each do |dep|
       requirements_to_unlock: requirements_to_unlock
     )
 
+    if $options[:security_updates_only] && updated_deps.none? { |d| security_fix?(d) }
+      puts "Updated version is still vulnerable 🚨"
+      log_conflicting_dependencies(checker.conflicting_dependencies)
+      next
+    end
+
     #####################################
     # Generate updated dependency files #
     #####################################
-    puts "Updating #{dep.name} from #{dep.version} to #{checker.latest_version}"
+    latest_allowed_version = checker.vulnerable? ?
+                               checker.lowest_resolvable_security_fix_version
+                               : checker.latest_resolvable_version
+    puts "Updating #{dep.name} from #{dep.version} to #{latest_allowed_version}"
     updater = Dependabot::FileUpdaters.for_package_manager($package_manager).new(
       dependencies: updated_deps,
       dependency_files: files,
