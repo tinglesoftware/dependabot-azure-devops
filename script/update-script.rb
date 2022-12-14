@@ -271,6 +271,7 @@ $api_endpoint = $api_endpoint + "#{$options[:azure_virtual_directory]}/" unless 
 puts "Using '#{$api_endpoint}' as API endpoint"
 puts "Pull Requests shall be linked to milestone (work item) #{$options[:milestone]}" if $options[:milestone]
 puts "Pull Requests shall be labeled #{$options[:custom_labels]}" if $options[:custom_labels]
+puts "Working in #{$repo_name}, '#{$options[:branch] || 'default'}' branch under '#{$options[:directory]}' directory"
 
 # Full name of the repo targeted.
 $repo_name = "#{$options[:azure_organization]}/#{$options[:azure_project]}/_git/#{$options[:azure_repository]}"
@@ -324,11 +325,9 @@ $update_config = $config_file.update_config(
 ##############################
 # Fetch the dependency files #
 ##############################
-puts "Fetching #{$package_manager} dependency files for #{$repo_name}"
-puts "Targeting '#{$options[:branch] || 'default'}' branch under '#{$options[:directory]}' directory"
 puts "Using '#{$options[:requirements_update_strategy]}' requirements update strategy" if $options[:requirements_update_strategy]
 fetcher = Dependabot::FileFetchers.for_package_manager($package_manager).new(**fetcher_args)
-puts "Fetching dependency files ..."
+puts "Fetching #{$package_manager} dependency files ..."
 files = fetcher.files
 commit = fetcher.commit
 puts "Found #{files.length} dependency file(s) at commit #{commit}"
