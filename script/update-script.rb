@@ -586,9 +586,10 @@ dependencies.select(&:top_level?).each do |dep|
       puts "Auto Approving PR for user #{$options[:auto_approve_user_email]}"
 
       azure_client.pull_request_approve(
-        pull_request_id: pull_request_id,
-        reviewer_email: $options[:auto_approve_user_email],
-        reviewer_token: $options[:auto_approve_user_token]
+        # Adding argument names will fail! May because there is no spec?
+        pull_request_id,
+        $options[:auto_approve_user_email],
+        $options[:auto_approve_user_token]
       )
     end
 
@@ -599,10 +600,11 @@ dependencies.select(&:top_level?).each do |dep|
       auto_complete_user_id = pull_request['createdBy']['id']
       puts "Setting auto complete on ##{pull_request_id}."
       azure_client.pull_request_auto_complete(
-        pull_request_id: pull_request_id,
-        user_id: auto_complete_user_id,
-        merge_strategy: $options[:merge_strategy],
-        ignore_config_ids: $options[:auto_complete_ignore_config_ids]
+        # Adding argument names will fail! May because there is no spec?
+        pull_request_id,
+        auto_complete_user_id,
+        $options[:merge_strategy],
+        $options[:auto_complete_ignore_config_ids]
       )
     end
 
