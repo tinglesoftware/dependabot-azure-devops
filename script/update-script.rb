@@ -427,6 +427,8 @@ dependencies.select(&:top_level?).each do |dep|
     puts "Checking if #{dep.name} #{dep.version} needs updating"
     checker = update_checker_for(dep, files)
 
+    puts "#{dep.name} #{dep.version} is vulnerable" if checker.vulnerable?
+
     # For security only updates, skip dependencies that are not vulnerable
     if $options[:security_updates_only] && !checker.vulnerable?
       unless checker.version_class.correct?(checker.dependency.version)
@@ -434,6 +436,15 @@ dependencies.select(&:top_level?).each do |dep|
              "a lockfile as the currently installed version isn't known "
       end
       next
+    end
+
+    # For vulnerable dependencies
+    if checker.vulnerable?
+      if checker.lowest_security_fix_version
+        puts "Earliest available non-vulnerable version is #{checker.lowest_security_fix_version}"
+      else
+        puts "There is no available non-vulnerable version"
+      end
     end
 
     if checker.up_to_date?
