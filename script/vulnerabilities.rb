@@ -61,6 +61,16 @@ module Dependabot
 
       end
 
+      def fetch(dependency_name)
+        [] unless @ecosystem
+
+        variables = { ecosystem: @ecosystem, package: dependency_name }.compact_blank
+        response = client.query(@parsed_query, variables: variables)
+        raise(QueryError, response.errors[:data].join(", ")) if response.errors.any?
+
+        [] # TODO parse the response
+      end
+
       private
 
       def client
