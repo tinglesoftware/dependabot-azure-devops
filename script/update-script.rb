@@ -305,6 +305,27 @@ def security_fix?(dependency)
   end
 end
 
+# If a version update for a peer dependency is possible we should
+# defer to the PR that will be created for it to avoid duplicate PRS
+def peer_dependency_should_update_instead?(dependency_name, updated_deps, files)
+  # # This doesn't apply to security updates as we can't rely on the
+  # # peer dependency getting updated
+  # return false if $options[:security_updated_only]
+
+  updated_deps
+    .reject { |dep| dep.name == dependency_name }
+    .any? do |dep|
+      original_peer_dep = ::Dependabot::Dependency.new(
+        name: dep.name,
+        version: dep.previous_version,
+        requirements: dep.previous_requirements,
+        package_manager: dep.package_manager
+      )
+      update_checker_for(original_peer_dep, files)
+        .can_update?(requirements_to_unlock: :own)
+  end
+end
+
 # Parse the options e.g. goprivate=true,kubernetes_updates=true
 $options[:updater_options] = (ENV["DEPENDABOT_UPDATER_OPTIONS"] || "").split(",").to_h do |o|
   if o.include?("=") # key/value pair, e.g. goprivate=true
@@ -505,6 +526,12 @@ dependencies.select(&:top_level?).each do |dep|
     updated_deps = checker.updated_dependencies(
       requirements_to_unlock: requirements_to_unlock
     )
+
+    # Skip when there is a peer dependency that can be updated
+    if peer_dependency_should_update_instead?(checker.dependency.name, updated_deps, files)
+      puts "Skipping update, peer dependency can be updated"
+      next
+    end
 
     if $options[:security_updates_only] && updated_deps.none? { |d| security_fix?(d) }
       puts "Updated version is still vulnerable 🚨"
