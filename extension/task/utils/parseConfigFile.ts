@@ -18,14 +18,9 @@ import convertPlaceholder from "./convertPlaceholder";
  */
 export default function parseConfigFile(): IDependabotConfig {
 
-  /*
-   * If the file under the .github folder does not exist, check for one under the .azuredevops folder.
-   */
   const possibleFilePaths = [
     "/.github/dependabot.yml",
     "/.github/dependabot.yaml",
-    "/.azuredevops/dependabot.yml",
-    "/.azuredevops/dependabot.yaml",
   ];
 
   // Find configuration file
@@ -41,16 +36,6 @@ export default function parseConfigFile(): IDependabotConfig {
   // Ensure we have the file. Otherwise throw a well readable error.
   if (filePath) {
     tl.debug(`Found configuration file at ${filePath}`);
-    if (filePath.includes(".azuredevops/dependabot")) {
-      tl.warning(
-        `
-        The docker container used to run this task checks for a configuration file in the .github folder. Migrate to it.
-        Using the .azuredevops folder is deprecated and will be removed in version 0.13.0.
-
-        See https://github.com/tinglesoftware/dependabot-azure-devops#using-a-configuration-file for more information.
-        `
-      );
-    }
   } else {
     throw new Error(`Configuration file not found at possible locations: ${possibleFilePaths.join(', ')}`);
   }

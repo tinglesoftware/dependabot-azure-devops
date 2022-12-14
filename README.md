@@ -21,13 +21,6 @@ Similar to the GitHub native version where you add a `.github/dependabot.yml` fi
 
 > Using a configuration file over explicit inputs will not work with repositories other than the one in the pipeline. This means no shared pipeline. Instead consider the [managed version](https://managed-dependabot.com).
 
-Using `.github/dependabot.yml` or `.github/dependabot.yaml` instead of `.azuredevops/dependabot.yml` is better for 2 reasons:
-
-1. Intellisense support in VS Code (and may be other IDEs).
-2. The docker container checks for the configuration file in this location to configure `commit-message` and `ignore` options.
-
-> Using the .azuredevops folder is deprecated and will be removed in version `0.13.0`.
-
 ## Credentials for private registries and feeds
 
 Besides accessing the repository only, sometimes private feeds/registries may need to be accessed.
