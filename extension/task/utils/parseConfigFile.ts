@@ -114,10 +114,9 @@ function parseUpdates(config: any): IDependabotUpdate[] {
       );
     }
 
-    if (!dependabotUpdate.openPullRequestsLimit) {
-      throw new Error(
-        "The value 'open-pull-requests-limit' in dependency update config is missing"
-      );
+    // zero is a valid value
+    if (!dependabotUpdate.openPullRequestsLimit && dependabotUpdate.openPullRequestsLimit != 0) {
+      dependabotUpdate.openPullRequestsLimit = 5;
     }
 
     if (!dependabotUpdate.directory) {
