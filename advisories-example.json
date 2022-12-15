@@ -1,12 +1,12 @@
 [
     {
-        "dependency-name": "Newtonsoft.Json",
+        "dependency-name": "Contoso.Utils",
         "patched-versions": [
-            "13.0.1"
+            "3.0.1"
         ],
         "unaffected-versions": [],
         "affected-versions": [
-            "< 13.0.1"
+            "< 3.0.1"
         ]
     }
 ]
