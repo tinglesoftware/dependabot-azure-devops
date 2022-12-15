@@ -21,6 +21,7 @@ RUN bundle config set --local path "vendor" \
 # Copy the Ruby scripts
 COPY --chown=dependabot:dependabot update-script.rb ${CODE_DIR}
 COPY --chown=dependabot:dependabot azure_helpers.rb ${CODE_DIR}
+COPY --chown=dependabot:dependabot vulnerabilities.rb ${CODE_DIR}
 COPY --chown=dependabot:dependabot --chmod=755 entrypoint.sh ${CODE_DIR}
 
 # This entrypoint exists to solve specific setup problems.
