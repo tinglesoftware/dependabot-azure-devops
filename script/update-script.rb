@@ -31,7 +31,6 @@ $options = {
   allow_conditions: [],
   reject_external_code: ENV['DEPENDABOT_REJECT_EXTERNAL_CODE'] == "true",
   requirements_update_strategy: nil,
-  security_advisories_graphql: ENV['DEPENDABOT_SECURITY_ADVISORIES_GRAPHQL'] == "true",
   security_advisories: [],
   security_updates_only: false,
   ignore_conditions: [],
@@ -265,7 +264,6 @@ end
 
 def vulnerabilities_fetcher
   return nil unless $options[:github_token]
-  return nil unless $options[:security_advisories_graphql]
   $options[:vulnerabilities_fetcher] ||=
     Dependabot::Vulnerabilities::Fetcher.new($package_manager, $options[:github_token])
 end
@@ -275,7 +273,7 @@ def security_advisories_for(dep)
     $options[:security_advisories].
       select { |adv| adv.fetch("dependency-name").casecmp(dep.name).zero? }
 
-  # add relevant advisories from GitHub's GraphQL if present
+  # add relevant advisories from the fetcher if present
   relevant_advisories += vulnerabilities_fetcher&.fetch(dep.name) || []
 
   relevant_advisories.map do |adv|

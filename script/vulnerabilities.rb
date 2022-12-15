@@ -1,6 +1,7 @@
 require "graphql/client"
 require "graphql/client/http"
 
+# Absolutely zero clue if the code in this file is written as per standard but first let it work
 module Dependabot
   module Vulnerabilities
     class Fetcher
@@ -27,6 +28,7 @@ module Dependabot
         @http_adapter = CustomHttp.new(GITHUB_GQL_API_ENDPOINT, github_token)
 
         # Fetch latest schema on init, this will make a network request
+        puts "Fetching GitHub's GraphQL schema (should only happen once per run)"
         @schema = GraphQL::Client.load_schema(@http_adapter)
 
         # Parse the query that will be used

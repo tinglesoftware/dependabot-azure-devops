@@ -67,9 +67,9 @@ When working with Azure Artifacts, some extra permission steps need to be done:
 
 ## Security Advisories, Vulnerabilities, and Updates
 
-Security-only updates ia a mechanism to only create pull requests for dependencies with vulnerabilities by updating them to the earliest available non-vulnerable version. Security updates are supported in the same way as the GitHub-hosted version with an exception to how the vulnerabilities are sourced. Currently, these can only be provided in a JSON file via the `securityAdvisoriesFile` input e.g. `securityAdvisoriesFile: '$(Pipeline.Workspace)/advisories.json'`. A file example is available [here](./advisories-example.json).
+Security-only updates ia a mechanism to only create pull requests for dependencies with vulnerabilities by updating them to the earliest available non-vulnerable version. Security updates are supported in the same way as the GitHub-hosted version. In addition, you can provide extra advisories, such as those for an internal dependency, in a JSON file via the `securityAdvisoriesFile` input e.g. `securityAdvisoriesFile: '$(Pipeline.Workspace)/advisories.json'`. A file example is available [here](./advisories-example.json).
 
-Except for when you are using the hosted version, you are responsible for keeping the data up to date using GitHub's GraphQL API for `securityAdvisories`. Querying in the pipeline delays the update process.
+A GitHub access token with `public_repo` access is required to perform the GitHub GraphQL for `securityVulnerabilities`.
 
 ## Kubernetes CronJob
 
