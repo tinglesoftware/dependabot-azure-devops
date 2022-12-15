@@ -93,7 +93,7 @@ function parseUpdates(config: any): IDependabotUpdate[] {
       packageEcosystem: update["package-ecosystem"],
       directory: update["directory"],
 
-      openPullRequestLimit: update["open-pull-requests-limit"] || 5,
+      openPullRequestsLimit: update["open-pull-requests-limit"] || 5,
 
       targetBranch: update["target-branch"],
       versioningStrategy: update["versioning-strategy"],

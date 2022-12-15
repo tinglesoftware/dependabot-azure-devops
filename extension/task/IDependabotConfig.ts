@@ -60,7 +60,7 @@ export interface IDependabotUpdate {
   /**
    * 	Limit number of open pull requests for version updates.
    */
-  openPullRequestLimit?: number;
+  openPullRequestsLimit?: number;
   /**
    * Branch to create pull requests against.
    */

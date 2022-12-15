@@ -16,7 +16,7 @@ export default function getConfigFromInputs(): IDependabotConfig {
       packageEcosystem: getInput("packageManager", true),
       directory: getInput("directory", false),
 
-      openPullRequestLimit: parseInt(getInput("openPullRequestsLimit", true)),
+      openPullRequestsLimit: parseInt(getInput("openPullRequestsLimit", true)),
 
       targetBranch: getInput("targetBranch", false),
       versioningStrategy: getInput("versioningStrategy", true),

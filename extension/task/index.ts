@@ -72,8 +72,8 @@ async function run() {
         dockerRunner.arg(["-e", `DEPENDABOT_VERSIONING_STRATEGY=${update.versioningStrategy}`]);
       }
       // Set the open pull requests limit
-      if (update.openPullRequestLimit) {
-        dockerRunner.arg(["-e", `DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT=${update.openPullRequestLimit}`]);
+      if (update.openPullRequestsLimit) {
+        dockerRunner.arg(["-e", `DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT=${update.openPullRequestsLimit}`]);
       }
 
       // Set the milestone, if provided
