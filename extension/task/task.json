@@ -246,7 +246,7 @@
     },
     {
       "name": "securityAdvisoriesFile",
-      "type": "filePath",
+      "type": "string",
       "label": "Path for the file containing security advisories in JSON format.",
       "groupName": "security_updates",
       "helpMarkDown": "The file containing security advisories.",
