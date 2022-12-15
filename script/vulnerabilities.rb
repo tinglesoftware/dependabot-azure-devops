@@ -54,7 +54,19 @@ module Dependabot
         response = client.query(@parsed_query, variables: variables)
         raise(QueryError, response.errors[:data].join(", ")) if response.errors.any?
 
-        [] # TODO parse the response
+        vulnerabilities = []
+        response.data.security_vulnerabilities.nodes.map do |node|
+          vulnerable_version_range = node.vulnerable_version_range
+          first_patched_version = node.first_patched_version&.identifier
+          vulnerabilities << {
+            "dependency-name" => dependency_name,
+            "affected-versions" => [vulnerable_version_range],
+            "patched-versions" => [first_patched_version],
+            "unaffected-versions" => [],
+          }
+        end
+
+        vulnerabilities
       end
 
       private
