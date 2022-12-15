@@ -56,6 +56,7 @@ async function run() {
        * Set env variables in the runner for Dependabot
        */
       dockerRunner.arg(["-e", `DEPENDABOT_PACKAGE_MANAGER=${update.packageEcosystem}`]);
+      dockerRunner.arg(["-e", `DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT=${update.openPullRequestsLimit}`]); // always has a value
 
       // Set the directory
       if (update.directory) {
@@ -70,10 +71,6 @@ async function run() {
       // Set the versioning strategy
       if (update.versioningStrategy) {
         dockerRunner.arg(["-e", `DEPENDABOT_VERSIONING_STRATEGY=${update.versioningStrategy}`]);
-      }
-      // Set the open pull requests limit
-      if (update.openPullRequestLimit) {
-        dockerRunner.arg(["-e", `DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT=${update.openPullRequestLimit}`]);
       }
 
       // Set the milestone, if provided
