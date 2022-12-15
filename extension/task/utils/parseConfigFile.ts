@@ -115,7 +115,7 @@ function parseUpdates(config: any): IDependabotUpdate[] {
     }
 
     // zero is a valid value
-    if (!dependabotUpdate.openPullRequestsLimit && dependabotUpdate.openPullRequestsLimit != 0) {
+    if (!dependabotUpdate.openPullRequestsLimit && dependabotUpdate.openPullRequestsLimit !== 0) {
       dependabotUpdate.openPullRequestsLimit = 5;
     }
 
