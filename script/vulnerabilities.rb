@@ -84,7 +84,6 @@ module Dependabot
         end
 
         def headers(context)
-          # { "Authorization" => "Bearer #{@token}" }
           {
             "Authorization" => "Bearer #{@token}",
             "User-Agent" => "dependabot-azure-devops/1.0"
