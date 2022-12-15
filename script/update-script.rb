@@ -293,16 +293,16 @@ def security_advisories_for(dep)
 end
 
 # Create an update checker
-def update_checker_for(dependency, files)
+def update_checker_for(dependency, files, security_advisories)
   Dependabot::UpdateCheckers.for_package_manager($package_manager).new(
     dependency: dependency,
     dependency_files: files,
     credentials: $options[:credentials],
     requirements_update_strategy: $options[:requirements_update_strategy],
     ignored_versions: ignored_versions_for(dependency),
-    security_advisories: security_advisories_for(dependency),
-    options: $options[:updater_options],
-    )
+    security_advisories: security_advisories,
+    options: $options[:updater_options]
+  )
 end
 
 def log_conflicting_dependencies(conflicting)
@@ -314,15 +314,15 @@ def log_conflicting_dependencies(conflicting)
   end
 end
 
-def security_fix?(dependency)
-  security_advisories_for(dependency).any? do |advisory|
+def security_fix?(dependency, security_advisories)
+  security_advisories.any? do |advisory|
     advisory.fixed_by?(dependency)
   end
 end
 
 # If a version update for a peer dependency is possible we should
 # defer to the PR that will be created for it to avoid duplicate PRS
-def peer_dependency_should_update_instead?(dependency_name, updated_deps, files)
+def peer_dependency_should_update_instead?(dependency_name, updated_deps, files, security_advisories)
   # # This doesn't apply to security updates as we can't rely on the
   # # peer dependency getting updated
   # return false if $options[:security_updated_only]
@@ -336,7 +336,7 @@ def peer_dependency_should_update_instead?(dependency_name, updated_deps, files)
         requirements: dep.previous_requirements,
         package_manager: dep.package_manager
       )
-      update_checker_for(original_peer_dep, files)
+      update_checker_for(original_peer_dep, files, security_advisories)
         .can_update?(requirements_to_unlock: :own)
   end
 end
@@ -479,7 +479,8 @@ dependencies.select(&:top_level?).each do |dep|
     # Get update details for the dependency #
     #########################################
     puts "Checking if #{dep.name} #{dep.version} #{$options[:security_updates_only] ? 'is vulnerable' : 'needs updating'}"
-    checker = update_checker_for(dep, files)
+    security_advisories = security_advisories_for(dep)
+    checker = update_checker_for(dep, files, security_advisories)
 
     # For security only updates, skip dependencies that are not vulnerable
     if $options[:security_updates_only] && !checker.vulnerable?
@@ -543,12 +544,12 @@ dependencies.select(&:top_level?).each do |dep|
     )
 
     # Skip when there is a peer dependency that can be updated
-    if peer_dependency_should_update_instead?(checker.dependency.name, updated_deps, files)
+    if peer_dependency_should_update_instead?(checker.dependency.name, updated_deps, files, security_advisories)
       puts "Skipping update, peer dependency can be updated"
       next
     end
 
-    if $options[:security_updates_only] && updated_deps.none? { |d| security_fix?(d) }
+    if $options[:security_updates_only] && updated_deps.none? { |d| security_fix?(d, security_advisories) }
       puts "Updated version is still vulnerable 🚨"
       log_conflicting_dependencies(checker.conflicting_dependencies)
       next
