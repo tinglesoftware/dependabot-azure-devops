@@ -236,22 +236,12 @@
     },
 
     {
-      "name": "securityAdvisories",
-      "type": "boolean",
-      "label": "Whether to add logic for security advisories",
-      "groupName": "security_updates",
-      "defaultValue": "true",
-      "required": false,
-      "helpMarkDown": "Determines if the task will add necessary logic to handle security advisories, vulnerabilities, and updates."
-    },
-    {
       "name": "securityAdvisoriesFile",
       "type": "string",
       "label": "Path for the file containing security advisories in JSON format.",
       "groupName": "security_updates",
       "helpMarkDown": "The file containing security advisories.",
-      "required": false,
-      "visibleRule": "securityAdvisories=false"
+      "required": false
     },
 
     {

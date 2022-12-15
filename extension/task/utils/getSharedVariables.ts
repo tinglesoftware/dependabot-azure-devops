@@ -39,7 +39,6 @@ interface ISharedVariables {
   /** A personal access token of the user that should approve the PR */
   autoApproveUserToken: string;
   extraCredentials: string;
-  securityAdvisoriesEnabled: boolean;
   securityAdvisoriesFile: string | undefined;
   /** Registry of the docker image to be pulled */
   dockerImageRegistry: string | undefined;
@@ -99,7 +98,6 @@ export default function getSharedVariables(): ISharedVariables {
   let autoApproveUserEmail: string = getInput("autoApproveUserEmail");
   let autoApproveUserToken: string = getInput("autoApproveUserToken");
   let extraCredentials = getVariable("DEPENDABOT_EXTRA_CREDENTIALS");
-  let securityAdvisoriesEnabled = getBoolInput("securityAdvisories", false);
   let securityAdvisoriesFile: string | undefined = getInput('securityAdvisoriesFile');
   let dockerImageRegistry: string | undefined = getInput('dockerImageRegistry');
   let dockerImageRepository: string = getInput('dockerImageRepository', true);
@@ -156,7 +154,6 @@ export default function getSharedVariables(): ISharedVariables {
     autoApproveUserEmail,
     autoApproveUserToken,
     extraCredentials,
-    securityAdvisoriesEnabled,
     securityAdvisoriesFile,
     dockerImageRegistry,
     dockerImageRepository,
