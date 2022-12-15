@@ -93,7 +93,7 @@ function parseUpdates(config: any): IDependabotUpdate[] {
       packageEcosystem: update["package-ecosystem"],
       directory: update["directory"],
 
-      openPullRequestsLimit: update["open-pull-requests-limit"] || 5,
+      openPullRequestsLimit: update["open-pull-requests-limit"],
 
       targetBranch: update["target-branch"],
       versioningStrategy: update["versioning-strategy"],
@@ -111,6 +111,12 @@ function parseUpdates(config: any): IDependabotUpdate[] {
     if (!dependabotUpdate.packageEcosystem) {
       throw new Error(
         "The value 'package-ecosystem' in dependency update config is missing"
+      );
+    }
+
+    if (!dependabotUpdate.openPullRequestsLimit) {
+      throw new Error(
+        "The value 'open-pull-requests-limit' in dependency update config is missing"
       );
     }
 
