@@ -53,7 +53,7 @@ module Dependabot
                     source.organization + "/" + source.project +
                     "/_apis/git/repositories/" + source.unscoped_repo +
                     "/pullrequests/" + "#{pull_request_id}" +
-                    "/commits")
+                    "/commits?api-version=6.0")
 
                 JSON.parse(response.body).fetch("value")
             end
