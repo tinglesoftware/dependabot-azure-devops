@@ -11,7 +11,7 @@ module Dependabot
                     source.organization + "/" + source.project +
                     "/_apis/git/repositories/" + source.unscoped_repo +
                     "/pullrequests?api-version=6.0&searchCriteria.status=active" \
-                    "&searchCriteria.targetRefName=refs/heads/" + default_branch)
+                    "&searchCriteria.targetRefName=refs/heads/#{default_branch}")
 
                 JSON.parse(response.body).fetch("value")
             end
@@ -52,8 +52,7 @@ module Dependabot
                 response = get(source.api_endpoint +
                     source.organization + "/" + source.project +
                     "/_apis/git/repositories/" + source.unscoped_repo +
-                    "/pullrequests/" + "#{pull_request_id}" +
-                    "/commits?api-version=6.0")
+                    "/pullrequests/#{pull_request_id}/commits?api-version=6.0")
 
                 JSON.parse(response.body).fetch("value")
             end
@@ -80,7 +79,9 @@ module Dependabot
 
             def pull_request_approve(pull_request_id, reviewer_email, reviewer_token)
                 # https://learn.microsoft.com/en-us/rest/api/azure/devops/memberentitlementmanagement/user-entitlements/search-user-entitlements?view=azure-devops-rest-6.0
-                response = get("https://vsaex.dev.azure.com/" + source.organization + "/_apis/userentitlements?$filter=name eq '#{reviewer_email}'&api-version=6.0-preview.3")
+                response = get("https://vsaex.dev.azure.com/" +
+                     source.organization +
+                     "/_apis/userentitlements?$filter=name eq '#{reviewer_email}'&api-version=6.0-preview.3")
 
                 user_id = JSON.parse(response.body).fetch("members")[0]['id']
 
@@ -91,9 +92,10 @@ module Dependabot
                 }
 
                 response = put_with_token(source.api_endpoint +
-                    source.organization + "/" + source.project +
-                    "/_apis/git/repositories/" + source.unscoped_repo +
-                    "/pullrequests/#{pull_request_id}/reviewers/#{user_id}?api-version=6.0", content.to_json, reviewer_token)
+                      source.organization + "/" + source.project +
+                      "/_apis/git/repositories/" + source.unscoped_repo +
+                      "/pullrequests/#{pull_request_id}/reviewers/#{user_id}?api-version=6.0",
+                    content.to_json, reviewer_token)
             end
 
             def put_with_token(url, json, token)
