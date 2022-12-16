@@ -166,14 +166,14 @@
       "type": "pickList",
       "groupName": "approval_completion",
       "label": "Merge Strategy",
-      "defaultValue": "2",
+      "defaultValue": "squash",
       "required": true,
-      "helpMarkDown": "The merge strategy to use. Learn more [here](https://docs.microsoft.com/en-us/javascript/api/azure-devops-extension-api/gitpullrequestmergestrategy).",
+      "helpMarkDown": "The merge strategy to use. Learn more [here](https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-requests/update?view=azure-devops-rest-5.1&tabs=HTTP#gitpullrequestmergestrategy).",
       "options": {
-        "1": "No fast forward",
-        "2": "Squash",
-        "3": "Rebase",
-        "4": "Rebase merge"
+        "noFastForward": "No fast forward",
+        "rebase": "Rebase",
+        "rebaseMerge": "Rebase merge",
+        "squash": "Squash"
       },
       "visibleRule": "setAutoComplete=true"
     },
