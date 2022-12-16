@@ -65,7 +65,7 @@ $options = {
   # Automatic completion
   set_auto_complete: ENV["AZURE_SET_AUTO_COMPLETE"] == "true", # Set auto complete on created pull requests
   auto_complete_ignore_config_ids: JSON.parse(ENV['AZURE_AUTO_COMPLETE_IGNORE_CONFIG_IDS'] || '[]'), # default to empty array
-  merge_strategy: ENV["AZURE_MERGE_STRATEGY"] || "2", # default to squash merge
+  merge_strategy: ENV["AZURE_MERGE_STRATEGY"] || "squash", # default to squash
 
   # Automatic Approval
   auto_approve_pr: ENV["AZURE_AUTO_APPROVE_PR"] == "true",
