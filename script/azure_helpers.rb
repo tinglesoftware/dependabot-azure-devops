@@ -24,7 +24,7 @@ module Dependabot
                 response = patch(source.api_endpoint +
                     source.organization + "/" + source.project +
                     "/_apis/git/repositories/" + source.unscoped_repo +
-                    "/pullrequests/#{pull_request_id}?api-version=5.0", content.to_json)
+                    "/pullrequests/#{pull_request_id}?api-version=6.0", content.to_json)
             end
 
             def branch_delete(name)
@@ -45,7 +45,7 @@ module Dependabot
                 response = post(source.api_endpoint +
                     source.organization + "/" + source.project +
                     "/_apis/git/repositories/" + source.unscoped_repo +
-                    "/refs?api-version=5.0", content.to_json)
+                    "/refs?api-version=6.0", content.to_json)
             end
 
             def pull_request_commits(pull_request_id)
