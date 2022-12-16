@@ -339,6 +339,15 @@ def peer_dependency_should_update_instead?(dependency_name, updated_deps, files,
   end
 end
 
+ActiveSupport::Notifications.subscribe(/excon/) do |*args|
+  name = args.first
+  return unless name == 'excon.request' || name == 'excon.response'
+
+  payload = args.last
+  puts "#{name == 'excon.response' ? "#{payload[:status]} " : ''}" \
+       "#{payload[:method].to_s.upcase} #{Excon::Utils.request_uri(payload)}"
+end
+
 # Parse the options e.g. goprivate=true,kubernetes_updates=true
 $options[:updater_options] = (ENV["DEPENDABOT_UPDATER_OPTIONS"] || "").split(",").to_h do |o|
   if o.include?("=") # key/value pair, e.g. goprivate=true
