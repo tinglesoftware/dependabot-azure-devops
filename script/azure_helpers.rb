@@ -10,7 +10,7 @@ module Dependabot
                 response = get(source.api_endpoint +
                     source.organization + "/" + source.project +
                     "/_apis/git/repositories/" + source.unscoped_repo +
-                    "/pullrequests?searchCriteria.status=active" \
+                    "/pullrequests?api-version=6.0&searchCriteria.status=active" \
                     "&searchCriteria.targetRefName=refs/heads/" + default_branch)
 
                 JSON.parse(response.body).fetch("value")
