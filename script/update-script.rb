@@ -500,11 +500,10 @@ dependencies.select(&:top_level?).each do |dep|
 
     # For vulnerable dependencies
     if checker.vulnerable?
-      print "#{dep.name} #{dep.version} is vulnerable. "
       if checker.lowest_security_fix_version
-        puts "Earliest non-vulnerable is #{checker.lowest_security_fix_version}"
+        puts "#{dep.name} #{dep.version} is vulnerable. Earliest non-vulnerable is #{checker.lowest_security_fix_version}"
       else
-        puts "Can't find non-vulnerable version. 🚨"
+        puts "#{dep.name} #{dep.version} is vulnerable. Can't find non-vulnerable version. 🚨"
       end
     end
 
@@ -664,11 +663,10 @@ dependencies.select(&:top_level?).each do |dep|
         author_details: $options[:author_details],
       )
 
-      print "Submitting pull request (##{conflict_pull_request_id}) update for #{dep.name}. "
+      puts "Submitting pull request (##{conflict_pull_request_id}) update for #{dep.name}."
       pr_updater.update
       pull_request = existing_pull_request
       pull_request_id = conflict_pull_request_id
-      puts "Done."
     elsif !existing_pull_request # Only create PR if there is none existing
       ########################################
       # Create a pull request for the update #
@@ -694,7 +692,7 @@ dependencies.select(&:top_level?).each do |dep|
         }
       )
 
-      print "Submitting #{dep.name} pull request for creation. "
+      puts "Submitting #{dep.name} pull request for creation."
       pull_request = pr_creator.create
 
       if pull_request
@@ -702,7 +700,7 @@ dependencies.select(&:top_level?).each do |dep|
         if req_status == 201
           pull_request = JSON[pull_request.body]
           pull_request_id = pull_request["pullRequestId"]
-          puts "Done (PR ##{pull_request_id})."
+          puts "Created pull request for #{dep.name} (##{pull_request_id})."
         else
           content = JSON[pull_request.body]
           message = content["message"]
