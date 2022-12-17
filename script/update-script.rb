@@ -465,8 +465,9 @@ azure_client = Dependabot::Clients::Azure.for_source(
   source: $source,
   credentials: $options[:credentials],
 )
+user_id = azure_client.get_user_id
 default_branch_name = azure_client.fetch_default_branch($source.repo)
-active_pull_requests = azure_client.pull_requests_active(default_branch_name)
+active_pull_requests = azure_client.pull_requests_active(user_id, default_branch_name)
 
 pull_requests_count = 0
 

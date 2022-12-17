@@ -6,11 +6,13 @@ module Dependabot
     module Clients
         class Azure
 
-            def pull_requests_active(default_branch)
+            def pull_requests_active(user_id, default_branch)
+              # https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-requests/get-pull-requests?view=azure-devops-rest-6.0&tabs=HTTP
                 response = get(source.api_endpoint +
                     source.organization + "/" + source.project +
                     "/_apis/git/repositories/" + source.unscoped_repo +
                     "/pullrequests?api-version=6.0&searchCriteria.status=active" \
+                    "&searchCriteria.creatorId=#{user_id}" \
                     "&searchCriteria.targetRefName=refs/heads/#{default_branch}")
 
                 JSON.parse(response.body).fetch("value")
@@ -77,15 +79,17 @@ module Dependabot
                     "/pullrequests/#{pull_request_id}?api-version=6.0", content.to_json)
             end
 
-            def get_user_id_for_token(token)
+            def get_user_id(token = nil)
               # https://learn.microsoft.com/en-us/javascript/api/azure-devops-extension-api/connectiondata
               # https://stackoverflow.com/a/53227325
-              response = get_with_token(source.api_endpoint + source.organization + "/_apis/connectionData", token)
+              response = token ?
+                   get_with_token(source.api_endpoint + source.organization + "/_apis/connectionData", token) :
+                   get(source.api_endpoint + source.organization + "/_apis/connectionData")
               JSON.parse(response.body).fetch("authenticatedUser")['id']
             end
 
             def pull_request_approve(pull_request_id, reviewer_token)
-                user_id = get_user_id_for_token(token)
+                user_id = get_user_id(token)
 
                 # https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-reviewers/create-pull-request-reviewers?view=azure-devops-rest-6.0
                 content = {
