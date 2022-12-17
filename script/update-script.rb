@@ -754,4 +754,44 @@ dependencies.select(&:top_level?).each do |dep|
   end
 end
 
+# look for pull requests that are no longer needed to be abandoned
+puts "Looking for pull requests that are no longer needed."
+active_pull_requests = azure_client.pull_requests_active(user_id, default_branch_name)
+active_pull_requests.each do |pr|
+  pr_id = pr["pullRequestId"]
+  title = pr["title"]
+  source_ref_name = pr["sourceRefName"]
+
+  begin
+    keep = false
+    dependencies.select(&:top_level?).each do |dep|
+      # Sometimes, the dep.version might be null such as in npm
+      # when the package.lock.json is not checked into source.
+      next unless dep.version
+
+      # Ensure the title contains the current dependency name and version.
+      #
+      # Samples:
+      # Bump Tingle.Extensions.Logging.LogAnalytics from 3.4.2-ci0005 to 3.4.2-ci0006
+      # chore(deps): bump dotenv from 9.0.1 to 9.0.2 in /server
+      keep = title.include?(" #{dep.name} from #{dep.version}")
+
+      # Break if the PR should be kept
+      break if keep
+    end
+
+    # Abandon the PR unless we should keep it
+    unless keep
+      puts "Abandoning PR ##{pr_id} (#{title}) as it is no longer needed."
+      azure_client.branch_delete(source_ref_name)
+      azure_client.pull_request_abandon(pr_id)
+    end
+
+  rescue StandardError => e
+    raise e if $options[:fail_on_exception]
+    puts "Error checking whether to abandon (or abandoning) PR ##{pr_id} (continuing)"
+    puts e.full_message
+  end
+end
+
 puts "Done"
