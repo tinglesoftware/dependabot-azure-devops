@@ -774,7 +774,7 @@ active_pull_requests.each do |pr|
       # Samples:
       # Bump Tingle.Extensions.Logging.LogAnalytics from 3.4.2-ci0005 to 3.4.2-ci0006
       # chore(deps): bump dotenv from 9.0.1 to 9.0.2 in /server
-      keep = title.include?(" #{dep.name} from #{dep.version}")
+      keep = title.include?(" #{dep.name} from #{dep.version} to ")
 
       # Break if the PR should be kept
       break if keep
