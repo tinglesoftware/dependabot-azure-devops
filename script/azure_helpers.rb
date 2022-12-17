@@ -77,13 +77,15 @@ module Dependabot
                     "/pullrequests/#{pull_request_id}?api-version=6.0", content.to_json)
             end
 
-            def pull_request_approve(pull_request_id, reviewer_email, reviewer_token)
-                # https://learn.microsoft.com/en-us/rest/api/azure/devops/memberentitlementmanagement/user-entitlements/search-user-entitlements?view=azure-devops-rest-6.0
-                response = get("https://vsaex.dev.azure.com/" +
-                     source.organization +
-                     "/_apis/userentitlements?$filter=name eq '#{reviewer_email}'&api-version=6.0-preview.3")
+            def get_user_id_for_token(token)
+              # https://learn.microsoft.com/en-us/javascript/api/azure-devops-extension-api/connectiondata
+              # https://stackoverflow.com/a/53227325
+              response = get_with_token(source.api_endpoint + source.organization + "/_apis/connectionData", token)
+              JSON.parse(response.body).fetch("authenticatedUser")['id']
+            end
 
-                user_id = JSON.parse(response.body).fetch("members")[0]['id']
+            def pull_request_approve(pull_request_id, reviewer_token)
+                user_id = get_user_id_for_token(token)
 
                 # https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-reviewers/create-pull-request-reviewers?view=azure-devops-rest-6.0
                 content = {
@@ -96,6 +98,24 @@ module Dependabot
                       "/_apis/git/repositories/" + source.unscoped_repo +
                       "/pullrequests/#{pull_request_id}/reviewers/#{user_id}?api-version=6.0",
                     content.to_json, reviewer_token)
+            end
+
+            def get_with_token(url, token)
+              response = Excon.get(
+                url,
+                user: credentials&.fetch("username", nil),
+                ppassword: token,
+                idempotent: true,
+                **SharedHelpers.excon_defaults(
+                  headers: auth_header
+                )
+              )
+
+              raise Unauthorized if response.status == 401
+              raise Forbidden if response.status == 403
+              raise NotFound if response.status == 404
+
+              response
             end
 
             def put_with_token(url, json, token)
@@ -113,6 +133,8 @@ module Dependabot
                         )
                     )
                 )
+                raise Unauthorized if response.status == 401
+                raise Forbidden if response.status == 403
                 raise NotFound if response.status == 404
 
                 response
@@ -133,6 +155,8 @@ module Dependabot
                         )
                     )
                 )
+                raise Unauthorized if response.status == 401
+                raise Forbidden if response.status == 403
                 raise NotFound if response.status == 404
 
                 response

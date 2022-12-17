@@ -196,23 +196,13 @@
       "helpMarkDown": "When set to `true`, pull requests will automatically be approved by the specified user. Defaults to `false`."
     },
     {
-      "name": "autoApproveUserEmail",
-      "type": "string",
-      "groupName": "approval_completion",
-      "label": "The email of the user that should approve the PR.",
-      "defaultValue": "",
-      "required": false,
-      "helpMarkDown": "The email of the user of that shall be used to approve the created PR automatically.",
-      "visibleRule": "autoApprove=true"
-    },
-    {
       "name": "autoApproveUserToken",
       "type": "string",
       "groupName": "approval_completion",
       "label": "A personal access token of the user that should approve the PR.",
       "defaultValue": "",
       "required": false,
-      "helpMarkDown": "A personal access token of the user of that shall be used to approve the created PR automatically. The token must belong to the user which was specified by email. If the same user that creates the PR should approve, this can be left empty. This won't work with if the Build Service with the build service account!",
+      "helpMarkDown": "A personal access token of the user of that shall be used to approve the created PR automatically. If the same user that creates the PR should approve, this can be left empty. This won't work with if the Build Service with the build service account!",
       "visibleRule": "autoApprove=true"
     },
 
