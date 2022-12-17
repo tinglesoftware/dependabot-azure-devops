@@ -727,7 +727,6 @@ dependencies.select(&:top_level?).each do |dep|
       azure_client.pull_request_approve(
         # Adding argument names will fail! May because there is no spec?
         pull_request_id,
-        $options[:auto_approve_user_email],
         $options[:auto_approve_user_token]
       )
     end
