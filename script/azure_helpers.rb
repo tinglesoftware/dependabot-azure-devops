@@ -113,6 +113,8 @@ module Dependabot
                         )
                     )
                 )
+                raise Unauthorized if response.status == 401
+                raise Forbidden if response.status == 403
                 raise NotFound if response.status == 404
 
                 response
@@ -133,6 +135,8 @@ module Dependabot
                         )
                     )
                 )
+                raise Unauthorized if response.status == 401
+                raise Forbidden if response.status == 403
                 raise NotFound if response.status == 404
 
                 response
