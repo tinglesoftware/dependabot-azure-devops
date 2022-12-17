@@ -451,7 +451,8 @@ parser = Dependabot::FileParsers.for_package_manager($package_manager).new(
   dependency_files: files,
   source: $source,
   credentials: $options[:credentials],
-  reject_external_code: $options[:reject_external_code]
+  reject_external_code: $options[:reject_external_code],
+  options: $options[:updater_options]
 )
 
 dependencies = parser.parse
@@ -570,6 +571,7 @@ dependencies.select(&:top_level?).each do |dep|
       dependencies: updated_deps,
       dependency_files: files,
       credentials: $options[:credentials],
+      options: $options[:updater_options]
     )
 
     updated_files = updater.updated_dependency_files
