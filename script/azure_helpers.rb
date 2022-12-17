@@ -7,6 +7,7 @@ module Dependabot
         class Azure
 
             def pull_requests_active(user_id, default_branch)
+              # https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-requests/get-pull-requests?view=azure-devops-rest-6.0&tabs=HTTP
                 response = get(source.api_endpoint +
                     source.organization + "/" + source.project +
                     "/_apis/git/repositories/" + source.unscoped_repo +
