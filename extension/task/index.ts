@@ -208,11 +208,6 @@ async function run() {
       if (variables.autoApprove === true) {
         dockerRunner.arg(["-e", 'AZURE_AUTO_APPROVE_PR=true']);
 
-        // Set the email to use for auto approve if provided
-        if (variables.autoApproveUserEmail) {
-          dockerRunner.arg(["-e", `AZURE_AUTO_APPROVE_USER_EMAIL=${variables.autoApproveUserEmail}`]);
-        }
-
         // Set the token to use for auto approve if provided
         if (variables.autoApproveUserToken) {
           dockerRunner.arg(["-e", `AZURE_AUTO_APPROVE_USER_TOKEN=${variables.autoApproveUserToken}`]);

@@ -69,7 +69,6 @@ $options = {
 
   # Automatic Approval
   auto_approve_pr: ENV["AZURE_AUTO_APPROVE_PR"] == "true",
-  auto_approve_user_email: ENV["AZURE_AUTO_APPROVE_USER_EMAIL"],
   auto_approve_user_token: ENV["AZURE_AUTO_APPROVE_USER_TOKEN"] || ENV["AZURE_ACCESS_TOKEN"],
 }
 
@@ -722,7 +721,7 @@ dependencies.select(&:top_level?).each do |dep|
 
     # Auto approve this Pull Request
     if $options[:auto_approve_pr]
-      puts "Auto Approving PR for user #{$options[:auto_approve_user_email]}"
+      puts "Auto Approving PR #{pull_request_id}"
 
       azure_client.pull_request_approve(
         # Adding argument names will fail! May because there is no spec?

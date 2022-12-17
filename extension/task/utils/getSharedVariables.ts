@@ -34,8 +34,6 @@ interface ISharedVariables {
   updaterOptions: string;
   /** Determines if the pull requests that dependabot creates should be automatically approved */
   autoApprove: boolean;
-  /** The email of the user that should approve the PR */
-  autoApproveUserEmail: string;
   /** A personal access token of the user that should approve the PR */
   autoApproveUserToken: string;
   extraCredentials: string;
@@ -95,7 +93,6 @@ export default function getSharedVariables(): ISharedVariables {
   let excludeRequirementsToUnlock = getInput("excludeRequirementsToUnlock") || "";
   let updaterOptions = getInput("updaterOptions");
   let autoApprove: boolean = getBoolInput("autoApprove", false);
-  let autoApproveUserEmail: string = getInput("autoApproveUserEmail");
   let autoApproveUserToken: string = getInput("autoApproveUserToken");
   let extraCredentials = getVariable("DEPENDABOT_EXTRA_CREDENTIALS");
   let securityAdvisoriesFile: string | undefined = getInput('securityAdvisoriesFile');
@@ -151,7 +148,6 @@ export default function getSharedVariables(): ISharedVariables {
     excludeRequirementsToUnlock,
     updaterOptions: updaterOptions,
     autoApprove,
-    autoApproveUserEmail,
     autoApproveUserToken,
     extraCredentials,
     securityAdvisoriesFile,
