@@ -78,6 +78,8 @@ module Dependabot
             end
 
             def get_user_id_for_token(token)
+              # https://learn.microsoft.com/en-us/javascript/api/azure-devops-extension-api/connectiondata
+              # https://stackoverflow.com/a/53227325
               response = get_with_token(source.api_endpoint + source.organization + "/_apis/connectionData", token)
               JSON.parse(response.body).fetch("authenticatedUser")['id']
             end
