@@ -627,8 +627,8 @@ dependencies.select(&:top_level?).each do |dep|
       # chore(deps): bump dotenv from 9.0.1 to 9.0.2 in /server
       if !title.include?("#{updated_deps[0].version} ") && !title.end_with?(updated_deps[0].version)
         # Abandon old version PR
+        azure_client.branch_delete(source_ref_name) # do this first to avoid hanging branches
         azure_client.pull_request_abandon(pr_id)
-        azure_client.branch_delete(source_ref_name)
         puts "Abandoned Pull Request ##{pr_id}"
         next
       end
