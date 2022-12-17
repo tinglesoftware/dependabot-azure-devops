@@ -6,11 +6,12 @@ module Dependabot
     module Clients
         class Azure
 
-            def pull_requests_active(default_branch)
+            def pull_requests_active(user_id, default_branch)
                 response = get(source.api_endpoint +
                     source.organization + "/" + source.project +
                     "/_apis/git/repositories/" + source.unscoped_repo +
                     "/pullrequests?api-version=6.0&searchCriteria.status=active" \
+                    "&searchCriteria.creatorId=#{user_id}" \
                     "&searchCriteria.targetRefName=refs/heads/#{default_branch}")
 
                 JSON.parse(response.body).fetch("value")
