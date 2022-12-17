@@ -612,12 +612,11 @@ dependencies.select(&:top_level?).each do |dep|
       # Filter those containing " #{dep.name} "
       # The prefix " " and suffix " " avoids taking PRS for dependencies named the same
       # e.g. Tingle.EventBus and Tingle.EventBus.Transports.Azure.ServiceBus
-      next unless title.include?(" #{dep.name} ")
-
+      #
       # Ensure the title contains the current dependency version
       # Sometimes, the dep.version might be null such as in npm
       # when the package.lock.json is not checked into source.
-      next unless title.include?(dep.name) && dep.version && title.include?(dep.version)
+      next unless title.include?(" #{dep.name} ") && dep.version && title.include?(dep.version)
 
       # If the title does not contain the updated version,
       # we need to close the PR and delete it's branch,
