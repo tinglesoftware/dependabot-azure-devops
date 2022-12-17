@@ -22,8 +22,6 @@ require_relative "vulnerabilities"
 $options = {
   credentials: [],
   provider: "azure",
-  github_token: nil,
-  vulnerabilities_fetcher: nil,
 
   directory: ENV["DEPENDABOT_DIRECTORY"] || "/", # Directory where the base dependency files are.
   branch: ENV["DEPENDABOT_TARGET_BRANCH"] || nil, # Branch against which to create PRs
@@ -118,15 +116,19 @@ $options[:credentials] << {
   "username" => ENV["AZURE_ACCESS_USERNAME"] || "x-access-token",
   "password" => ENV["AZURE_ACCESS_TOKEN"]
 }
+
+$vulnerabilities_fetcher = nil
 unless ENV["GITHUB_ACCESS_TOKEN"].to_s.strip.empty?
   puts "GitHub access token has been provided."
-  $options[:github_token] = ENV["GITHUB_ACCESS_TOKEN"] # A GitHub access token with read access to public repos
+  github_token = ENV["GITHUB_ACCESS_TOKEN"] # A GitHub access token with read access to public repos
   $options[:credentials] << {
     "type" => "git_source",
     "host" => "github.com",
     "username" => "x-access-token",
-    "password" => $options[:github_token]
+    "password" => github_token
   }
+  $vulnerabilities_fetcher =
+    Dependabot::Vulnerabilities::Fetcher.new($package_manager, github_token)
 end
 # DEPENDABOT_EXTRA_CREDENTIALS, for example:
 # "[{\"type\":\"npm_registry\",\"registry\":\"registry.npmjs.org\",\"token\":\"123\"}]"
@@ -265,19 +267,13 @@ def ignored_versions_for(dep)
   end
 end
 
-def vulnerabilities_fetcher
-  return nil unless $options[:github_token]
-  $options[:vulnerabilities_fetcher] ||=
-    Dependabot::Vulnerabilities::Fetcher.new($package_manager, $options[:github_token])
-end
-
 def security_advisories_for(dep)
   relevant_advisories =
     $options[:security_advisories].
       select { |adv| adv.fetch("dependency-name").casecmp(dep.name).zero? }
 
   # add relevant advisories from the fetcher if present
-  relevant_advisories += vulnerabilities_fetcher&.fetch(dep.name) || []
+  relevant_advisories += $vulnerabilities_fetcher&.fetch(dep.name) || []
 
   relevant_advisories.map do |adv|
     vulnerable_versions = adv["affected-versions"] || []
