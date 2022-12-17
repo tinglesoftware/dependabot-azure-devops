@@ -619,17 +619,17 @@ dependencies.select(&:top_level?).each do |dep|
       next unless title.include?(" #{dep.name} ") && dep.version && title.include?(dep.version)
 
       # If the title does not contain the updated version,
-      # we need to close the PR and delete it's branch,
+      # we need to abandon the PR and delete it's branch,
       # because there is a newer version available
       #
       # Sample Titles:
       # Bump Tingle.Extensions.Logging.LogAnalytics from 3.4.2-ci0005 to 3.4.2-ci0006
       # chore(deps): bump dotenv from 9.0.1 to 9.0.2 in /server
       if !title.include?("#{updated_deps[0].version} ") && !title.end_with?(updated_deps[0].version)
-        # Close old version PR
+        # Abandon old version PR
         azure_client.pull_request_abandon(pr_id)
         azure_client.branch_delete(source_ref_name)
-        puts "Closed Pull Request ##{pr_id}"
+        puts "Abandoned Pull Request ##{pr_id}"
         next
       end
 
