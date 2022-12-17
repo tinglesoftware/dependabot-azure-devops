@@ -9,7 +9,7 @@ module Dependabot
 
       GITHUB_GQL_API_ENDPOINT = "https://api.github.com/graphql"
 
-      ECOSYSTEM_LOOKUP = { # [Hash<String, String>]
+      ECOSYSTEM_LOOKUP = {
         "github_actions" => "ACTIONS",
         "composer" => "COMPOSER",
         "elm" => "ERLANG",
@@ -43,7 +43,7 @@ module Dependabot
               }
             }
           }
-          GRAPHQL
+        GRAPHQL
 
         client.allow_dynamic_queries = true
 
@@ -52,7 +52,7 @@ module Dependabot
       def fetch(dependency_name)
         [] unless @ecosystem
 
-        variables = { ecosystem: @ecosystem, package: dependency_name }#.compact_blank
+        variables = { ecosystem: @ecosystem, package: dependency_name }
         response = client.query(@parsed_query, variables: variables)
         raise(QueryError, response.errors[:data].join(", ")) if response.errors.any?
 

@@ -92,7 +92,8 @@ $package_manager = ENV["DEPENDABOT_PACKAGE_MANAGER"] || "bundler"
 
 # GitHub native implementation modifies some of the names in the config file
 # https://docs.github.com/en/github/administering-a-repository/configuration-options-for-dependency-updates#package-ecosystem
-PACKAGE_ECOSYSTEM_MAPPING = { # [Hash<String, String>]
+# [Hash<String, String>]
+PACKAGE_ECOSYSTEM_MAPPING = {
   "github-actions" => "github_actions",
   "gitsubmodule" => "submodules",
   "gomod" => "go_modules",
@@ -138,7 +139,8 @@ end
 ##########################################
 # GitHub native implementation modifies some of the names in the config file
 unless ENV["DEPENDABOT_VERSIONING_STRATEGY"].to_s.strip.empty?
-  VERSIONING_STRATEGIES = { # [Hash<String, Symbol>]
+  # [Hash<String, Symbol>]
+  VERSIONING_STRATEGIES = {
     "auto" => :auto,
     "lockfile-only" => :lockfile_only,
     "widen" => :widen_ranges,
@@ -182,7 +184,8 @@ unless ENV["DEPENDABOT_ALLOW_CONDITIONS"].to_s.strip.empty?
 end
 
 # Get allow versions for a dependency
-TYPE_HANDLERS = { # [Hash<String, Proc>] handlers for type allow rules
+# [Hash<String, Proc>] handlers for type allow rules
+TYPE_HANDLERS = {
   "all" => proc { true },
   "direct" => proc { |dep| dep.top_level? },
   "indirect" => proc { |dep| !dep.top_level? },
@@ -190,6 +193,7 @@ TYPE_HANDLERS = { # [Hash<String, Proc>] handlers for type allow rules
   "development" => proc { |dep| !dep.production? },
   "security" => proc { |_, checker| checker.vulnerable? }
 }.freeze
+
 def allow_conditions_for(dep)
   # Find where the name matches then get the type e.g. production, direct, etc
   found = $options[:allow_conditions].find { |al| dep.name.match?(al['dependency-name']) }
