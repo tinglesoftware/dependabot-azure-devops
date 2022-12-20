@@ -25,25 +25,31 @@ export default function parseConfigFile(variables: ISharedVariables): IDependabo
     "/.github/dependabot.yaml",
   ];
 
-  // Find configuration file
-  let filePath: string;
-  let rootDir = getVariable("Build.SourcesDirectory");
-  possibleFilePaths.forEach(fp => {
-    var fullPath = path.join(rootDir, fp);
-    if (fs.existsSync(fullPath)) {
-      filePath = fullPath;
-    }
-  });
+  let contents: string;
 
-  // Ensure we have the file. Otherwise throw a well readable error.
-  if (filePath) {
-    tl.debug(`Found configuration file at ${filePath}`);
-  } else {
+  // Attempt to find the configuration file locally (cloned)
+  let rootDir = getVariable("Build.SourcesDirectory");
+  for (const fp in possibleFilePaths) {
+    var filePath = path.join(rootDir, fp);
+    if (fs.existsSync(filePath)) {
+      tl.debug(`Found configuration file cloned at ${filePath}`);
+      contents = fs.readFileSync(filePath, "utf-8");
+      break;
+    }
+  }
+
+  // If we have no contents, attempt to get them via the API
+  if (!contents) {
+    for (const fp in possibleFilePaths) {
+      var url = `${variables.projectUrl}/_apis/git/repositories/${variables.repository}/items?path=${fp}`;
+      // TODO: make HTTP request here
+
+  // Ensure we have file contents. Otherwise throw a well readable error.
+  if (contents === null) {
     throw new Error(`Configuration file not found at possible locations: ${possibleFilePaths.join(', ')}`);
   }
 
-  let config: any;
-  config = load(fs.readFileSync(filePath, "utf-8"));
+  let config: any = load(contents);
 
   // Ensure the config object parsed is an object
   if (config === null || typeof config !== "object") {
