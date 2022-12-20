@@ -29,7 +29,7 @@ export default async function parseConfigFile(variables: ISharedVariables): Prom
 
   // Attempt to find the configuration file locally (cloned)
   let rootDir = getVariable("Build.SourcesDirectory");
-  for (const fp in possibleFilePaths) {
+  for (const fp of possibleFilePaths) {
     var filePath = path.join(rootDir, fp);
     if (fs.existsSync(filePath)) {
       tl.debug(`Found configuration file cloned at ${filePath}`);
@@ -46,7 +46,7 @@ export default async function parseConfigFile(variables: ISharedVariables): Prom
   // 2. Running a single pipeline to update multiple repositories https://github.com/tinglesoftware/dependabot-azure-devops/issues/328
   if (contents === null) {
     tl.debug(`Attempting to fetch configuration file via REST API ...`);
-    for (const fp in possibleFilePaths) {
+    for (const fp of possibleFilePaths) {
       // make HTTP request
       var url = new URL(`${variables.projectUrl}/_apis/git/repositories/${variables.repository}/items?path=${fp}`);
       const response = await fetch(url, {
