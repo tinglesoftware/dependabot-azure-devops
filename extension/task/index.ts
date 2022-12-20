@@ -29,16 +29,6 @@ async function run() {
       config = getConfigFromInputs();
     }
 
-    if (variables.useConfigFile && tl.getInput("targetRepositoryName")) {
-      tl.warning(
-        `
-        Using targetRepositoryName input does not work when useConfigFile is set to true.
-        Either use a pipeline for each repository or consider using the [managed version](https://managed-dependabot.com).
-        Using targetRepositoryName will be deprecated and removed in a future minor release.
-        `
-      );
-    }
-
     // For each update run docker container
     for (const update of config.updates) {
       // Prepare the docker task
