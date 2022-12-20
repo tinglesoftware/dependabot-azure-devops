@@ -28,15 +28,17 @@ export default async function parseConfigFile(variables: ISharedVariables): Prom
   let contents: string;
 
   // Attempt to find the configuration file locally (cloned)
-  let rootDir = getVariable("Build.SourcesDirectory");
-  for (const fp of possibleFilePaths) {
-    var filePath = path.join(rootDir, fp);
-    if (fs.existsSync(filePath)) {
-      tl.debug(`Found configuration file cloned at ${filePath}`);
-      contents = fs.readFileSync(filePath, "utf-8");
-      break;
-    } else {
-      tl.debug(`No configuration file cloned at ${filePath}`);
+  if (!tl.getInput("targetRepositoryName")) {
+    let rootDir = getVariable("Build.SourcesDirectory");
+    for (const fp of possibleFilePaths) {
+      var filePath = path.join(rootDir, fp);
+      if (fs.existsSync(filePath)) {
+        tl.debug(`Found configuration file cloned at ${filePath}`);
+        contents = fs.readFileSync(filePath, "utf-8");
+        break;
+      } else {
+        tl.debug(`No configuration file cloned at ${filePath}`);
+      }
     }
   }
 
