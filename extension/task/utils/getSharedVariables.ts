@@ -13,6 +13,8 @@ import getGithubAccessToken from "./getGithubAccessToken";
 import getTargetRepository from "./getTargetRepository";
 
 interface ISharedVariables {
+  /** URL of the project */
+  projectUrl: URL;
   /** Organization URL protocol */
   protocol: string;
   /** Organization URL hostname */
@@ -76,11 +78,11 @@ interface ISharedVariables {
 export default function getSharedVariables(): ISharedVariables {
   // Prepare shared variables
   let organizationUrl = getVariable("System.TeamFoundationCollectionUri");
-  let parsedUrl = new URL(organizationUrl);
-  let protocol: string = parsedUrl.protocol.slice(0, -1);
-  let hostname: string = extractHostname(parsedUrl);
-  let port: string = parsedUrl.port;
-  let virtualDirectory: string = extractVirtualDirectory(parsedUrl);
+  let projectUrl = new URL(organizationUrl);
+  let protocol: string = projectUrl.protocol.slice(0, -1);
+  let hostname: string = extractHostname(projectUrl);
+  let port: string = projectUrl.port;
+  let virtualDirectory: string = extractVirtualDirectory(projectUrl);
   let organization: string = extractOrganization(organizationUrl);
   let project: string = encodeURI(getVariable("System.TeamProject")); // encode special characters like spaces
   let setAutoComplete = getBoolInput("setAutoComplete", false);
@@ -136,6 +138,7 @@ export default function getSharedVariables(): ISharedVariables {
   let skipPullRequests: boolean = getBoolInput("skipPullRequests", false);
 
   return {
+    projectUrl,
     protocol,
     hostname,
     port,
