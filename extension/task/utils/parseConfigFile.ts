@@ -35,6 +35,8 @@ export default async function parseConfigFile(variables: ISharedVariables): Prom
       tl.debug(`Found configuration file cloned at ${filePath}`);
       contents = fs.readFileSync(filePath, "utf-8");
       break;
+    } else {
+      tl.debug(`No configuration file cloned at ${filePath}`);
     }
   }
 
@@ -45,8 +47,8 @@ export default async function parseConfigFile(variables: ISharedVariables): Prom
   if (contents === null) {
     tl.debug(`Attempting to fetch configuration file via REST API ...`);
     for (const fp in possibleFilePaths) {
+      // make HTTP request
       var url = new URL(`${variables.projectUrl}/_apis/git/repositories/${variables.repository}/items?path=${fp}`);
-      // make HTTP request here
       const response = await fetch(url, {
         method: 'GET',
         headers: {
@@ -61,6 +63,8 @@ export default async function parseConfigFile(variables: ISharedVariables): Prom
         throw new Error(`No access token has been provided to access '${url}'`);
       } else if (response.status === 403) {
         throw new Error(`The access token provided does not have permissions to access '${url}'`);
+      } else if (response.status === 404) {
+        tl.debug(`No configuration file at '${url}'`);
       }
     }
   }
