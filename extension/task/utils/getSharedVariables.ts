@@ -12,7 +12,7 @@ import getDockerImageTag from "./getDockerImageTag";
 import getGithubAccessToken from "./getGithubAccessToken";
 import getTargetRepository from "./getTargetRepository";
 
-interface ISharedVariables {
+export interface ISharedVariables {
   /** URL of the project */
   projectUrl: URL;
   /** Organization URL protocol */

@@ -4,6 +4,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as tl from "azure-pipelines-task-lib/task"
 import { getVariable } from "azure-pipelines-task-lib/task";
+import { ISharedVariables } from "./getSharedVariables";
 import convertPlaceholder from "./convertPlaceholder";
 
 /**
@@ -14,9 +15,10 @@ import convertPlaceholder from "./convertPlaceholder";
  * To view YAML file format, visit
  * https://docs.github.com/en/github/administering-a-repository/configuration-options-for-dependency-updates#allow
  *
+ * @param variables
  * @returns {IDependabotConfig} config - the dependabot configuration
  */
-export default function parseConfigFile(): IDependabotConfig {
+export default function parseConfigFile(variables: ISharedVariables): IDependabotConfig {
 
   const possibleFilePaths = [
     "/.github/dependabot.yml",
