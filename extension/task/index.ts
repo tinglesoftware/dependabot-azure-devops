@@ -16,7 +16,7 @@ async function run() {
 
     var config: IDependabotConfig;
     if (variables.useConfigFile) {
-      config = parseConfigFile(variables);
+      config = await parseConfigFile(variables);
     } else {
       tl.warning(
         `

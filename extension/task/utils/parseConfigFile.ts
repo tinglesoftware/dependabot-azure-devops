@@ -18,7 +18,7 @@ import convertPlaceholder from "./convertPlaceholder";
  * @param variables
  * @returns {IDependabotConfig} config - the dependabot configuration
  */
-export default function parseConfigFile(variables: ISharedVariables): IDependabotConfig {
+export default async function parseConfigFile(variables: ISharedVariables): Promise<IDependabotConfig> {
 
   const possibleFilePaths = [
     "/.github/dependabot.yml",
@@ -45,8 +45,25 @@ export default function parseConfigFile(variables: ISharedVariables): IDependabo
   if (!contents) {
     tl.debug(`Attempting to fetch configuration file via REST API ...`);
     for (const fp in possibleFilePaths) {
-      var url = `${variables.projectUrl}/_apis/git/repositories/${variables.repository}/items?path=${fp}`;
-      // TODO: make HTTP request here
+      var url = new URL(`${variables.projectUrl}/_apis/git/repositories/${variables.repository}/items?path=${fp}`);
+      // make HTTP request here
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Basic ${Buffer.from(`:${variables.systemAccessToken}`, 'binary').toString('base64')}`
+        }
+      });
+      if (response.status === 200) {
+        tl.debug(`Found configuration file at '${url}'`);
+        contents = await response.text();
+        break;
+      } else if (response.status === 401) {
+        throw new Error(`No access token has been provided to access '${url}'`);
+      } else if (response.status === 403) {
+        throw new Error(`The access token provided does not have permissions to access '${url}'`);
+      }
+    }
+  }
 
   // Ensure we have file contents. Otherwise throw a well readable error.
   if (contents === null) {
