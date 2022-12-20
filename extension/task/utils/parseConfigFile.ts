@@ -39,7 +39,11 @@ export default function parseConfigFile(variables: ISharedVariables): IDependabo
   }
 
   // If we have no contents, attempt to get them via the API
+  // This supports 2 scenarios:
+  // 1. Running the pipeline without cloning, which is useful for huge repositories (multiple submodules or large commit log)
+  // 2. Running a single pipeline to update multiple repositories https://github.com/tinglesoftware/dependabot-azure-devops/issues/328
   if (!contents) {
+    tl.debug(`Attempting to fetch configuration file via REST API ...`);
     for (const fp in possibleFilePaths) {
       var url = `${variables.projectUrl}/_apis/git/repositories/${variables.repository}/items?path=${fp}`;
       // TODO: make HTTP request here
