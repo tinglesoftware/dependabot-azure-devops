@@ -4,13 +4,13 @@ import {
   getInput,
   getDelimitedInput,
 } from "azure-pipelines-task-lib/task";
+import * as tl from "azure-pipelines-task-lib/task";
 import extractHostname from "./extractHostname";
 import extractOrganization from "./extractOrganization";
 import extractVirtualDirectory from "./extractVirtualDirectory";
 import getAzureDevOpsAccessToken from "./getAzureDevOpsAccessToken";
 import getDockerImageTag from "./getDockerImageTag";
 import getGithubAccessToken from "./getGithubAccessToken";
-import getTargetRepository from "./getTargetRepository";
 
 export interface ISharedVariables {
   /** URL of the project */
@@ -169,4 +169,17 @@ export default function getSharedVariables(): ISharedVariables {
     mergeStrategy,
     skipPullRequests,
   };
+}
+
+function getTargetRepository() {
+  // Prepare the repository
+  let repository: string = getInput("targetRepositoryName");
+  if (!repository) {
+    tl.debug("No custom repository provided. The Pipeline Repository Name shall be used.");
+    repository = getVariable("Build.Repository.Name");
+  }
+
+  repository = encodeURI(repository); // encode special characters like spaces
+
+  return repository;
 }
