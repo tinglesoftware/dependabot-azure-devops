@@ -34,7 +34,7 @@ export default async function parseConfigFile(variables: ISharedVariables): Prom
    * 1. Running the pipeline without cloning, which is useful for huge repositories (multiple submodules or large commit log)
    * 2. Running a single pipeline to update multiple repositories https://github.com/tinglesoftware/dependabot-azure-devops/issues/328
    */
-  if (tl.getInput("targetRepositoryName")) {
+  if (variables.repositoryOverridden) {
     tl.debug(`Attempting to fetch configuration file via REST API ...`);
     let httpc: httpm.HttpClient = new httpm.HttpClient('tingle-software.dependabot');
     for (const fp of possibleFilePaths) {

@@ -24,6 +24,8 @@ export interface ISharedVariables {
   project: string;
   /** Repository name */
   repository: string;
+  /** Whether the repository was overridden via input */
+  repositoryOverridden: boolean;
 
   /** The github token */
   githubAccessToken: string;
@@ -88,7 +90,14 @@ export default function getSharedVariables(): ISharedVariables {
   let virtualDirectory: string = extractVirtualDirectory(projectUrl);
   let organization: string = extractOrganization(organizationUrl);
   let project: string = encodeURI(tl.getVariable("System.TeamProject")); // encode special characters like spaces
-  let repository: string = getTargetRepository();
+  let repository: string = tl.getInput("targetRepositoryName");
+  let repositoryOverridden = typeof repository === 'string';
+  if (!repositoryOverridden) {
+    tl.debug("No custom repository provided. The Pipeline Repository Name shall be used.");
+    repository = tl.getVariable("Build.Repository.Name");
+  }
+  repository = encodeURI(repository); // encode special characters like spaces
+
 
   // Prepare the access credentials
   let githubAccessToken: string = getGithubAccessToken();
@@ -146,6 +155,7 @@ export default function getSharedVariables(): ISharedVariables {
     organization,
     project,
     repository,
+    repositoryOverridden,
 
     githubAccessToken,
     systemAccessUser,
@@ -176,17 +186,4 @@ export default function getSharedVariables(): ISharedVariables {
     dockerImageRepository,
     dockerImageTag,
   };
-}
-
-function getTargetRepository() {
-  // Prepare the repository
-  let repository: string = tl.getInput("targetRepositoryName");
-  if (!repository) {
-    tl.debug("No custom repository provided. The Pipeline Repository Name shall be used.");
-    repository = tl.getVariable("Build.Repository.Name");
-  }
-
-  repository = encodeURI(repository); // encode special characters like spaces
-
-  return repository;
 }
