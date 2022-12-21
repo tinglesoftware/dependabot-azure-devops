@@ -43,7 +43,7 @@ export default async function parseConfigFile(
     tl.debug(`Attempting to fetch configuration file via REST API ...`);
     for (const fp of possibleFilePaths) {
       // make HTTP request
-      var url = `${variables.projectUrl}_apis/git/repositories/${variables.repository}/items?path=${fp}`;
+      var url = `${variables.projectUrl}${variables.project}/_apis/git/repositories/${variables.repository}/items?path=${fp}`;
       tl.debug(`GET ${url}`);
       var response = await axios.get(url, {
         auth: {
