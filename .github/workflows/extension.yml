@@ -49,6 +49,10 @@ jobs:
       run: npm run build:prod
       working-directory: '${{ github.workspace }}/extension'
 
+    - name: Test
+      run: npm run test
+      working-directory: '${{ github.workspace }}/extension'
+
     - name: Install tfx-cli
       run: npm install -g tfx-cli@0.12.0
 
