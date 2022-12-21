@@ -93,6 +93,7 @@ export default async function parseConfigFile(
   }
 
   // Ensure we have file contents. Otherwise throw a well readable error.
+  tl.debug(`Contents:\r\n${contents}`)
   if (!contents || typeof contents !== "string") {
     throw new Error(
       `Configuration file not found at possible locations: ${possibleFilePaths.join(
@@ -102,6 +103,7 @@ export default async function parseConfigFile(
   }
 
   let config: any = load(contents);
+  tl.debug(`Config:\r\n${config}`)
 
   // Ensure the config object parsed is an object
   if (config === null || typeof config !== "object") {
