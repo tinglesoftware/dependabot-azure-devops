@@ -16,7 +16,7 @@ import * as httpm from 'typed-rest-client/HttpClient';
  * To view YAML file format, visit
  * https://docs.github.com/en/github/administering-a-repository/configuration-options-for-dependency-updates#allow
  *
- * @param variables
+ * @param variables the shared variables of the task
  * @returns {IDependabotConfig} config - the dependabot configuration
  */
 export default async function parseConfigFile(variables: ISharedVariables): Promise<IDependabotConfig> {
@@ -28,26 +28,13 @@ export default async function parseConfigFile(variables: ISharedVariables): Prom
 
   let contents: null | string;
 
-  // Attempt to find the configuration file locally (cloned)
-  if (!tl.getInput("targetRepositoryName")) {
-    let rootDir = getVariable("Build.SourcesDirectory");
-    for (const fp of possibleFilePaths) {
-      var filePath = path.join(rootDir, fp);
-      if (fs.existsSync(filePath)) {
-        tl.debug(`Found configuration file cloned at ${filePath}`);
-        contents = fs.readFileSync(filePath, "utf-8");
-        break;
-      } else {
-        tl.debug(`No configuration file cloned at ${filePath}`);
-      }
-    }
-  }
-
-  // If we have no contents, attempt to get them via the API
-  // This supports 2 scenarios:
-  // 1. Running the pipeline without cloning, which is useful for huge repositories (multiple submodules or large commit log)
-  // 2. Running a single pipeline to update multiple repositories https://github.com/tinglesoftware/dependabot-azure-devops/issues/328
-  if (contents === null || typeof contents !== 'string') {
+  /*
+   * The configuration file can be available locally if the repository is cloned.
+   * Otherwise, we should get it via the API which supports 2 scenarios:
+   * 1. Running the pipeline without cloning, which is useful for huge repositories (multiple submodules or large commit log)
+   * 2. Running a single pipeline to update multiple repositories https://github.com/tinglesoftware/dependabot-azure-devops/issues/328
+   */
+  if (tl.getInput("targetRepositoryName")) {
     tl.debug(`Attempting to fetch configuration file via REST API ...`);
     let httpc: httpm.HttpClient = new httpm.HttpClient('tingle-software.dependabot');
     for (const fp of possibleFilePaths) {
@@ -66,6 +53,18 @@ export default async function parseConfigFile(variables: ISharedVariables): Prom
         throw new Error(`The access token provided does not have permissions to access '${url}'`);
       } else if (response.message.statusCode === 404) {
         tl.debug(`No configuration file at '${url}'`);
+      }
+    }
+  } else {
+    let rootDir = getVariable("Build.SourcesDirectory");
+    for (const fp of possibleFilePaths) {
+      var filePath = path.join(rootDir, fp);
+      if (fs.existsSync(filePath)) {
+        tl.debug(`Found configuration file cloned at ${filePath}`);
+        contents = fs.readFileSync(filePath, "utf-8");
+        break;
+      } else {
+        tl.debug(`No configuration file cloned at ${filePath}`);
       }
     }
   }
