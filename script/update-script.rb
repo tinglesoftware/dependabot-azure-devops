@@ -770,9 +770,9 @@ active_pull_requests.each do |pr|
       next unless dep.version
 
       # Check if the version has since been ignored, it so we do not keep
-      requirement_class = Utils.requirement_class_for_package_manager(dep.package_manager)
+      requirement_class = Dependabot::Utils.requirement_class_for_package_manager(dep.package_manager)
       ignore_reqs = ignored_versions_for(dep)
-                              .flat_map { |req| requirement_class.requirements_array(req) }
+                      .flat_map { |req| requirement_class.requirements_array(req) }
       if ignore_reqs.any? { |req| req.satisfied_by?(dep.version) }
         puts "Update for #{dep.name} #{dep.version} is no longer required."
         next
@@ -791,9 +791,13 @@ active_pull_requests.each do |pr|
 
     # Abandon the PR unless we should keep it
     unless keep
-      puts "Abandoning PR ##{pr_id} (#{title}) as it is no longer needed."
-      azure_client.branch_delete(source_ref_name)
-      azure_client.pull_request_abandon(pr_id)
+      if $options[:skip_pull_requests]
+        puts "Skipping abandoning PR ##{pr_id} (#{title})"
+      else
+        puts "Abandoning PR ##{pr_id} (#{title}) as it is no longer needed."
+        azure_client.branch_delete(source_ref_name)
+        azure_client.pull_request_abandon(pr_id)
+      end
     end
 
   rescue StandardError => e
