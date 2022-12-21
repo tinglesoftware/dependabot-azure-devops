@@ -612,25 +612,24 @@ dependencies.select(&:top_level?).each do |dep|
       # Filter those containing " #{dep.name} "
       # The prefix " " and suffix " " avoids taking PRS for dependencies named the same
       # e.g. Tingle.EventBus and Tingle.EventBus.Transports.Azure.ServiceBus
-      next unless title.include?(" #{dep.name} ")
-
+      #
       # Ensure the title contains the current dependency version
       # Sometimes, the dep.version might be null such as in npm
       # when the package.lock.json is not checked into source.
-      next unless title.include?(dep.name) && dep.version && title.include?(dep.version)
+      next unless title.include?(" #{dep.name} ") && dep.version && title.include?(dep.version)
 
       # If the title does not contain the updated version,
-      # we need to close the PR and delete it's branch,
+      # we need to abandon the PR and delete it's branch,
       # because there is a newer version available
       #
       # Sample Titles:
       # Bump Tingle.Extensions.Logging.LogAnalytics from 3.4.2-ci0005 to 3.4.2-ci0006
       # chore(deps): bump dotenv from 9.0.1 to 9.0.2 in /server
       if !title.include?("#{updated_deps[0].version} ") && !title.end_with?(updated_deps[0].version)
-        # Close old version PR
+        # Abandon old version PR
+        azure_client.branch_delete(source_ref_name) # do this first to avoid hanging branches
         azure_client.pull_request_abandon(pr_id)
-        azure_client.branch_delete(source_ref_name)
-        puts "Closed Pull Request ##{pr_id}"
+        puts "Abandoned Pull Request ##{pr_id}"
         next
       end
 
@@ -727,7 +726,7 @@ dependencies.select(&:top_level?).each do |dep|
       puts "Auto Approving PR #{pull_request_id}"
 
       azure_client.pull_request_approve(
-        # Adding argument names will fail! May because there is no spec?
+        # Adding argument names will fail! Maybe because there is no spec?
         pull_request_id,
         $options[:auto_approve_user_token]
       )
@@ -740,7 +739,7 @@ dependencies.select(&:top_level?).each do |dep|
       auto_complete_user_id = pull_request['createdBy']['id']
       puts "Setting auto complete on ##{pull_request_id}."
       azure_client.pull_request_auto_complete(
-        # Adding argument names will fail! May because there is no spec?
+        # Adding argument names will fail! Maybe because there is no spec?
         pull_request_id,
         auto_complete_user_id,
         $options[:merge_strategy],
@@ -751,6 +750,61 @@ dependencies.select(&:top_level?).each do |dep|
   rescue StandardError => e
     raise e if $options[:fail_on_exception]
     puts "Error working on updates for #{dep.name} #{dep.version} (continuing)"
+    puts e.full_message
+  end
+end
+
+# look for pull requests that are no longer needed to be abandoned
+puts "Looking for pull requests that are no longer needed."
+active_pull_requests = azure_client.pull_requests_active(user_id, default_branch_name)
+active_pull_requests.each do |pr|
+  pr_id = pr["pullRequestId"]
+  title = pr["title"]
+  source_ref_name = pr["sourceRefName"]
+
+  begin
+    keep = false
+    dependencies.select(&:top_level?).each do |dep|
+      # Sometimes, the dep.version might be null such as in npm
+      # when the package.lock.json is not checked into source.
+      next unless dep.version
+
+      # CHECKING BY VERSION DOESN'T SEEM TO WORK. THE CODE IS HERE FOR REFERENCE
+
+      # Check if the version has since been ignored, it so we do not keep
+      requirement_class = Dependabot::Utils.requirement_class_for_package_manager(dep.package_manager)
+      ignore_reqs = ignored_versions_for(dep)
+                      .flat_map { |req| requirement_class.requirements_array(req) }
+      if ignore_reqs.any? { |req| req.satisfied_by?(dep.version) }
+        puts "Update for #{dep.name} #{dep.version} is no longer required."
+        next
+      end
+
+      # Ensure the title contains the current dependency name and version.
+      #
+      # Samples:
+      # Bump Tingle.Extensions.Logging.LogAnalytics from 3.4.2-ci0005 to 3.4.2-ci0006
+      # chore(deps): bump dotenv from 9.0.1 to 9.0.2 in /server
+      keep = title.include?(" #{dep.name} from #{dep.version} to ")
+
+      # Break if the PR should be kept
+      break if keep
+    end
+
+    # Abandon the PR unless we should keep it
+    unless keep
+      if $options[:skip_pull_requests]
+        puts "Skipping abandoning PR ##{pr_id} (#{title})"
+      else
+        puts "Abandoning PR ##{pr_id} (#{title}) as it is no longer needed."
+        azure_client.branch_delete(source_ref_name)
+        azure_client.pull_request_abandon(pr_id)
+      end
+    end
+
+  rescue StandardError => e
+    raise e if $options[:fail_on_exception]
+    puts "Error checking whether to abandon (or abandoning) PR ##{pr_id} (continuing)"
     puts e.full_message
   end
 end
