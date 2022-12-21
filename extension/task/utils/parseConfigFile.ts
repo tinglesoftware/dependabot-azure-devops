@@ -7,6 +7,7 @@ import { getVariable } from "azure-pipelines-task-lib/task";
 import { ISharedVariables } from "./getSharedVariables";
 import convertPlaceholder from "./convertPlaceholder";
 import * as httpm from 'typed-rest-client/HttpClient';
+import axios from "axios";
 
 /**
  * Parse the dependabot config YAML file to specify update configuration
@@ -41,18 +42,35 @@ export default async function parseConfigFile(variables: ISharedVariables): Prom
       // make HTTP request
       var url = `${variables.projectUrl}_apis/git/repositories/${variables.repository}/items?path=${fp}`;
       tl.debug(`GET ${url}`);
-      var response = await httpc.get(url, {
-        'Authorization': `Basic ${Buffer.from(`:${variables.systemAccessToken}`, 'binary').toString('base64')}`
+      // var response = await httpc.get(url, {
+      //   'Authorization': `Basic ${Buffer.from(`:${variables.systemAccessToken}`, 'binary').toString('base64')}`
+      // });
+      // if (response.message.statusCode === 200) {
+      //   tl.debug(`Found configuration file at '${url}'`);
+      //   contents = await response.readBody();
+      //   break;
+      // } else if (response.message.statusCode === 401) {
+      //   throw new Error(`No access token has been provided to access '${url}'`);
+      // } else if (response.message.statusCode === 403) {
+      //   throw new Error(`The access token provided does not have permissions to access '${url}'`);
+      // } else if (response.message.statusCode === 404) {
+      //   tl.debug(`No configuration file at '${url}'`);
+      // }
+      var response = await axios.get(url, {
+        auth: {
+          username: 'x-access-token',
+          password: variables.systemAccessToken,
+        },
       });
-      if (response.message.statusCode === 200) {
+      if (response.status === 200) {
         tl.debug(`Found configuration file at '${url}'`);
-        contents = await response.readBody();
+        contents = response.data;
         break;
-      } else if (response.message.statusCode === 401) {
+      } else if (response.status === 401) {
         throw new Error(`No access token has been provided to access '${url}'`);
-      } else if (response.message.statusCode === 403) {
+      } else if (response.status === 403) {
         throw new Error(`The access token provided does not have permissions to access '${url}'`);
-      } else if (response.message.statusCode === 404) {
+      } else if (response.status === 404) {
         tl.debug(`No configuration file at '${url}'`);
       }
     }
