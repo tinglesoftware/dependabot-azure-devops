@@ -45,8 +45,20 @@ jobs:
       with:
         node-version: '18.x'
 
+    - name: Install
+      run: npm install
+      working-directory: '${{ github.workspace }}/extension'
+
+    - name: Test
+      run: npm run test
+      working-directory: '${{ github.workspace }}/extension'
+
     - name: Build
       run: npm run build:prod
+      working-directory: '${{ github.workspace }}/extension'
+
+    - name: Move node_modules
+      run: npm run mv:prod
       working-directory: '${{ github.workspace }}/extension'
 
     - name: Install tfx-cli
