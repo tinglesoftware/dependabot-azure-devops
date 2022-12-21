@@ -52,6 +52,7 @@ export default async function parseConfigFile(
             username: "x-access-token",
             password: variables.systemAccessToken,
           },
+          responseType: "text",
         });
         if (response.status === 200) {
           tl.debug(`Found configuration file at '${url}'`);
