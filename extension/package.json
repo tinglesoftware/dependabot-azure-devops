@@ -26,7 +26,8 @@
   "homepage": "https://github.com/tinglesoftware/dependabot-azure-devops#readme",
   "dependencies": {
     "azure-pipelines-task-lib": "^4.0.2",
-    "js-yaml": "^4.1.0"
+    "js-yaml": "^4.1.0",
+    "typed-rest-client": "^1.8.9"
   },
   "devDependencies": {
     "@types/js-yaml": "^4.0.3",

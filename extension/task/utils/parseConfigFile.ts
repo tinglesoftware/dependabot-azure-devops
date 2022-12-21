@@ -6,6 +6,7 @@ import * as tl from "azure-pipelines-task-lib/task"
 import { getVariable } from "azure-pipelines-task-lib/task";
 import { ISharedVariables } from "./getSharedVariables";
 import convertPlaceholder from "./convertPlaceholder";
+import * as httpm from 'typed-rest-client/HttpClient';
 
 /**
  * Parse the dependabot config YAML file to specify update configuration
@@ -21,8 +22,8 @@ import convertPlaceholder from "./convertPlaceholder";
 export default async function parseConfigFile(variables: ISharedVariables): Promise<IDependabotConfig> {
 
   const possibleFilePaths = [
-    "/.github/dependabot.yml",
     "/.github/dependabot.yaml",
+    "/.github/dependabot.yml",
   ];
 
   let contents: null | string;
@@ -48,24 +49,22 @@ export default async function parseConfigFile(variables: ISharedVariables): Prom
   // 2. Running a single pipeline to update multiple repositories https://github.com/tinglesoftware/dependabot-azure-devops/issues/328
   if (contents === null || typeof contents !== 'string') {
     tl.debug(`Attempting to fetch configuration file via REST API ...`);
+    let httpc: httpm.HttpClient = new httpm.HttpClient('tingle-software.dependabot');
     for (const fp of possibleFilePaths) {
       // make HTTP request
-      var url = new URL(`${variables.projectUrl}/_apis/git/repositories/${variables.repository}/items?path=${fp}`);
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Basic ${Buffer.from(`:${variables.systemAccessToken}`, 'binary').toString('base64')}`
-        }
+      var url = `${variables.projectUrl}/_apis/git/repositories/${variables.repository}/items?path=${fp}`;
+      var response = await httpc.get(url, {
+        'Authorization': `Basic ${Buffer.from(`:${variables.systemAccessToken}`, 'binary').toString('base64')}`
       });
-      if (response.status === 200) {
+      if (response.message.statusCode === 200) {
         tl.debug(`Found configuration file at '${url}'`);
-        contents = await response.text();
+        contents = await response.readBody();
         break;
-      } else if (response.status === 401) {
+      } else if (response.message.statusCode === 401) {
         throw new Error(`No access token has been provided to access '${url}'`);
-      } else if (response.status === 403) {
+      } else if (response.message.statusCode === 403) {
         throw new Error(`The access token provided does not have permissions to access '${url}'`);
-      } else if (response.status === 404) {
+      } else if (response.message.statusCode === 404) {
         tl.debug(`No configuration file at '${url}'`);
       }
     }
