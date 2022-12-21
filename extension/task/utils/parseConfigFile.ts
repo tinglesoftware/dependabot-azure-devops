@@ -45,24 +45,36 @@ export default async function parseConfigFile(
       // make HTTP request
       var url = `${variables.organizationUrl}${variables.project}/_apis/git/repositories/${variables.repository}/items?path=${fp}`;
       tl.debug(`GET ${url}`);
-      var response = await axios.get(url, {
-        auth: {
-          username: "x-access-token",
-          password: variables.systemAccessToken,
-        },
-      });
-      if (response.status === 200) {
-        tl.debug(`Found configuration file at '${url}'`);
-        contents = response.data;
-        break;
-      } else if (response.status === 401) {
-        throw new Error(`No access token has been provided to access '${url}'`);
-      } else if (response.status === 403) {
-        throw new Error(
-          `The access token provided does not have permissions to access '${url}'`
-        );
-      } else if (response.status === 404) {
-        tl.debug(`No configuration file at '${url}'`);
+
+      try {
+        var response = await axios.get(url, {
+          auth: {
+            username: "x-access-token",
+            password: variables.systemAccessToken,
+          },
+        });
+        if (response.status === 200) {
+          tl.debug(`Found configuration file at '${url}'`);
+          contents = response.data;
+          break;
+        }
+      } catch (error) {
+        var responseStatusCode = error?.response?.status;
+
+        if (responseStatusCode === 404) {
+          tl.debug(`No configuration file at '${url}'`);
+          continue;
+        } else if (responseStatusCode === 401) {
+          throw new Error(
+            `No access token has been provided to access '${url}'`
+          );
+        } else if (responseStatusCode === 403) {
+          throw new Error(
+            `The access token provided does not have permissions to access '${url}'`
+          );
+        } else {
+          throw error;
+        }
       }
     }
   } else {
