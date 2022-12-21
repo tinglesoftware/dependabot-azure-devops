@@ -53,7 +53,7 @@ export default async function parseConfigFile(
             password: variables.systemAccessToken,
           },
           headers: {
-            Accept: "*/*",
+            Accept: "*/*", // Gotcha!!! without this SH*T fails terribly
           },
         });
         if (response.status === 200) {
