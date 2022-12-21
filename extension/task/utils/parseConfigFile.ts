@@ -80,7 +80,7 @@ export default async function parseConfigFile(
   }
 
   // Ensure we have file contents. Otherwise throw a well readable error.
-  if (contents === null || typeof contents !== "string") {
+  if (!contents || typeof contents !== "string") {
     throw new Error(
       `Configuration file not found at possible locations: ${possibleFilePaths.join(
         ", "
