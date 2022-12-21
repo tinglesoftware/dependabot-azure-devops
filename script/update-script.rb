@@ -769,6 +769,15 @@ active_pull_requests.each do |pr|
       # when the package.lock.json is not checked into source.
       next unless dep.version
 
+      # Check if the version has since been ignored, it so we do not keep
+      requirement_class = Utils.requirement_class_for_package_manager(dep.package_manager)
+      ignore_reqs = ignored_versions_for(dep)
+                              .flat_map { |req| requirement_class.requirements_array(req) }
+      if ignore_reqs.any? { |req| req.satisfied_by?(dep.version) }
+        puts "Update for #{dep.name} #{dep.version} is no longer required."
+        next
+      end
+
       # Ensure the title contains the current dependency name and version.
       #
       # Samples:
