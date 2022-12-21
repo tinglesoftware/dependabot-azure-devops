@@ -7,7 +7,7 @@
     "mv": "cp -r node_modules task/node_modules",
     "build": "tsc -p .",
     "build:prod": "npm i && npm run build && npm run mv",
-    "test": " "
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -30,9 +30,13 @@
     "js-yaml": "^4.1.0"
   },
   "devDependencies": {
+    "@types/jest": "^29.2.4",
     "@types/js-yaml": "^4.0.3",
     "@types/node": "^18.0.0",
     "@types/q": "^1.5.5",
+    "jest": "^29.3.1",
+    "ts-jest": "^29.0.3",
+    "ts-node": "^10.9.1",
     "typescript": "^4.4.3"
   }
 }
