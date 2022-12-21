@@ -456,8 +456,8 @@ parser = Dependabot::FileParsers.for_package_manager($package_manager).new(
 )
 
 dependencies = parser.parse
-puts "Found #{dependencies.length} dependencies"
-dependencies.each { |d| puts " - #{d.name} (#{d.version})" }
+puts "Found #{dependencies.select(&:top_level?).length} dependencies"
+dependencies.select(&:top_level?).each { |d| puts " - #{d.name} (#{d.version})" }
 
 ################################################
 # Get active pull requests for this repository #
