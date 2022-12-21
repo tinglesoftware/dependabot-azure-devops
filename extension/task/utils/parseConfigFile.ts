@@ -105,7 +105,6 @@ export default async function parseConfigFile(
   }
 
   let config: any = load(contents);
-  tl.debug(`Config:\r\n${config}`);
 
   // Ensure the config object parsed is an object
   if (config === null || typeof config !== "object") {
