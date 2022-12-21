@@ -769,6 +769,8 @@ active_pull_requests.each do |pr|
       # when the package.lock.json is not checked into source.
       next unless dep.version
 
+      # CHECKING BY VERSION DOESN'T SEEM TO WORK. THE CODE IS HERE FOR REFERENCE
+
       # Check if the version has since been ignored, it so we do not keep
       requirement_class = Dependabot::Utils.requirement_class_for_package_manager(dep.package_manager)
       ignore_reqs = ignored_versions_for(dep)
