@@ -39,7 +39,7 @@ export default async function parseConfigFile(variables: ISharedVariables): Prom
     let httpc: httpm.HttpClient = new httpm.HttpClient('tingle-software.dependabot');
     for (const fp of possibleFilePaths) {
       // make HTTP request
-      var url = `${variables.projectUrl}/_apis/git/repositories/${variables.repository}/items?path=${fp}`;
+      var url = `${variables.projectUrl}_apis/git/repositories/${variables.repository}/items?path=${fp}`;
       tl.debug(`GET ${url}`);
       var response = await httpc.get(url, {
         'Authorization': `Basic ${Buffer.from(`:${variables.systemAccessToken}`, 'binary').toString('base64')}`
