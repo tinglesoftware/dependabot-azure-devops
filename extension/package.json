@@ -27,8 +27,7 @@
   "dependencies": {
     "axios": "^1.2.1",
     "azure-pipelines-task-lib": "^4.0.2",
-    "js-yaml": "^4.1.0",
-    "typed-rest-client": "^1.8.9"
+    "js-yaml": "^4.1.0"
   },
   "devDependencies": {
     "@types/js-yaml": "^4.0.3",

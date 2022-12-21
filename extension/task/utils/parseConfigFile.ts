@@ -6,7 +6,6 @@ import * as tl from "azure-pipelines-task-lib/task"
 import { getVariable } from "azure-pipelines-task-lib/task";
 import { ISharedVariables } from "./getSharedVariables";
 import convertPlaceholder from "./convertPlaceholder";
-import * as httpm from 'typed-rest-client/HttpClient';
 import axios from "axios";
 
 /**
@@ -37,25 +36,10 @@ export default async function parseConfigFile(variables: ISharedVariables): Prom
    */
   if (variables.repositoryOverridden) {
     tl.debug(`Attempting to fetch configuration file via REST API ...`);
-    let httpc: httpm.HttpClient = new httpm.HttpClient('tingle-software.dependabot');
     for (const fp of possibleFilePaths) {
       // make HTTP request
       var url = `${variables.projectUrl}_apis/git/repositories/${variables.repository}/items?path=${fp}`;
       tl.debug(`GET ${url}`);
-      // var response = await httpc.get(url, {
-      //   'Authorization': `Basic ${Buffer.from(`:${variables.systemAccessToken}`, 'binary').toString('base64')}`
-      // });
-      // if (response.message.statusCode === 200) {
-      //   tl.debug(`Found configuration file at '${url}'`);
-      //   contents = await response.readBody();
-      //   break;
-      // } else if (response.message.statusCode === 401) {
-      //   throw new Error(`No access token has been provided to access '${url}'`);
-      // } else if (response.message.statusCode === 403) {
-      //   throw new Error(`The access token provided does not have permissions to access '${url}'`);
-      // } else if (response.message.statusCode === 404) {
-      //   tl.debug(`No configuration file at '${url}'`);
-      // }
       var response = await axios.get(url, {
         auth: {
           username: 'x-access-token',
