@@ -1,5 +1,3 @@
-import { setResult, TaskResult } from "azure-pipelines-task-lib/task";
-
 /**
  * Extract organization name from organization URL
  *
@@ -29,8 +27,5 @@ export default function extractOrganization(organizationUrl: string): string {
     return part.split(".")[0];
   }
 
-  setResult(
-    TaskResult.Failed,
-    `Error parsing organization from organization url: '${organizationUrl}'.`
-  );
+  throw new Error(`Error parsing organization from organization url: '${organizationUrl}'.`);
 }
