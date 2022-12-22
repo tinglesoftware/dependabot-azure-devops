@@ -785,7 +785,10 @@ active_pull_requests.each do |pr|
       # Samples:
       # Bump Tingle.Extensions.Logging.LogAnalytics from 3.4.2-ci0005 to 3.4.2-ci0006
       # chore(deps): bump dotenv from 9.0.1 to 9.0.2 in /server
-      keep = title.include?(" #{dep.name} from #{dep.version} to ")
+      #
+      # There is no leading space because some titles do not have the full dependency name.
+      # For instance 'org.junit.jupiter:junit-jupiter' will only read 'junit-jupiter' in the title.
+      keep = title.include?("#{dep.name} from #{dep.version} to ")
 
       # Break if the PR should be kept
       break if keep
