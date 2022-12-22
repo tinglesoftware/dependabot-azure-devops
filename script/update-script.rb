@@ -609,11 +609,11 @@ dependencies.select(&:top_level?).each do |dep|
       title = pr["title"]
       source_ref_name = pr["sourceRefName"]
 
-      # Filter those containing "#{dep.name} from #{dep.version}"
+      # Filter those containing "#{dep.display_name} from #{dep.version}"
       # The format avoids taking PRS for dependencies named in a similar manner.
       # For instance 'Tingle.EventBus' and 'Tingle.EventBus.Transports.Azure.ServiceBus'
       #
-      # There is no leading space because some titles do not have the full dependency name.
+      # display_name is used instead of name because some titles do not have the full dependency name.
       # For instance 'org.junit.jupiter:junit-jupiter' will only read 'junit-jupiter' in the title.
       #
       # Sample Titles:
@@ -621,7 +621,7 @@ dependencies.select(&:top_level?).each do |dep|
       # Bump Tingle.EventBus from 0.4.2-ci0005 to 0.4.2-ci0006
       # Bump Tingle.EventBus.Transports.Azure.ServiceBus from 0.4.2-ci0005 to 0.4.2-ci0006
       # chore(deps): bump dotenv from 9.0.1 to 9.0.2 in /server
-      next unless title.include?("#{dep.name} from #{dep.version} to ")
+      next unless title.include?(" #{dep.display_name} from #{dep.version} to ")
 
       # If the title does not contain the updated version, we need to abandon the PR and delete
       # it's branch, because there is a newer version available.
@@ -790,9 +790,9 @@ active_pull_requests.each do |pr|
       # Bump Tingle.Extensions.Logging.LogAnalytics from 3.4.2-ci0005 to 3.4.2-ci0006
       # chore(deps): bump dotenv from 9.0.1 to 9.0.2 in /server
       #
-      # There is no leading space because some titles do not have the full dependency name.
+      # display_name is used instead of name because some titles do not have the full dependency name.
       # For instance 'org.junit.jupiter:junit-jupiter' will only read 'junit-jupiter' in the title.
-      keep = title.include?("#{dep.name} from #{dep.version} to ")
+      keep = title.include?("#{dep.display_name} from #{dep.version} to ")
 
       # Break if the PR should be kept
       break if keep
