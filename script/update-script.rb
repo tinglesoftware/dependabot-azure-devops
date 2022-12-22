@@ -609,23 +609,27 @@ dependencies.select(&:top_level?).each do |dep|
       title = pr["title"]
       source_ref_name = pr["sourceRefName"]
 
-      # Filter those containing " #{dep.name} "
-      # The prefix " " and suffix " " avoids taking PRS for dependencies named the same
-      # e.g. Tingle.EventBus and Tingle.EventBus.Transports.Azure.ServiceBus
+      # Filter those containing "#{dep.display_name} from #{dep.version}"
+      # The format avoids taking PRS for dependencies named in a similar manner.
+      # For instance 'Tingle.EventBus' and 'Tingle.EventBus.Transports.Azure.ServiceBus'
       #
-      # Ensure the title contains the current dependency version
-      # Sometimes, the dep.version might be null such as in npm
-      # when the package.lock.json is not checked into source.
-      next unless title.include?(" #{dep.name} ") && dep.version && title.include?(dep.version)
-
-      # If the title does not contain the updated version,
-      # we need to abandon the PR and delete it's branch,
-      # because there is a newer version available
+      # display_name is used instead of name because some titles do not have the full dependency name.
+      # For instance 'org.junit.jupiter:junit-jupiter' will only read 'junit-jupiter' in the title.
       #
       # Sample Titles:
       # Bump Tingle.Extensions.Logging.LogAnalytics from 3.4.2-ci0005 to 3.4.2-ci0006
+      # Bump Tingle.EventBus from 0.4.2-ci0005 to 0.4.2-ci0006
+      # Bump Tingle.EventBus.Transports.Azure.ServiceBus from 0.4.2-ci0005 to 0.4.2-ci0006
       # chore(deps): bump dotenv from 9.0.1 to 9.0.2 in /server
-      if !title.include?("#{updated_deps[0].version} ") && !title.end_with?(updated_deps[0].version)
+      next unless title.include?(" #{dep.display_name} from #{dep.version} to ")
+
+      # If the title does not contain the updated version, we need to abandon the PR and delete
+      # it's branch, because there is a newer version available.
+      # Using the format " to #{updated_deps[0].version}" handles both root and nested updates.
+      # For example:
+      # Bump Tingle.EventBus from 0.4.2-ci0005 to 0.4.2-ci0006
+      # chore(deps): bump dotenv from 9.0.1 to 9.0.2 in /server
+      unless title.include?(" to #{updated_deps[0].version}")
         # Abandon old version PR
         azure_client.branch_delete(source_ref_name) # do this first to avoid hanging branches
         azure_client.pull_request_abandon(pr_id)
@@ -785,7 +789,10 @@ active_pull_requests.each do |pr|
       # Samples:
       # Bump Tingle.Extensions.Logging.LogAnalytics from 3.4.2-ci0005 to 3.4.2-ci0006
       # chore(deps): bump dotenv from 9.0.1 to 9.0.2 in /server
-      keep = title.include?(" #{dep.name} from #{dep.version} to ")
+      #
+      # display_name is used instead of name because some titles do not have the full dependency name.
+      # For instance 'org.junit.jupiter:junit-jupiter' will only read 'junit-jupiter' in the title.
+      keep = title.include?("#{dep.display_name} from #{dep.version} to ")
 
       # Break if the PR should be kept
       break if keep
