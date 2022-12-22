@@ -45,6 +45,7 @@ $options = {
   },
   fail_on_exception: ENV['DEPENDABOT_FAIL_ON_EXCEPTION'] == "true", # Stop the job if an exception occurs
   skip_pull_requests: ENV['DEPENDABOT_SKIP_PULL_REQUESTS'] == "true", # Skip creating/updating Pull Requests
+  close_unwanted: ENV['DEPENDABOT_CLOSE_PULL_REQUESTS'] == "true", # Close unwanted Pull Requests
 
   # See description of requirements here:
   # https://github.com/dependabot/dependabot-core/issues/600#issuecomment-407808103
@@ -759,60 +760,62 @@ dependencies.select(&:top_level?).each do |dep|
 end
 
 # look for pull requests that are no longer needed to be abandoned
-puts "Looking for pull requests that are no longer needed."
-active_pull_requests = azure_client.pull_requests_active(user_id, default_branch_name)
-active_pull_requests.each do |pr|
-  pr_id = pr["pullRequestId"]
-  title = pr["title"]
-  source_ref_name = pr["sourceRefName"]
+if $options[:close_unwanted]
+  puts "Looking for pull requests that are no longer needed."
+  active_pull_requests = azure_client.pull_requests_active(user_id, default_branch_name)
+  active_pull_requests.each do |pr|
+    pr_id = pr["pullRequestId"]
+    title = pr["title"]
+    source_ref_name = pr["sourceRefName"]
 
-  begin
-    keep = false
-    dependencies.select(&:top_level?).each do |dep|
-      # Sometimes, the dep.version might be null such as in npm
-      # when the package.lock.json is not checked into source.
-      next unless dep.version
+    begin
+      keep = false
+      dependencies.select(&:top_level?).each do |dep|
+        # Sometimes, the dep.version might be null such as in npm
+        # when the package.lock.json is not checked into source.
+        next unless dep.version
 
-      # CHECKING BY VERSION DOESN'T SEEM TO WORK. THE CODE IS HERE FOR REFERENCE
+        # CHECKING BY VERSION DOESN'T SEEM TO WORK. THE CODE IS HERE FOR REFERENCE
 
-      # Check if the version has since been ignored, it so we do not keep
-      requirement_class = Dependabot::Utils.requirement_class_for_package_manager(dep.package_manager)
-      ignore_reqs = ignored_versions_for(dep)
-                      .flat_map { |req| requirement_class.requirements_array(req) }
-      if ignore_reqs.any? { |req| req.satisfied_by?(dep.version) }
-        puts "Update for #{dep.name} #{dep.version} is no longer required."
-        next
+        # Check if the version has since been ignored, it so we do not keep
+        requirement_class = Dependabot::Utils.requirement_class_for_package_manager(dep.package_manager)
+        ignore_reqs = ignored_versions_for(dep)
+                        .flat_map { |req| requirement_class.requirements_array(req) }
+        if ignore_reqs.any? { |req| req.satisfied_by?(dep.version) }
+          puts "Update for #{dep.name} #{dep.version} is no longer required."
+          next
+        end
+
+        # Ensure the title contains the current dependency name and version.
+        #
+        # Samples:
+        # Bump Tingle.Extensions.Logging.LogAnalytics from 3.4.2-ci0005 to 3.4.2-ci0006
+        # chore(deps): bump dotenv from 9.0.1 to 9.0.2 in /server
+        #
+        # display_name is used instead of name because some titles do not have the full dependency name.
+        # For instance 'org.junit.jupiter:junit-jupiter' will only read 'junit-jupiter' in the title.
+        keep = title.include?("#{dep.display_name} from #{dep.version} to ")
+
+        # Break if the PR should be kept
+        break if keep
       end
 
-      # Ensure the title contains the current dependency name and version.
-      #
-      # Samples:
-      # Bump Tingle.Extensions.Logging.LogAnalytics from 3.4.2-ci0005 to 3.4.2-ci0006
-      # chore(deps): bump dotenv from 9.0.1 to 9.0.2 in /server
-      #
-      # display_name is used instead of name because some titles do not have the full dependency name.
-      # For instance 'org.junit.jupiter:junit-jupiter' will only read 'junit-jupiter' in the title.
-      keep = title.include?("#{dep.display_name} from #{dep.version} to ")
-
-      # Break if the PR should be kept
-      break if keep
-    end
-
-    # Abandon the PR unless we should keep it
-    unless keep
-      if $options[:skip_pull_requests]
-        puts "Skipping abandoning PR ##{pr_id} (#{title})"
-      else
-        puts "Abandoning PR ##{pr_id} (#{title}) as it is no longer needed."
-        azure_client.branch_delete(source_ref_name)
-        azure_client.pull_request_abandon(pr_id)
+      # Abandon the PR unless we should keep it
+      unless keep
+        if $options[:skip_pull_requests]
+          puts "Skipping abandoning PR ##{pr_id} (#{title})"
+        else
+          puts "Abandoning PR ##{pr_id} (#{title}) as it is no longer needed."
+          azure_client.branch_delete(source_ref_name)
+          azure_client.pull_request_abandon(pr_id)
+        end
       end
-    end
 
-  rescue StandardError => e
-    raise e if $options[:fail_on_exception]
-    puts "Error checking whether to abandon (or abandoning) PR ##{pr_id} (continuing)"
-    puts e.full_message
+    rescue StandardError => e
+      raise e if $options[:fail_on_exception]
+      puts "Error checking whether to abandon (or abandoning) PR ##{pr_id} (continuing)"
+      puts e.full_message
+    end
   end
 end
 

@@ -143,6 +143,11 @@ async function run() {
         dockerRunner.arg(["-e", 'DEPENDABOT_SKIP_PULL_REQUESTS=true']);
       }
 
+      // Set abandon Unwanted pull requests if true
+      if (variables.abandonUnwantedPullRequests === true) {
+        dockerRunner.arg(["-e", 'DEPENDABOT_CLOSE_PULL_REQUESTS=true']);
+      }
+
       // Set the security advisories
       if (variables.securityAdvisoriesFile) {
         const containerPath = "/mnt/security_advisories.json"

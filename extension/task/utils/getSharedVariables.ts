@@ -62,6 +62,8 @@ export interface ISharedVariables {
   extraCredentials: string;
   /** Determines whether to skip creating/updating pull requests */
   skipPullRequests: boolean;
+  /** Determines whether to abandon unwanted pull requests */
+  abandonUnwantedPullRequests: boolean;
   /** List of extra environment variables */
   extraEnvironmentVariables: string[];
   /** Flag used to forward the host ssh socket */
@@ -139,6 +141,7 @@ export default function getSharedVariables(): ISharedVariables {
   );
   let extraCredentials = tl.getVariable("DEPENDABOT_EXTRA_CREDENTIALS");
   let skipPullRequests: boolean = tl.getBoolInput("skipPullRequests", false);
+  let abandonUnwantedPullRequests: boolean = tl.getBoolInput("abandonUnwantedPullRequests", true);
   let extraEnvironmentVariables = tl.getDelimitedInput(
     "extraEnvironmentVariables",
     ";",
@@ -193,6 +196,7 @@ export default function getSharedVariables(): ISharedVariables {
     securityAdvisoriesFile,
     extraCredentials,
     skipPullRequests,
+    abandonUnwantedPullRequests,
     extraEnvironmentVariables,
     forwardHostSshSocket,
 
