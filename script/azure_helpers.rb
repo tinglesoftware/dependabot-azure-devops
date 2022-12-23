@@ -89,7 +89,7 @@ module Dependabot
       end
 
       def pull_request_approve(pull_request_id, reviewer_token)
-        user_id = get_user_id(token)
+        user_id = get_user_id(reviewer_token)
 
         # https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-reviewers/create-pull-request-reviewers?view=azure-devops-rest-6.0
         content = {
@@ -108,7 +108,7 @@ module Dependabot
         response = Excon.get(
           url,
           user: credentials&.fetch("username", nil),
-          ppassword: token,
+          password: token,
           idempotent: true,
           **SharedHelpers.excon_defaults(
             headers: auth_header
