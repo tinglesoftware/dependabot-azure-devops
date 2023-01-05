@@ -190,10 +190,10 @@
       "name": "autoCompleteIgnoreConfigIds",
       "type": "string",
       "groupName": "approval_completion",
-      "label": "Semicolon delimited list of any policy configuration Id's which auto-complete should not wait for.",
+      "label": "Semicolon delimited list of any policy configuration IDs which auto-complete should not wait for.",
       "defaultValue": "",
       "required": false,
-      "helpMarkDown": "A semicolon (`;`) delimited list of any policy configuration Id's which auto-complete should not wait for. Only applies to optional policies (isBlocking == false). Auto-complete always waits for required policies (isBlocking == true)."
+      "helpMarkDown": "A semicolon (`;`) delimited list of any policy configuration IDs which auto-complete should not wait for. Only applies to optional policies (isBlocking == false). Auto-complete always waits for required policies (isBlocking == true)."
     },
     {
       "name": "autoApprove",
