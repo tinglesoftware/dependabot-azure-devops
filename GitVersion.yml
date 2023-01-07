@@ -1,7 +1,3 @@
 # Only changing the mode from 'ContinuousDelivery' to 'ContinuousDeployment' results in better numbers (no '+' in them)
 # To get the default configuration comment out all the contents of this file and run 'gitversion /showconfig'
 mode: ContinuousDeployment
-branches:
-  master:
-    regex: (^master$|^origin\/master$|^main$|^origin\/main$)
-    tag: ci
