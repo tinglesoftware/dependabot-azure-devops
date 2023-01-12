@@ -55,8 +55,6 @@ export interface ISharedVariables {
   useConfigFile: boolean;
   /** override value for allow */
   allowOvr: string;
-  /** override value for ignore */
-  ignoreOvr: string;
 
   securityAdvisoriesFile: string | undefined;
   /** Determines whether to skip creating/updating pull requests */
@@ -132,7 +130,6 @@ export default function getSharedVariables(): ISharedVariables {
 
   // Get the override values for allow, and ignore
   let allowOvr = tl.getVariable("DEPENDABOT_ALLOW_CONDITIONS");
-  let ignoreOvr = tl.getVariable("DEPENDABOT_IGNORE_CONDITIONS");
 
   // Prepare other variables
   let securityAdvisoriesFile: string | undefined = tl.getInput(
@@ -188,7 +185,6 @@ export default function getSharedVariables(): ISharedVariables {
     updaterOptions,
 
     allowOvr,
-    ignoreOvr,
     useConfigFile,
 
     securityAdvisoriesFile,
