@@ -54,7 +54,7 @@ export interface ISharedVariables {
   /** Flag used to check if to use dependabot.yml or task inputs */
   useConfigFile: boolean;
   /** override value for allow */
-  allowOvr: string;
+  allowOvr: string; // TODO: remove this in 0.16.0
 
   securityAdvisoriesFile: string | undefined;
   /** Determines whether to skip creating/updating pull requests */
