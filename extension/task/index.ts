@@ -6,17 +6,8 @@ import parseConfigFile from "./utils/parseConfigFile";
 
 async function run() {
   try {
-    // Checking if docker is installed
-    tl.debug("Checking for docker install ...");
-    tl.which("docker", true);
-
-    // prepare the shared variables
-    const variables = getSharedVariables();
-
-    var config: IDependabotConfig;
-    if (variables.useConfigFile) {
-      config = await parseConfigFile(variables);
-    } else {
+    let useConfigFile: boolean = tl.getBoolInput("useConfigFile", true); // TODO: find a way to check if specified
+    if (!useConfigFile) {
       throw new Error(
         `
         Using explicit inputs is no longer supported.
@@ -25,6 +16,15 @@ async function run() {
         `
       );
     }
+
+    // Checking if docker is installed
+    tl.debug("Checking for docker install ...");
+    tl.which("docker", true);
+
+    // prepare the shared variables
+    const variables = getSharedVariables();
+
+    var config = await parseConfigFile(variables);
 
     // For each update run docker container
     for (const update of config.updates) {

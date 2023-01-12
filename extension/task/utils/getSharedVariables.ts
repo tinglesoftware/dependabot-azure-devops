@@ -51,8 +51,6 @@ export interface ISharedVariables {
   excludeRequirementsToUnlock: string;
   updaterOptions: string;
 
-  /** Flag used to check if to use dependabot.yml or task inputs */
-  useConfigFile: boolean;
   /** override value for allow */
   allowOvr: string; // TODO: remove this in 0.16.0
 
@@ -125,9 +123,6 @@ export default function getSharedVariables(): ISharedVariables {
     tl.getInput("excludeRequirementsToUnlock") || "";
   let updaterOptions = tl.getInput("updaterOptions");
 
-  // Check if to use dependabot.yml or task inputs
-  let useConfigFile: boolean = tl.getBoolInput("useConfigFile", false);
-
   // Get the override values for allow, and ignore
   let allowOvr = tl.getVariable("DEPENDABOT_ALLOW_CONDITIONS");
 
@@ -185,7 +180,6 @@ export default function getSharedVariables(): ISharedVariables {
     updaterOptions,
 
     allowOvr,
-    useConfigFile,
 
     securityAdvisoriesFile,
     skipPullRequests,
