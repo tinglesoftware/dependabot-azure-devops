@@ -1,7 +1,6 @@
 import * as tl from "azure-pipelines-task-lib/task"
 import { ToolRunner } from "azure-pipelines-task-lib/toolrunner"
 import { IDependabotConfig } from "./IDependabotConfig";
-import getConfigFromInputs from "./utils/getConfigFromInputs";
 import getSharedVariables from "./utils/getSharedVariables";
 import parseConfigFile from "./utils/parseConfigFile";
 
@@ -18,15 +17,13 @@ async function run() {
     if (variables.useConfigFile) {
       config = await parseConfigFile(variables);
     } else {
-      tl.warning(
+      throw new Error(
         `
-        Using explicit inputs instead of a configuration file is deprecated and will be removed in version 0.14.0.
-        No new features will be added to the use of explicit inputs that can also be specified in the configuration file.\r\n
+        Using explicit inputs is no longer supported.
         Migrate to using a config file at .github/dependabot.yml.
         See https://github.com/tinglesoftware/dependabot-azure-devops/tree/main/extension#usage for more information.
         `
       );
-      config = getConfigFromInputs();
     }
 
     // For each update run docker container

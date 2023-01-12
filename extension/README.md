@@ -10,8 +10,6 @@ To use in a YAML pipeline:
 
 ```yaml
 - task: dependabot@1
-  inputs:
-    useConfigFile: true
 ```
 
 You can schedule the pipeline as is appropriate for your solution.
@@ -35,8 +33,6 @@ pool:
 
 steps:
 - task: dependabot@1
-  inputs:
-    useConfigFile: true
 ```
 
 This task makes use of a docker image, which may take time to install. Subsequent dependabot tasks in a job will be faster after initially pulling the image using the first task. An alternative way to run your pipelines faster is by leveraging Docker caching in Azure Pipelines (See [#113](https://github.com/tinglesoftware/dependabot-azure-devops/issues/113#issuecomment-894771611)). 
@@ -45,18 +41,10 @@ This task makes use of a docker image, which may take time to install. Subsequen
 
 |Input|Description|
 |--|--|
-|useConfigFile|**_Optional_** Determines if to use the config file or not. Defaults to `false`.|
-|packageManager|**_Required (when useConfig=false)_**. The type of packages to check for dependency upgrades. Examples: `nuget`, `maven`, `gradle`, `npm`, etc. See the [updated-script](./update-script.rb) or [docs](https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/configuration-options-for-dependency-updates#package-ecosystem) for more.|
-|directory|**_Optional_**. The directory in which dependencies are to be checked. Examples: `/` for root, `/src` for src folder.|
-|targetBranch|**_Optional_**. The branch to be targeted when creating pull requests. When not specified, Dependabot will resolve the default branch of the repository. Examples: `master`, `main`, `develop`|
-|openPullRequestsLimit|**_Optional_**. The maximum number of open pull requests to have at any one time. Defaults to 5.|
-|versioningStrategy|**_Optional_**. The versioning strategy to use. See the [official docs](https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/configuration-options-for-dependency-updates#versioning-strategy). Defaults to `auto`.|
 |failOnException|**_Optional_**. Determines if the execution should fail when an exception occurs. Defaults to `true`.|
-|milestone|**_Optional_**. The identifier of the work item to be linked to the Pull Requests that dependabot creates.|
 |updaterOptions|**_Optional_**. Comma separated list of updater options; available options depend on the ecosystem. Example: `goprivate=true,kubernetes_updates=true`.|
 |setAutoComplete|**_Optional_**. Determines if the pull requests that dependabot creates should have auto complete set. When set to `true`, pull requests that pass all policies will be merged automatically. Defaults to `false`.|
 |mergeStrategy|**_Optional_**. The merge strategy to use when auto complete is set. Learn more [here](https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-requests/update?view=azure-devops-rest-6.0&tabs=HTTP#gitpullrequestmergestrategy). Defaults to `squash`.|
-|rejectExternalCode|**_Optional_**. See official docs [here](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#insecure-external-code-execution). Defaults to `false`.|
 |autoApprove|**_Optional_**. Determines if the pull requests that dependabot creates should be automatically completed. When set to `true`, pull requests will be approved automatically. To use a different user for approval, supply `autoApproveUserToken` input. Defaults to `false`.|
 |autoApproveUserToken|**_Optional_**. A personal access token for the user to automatically approve the created PR.|
 |skipPullRequests|**_Optional_**. Determines whether to skip creation and updating of pull requests. When set to `true` the logic to update the dependencies is executed but the actual Pull Requests are not created/updated. This is useful for debugging. Defaults to `false`.|
@@ -94,8 +82,6 @@ pool:
 
 steps:
 - task: dependabot@1
-  inputs:
-    useConfigFile: true
 ```
 
 Check the logs for the image that is pulled.
