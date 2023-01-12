@@ -86,14 +86,6 @@ async function run() {
         dockerRunner.arg(["-e", `DEPENDABOT_EXCLUDE_REQUIREMENTS_TO_UNLOCK=${variables.excludeRequirementsToUnlock}`]);
       }
 
-      // Set the dependencies to ignore only when not using the config file
-      if (variables.useConfigFile && variables.ignoreOvr) {
-        tl.warning(`Using 'DEPENDABOT_IGNORE_CONDITIONS' is not supported when using a config file. Specify the same values in the .github/dependabot.yml file.`);
-      }
-      if (!variables.useConfigFile && variables.ignoreOvr) {
-        dockerRunner.arg(["-e", `DEPENDABOT_IGNORE_CONDITIONS=${variables.ignoreOvr}`]);
-      }
-
       // Set the custom labels/tags
       if (update.labels) {
         dockerRunner.arg(["-e", `DEPENDABOT_LABELS=${update.labels}`]);
