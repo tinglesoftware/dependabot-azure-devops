@@ -30,7 +30,7 @@
     "js-yaml": "^4.1.0"
   },
   "devDependencies": {
-    "@types/jest": "^29.2.4",
+    "@types/jest": "^29.2.5",
     "@types/js-yaml": "^4.0.3",
     "@types/node": "^18.11.18",
     "@types/q": "^1.5.5",
