@@ -44,7 +44,7 @@
       "name": "useConfigFile",
       "type": "boolean",
       "label": "Use Dependabot YAML file",
-      "defaultValue": "false",
+      "defaultValue": "true",
       "required": false,
       "helpMarkDown": "Determines if the task will pick config values specified from the yaml file located at `.github/dependabot.yml` or `.github/dependabot.yaml`"
     },

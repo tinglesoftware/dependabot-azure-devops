@@ -10,8 +10,6 @@ To use in a YAML pipeline:
 
 ```yaml
 - task: dependabot@1
-  inputs:
-    useConfigFile: true
 ```
 
 You can schedule the pipeline as is appropriate for your solution.
@@ -35,8 +33,6 @@ pool:
 
 steps:
 - task: dependabot@1
-  inputs:
-    useConfigFile: true
 ```
 
 This task makes use of a docker image, which may take time to install. Subsequent dependabot tasks in a job will be faster after initially pulling the image using the first task. An alternative way to run your pipelines faster is by leveraging Docker caching in Azure Pipelines (See [#113](https://github.com/tinglesoftware/dependabot-azure-devops/issues/113#issuecomment-894771611)). 
@@ -45,7 +41,6 @@ This task makes use of a docker image, which may take time to install. Subsequen
 
 |Input|Description|
 |--|--|
-|useConfigFile|**_Optional_** Determines if to use the config file or not. Defaults to `false`.|
 |packageManager|**_Required (when useConfig=false)_**. The type of packages to check for dependency upgrades. Examples: `nuget`, `maven`, `gradle`, `npm`, etc. See the [updated-script](./update-script.rb) or [docs](https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/configuration-options-for-dependency-updates#package-ecosystem) for more.|
 |directory|**_Optional_**. The directory in which dependencies are to be checked. Examples: `/` for root, `/src` for src folder.|
 |targetBranch|**_Optional_**. The branch to be targeted when creating pull requests. When not specified, Dependabot will resolve the default branch of the repository. Examples: `master`, `main`, `develop`|
@@ -94,8 +89,6 @@ pool:
 
 steps:
 - task: dependabot@1
-  inputs:
-    useConfigFile: true
 ```
 
 Check the logs for the image that is pulled.
