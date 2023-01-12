@@ -59,7 +59,6 @@ export interface ISharedVariables {
   ignoreOvr: string;
 
   securityAdvisoriesFile: string | undefined;
-  extraCredentials: string;
   /** Determines whether to skip creating/updating pull requests */
   skipPullRequests: boolean;
   /** Determines whether to abandon unwanted pull requests */
@@ -139,7 +138,6 @@ export default function getSharedVariables(): ISharedVariables {
   let securityAdvisoriesFile: string | undefined = tl.getInput(
     "securityAdvisoriesFile"
   );
-  let extraCredentials = tl.getVariable("DEPENDABOT_EXTRA_CREDENTIALS");
   let skipPullRequests: boolean = tl.getBoolInput("skipPullRequests", false);
   let abandonUnwantedPullRequests: boolean = tl.getBoolInput("abandonUnwantedPullRequests", true);
   let extraEnvironmentVariables = tl.getDelimitedInput(
@@ -194,7 +192,6 @@ export default function getSharedVariables(): ISharedVariables {
     useConfigFile,
 
     securityAdvisoriesFile,
-    extraCredentials,
     skipPullRequests,
     abandonUnwantedPullRequests,
     extraEnvironmentVariables,

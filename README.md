@@ -57,9 +57,6 @@ BUT the values will be used from Environment Variables in the pipeline/environme
 
 2. When using a token the notation should be `PAT:${{VARIABLE_NAME}}`. Otherwise the wrong authentication mechanism is used by dependabot, see [here](https://github.com/tinglesoftware/dependabot-azure-devops/issues/50).
 
-Adding credentials can also be done via the `DEPENDABOT_EXTRA_CREDENTIALS` environment variable which overrides the registries in the configuration file. The value is supplied in JSON hence allowing any type of credentials even if they are not for private feeds/registries.
-Using this ENV directly will be removed in a future release.
-
 When working with Azure Artifacts, some extra permission steps need to be done:
 
 1. The PAT should have *Packaging Read* permission.
