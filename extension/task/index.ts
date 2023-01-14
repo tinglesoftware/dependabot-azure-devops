@@ -55,6 +55,11 @@ async function run() {
         dockerRunner.arg(["-e", `DEPENDABOT_TARGET_BRANCH=${update.targetBranch}`]);
       }
 
+      // Set vendored if true
+      if (update.vendor === true) {
+        dockerRunner.arg(["-e", 'DEPENDABOT_VENDOR=true']);
+      }
+
       // Set the versioning strategy
       if (update.versioningStrategy) {
         dockerRunner.arg(["-e", `DEPENDABOT_VERSIONING_STRATEGY=${update.versioningStrategy}`]);
