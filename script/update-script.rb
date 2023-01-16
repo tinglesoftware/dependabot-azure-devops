@@ -573,13 +573,25 @@ dependencies.select(&:top_level?).each do |dep|
       next
     end
 
+    # Removal is only supported for transitive dependencies which are removed as a
+    # side effect of the parent update
+    updated_deps = updated_deps.reject(&:removed?)
+
     #####################################
     # Generate updated dependency files #
     #####################################
     latest_allowed_version = checker.vulnerable? ?
                                checker.lowest_resolvable_security_fix_version
                                : checker.latest_resolvable_version
-    puts "Updating #{dep.name} from #{dep.version} to #{latest_allowed_version}"
+    if updated_deps.count == 1
+      dep_first = updated_deps.first
+      prev_v = dep_first.previous_version
+      prev_v_msg = prev_v ? "from #{prev_v} " : ""
+      puts "Updating #{dep_first.name} #{prev_v_msg} to #{latest_allowed_version}"
+    else
+      dep_names = updated_deps.map(&:name)
+      puts "Updating #{dep_names.join(', ')}"
+    end
     updater = Dependabot::FileUpdaters.for_package_manager($package_manager).new(
       dependencies: updated_deps,
       dependency_files: files,
