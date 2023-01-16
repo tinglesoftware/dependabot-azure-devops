@@ -283,6 +283,16 @@ def security_advisories_for(dep)
     safe_versions = (adv["patched-versions"] || []) +
                     (adv["unaffected-versions"] || [])
 
+    # Filter out nil (blank objects) and empty strings which is necessary for situations
+    # where the API response contains null that is converted to nil, or it is an empty
+    # string. For example, npm package named faker does not have patched version as of 2023-01-16
+    # See: https://github.com/advisories/GHSA-5w9c-rv96-fr7g for npm package
+    # This ideally fixes
+    # https://github.com/tinglesoftware/dependabot-azure-devops/issues/453#issuecomment-1383587644
+    vulnerable_versions = vulnerable_versions.reject(&:blank?).reject(&:empty?)
+    safe_versions = safe_versions.reject(&:blank?).reject(&:empty?)
+    next if vulnerable_versions.empty? && safe_versions.empty?
+
     Dependabot::SecurityAdvisory.new(
       dependency_name: dep.name,
       package_manager: $package_manager,
@@ -587,7 +597,7 @@ dependencies.select(&:top_level?).each do |dep|
       dep_first = updated_deps.first
       prev_v = dep_first.previous_version
       prev_v_msg = prev_v ? "from #{prev_v} " : ""
-      puts "Updating #{dep_first.name} #{prev_v_msg} to #{latest_allowed_version}"
+      puts "Updating #{dep_first.name} #{prev_v_msg}to #{latest_allowed_version}"
     else
       dep_names = updated_deps.map(&:name)
       puts "Updating #{dep_names.join(', ')}"
