@@ -814,9 +814,11 @@ if $options[:close_unwanted]
 
         # Check if the version has since been ignored, it so we do not keep
         requirement_class = Dependabot::Utils.requirement_class_for_package_manager(dep.package_manager)
+        version_class = Dependabot::Utils.version_class_for_package_manager(dep.package_manager) # necessary for npm
+        next unless version_class.correct?(dep.version) # git_submodules don't work here
         ignore_reqs = ignored_versions_for(dep)
                         .flat_map { |req| requirement_class.requirements_array(req) }
-        if ignore_reqs.any? { |req| req.satisfied_by?(dep.version) }
+        if ignore_reqs.any? { |req| req.satisfied_by?(version_class.new(dep.version)) }
           puts "Update for #{dep.name} #{dep.version} is no longer required."
           next
         end
