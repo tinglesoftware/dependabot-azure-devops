@@ -71,7 +71,7 @@
       "type": "boolean",
       "groupName": "advanced",
       "label": "Whether to abandon unwanted pull requests.",
-      "defaultValue": false,
+      "defaultValue": true,
       "required": false,
       "helpMarkDown": "When set to `true` the logic to update the dependencies is executed but the actual Pull Requests are not created/updated. Defaults to `false`."
     },
