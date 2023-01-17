@@ -161,6 +161,7 @@ function parseUpdates(config: any): IDependabotUpdate[] {
       openPullRequestsLimit: update["open-pull-requests-limit"],
 
       targetBranch: update["target-branch"],
+      vendor: update["vendor"] ? JSON.parse(update["vendor"]) : null,
       versioningStrategy: update["versioning-strategy"],
       milestone: update["milestone"],
       branchNameSeparator: update["pull-request-branch-name"]

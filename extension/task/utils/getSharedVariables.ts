@@ -51,15 +51,10 @@ export interface ISharedVariables {
   excludeRequirementsToUnlock: string;
   updaterOptions: string;
 
-  /** Flag used to check if to use dependabot.yml or task inputs */
-  useConfigFile: boolean;
   /** override value for allow */
-  allowOvr: string;
-  /** override value for ignore */
-  ignoreOvr: string;
+  allowOvr: string; // TODO: remove this in 0.16.0
 
   securityAdvisoriesFile: string | undefined;
-  extraCredentials: string;
   /** Determines whether to skip creating/updating pull requests */
   skipPullRequests: boolean;
   /** Determines whether to abandon unwanted pull requests */
@@ -128,18 +123,13 @@ export default function getSharedVariables(): ISharedVariables {
     tl.getInput("excludeRequirementsToUnlock") || "";
   let updaterOptions = tl.getInput("updaterOptions");
 
-  // Check if to use dependabot.yml or task inputs
-  let useConfigFile: boolean = tl.getBoolInput("useConfigFile", false);
-
   // Get the override values for allow, and ignore
   let allowOvr = tl.getVariable("DEPENDABOT_ALLOW_CONDITIONS");
-  let ignoreOvr = tl.getVariable("DEPENDABOT_IGNORE_CONDITIONS");
 
   // Prepare other variables
   let securityAdvisoriesFile: string | undefined = tl.getInput(
     "securityAdvisoriesFile"
   );
-  let extraCredentials = tl.getVariable("DEPENDABOT_EXTRA_CREDENTIALS");
   let skipPullRequests: boolean = tl.getBoolInput("skipPullRequests", false);
   let abandonUnwantedPullRequests: boolean = tl.getBoolInput("abandonUnwantedPullRequests", true);
   let extraEnvironmentVariables = tl.getDelimitedInput(
@@ -190,11 +180,8 @@ export default function getSharedVariables(): ISharedVariables {
     updaterOptions,
 
     allowOvr,
-    ignoreOvr,
-    useConfigFile,
 
     securityAdvisoriesFile,
-    extraCredentials,
     skipPullRequests,
     abandonUnwantedPullRequests,
     extraEnvironmentVariables,

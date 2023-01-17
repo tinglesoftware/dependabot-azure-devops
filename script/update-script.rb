@@ -38,6 +38,8 @@ $options = {
   assignees: nil, # nil instead of empty array to avoid API rejection
   branch_name_separator: ENV["DEPENDABOT_BRANCH_NAME_SEPARATOR"] || "/", # Separator used for created branches.
   milestone: ENV['DEPENDABOT_MILESTONE'] || nil, # Get the work item to attach
+  vendor_dependencies: ENV['DEPENDABOT_VENDOR'] == "true",
+  repo_contents_path: ENV['DEPENDABOT_REPO_CONTENTS_PATH'] || nil,
   updater_options: {},
   author_details: {
     email: ENV["DEPENDABOT_AUTHOR_EMAIL"] || "noreply@github.com",
@@ -281,6 +283,16 @@ def security_advisories_for(dep)
     safe_versions = (adv["patched-versions"] || []) +
                     (adv["unaffected-versions"] || [])
 
+    # Filter out nil (blank objects) and empty strings which is necessary for situations
+    # where the API response contains null that is converted to nil, or it is an empty
+    # string. For example, npm package named faker does not have patched version as of 2023-01-16
+    # See: https://github.com/advisories/GHSA-5w9c-rv96-fr7g for npm package
+    # This ideally fixes
+    # https://github.com/tinglesoftware/dependabot-azure-devops/issues/453#issuecomment-1383587644
+    vulnerable_versions = vulnerable_versions.reject(&:blank?).reject(&:empty?)
+    safe_versions = safe_versions.reject(&:blank?).reject(&:empty?)
+    next if vulnerable_versions.empty? && safe_versions.empty?
+
     Dependabot::SecurityAdvisory.new(
       dependency_name: dep.name,
       package_manager: $package_manager,
@@ -397,11 +409,6 @@ $source = Dependabot::Source.new(
 )
 
 ## Read the update configuration if present
-fetcher_args = {
-  source: $source,
-  credentials: $options[:credentials],
-  options: $options[:updater_options]
-}
 puts "Looking for configuration file in the repository ..."
 $config_file = begin
   # Using fetcher_args as before or in the examples will result in the
@@ -433,12 +440,26 @@ $update_config = $config_file.update_config(
   target_branch: $options[:branch]
 )
 
+puts "Using '#{$options[:requirements_update_strategy]}' requirements update strategy" if $options[:requirements_update_strategy]
+
 ##############################
 # Fetch the dependency files #
 ##############################
-puts "Using '#{$options[:requirements_update_strategy]}' requirements update strategy" if $options[:requirements_update_strategy]
+clone = $options[:vendor_dependencies] || Dependabot::Utils.always_clone_for_package_manager?($package_manager)
+$options[:repo_contents_path] ||= File.expand_path(File.join("tmp", $repo_name.split("/"))) if clone
+fetcher_args = {
+  source: $source,
+  credentials: $options[:credentials],
+  repo_contents_path: $options[:repo_contents_path],
+  options: $options[:updater_options],
+}
 fetcher = Dependabot::FileFetchers.for_package_manager($package_manager).new(**fetcher_args)
-puts "Fetching #{$package_manager} dependency files ..."
+if clone
+  puts "Cloning repository into #{$options[:repo_contents_path]}"
+  fetcher.clone_repo_contents
+else
+  puts "Fetching #{$package_manager} dependency files ..."
+end
 files = fetcher.files
 commit = fetcher.commit
 puts "Found #{files.length} dependency file(s) at commit #{commit}"
@@ -451,6 +472,7 @@ puts "Parsing dependencies information"
 parser = Dependabot::FileParsers.for_package_manager($package_manager).new(
   dependency_files: files,
   source: $source,
+  repo_contents_path: $options[:repo_contents_path],
   credentials: $options[:credentials],
   reject_external_code: $options[:reject_external_code],
   options: $options[:updater_options]
@@ -561,16 +583,29 @@ dependencies.select(&:top_level?).each do |dep|
       next
     end
 
+    # Removal is only supported for transitive dependencies which are removed as a
+    # side effect of the parent update
+    updated_deps = updated_deps.reject(&:removed?)
+
     #####################################
     # Generate updated dependency files #
     #####################################
     latest_allowed_version = checker.vulnerable? ?
                                checker.lowest_resolvable_security_fix_version
                                : checker.latest_resolvable_version
-    puts "Updating #{dep.name} from #{dep.version} to #{latest_allowed_version}"
+    if updated_deps.count == 1
+      dep_first = updated_deps.first
+      prev_v = dep_first.previous_version
+      prev_v_msg = prev_v ? "from #{prev_v} " : ""
+      puts "Updating #{dep_first.name} #{prev_v_msg}to #{latest_allowed_version}"
+    else
+      dep_names = updated_deps.map(&:name)
+      puts "Updating #{dep_names.join(', ')}"
+    end
     updater = Dependabot::FileUpdaters.for_package_manager($package_manager).new(
       dependencies: updated_deps,
       dependency_files: files,
+      repo_contents_path: $options[:repo_contents_path],
       credentials: $options[:credentials],
       options: $options[:updater_options]
     )
@@ -779,9 +814,11 @@ if $options[:close_unwanted]
 
         # Check if the version has since been ignored, it so we do not keep
         requirement_class = Dependabot::Utils.requirement_class_for_package_manager(dep.package_manager)
+        version_class = Dependabot::Utils.version_class_for_package_manager(dep.package_manager) # necessary for npm
+        next unless version_class.correct?(dep.version) # git_submodules don't work here
         ignore_reqs = ignored_versions_for(dep)
                         .flat_map { |req| requirement_class.requirements_array(req) }
-        if ignore_reqs.any? { |req| req.satisfied_by?(dep.version) }
+        if ignore_reqs.any? { |req| req.satisfied_by?(version_class.new(dep.version)) }
           puts "Update for #{dep.name} #{dep.version} is no longer required."
           next
         end
