@@ -9,7 +9,7 @@ import * as path from "path";
 import * as tl from "azure-pipelines-task-lib/task";
 import { getVariable } from "azure-pipelines-task-lib/task";
 import { ISharedVariables } from "./getSharedVariables";
-import {convertPlaceholder} from "./convertPlaceholder";
+import { convertPlaceholder } from "./convertPlaceholder";
 import axios from "axios";
 
 /**
