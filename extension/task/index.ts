@@ -1,12 +1,22 @@
 import * as tl from "azure-pipelines-task-lib/task"
 import { ToolRunner } from "azure-pipelines-task-lib/toolrunner"
 import { IDependabotConfig } from "./IDependabotConfig";
-import getConfigFromInputs from "./utils/getConfigFromInputs";
 import getSharedVariables from "./utils/getSharedVariables";
 import parseConfigFile from "./utils/parseConfigFile";
 
 async function run() {
   try {
+    let useConfigFile: boolean = tl.getBoolInput("useConfigFile", true); // TODO: find a way to check if specified
+    if (!useConfigFile) {
+      throw new Error(
+        `
+        Using explicit inputs is no longer supported.
+        Migrate to using a config file at .github/dependabot.yml.
+        See https://github.com/tinglesoftware/dependabot-azure-devops/tree/main/extension#usage for more information.
+        `
+      );
+    }
+
     // Checking if docker is installed
     tl.debug("Checking for docker install ...");
     tl.which("docker", true);
@@ -14,20 +24,7 @@ async function run() {
     // prepare the shared variables
     const variables = getSharedVariables();
 
-    var config: IDependabotConfig;
-    if (variables.useConfigFile) {
-      config = await parseConfigFile(variables);
-    } else {
-      tl.warning(
-        `
-        Using explicit inputs instead of a configuration file is deprecated and will be removed in version 0.14.0.
-        No new features will be added to the use of explicit inputs that can also be specified in the configuration file.\r\n
-        Migrate to using a config file at .github/dependabot.yml.
-        See https://github.com/tinglesoftware/dependabot-azure-devops/tree/main/extension#usage for more information.
-        `
-      );
-      config = getConfigFromInputs();
-    }
+    var config = await parseConfigFile(variables);
 
     // For each update run docker container
     for (const update of config.updates) {
@@ -58,6 +55,11 @@ async function run() {
         dockerRunner.arg(["-e", `DEPENDABOT_TARGET_BRANCH=${update.targetBranch}`]);
       }
 
+      // Set vendored if true
+      if (update.vendor === true) {
+        dockerRunner.arg(["-e", 'DEPENDABOT_VENDOR=true']);
+      }
+
       // Set the versioning strategy
       if (update.versioningStrategy) {
         dockerRunner.arg(["-e", `DEPENDABOT_VERSIONING_STRATEGY=${update.versioningStrategy}`]);
@@ -79,6 +81,9 @@ async function run() {
       }
 
       // Set the dependencies to allow
+      if (variables.allowOvr) {
+        tl.warning(`Using 'DEPENDABOT_ALLOW_CONDITIONS' is no longer supported when using a config file. Specify the same values in the .github/dependabot.yml file.`);
+      }
       let allow = update.allow || variables.allowOvr;
       if (allow) {
         dockerRunner.arg(["-e", `DEPENDABOT_ALLOW_CONDITIONS=${allow}`]);
@@ -87,14 +92,6 @@ async function run() {
       // Set the requirements that should not be unlocked
       if (variables.excludeRequirementsToUnlock) {
         dockerRunner.arg(["-e", `DEPENDABOT_EXCLUDE_REQUIREMENTS_TO_UNLOCK=${variables.excludeRequirementsToUnlock}`]);
-      }
-
-      // Set the dependencies to ignore only when not using the config file
-      if (variables.useConfigFile && variables.ignoreOvr) {
-        tl.warning(`Using 'DEPENDABOT_IGNORE_CONDITIONS' is not supported when using a config file. Specify the same values in the .github/dependabot.yml file.`);
-      }
-      if (!variables.useConfigFile && variables.ignoreOvr) {
-        dockerRunner.arg(["-e", `DEPENDABOT_IGNORE_CONDITIONS=${variables.ignoreOvr}`]);
       }
 
       // Set the custom labels/tags
@@ -118,15 +115,7 @@ async function run() {
       }
 
       // Set the extra credentials
-      if (variables.useConfigFile && variables.extraCredentials) {
-        tl.warning(`Using 'DEPENDABOT_EXTRA_CREDENTIALS' is not recommended when using a config file. Specify the same values in the registries section of .github/dependabot.yml file.`);
-      }
-      if (variables.extraCredentials) {
-        //TODO remove variables.extraCredentials in future in favor default yml configuration.
-        if (variables.extraCredentials.length > 0 && variables.extraCredentials !== '[]') {
-          dockerRunner.arg(["-e", `DEPENDABOT_EXTRA_CREDENTIALS=${variables.extraCredentials}`]);
-        }
-      } else if (config.registries != undefined) {
+      if (config.registries != undefined) {
         if (config.registries.length > 0) {
           let extraCredentials = JSON.stringify(config.registries);
           dockerRunner.arg(["-e", `DEPENDABOT_EXTRA_CREDENTIALS=${extraCredentials}`]);

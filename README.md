@@ -17,9 +17,7 @@ In this repository you'll find:
 
 ## Using a configuration file
 
-Similar to the GitHub native version where you add a `.github/dependabot.yml` file, this repository adds support for the same official [configuration options](https://help.github.com/github/administering-a-repository/configuration-options-for-dependency-updates) via a file located at `.github/dependabot.yml`. This support is only available in the Azure DevOps extension and the [managed version](https://managed-dependabot.com). However, the extension does not currently support automatically picking up the file, a pipeline is still required. See [docs](./extension/README.md#usage).
-
-> Using a configuration file over explicit inputs will not work with repositories other than the one in the pipeline. This means no shared pipeline. Instead consider the [managed version](https://managed-dependabot.com).
+Similar to the GitHub native version where you add a `.github/dependabot.yml` file, this repository adds support for the same official [configuration options](https://help.github.com/github/administering-a-repository/configuration-options-for-dependency-updates) via a file located at `.github/dependabot.yml`. This support is only available in the Azure DevOps extension and the [managed version](https://managd.dev). However, the extension does not currently support automatically picking up the file, a pipeline is still required. See [docs](./extension/README.md#usage).
 
 ## Credentials for private registries and feeds
 
@@ -56,9 +54,6 @@ Note:
 BUT the values will be used from Environment Variables in the pipeline/environment.
 
 2. When using a token the notation should be `PAT:${{VARIABLE_NAME}}`. Otherwise the wrong authentication mechanism is used by dependabot, see [here](https://github.com/tinglesoftware/dependabot-azure-devops/issues/50).
-
-Adding credentials can also be done via the `DEPENDABOT_EXTRA_CREDENTIALS` environment variable which overrides the registries in the configuration file. The value is supplied in JSON hence allowing any type of credentials even if they are not for private feeds/registries.
-Using this ENV directly will be removed in a future release.
 
 When working with Azure Artifacts, some extra permission steps need to be done:
 

@@ -60,3 +60,7 @@ dist
 *.log
 .idea
 .DS_Store
+
+# local caching
+script/tmp
+*git.store

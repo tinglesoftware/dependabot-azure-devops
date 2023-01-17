@@ -44,94 +44,9 @@
       "name": "useConfigFile",
       "type": "boolean",
       "label": "Use Dependabot YAML file",
-      "defaultValue": "false",
+      "defaultValue": "true",
       "required": false,
       "helpMarkDown": "Determines if the task will pick config values specified from the yaml file located at `.github/dependabot.yml` or `.github/dependabot.yaml`"
-    },
-
-    {
-      "name": "packageManager",
-      "type": "pickList",
-      "label": "Package Ecosystem",
-      "helpMarkDown": "The package ecosystem to check updates for. Learn more [here](https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/configuration-options-for-dependency-updates#package-ecosystem).",
-      "defaultValue": "nuget",
-      "required": true,
-      "options": {
-        "bundler": "Bundler",
-        "cargo": "Cargo",
-        "composer": "Composer",
-        "docker": "docker",
-        "hex": "Elixir",
-        "elm": "Elm",
-        "gitsubmodule": "git submodule",
-        "github-actions": "GitHub Actions",
-        "gomod": "Go modules",
-        "gradle": "Gradle",
-        "maven": "Maven",
-        "mix": "Mix",
-        "npm": "npm",
-        "nuget": "NuGet",
-        "pip": "pip",
-        "terraform": "Terraform"
-      },
-      "visibleRule": "useConfigFile=false"
-    },
-    {
-      "name": "directory",
-      "type": "string",
-      "label": "Directory",
-      "required": false,
-      "helpMarkDown": "Set the directory from where Dependabot should check for updates. Examples: `/` for root, `/src` for src folder.",
-      "visibleRule": "useConfigFile=false"
-    },
-    {
-      "name": "targetBranch",
-      "type": "string",
-      "label": "Target Branch",
-      "required": false,
-      "helpMarkDown": "The branch to be targeted when creating pull requests. When not specified, Dependabot will resolve the default branch of the repository. Examples: `master`, `main`, `develop`",
-      "visibleRule": "useConfigFile=false"
-    },
-    {
-      "name": "openPullRequestsLimit",
-      "type": "int",
-      "label": "Limit number of open pull requests for version updates.",
-      "required": false,
-      "defaultValue": "5",
-      "helpMarkDown": "The maximum number of open pull requests to have at any one time. Defaults to 5.",
-      "visibleRule": "useConfigFile=false"
-    },
-    {
-      "name": "versioningStrategy",
-      "type": "pickList",
-      "label": "Versioning Strategy",
-      "defaultValue": "auto",
-      "required": true,
-      "helpMarkDown": "The versioning strategy to use. Learn more [here](https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/configuration-options-for-dependency-updates#versioning-strategy).",
-      "options": {
-        "auto": "auto",
-        "lockfile-only": "lockfile-only",
-        "widen": "widen",
-        "increase": "increase",
-        "increase-if-necessary": "increase-if-necessary"
-      },
-      "visibleRule": "useConfigFile=false"
-    },
-    {
-      "name": "milestone",
-      "type": "string",
-      "label": "Work item identifier to be linked to the Pull Requests.",
-      "required": false,
-      "helpMarkDown": "The identifier of the work item to be linked to the Pull Requests that dependabot creates."
-    },
-    {
-      "name": "rejectExternalCode",
-      "type": "boolean",
-      "groupName": "advanced",
-      "label": "Whether to reject external code",
-      "defaultValue": false,
-      "required": false,
-      "helpMarkDown": "Learn more [here](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#insecure-external-code-execution). Defaults to `false`."
     },
 
     {

@@ -25,14 +25,14 @@
   },
   "homepage": "https://github.com/tinglesoftware/dependabot-azure-devops#readme",
   "dependencies": {
-    "axios": "^1.2.1",
-    "azure-pipelines-task-lib": "^4.0.2",
+    "axios": "^1.2.2",
+    "azure-pipelines-task-lib": "^4.2.0",
     "js-yaml": "^4.1.0"
   },
   "devDependencies": {
-    "@types/jest": "^29.2.4",
+    "@types/jest": "^29.2.5",
     "@types/js-yaml": "^4.0.3",
-    "@types/node": "^18.0.0",
+    "@types/node": "^18.11.18",
     "@types/q": "^1.5.5",
     "jest": "^29.3.1",
     "ts-jest": "^29.0.3",
