@@ -54,6 +54,9 @@ export interface ISharedVariables {
   /** override value for allow */
   allowOvr: string; // TODO: remove this in 0.16.0
 
+  /** List of update identifiers to run */
+  targetUpdateIds: number[];
+
   securityAdvisoriesFile: string | undefined;
   /** Determines whether to skip creating/updating pull requests */
   skipPullRequests: boolean;
@@ -126,6 +129,11 @@ export default function getSharedVariables(): ISharedVariables {
   // Get the override values for allow, and ignore
   let allowOvr = tl.getVariable("DEPENDABOT_ALLOW_CONDITIONS");
 
+  // Get the target identifiers
+  let targetUpdateIds = tl
+    .getDelimitedInput("targetUpdateIds", ";", false)
+    .map(Number);
+
   // Prepare other variables
   let securityAdvisoriesFile: string | undefined = tl.getInput(
     "securityAdvisoriesFile"
@@ -181,6 +189,7 @@ export default function getSharedVariables(): ISharedVariables {
 
     allowOvr,
 
+    targetUpdateIds,
     securityAdvisoriesFile,
     skipPullRequests,
     abandonUnwantedPullRequests,

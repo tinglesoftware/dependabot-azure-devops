@@ -172,7 +172,16 @@
       "groupName": "advanced",
       "label": "Target Repository Name",
       "required": false,
-      "helpMarkDown": "The name of the repository to target for processing. If this value is not supplied then the Build Repository Name is used. Supplying this value allows creation of a single pipeline that runs Dependablot against multiple repositories."
+      "helpMarkDown": "The name of the repository to target for processing. If this value is not supplied then the Build Repository Name is used. Supplying this value allows creation of a single pipeline that runs Dependabot against multiple repositories."
+    },
+    {
+      "name": "targetUpdateIds",
+      "type": "string",
+      "groupName": "advanced",
+      "label": "Semicolon delimited list of update identifiers to run.",
+      "defaultValue": "",
+      "required": false,
+      "helpMarkDown": "A semicolon (`;`) delimited list of update identifiers run. Index are zero-based and in the order written in the configuration file. When not present, all the updates are run. This is meant to be used in scenarios where you want to run updates a different times from teh same configuration file given you cannot schedule them independently in the pipeline."
     },
     {
       "name": "updaterOptions",

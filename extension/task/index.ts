@@ -1,6 +1,6 @@
 import * as tl from "azure-pipelines-task-lib/task"
 import { ToolRunner } from "azure-pipelines-task-lib/toolrunner"
-import { IDependabotConfig } from "./IDependabotConfig";
+import { IDependabotConfig, IDependabotUpdate } from "./IDependabotConfig";
 import getSharedVariables from "./utils/getSharedVariables";
 import parseConfigFile from "./utils/parseConfigFile";
 
@@ -24,10 +24,22 @@ async function run() {
     // prepare the shared variables
     const variables = getSharedVariables();
 
-    var config = await parseConfigFile(variables);
+    // parse the configuration file
+    const config = await parseConfigFile(variables);
+
+    // if update identifiers are specified, select then otherwise handle all
+    var updates: IDependabotUpdate[] = [];
+    const targetIds = variables.targetUpdateIds;
+    if (targetIds && targetIds.length > 0) {
+      for (const id of targetIds) {
+        updates.push(config.updates[id])
+      }
+    } else {
+      updates = config.updates;
+    }
 
     // For each update run docker container
-    for (const update of config.updates) {
+    for (const update of updates) {
       // Prepare the docker task
       let dockerRunner: ToolRunner = tl.tool(tl.which("docker", true));
       dockerRunner.arg(["run"]); // run command
