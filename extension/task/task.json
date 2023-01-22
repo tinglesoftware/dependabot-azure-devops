@@ -181,7 +181,7 @@
       "label": "Semicolon delimited list of update identifiers to run.",
       "defaultValue": "",
       "required": false,
-      "helpMarkDown": "A semicolon (`;`) delimited list of update identifiers run. Index are zero-based and in the order written in the configuration file. When not present, all the updates are run. This is meant to be used in scenarios where you want to run updates a different times from teh same configuration file given you cannot schedule them independently in the pipeline."
+      "helpMarkDown": "A semicolon (`;`) delimited list of update identifiers run. Index are zero-based and in the order written in the configuration file. When not present, all the updates are run. This is meant to be used in scenarios where you want to run updates a different times from the same configuration file given you cannot schedule them independently in the pipeline."
     },
     {
       "name": "updaterOptions",
