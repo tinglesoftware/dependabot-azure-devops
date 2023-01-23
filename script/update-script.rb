@@ -4,6 +4,9 @@ require "dependabot/logger"
 
 Dependabot.logger = Logger.new($stdout)
 
+ # ensure logs are output immediately. Useful when running in certain hosts like ContainerGroups
+$stdout.sync = true
+
 require "dependabot/file_fetchers"
 require "dependabot/file_parsers"
 require "dependabot/update_checkers"
