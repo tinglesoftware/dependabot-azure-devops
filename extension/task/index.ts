@@ -6,7 +6,7 @@ import parseConfigFile from "./utils/parseConfigFile";
 
 async function run() {
   try {
-    let useConfigFile: boolean = tl.getBoolInput("useConfigFile", true); // TODO: find a way to check if specified
+    let useConfigFile: boolean = tl.getBoolInput("useConfigFile", true);
     if (!useConfigFile) {
       throw new Error(
         `

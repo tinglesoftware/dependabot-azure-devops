@@ -18,11 +18,7 @@ function extractPlaceholder(input: string) {
   return matchAll(input, regexp);
 }
 
-function matchAll(
-  target: string,
-  rExp: RegExp,
-  matches: Array<RegExpExecArray> = []
-) {
+function matchAll(target: string, rExp: RegExp, matches: Array<RegExpExecArray> = []) {
   const matchIfAny = rExp.exec(target);
   matchIfAny && matches.push(matchIfAny) && matchAll(target, rExp, matches);
   return matches;
