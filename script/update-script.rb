@@ -359,8 +359,10 @@ ActiveSupport::Notifications.subscribe(/excon/) do |*args|
   return unless name == 'excon.request' || name == 'excon.response'
 
   payload = args.last
-  puts "#{name == 'excon.response' ? "#{payload[:status]} " : ''}" \
-       "#{payload[:method].to_s.upcase} #{Excon::Utils.request_uri(payload)}"
+  if name == "excon.request" || name == "excon.response"
+    puts "🌍 #{name == 'excon.response' ? "<-- #{payload[:status]}" : "--> #{payload[:method].upcase}"}" \
+         " #{Excon::Utils.request_uri(payload)}"
+  end
 end
 
 # Parse the options e.g. goprivate=true,kubernetes_updates=true
