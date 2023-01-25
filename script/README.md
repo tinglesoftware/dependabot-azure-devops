@@ -45,8 +45,8 @@ docker run --rm -t \
            -e DEPENDABOT_TARGET_BRANCH=main \
            -e DEPENDABOT_VERSIONING_STRATEGY=auto \
            -e DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT=10 \
-           -e DEPENDABOT_EXTRA_CREDENTIALS='[{\"type\":\"npm_registry\",\"token\":\"<redacted>\",\"registry\":\"npm.fontawesome.com\"}]' \
-           -e DEPENDABOT_ALLOW_CONDITIONS='[{\"dependency-name\":"django*",\"dependency-type\":\"direct\"}]' \
+           -e DEPENDABOT_EXTRA_CREDENTIALS='[{"type":"npm_registry","token":"<redacted>","registry":"npm.fontawesome.com"}]' \
+           -e DEPENDABOT_ALLOW_CONDITIONS='[{"dependency-name":"django*","dependency-type":"direct"}]' \
            -e DEPENDABOT_BRANCH_NAME_SEPARATOR='/' \
            -e DEPENDABOT_MILESTONE=123 \
            -e DEPENDABOT_UPDATER_OPTIONS='goprivate=true,kubernetes_updates=true' \
@@ -71,8 +71,8 @@ docker run --rm -t \
            -e DEPENDABOT_TARGET_BRANCH=main \
            -e DEPENDABOT_VERSIONING_STRATEGY=auto \
            -e DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT=10 \
-           -e DEPENDABOT_EXTRA_CREDENTIALS='[{\"type\":\"npm_registry\",\"token\":\"<redacted>\",\"registry\":\"npm.fontawesome.com\"}]' \
-           -e DEPENDABOT_ALLOW_CONDITIONS='[{\"dependency-name\":"django*",\"dependency-type\":\"direct\"}]' \
+           -e DEPENDABOT_EXTRA_CREDENTIALS='[{"type":"npm_registry","token":"<redacted>","registry":"npm.fontawesome.com"}]' \
+           -e DEPENDABOT_ALLOW_CONDITIONS='[{"dependency-name":"django*","dependency-type":"direct"}]' \
            -e DEPENDABOT_BRANCH_NAME_SEPARATOR='/' \
            -e DEPENDABOT_MILESTONE=123 \
            -e DEPENDABOT_UPDATER_OPTIONS='goprivate=true,kubernetes_updates=true' \
@@ -96,7 +96,7 @@ To run the script, some environment variables are required.
 
 |Variable Name|Description|
 |--|--|
-|GITHUB_ACCESS_TOKEN|**_Optional_**. The GitHub token for authenticating requests against GitHub public repositories. This is useful to avoid rate limiting errors. The token must include permissions to read public repositories. See the [documentation](https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token) for more on Personal Access Tokens.|
+|GITHUB_ACCESS_TOKEN|**_Optional_**. The GitHub token (classic) for authenticating requests against GitHub public repositories. This is useful to avoid rate limiting errors. The token must include permissions to read public repositories. See the [documentation](https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token) for more on Personal Access Tokens.|
 |DEPENDABOT_PACKAGE_MANAGER|**_Required_**. The type of packages to check for dependency upgrades. Examples: `nuget`, `maven`, `gradle`, `npm_and_yarn`, etc. See the [updated-script](./script/update-script.rb) or [docs](https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/configuration-options-for-dependency-updates#package-ecosystem) for more.|
 |DEPENDABOT_DIRECTORY|**_Optional_**. The directory in which dependencies are to be checked. When not specified, the root of the repository (denoted as '/') is used.|
 |DEPENDABOT_TARGET_BRANCH|**_Optional_**. The branch to be targeted when creating a pull request. When not specified, Dependabot will resolve the default branch of the repository.|
