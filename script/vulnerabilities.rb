@@ -47,7 +47,7 @@ module Dependabot
         vulnerabilities = []
         response.data[:securityVulnerabilities][:nodes].map do | node |
           vulnerable_version_range = node[:vulnerableVersionRange]
-          first_patched_version = node[:firstPatchedVersion] && node[:firstPatchedVersion][:identifier]
+          first_patched_version = node.dig :firstPatchedVersion, :identifier
           vulnerabilities << {
             "dependency-name" => dependency_name,
             "affected-versions" => [vulnerable_version_range],
