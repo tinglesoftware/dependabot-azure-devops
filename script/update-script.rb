@@ -669,6 +669,13 @@ dependencies.select(&:top_level?).each do |dep|
       # chore(deps): bump dotenv from 9.0.1 to 9.0.2 in /server
       next unless title.include?(" #{dep.display_name} from #{dep.version} to ")
 
+      # In case the Pull Request title contains an explicit path, check that path to make sure it is the same Pull Request
+      # For example:
+      # 'Bump hashicorp/azurerm from 3.1.0 to 3.12.3 in /projectA' denotes a different Pull Request than 'Bump hashicorp/azurerm from 3.1.0 to 3.12.3 in /projectB'
+      if updated_files.first.directory != "/"
+        next unless title.end_with?(" in #{updated_files.first.directory}")
+      end
+
       # If the title does not contain the updated version, we need to abandon the PR and delete
       # it's branch, because there is a newer version available.
       # Using the format " to #{updated_deps[0].version}" handles both root and nested updates.
