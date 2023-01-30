@@ -336,9 +336,9 @@ end
 # If a version update for a peer dependency is possible we should
 # defer to the PR that will be created for it to avoid duplicate PRS
 def peer_dependency_should_update_instead?(dependency_name, updated_deps, files, security_advisories)
-  # # This doesn't apply to security updates as we can't rely on the
-  # # peer dependency getting updated
-  # return false if $options[:security_updated_only]
+  # This doesn't apply to security updates as we can't rely on the
+  # peer dependency getting updated
+  return false if $options[:security_updates_only]
 
   updated_deps
     .reject { |dep| dep.name == dependency_name }
@@ -390,6 +390,11 @@ end
 if !$options[:security_updates_only] && $options[:pull_requests_limit] == 0
   puts "Pull requests limit is set to zero. Security only updates are implied."
   $options[:security_updates_only] = true
+end
+
+# Security updates cannot be performed without GitHub token
+if $options[:security_updates_only] && $vulnerabilities_fetcher.nil?
+  raise StandardError.new "Security updates are enabled but a GitHub token is not supplied! Cannot proceed"
 end
 
 ####################################################
