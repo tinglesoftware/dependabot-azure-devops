@@ -392,6 +392,11 @@ if !$options[:security_updates_only] && $options[:pull_requests_limit] == 0
   $options[:security_updates_only] = true
 end
 
+# Security updates cannot be performed without GitHub token
+if $options[:security_updates_only] && $vulnerabilities_fetcher.nil?
+  raise StandardError.new "Security updates are enabled but a GitHub token is not supplied! Cannot proceed"
+end
+
 ####################################################
 # Setup the hostname, protocol and port to be used #
 ####################################################
