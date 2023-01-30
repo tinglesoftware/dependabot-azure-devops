@@ -2,4 +2,10 @@
 
 source "https://rubygems.org"
 
-gem "dependabot-omnibus", "~> 0.215.0"
+# The tagged versions are currently slow (sometimes it takes months)
+# We temporarily switch to getting the gem from git.
+# When the changes to this repository are no longer many/major,
+# we can switch back to using the tagged versions.
+
+# gem "dependabot-omnibus", "~> 0.215.0"
+gem 'dependabot-omnibus', github: 'dependabot/dependabot-core', ref: '25f4de8'
