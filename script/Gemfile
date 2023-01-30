@@ -8,4 +8,4 @@ source "https://rubygems.org"
 # we can switch back to using the tagged versions.
 
 # gem "dependabot-omnibus", "~> 0.215.0"
-gem 'dependabot-omnibus', github: 'dependabot/dependabot-core', ref: '25f4de8'
+gem 'dependabot-omnibus', github: 'dependabot/dependabot-core', ref: '05d11aa'
