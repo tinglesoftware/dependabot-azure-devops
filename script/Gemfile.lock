@@ -108,10 +108,6 @@ GEM
     gitlab (4.19.0)
       httparty (~> 0.20)
       terminal-table (>= 1.5.1)
-    graphql (2.0.15)
-    graphql-client (0.18.0)
-      activesupport (>= 3.0)
-      graphql
     http-accept (1.7.0)
     http-cookie (1.0.5)
       domain_name (~> 0.5)
@@ -165,7 +161,6 @@ PLATFORMS
 
 DEPENDENCIES
   dependabot-omnibus (~> 0.215.0)
-  graphql-client (~> 0.18.0)
 
 BUNDLED WITH
    2.3.26
