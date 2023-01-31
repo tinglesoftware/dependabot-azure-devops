@@ -1,4 +1,10 @@
-FROM dependabot/dependabot-core:0.215.0
+# The tagged versions are currently slow (sometimes it takes months)
+# We temporarily switch to getting the gem from git.
+# When the changes to this repository are no longer many/major,
+# we can switch back to using the tagged versions.
+
+# FROM dependabot/dependabot-core:0.215.0
+FROM dependabot/dependabot-core@sha256:3681373aeb07e29fdf30c7a03713195424636fd1cafd569c424a96af27d37735
 
 # Copy the Gemfile and Gemfile.lock
 ARG CODE_DIR=/home/dependabot/dependabot-script
