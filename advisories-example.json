@@ -1,12 +1,12 @@
 [
-    {
-        "dependency-name": "Contoso.Utils",
-        "patched-versions": [
-            "3.0.1"
-        ],
-        "unaffected-versions": [],
-        "affected-versions": [
-            "< 3.0.1"
-        ]
-    }
+  {
+    "dependency-name": "Contoso.Utils",
+    "patched-versions": [
+      "3.0.1"
+    ],
+    "unaffected-versions": [],
+    "affected-versions": [
+      "< 3.0.1"
+    ]
+  }
 ]
