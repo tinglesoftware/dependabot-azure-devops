@@ -24,7 +24,6 @@ group :test do
   common_gemspec = File.expand_path("../dependabot-core/common/dependabot-common.gemspec", __dir__)
 
   deps_shared_with_core = %w(
-    debug
     rspec
     rubocop
     rubocop-performance

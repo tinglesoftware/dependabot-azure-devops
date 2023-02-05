@@ -146,7 +146,6 @@ GEM
     concurrent-ruby (1.2.0)
     crack (0.4.5)
       rexml
-    debug (1.7.1)
     diff-lcs (1.5.0)
     docker_registry2 (1.13.0)
       rest-client (>= 1.8.0)
@@ -255,7 +254,6 @@ PLATFORMS
   x86_64-linux
 
 DEPENDENCIES
-  debug (~> 1.7.1)
   dependabot-bundler!
   dependabot-cargo!
   dependabot-common!
