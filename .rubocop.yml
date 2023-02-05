@@ -10,6 +10,7 @@ AllCops:
     - "../*/spec/fixtures/**/*"
     - "../vendor/**/*"
     - "../dry-run/**/*"
+    - "dependabot-core/**/*"
   NewCops: enable
   SuggestExtensions: false
 Gemspec/DeprecatedAttributeAssignment:

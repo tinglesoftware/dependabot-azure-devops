@@ -37,7 +37,6 @@ def run_command(command)
   exit 1 unless system(command)
 end
 
-# rubocop:disable Metrics/BlockLength
 namespace :gems do
   task build: :clean do
     root_path = Dir.getwd
@@ -127,4 +126,3 @@ def rubygems_release_exists?(name, version)
   existing_versions = body.map { |b| b["number"] }
   existing_versions.include?(version)
 end
-# rubocop:enable Metrics/BlockLength
