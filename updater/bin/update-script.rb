@@ -1,10 +1,14 @@
+# frozen_string_literal: true
+
+# rubocop:disable Style/GlobalVars
+
 require "json"
 require "logger"
 require "dependabot/logger"
 
 Dependabot.logger = Logger.new($stdout)
 
- # ensure logs are output immediately. Useful when running in certain hosts like ContainerGroups
+# ensure logs are output immediately. Useful when running in certain hosts like ContainerGroups
 $stdout.sync = true
 
 require "dependabot/file_fetchers"
@@ -46,7 +50,7 @@ $options = {
   branch: ENV["DEPENDABOT_TARGET_BRANCH"] || nil, # Branch against which to create PRs
 
   allow_conditions: [],
-  reject_external_code: ENV['DEPENDABOT_REJECT_EXTERNAL_CODE'] == "true",
+  reject_external_code: ENV["DEPENDABOT_REJECT_EXTERNAL_CODE"] == "true",
   requirements_update_strategy: nil,
   security_advisories: [],
   security_updates_only: false,
@@ -56,27 +60,27 @@ $options = {
   reviewers: nil, # nil instead of empty array to avoid API rejection
   assignees: nil, # nil instead of empty array to avoid API rejection
   branch_name_separator: ENV["DEPENDABOT_BRANCH_NAME_SEPARATOR"] || "/", # Separator used for created branches.
-  milestone: ENV['DEPENDABOT_MILESTONE'] || nil, # Get the work item to attach
-  vendor_dependencies: ENV['DEPENDABOT_VENDOR'] == "true",
-  repo_contents_path: ENV['DEPENDABOT_REPO_CONTENTS_PATH'] || nil,
+  milestone: ENV["DEPENDABOT_MILESTONE"] || nil, # Get the work item to attach
+  vendor_dependencies: ENV["DEPENDABOT_VENDOR"] == "true",
+  repo_contents_path: ENV["DEPENDABOT_REPO_CONTENTS_PATH"] || nil,
   updater_options: {},
   author_details: {
     email: ENV["DEPENDABOT_AUTHOR_EMAIL"] || "noreply@github.com",
-    name: ENV["DEPENDABOT_AUTHOR_NAME"] || "dependabot[bot]",
+    name: ENV["DEPENDABOT_AUTHOR_NAME"] || "dependabot[bot]"
   },
-  fail_on_exception: ENV['DEPENDABOT_FAIL_ON_EXCEPTION'] == "true", # Stop the job if an exception occurs
-  skip_pull_requests: ENV['DEPENDABOT_SKIP_PULL_REQUESTS'] == "true", # Skip creating/updating Pull Requests
-  close_unwanted: ENV['DEPENDABOT_CLOSE_PULL_REQUESTS'] == "true", # Close unwanted Pull Requests
+  fail_on_exception: ENV["DEPENDABOT_FAIL_ON_EXCEPTION"] == "true", # Stop the job if an exception occurs
+  skip_pull_requests: ENV["DEPENDABOT_SKIP_PULL_REQUESTS"] == "true", # Skip creating/updating Pull Requests
+  close_unwanted: ENV["DEPENDABOT_CLOSE_PULL_REQUESTS"] == "true", # Close unwanted Pull Requests
 
   # See description of requirements here:
   # https://github.com/dependabot/dependabot-core/issues/600#issuecomment-407808103
   # https://github.com/wemake-services/kira-dependencies/pull/210
-  excluded_requirements: ENV['DEPENDABOT_EXCLUDE_REQUIREMENTS_TO_UNLOCK']&.split(" ")&.map(&:to_sym) || [],
+  excluded_requirements: ENV["DEPENDABOT_EXCLUDE_REQUIREMENTS_TO_UNLOCK"]&.split(" ")&.map(&:to_sym) || [],
 
   # Details on the location of the repository
-  azure_organization: ENV["AZURE_ORGANIZATION"],
-  azure_project: ENV["AZURE_PROJECT"],
-  azure_repository: ENV["AZURE_REPOSITORY"],
+  azure_organization: ENV.fetch("AZURE_ORGANIZATION", nil),
+  azure_project: ENV.fetch("AZURE_PROJECT", nil),
+  azure_repository: ENV.fetch("AZURE_REPOSITORY", nil),
   azure_hostname: ENV["AZURE_HOSTNAME"] || "dev.azure.com",
   azure_protocol: ENV["AZURE_PROTOCOL"] || "https",
   azure_port: nil,
@@ -84,12 +88,12 @@ $options = {
 
   # Automatic completion
   set_auto_complete: ENV["AZURE_SET_AUTO_COMPLETE"] == "true", # Set auto complete on created pull requests
-  auto_complete_ignore_config_ids: JSON.parse(ENV['AZURE_AUTO_COMPLETE_IGNORE_CONFIG_IDS'] || '[]'), # default to empty array
+  auto_complete_ignore_config_ids: JSON.parse(ENV["AZURE_AUTO_COMPLETE_IGNORE_CONFIG_IDS"] || "[]"), # default to empty
   merge_strategy: ENV["AZURE_MERGE_STRATEGY"] || "squash", # default to squash
 
   # Automatic Approval
   auto_approve_pr: ENV["AZURE_AUTO_APPROVE_PR"] == "true",
-  auto_approve_user_token: ENV["AZURE_AUTO_APPROVE_USER_TOKEN"] || ENV["AZURE_ACCESS_TOKEN"],
+  auto_approve_user_token: ENV["AZURE_AUTO_APPROVE_USER_TOKEN"] || ENV.fetch("AZURE_ACCESS_TOKEN", nil)
 }
 
 # Name of the package manager you'd like to do the update for. Options are:
@@ -123,7 +127,7 @@ PACKAGE_ECOSYSTEM_MAPPING = {
   "yarn" => "npm_and_yarn",
   "pipenv" => "pip",
   "pip-compile" => "pip",
-  "poetry" => "pip",
+  "poetry" => "pip"
 }.freeze
 $package_manager = PACKAGE_ECOSYSTEM_MAPPING.fetch($package_manager, $package_manager)
 
@@ -136,13 +140,13 @@ $options[:credentials] << {
   "type" => "git_source",
   "host" => $options[:azure_hostname],
   "username" => ENV["AZURE_ACCESS_USERNAME"] || "x-access-token",
-  "password" => ENV["AZURE_ACCESS_TOKEN"]
+  "password" => ENV.fetch("AZURE_ACCESS_TOKEN", nil)
 }
 
 $vulnerabilities_fetcher = nil
 unless ENV["GITHUB_ACCESS_TOKEN"].to_s.strip.empty?
   puts "GitHub access token has been provided."
-  github_token = ENV["GITHUB_ACCESS_TOKEN"] # A GitHub access token with read access to public repos
+  github_token = ENV.fetch("GITHUB_ACCESS_TOKEN", nil) # A GitHub access token with read access to public repos
   $options[:credentials] << {
     "type" => "git_source",
     "host" => "github.com",
@@ -155,7 +159,7 @@ end
 # DEPENDABOT_EXTRA_CREDENTIALS, for example:
 # "[{\"type\":\"npm_registry\",\"registry\":\"registry.npmjs.org\",\"token\":\"123\"}]"
 unless ENV["DEPENDABOT_EXTRA_CREDENTIALS"].to_s.strip.empty?
-  $options[:credentials] += JSON.parse(ENV["DEPENDABOT_EXTRA_CREDENTIALS"])
+  $options[:credentials] += JSON.parse(ENV.fetch("DEPENDABOT_EXTRA_CREDENTIALS", nil))
 end
 
 ##########################################
@@ -179,22 +183,18 @@ unless ENV["DEPENDABOT_VERSIONING_STRATEGY"].to_s.strip.empty?
   # https://github.com/dependabot/dependabot-core/blob/5926b243b2875ad0d8c0a52c09210c4f5f274c5e/composer/lib/dependabot/composer/update_checker/requirements_updater.rb#L23-L24
   if $package_manager == "npm_and_yarn" || $package_manager == "composer"
     strategy = $options[:requirements_update_strategy]
-    if strategy == :auto || strategy == :lockfile_only
-      $options[:requirements_update_strategy] = :bump_versions
-    end
+    $options[:requirements_update_strategy] = :bump_versions if strategy == :auto || strategy == :lockfile_only
   end
 
   # For pub, we also correct the strategy
   # https://github.com/dependabot/dependabot-core/blob/ca9f236591ba49fa6e2a8d5f06e538614033a628/pub/lib/dependabot/pub/update_checker.rb#L110
   if $package_manager == "pub"
     strategy = $options[:requirements_update_strategy]
-    if strategy == :auto
-      $options[:requirements_update_strategy] = nil
-    elsif strategy == :lockfile_only
-      $options[:requirements_update_strategy] = "bump_versions"
-    else
-      $options[:requirements_update_strategy] = strategy.to_s
-    end
+    $options[:requirements_update_strategy] = case strategy
+                                              when :auto then nil
+                                              when :lockfile_only then "bump_versions"
+                                              else strategy.to_s
+                                              end
   end
 end
 
@@ -204,7 +204,7 @@ end
 # [{"dependency-name":"sphinx","dependency-type":"production"}]
 #################################################################
 unless ENV["DEPENDABOT_ALLOW_CONDITIONS"].to_s.strip.empty?
-  $options[:allow_conditions] = JSON.parse(ENV["DEPENDABOT_ALLOW_CONDITIONS"])
+  $options[:allow_conditions] = JSON.parse(ENV.fetch("DEPENDABOT_ALLOW_CONDITIONS", nil))
 end
 
 # Get allow versions for a dependency
@@ -220,8 +220,8 @@ TYPE_HANDLERS = {
 
 def allow_conditions_for(dep)
   # Find where the name matches then get the type e.g. production, direct, etc
-  found = $options[:allow_conditions].find { |al| dep.name.match?(al['dependency-name']) }
-  found ? found['dependency-type'] : nil
+  found = $options[:allow_conditions].find { |al| dep.name.match?(al["dependency-name"]) }
+  found ? found["dependency-type"] : nil
 end
 
 #################################################################
@@ -230,8 +230,8 @@ end
 # [{"dependency-name":"name","patched-versions":[],"unaffected-versions":[],"affected-versions":["< 0.10.0"]}]
 #################################################################
 unless ENV["DEPENDABOT_SECURITY_ADVISORIES_FILE"].to_s.strip.empty?
-  security_advisories_file_name = ENV["DEPENDABOT_SECURITY_ADVISORIES_FILE"]
-  if File.exists?(security_advisories_file_name)
+  security_advisories_file_name = ENV.fetch("DEPENDABOT_SECURITY_ADVISORIES_FILE", nil)
+  if File.exist?(security_advisories_file_name)
     $options[:security_advisories] += JSON.parse(File.read(security_advisories_file_name))
   end
 end
@@ -241,7 +241,7 @@ end
 # DEPENDABOT_IGNORE_CONDITIONS Example: [{"dependency-name":"ruby","versions":[">= 3.a", "< 4"]}]
 ##################################################################################################
 unless ENV["DEPENDABOT_IGNORE_CONDITIONS"].to_s.strip.empty?
-  $options[:ignore_conditions] = JSON.parse(ENV["DEPENDABOT_IGNORE_CONDITIONS"])
+  $options[:ignore_conditions] = JSON.parse(ENV.fetch("DEPENDABOT_IGNORE_CONDITIONS", nil))
 end
 
 #################################################################
@@ -249,7 +249,7 @@ end
 # DEPENDABOT_LABELS Example: ["npm dependencies","triage-board"]
 #################################################################
 unless ENV["DEPENDABOT_LABELS"].to_s.strip.empty?
-  $options[:custom_labels] = JSON.parse(ENV["DEPENDABOT_LABELS"])
+  $options[:custom_labels] = JSON.parse(ENV.fetch("DEPENDABOT_LABELS", nil))
 end
 
 #########################################################################
@@ -257,7 +257,7 @@ end
 # DEPENDABOT_REVIEWERS Example: ["be9321e2-f404-4ffa-8d6b-44efddb04865"]
 #########################################################################
 unless ENV["DEPENDABOT_REVIEWERS"].to_s.strip.empty?
-  $options[:reviewers] = JSON.parse(ENV["DEPENDABOT_REVIEWERS"])
+  $options[:reviewers] = JSON.parse(ENV.fetch("DEPENDABOT_REVIEWERS", nil))
 end
 
 #########################################################################
@@ -265,7 +265,7 @@ end
 # DEPENDABOT_ASSIGNEES Example: ["be9321e2-f404-4ffa-8d6b-44efddb04865"]
 #########################################################################
 unless ENV["DEPENDABOT_ASSIGNEES"].to_s.strip.empty?
-  $options[:assignees] = JSON.parse(ENV["DEPENDABOT_ASSIGNEES"])
+  $options[:assignees] = JSON.parse(ENV.fetch("DEPENDABOT_ASSIGNEES", nil))
 end
 
 # Get ignore versions for a dependency
@@ -281,18 +281,21 @@ def ignored_versions_for(dep)
     Dependabot::Config::UpdateConfig.new(ignore_conditions: ignore_conditions).
       ignored_versions_for(
         dep,
-        security_updates_only: $options[:security_updates_only])
+        security_updates_only: $options[:security_updates_only]
+      )
   else
     $update_config.ignored_versions_for(
       dep,
-      security_updates_only: $options[:security_updates_only])
+      security_updates_only: $options[:security_updates_only]
+    )
   end
 end
 
+# rubocop:disable Metrics/PerceivedComplexity
 def security_advisories_for(dep)
   relevant_advisories =
     $options[:security_advisories].
-      select { |adv| adv.fetch("dependency-name").casecmp(dep.name).zero? }
+    select { |adv| adv.fetch("dependency-name").casecmp(dep.name).zero? }
 
   # add relevant advisories from the fetcher if present
   relevant_advisories += $vulnerabilities_fetcher&.fetch(dep.name) || []
@@ -320,6 +323,7 @@ def security_advisories_for(dep)
     )
   end
 end
+# rubocop:enable Metrics/PerceivedComplexity
 
 # Create an update checker
 def update_checker_for(dependency, files, security_advisories)
@@ -356,23 +360,22 @@ def peer_dependency_should_update_instead?(dependency_name, updated_deps, files,
   # peer dependency getting updated
   return false if $options[:security_updates_only]
 
-  updated_deps
-    .reject { |dep| dep.name == dependency_name }
-    .any? do |dep|
-      original_peer_dep = ::Dependabot::Dependency.new(
-        name: dep.name,
-        version: dep.previous_version,
-        requirements: dep.previous_requirements,
-        package_manager: dep.package_manager
-      )
-      update_checker_for(original_peer_dep, files, security_advisories)
-        .can_update?(requirements_to_unlock: :own)
+  updated_deps.
+    reject { |dep| dep.name == dependency_name }.
+    any? do |dep|
+    original_peer_dep = ::Dependabot::Dependency.new(
+      name: dep.name,
+      version: dep.previous_version,
+      requirements: dep.previous_requirements,
+      package_manager: dep.package_manager
+    )
+    update_checker_for(original_peer_dep, files, security_advisories).
+      can_update?(requirements_to_unlock: :own)
   end
 end
 
 ActiveSupport::Notifications.subscribe(/excon/) do |*args|
   name = args.first
-  return unless name == 'excon.request' || name == 'excon.response'
 
   payload = args.last
   if name == "excon.request" || name == "excon.response"
@@ -403,14 +406,14 @@ $options[:updater_options].each do |name, val|
 end
 
 # Enable security only updates if not enabled and limits is zero
-if !$options[:security_updates_only] && $options[:pull_requests_limit] == 0
+if !$options[:security_updates_only] && ($options[:pull_requests_limit]).zero?
   puts "Pull requests limit is set to zero. Security only updates are implied."
   $options[:security_updates_only] = true
 end
 
 # Security updates cannot be performed without GitHub token
 if $options[:security_updates_only] && $vulnerabilities_fetcher.nil?
-  raise StandardError.new "Security updates are enabled but a GitHub token is not supplied! Cannot proceed"
+  raise StandardError, "Security updates are enabled but a GitHub token is not supplied! Cannot proceed"
 end
 
 ####################################################
@@ -418,8 +421,11 @@ end
 ####################################################
 $options[:azure_port] = ENV["AZURE_PORT"] || ($options[:azure_protocol] == "http" ? "80" : "443")
 $api_endpoint = "#{$options[:azure_protocol]}://#{$options[:azure_hostname]}:#{$options[:azure_port]}/"
-$api_endpoint = $api_endpoint + "#{$options[:azure_virtual_directory]}/" unless $options[:azure_virtual_directory].empty?
-$repo_name = "#{$options[:azure_organization]}/#{$options[:azure_project]}/_git/#{$options[:azure_repository]}" # Full name of the repo targeted.
+unless $options[:azure_virtual_directory].empty?
+  $api_endpoint = $api_endpoint + "#{$options[:azure_virtual_directory]}/"
+end
+# Full name of the repo targeted.
+$repo_name = "#{$options[:azure_organization]}/#{$options[:azure_project]}/_git/#{$options[:azure_repository]}"
 puts "Using '#{$api_endpoint}' as API endpoint"
 puts "Pull Requests shall be linked to milestone (work item) #{$options[:milestone]}" if $options[:milestone]
 puts "Pull Requests shall be labeled #{$options[:custom_labels]}" if $options[:custom_labels]
@@ -431,7 +437,7 @@ $source = Dependabot::Source.new(
   api_endpoint: $api_endpoint,
   repo: $repo_name,
   directory: $options[:directory],
-  branch: $options[:branch],
+  branch: $options[:branch]
 )
 
 ## Read the update configuration if present
@@ -452,7 +458,7 @@ $config_file = begin
   cfg_file = Dependabot::Config::FileFetcher.new(
     source: cfg_source,
     credentials: $options[:credentials],
-    options: $options[:updater_options],
+    options: $options[:updater_options]
   ).config_file
   puts "Using configuration file at '#{cfg_file.path}' 😎"
   Dependabot::Config::File.parse(cfg_file.content)
@@ -466,7 +472,9 @@ $update_config = $config_file.update_config(
   target_branch: $options[:branch]
 )
 
-puts "Using '#{$options[:requirements_update_strategy]}' requirements update strategy" if $options[:requirements_update_strategy]
+if $options[:requirements_update_strategy]
+  puts "Using '#{$options[:requirements_update_strategy]}' requirements update strategy"
+end
 
 ##############################
 # Fetch the dependency files #
@@ -477,7 +485,7 @@ fetcher_args = {
   source: $source,
   credentials: $options[:credentials],
   repo_contents_path: $options[:repo_contents_path],
-  options: $options[:updater_options],
+  options: $options[:updater_options]
 }
 fetcher = Dependabot::FileFetchers.for_package_manager($package_manager).new(**fetcher_args)
 if clone
@@ -505,7 +513,7 @@ parser = Dependabot::FileParsers.for_package_manager($package_manager).new(
 )
 
 dependencies = parser.parse
-puts "Found #{dependencies.select(&:top_level?).length} dependencies"
+puts "Found #{dependencies.count(&:top_level?)} dependencies"
 dependencies.select(&:top_level?).each { |d| puts " - #{d.name} (#{d.version})" }
 
 ################################################
@@ -513,7 +521,7 @@ dependencies.select(&:top_level?).each { |d| puts " - #{d.name} (#{d.version})" 
 ################################################
 azure_client = Dependabot::Clients::Azure.for_source(
   source: $source,
-  credentials: $options[:credentials],
+  credentials: $options[:credentials]
 )
 user_id = azure_client.get_user_id
 default_branch_name = azure_client.fetch_default_branch($source.repo)
@@ -521,19 +529,20 @@ active_pull_requests = azure_client.pull_requests_active(user_id, default_branch
 
 pull_requests_count = 0
 
+# rubocop:disable Metrics/BlockLength
 dependencies.select(&:top_level?).each do |dep|
   # Check if we have reached maximum number of open pull requests
-  if $options[:pull_requests_limit] > 0 && pull_requests_count >= $options[:pull_requests_limit]
+  if ($options[:pull_requests_limit]).positive? && pull_requests_count >= $options[:pull_requests_limit]
     puts "Limit of open pull requests (#{$options[:pull_requests_limit]}) reached."
     break
   end
 
   begin
-
     #########################################
     # Get update details for the dependency #
     #########################################
-    puts "Checking if #{dep.name} #{dep.version} #{$options[:security_updates_only] ? 'is vulnerable' : 'needs updating'}"
+    puts "Checking if #{dep.name} #{dep.version} is vulnerable" if $options[:security_updates_only]
+    puts "Checking if #{dep.name} #{dep.version} needs updating" unless $options[:security_updates_only]
     security_advisories = security_advisories_for(dep)
     checker = update_checker_for(dep, files, security_advisories)
 
@@ -551,7 +560,8 @@ dependencies.select(&:top_level?).each do |dep|
     # For vulnerable dependencies
     if checker.vulnerable?
       if checker.lowest_security_fix_version
-        puts "#{dep.name} #{dep.version} is vulnerable. Earliest non-vulnerable is #{checker.lowest_security_fix_version}"
+        puts "#{dep.name} #{dep.version} is vulnerable. Earliest non-vulnerable is " \
+             "#{checker.lowest_security_fix_version}"
       else
         puts "#{dep.name} #{dep.version} is vulnerable. Can't find non-vulnerable version. 🚨"
       end
@@ -562,18 +572,20 @@ dependencies.select(&:top_level?).each do |dep|
       next
     end
 
+    # rubocop:disable Lint/ElseLayout
     requirements_to_unlock =
       if !checker.requirements_unlocked_or_can_be?
         if !$options[:excluded_requirements].include?(:none) &&
-          checker.can_update?(requirements_to_unlock: :none) then :none
+           checker.can_update?(requirements_to_unlock: :none) then :none
         else :update_not_possible
         end
       elsif !$options[:excluded_requirements].include?(:own) &&
-        checker.can_update?(requirements_to_unlock: :own) then :own
+            checker.can_update?(requirements_to_unlock: :own) then :own
       elsif !$options[:excluded_requirements].include?(:all) &&
-        checker.can_update?(requirements_to_unlock: :all) then :all
+            checker.can_update?(requirements_to_unlock: :all) then :all
       else :update_not_possible
       end
+    # rubocop:enable Lint/ElseLayout
 
     puts "Requirements to unlock #{requirements_to_unlock}" unless $options[:security_updates_only]
     if checker.respond_to?(:requirements_update_strategy)
@@ -587,7 +599,9 @@ dependencies.select(&:top_level?).each do |dep|
 
     # Check if the dependency is allowed
     allow_type = allow_conditions_for(dep)
-    allowed = checker.vulnerable? || $options[:allow_conditions].empty? || (allow_type && TYPE_HANDLERS[allow_type].call(dep, checker))
+    allowed = checker.vulnerable? ||
+              $options[:allow_conditions].empty? ||
+              (allow_type && TYPE_HANDLERS[allow_type].call(dep, checker))
     unless allowed
       puts "Updating #{dep.name} is not allowed"
       next
@@ -616,9 +630,11 @@ dependencies.select(&:top_level?).each do |dep|
     #####################################
     # Generate updated dependency files #
     #####################################
-    latest_allowed_version = checker.vulnerable? ?
+    latest_allowed_version = if checker.vulnerable?
                                checker.lowest_resolvable_security_fix_version
-                               : checker.latest_resolvable_version
+                             else
+                               checker.latest_resolvable_version
+                             end
     if updated_deps.count == 1
       dep_first = updated_deps.first
       prev_v = dep_first.previous_version
@@ -685,12 +701,11 @@ dependencies.select(&:top_level?).each do |dep|
       # chore(deps): bump dotenv from 9.0.1 to 9.0.2 in /server
       next unless title.include?(" #{dep.display_name} from #{dep.version} to ")
 
-      # In case the Pull Request title contains an explicit path, check that path to make sure it is the same Pull Request
-      # For example:
-      # 'Bump hashicorp/azurerm from 3.1.0 to 3.12.3 in /projectA' denotes a different Pull Request than 'Bump hashicorp/azurerm from 3.1.0 to 3.12.3 in /projectB'
-      if updated_files.first.directory != "/"
-        next unless title.end_with?(" in #{updated_files.first.directory}")
-      end
+      # In case the Pull Request title contains an explicit path, check that path
+      # to make sure it is the same Pull Request. For example:
+      # 'Bump hashicorp/azurerm from 3.1.0 to 3.12.3 in /projectA' denotes a different
+      # Pull Request from 'Bump hashicorp/azurerm from 3.1.0 to 3.12.3 in /projectB'
+      next if updated_files.first.directory != "/" && !title.end_with?(" in #{updated_files.first.directory}")
 
       # If the title does not contain the updated version, we need to abandon the PR and delete
       # it's branch, because there is a newer version available.
@@ -721,7 +736,6 @@ dependencies.select(&:top_level?).each do |dep|
       break
     end
 
-    pull_request = nil
     pull_request_id = nil
     if conflict_pull_request_commit && conflict_pull_request_id
       ##############################################
@@ -734,7 +748,7 @@ dependencies.select(&:top_level?).each do |dep|
         files: updated_files,
         credentials: $options[:credentials],
         pull_request_number: conflict_pull_request_id,
-        author_details: $options[:author_details],
+        author_details: $options[:author_details]
       )
 
       puts "Submitting pull request (##{conflict_pull_request_id}) update for #{dep.name}."
@@ -762,7 +776,7 @@ dependencies.select(&:top_level?).each do |dep|
         automerge_candidate: $options[:set_auto_complete],
         github_redirection_service: Dependabot::PullRequestCreator::DEFAULT_GITHUB_REDIRECTION_SERVICE,
         provider_metadata: {
-          work_item: $options[:milestone],
+          work_item: $options[:milestone]
         }
       )
 
@@ -780,7 +794,7 @@ dependencies.select(&:top_level?).each do |dep|
           message = content["message"]
           puts "Failed! PR already exists or an error has occurred."
           # throw exception here because pull_request.create does not throw
-          raise StandardError.new "Pull Request creation failed with status #{req_status}. Message: #{message}"
+          raise StandardError, "Pull Request creation failed with status #{req_status}. Message: #{message}"
         end
       else
         puts "Seems PR is already present."
@@ -809,7 +823,7 @@ dependencies.select(&:top_level?).each do |dep|
     # Pull requests that pass all policies will be merged automatically.
     # Optional policies can be ignored by passing their identifiers
     if $options[:set_auto_complete]
-      auto_complete_user_id = pull_request['createdBy']['id']
+      auto_complete_user_id = pull_request["createdBy"]["id"]
       puts "Setting auto complete on ##{pull_request_id}."
       azure_client.pull_request_auto_complete(
         # Adding argument names will fail! Maybe because there is no spec?
@@ -819,9 +833,9 @@ dependencies.select(&:top_level?).each do |dep|
         $options[:auto_complete_ignore_config_ids]
       )
     end
-
   rescue StandardError => e
     raise e if $options[:fail_on_exception]
+
     puts "Error working on updates for #{dep.name} #{dep.version} (continuing)"
     puts e.full_message
   end
@@ -849,8 +863,9 @@ if $options[:close_unwanted]
         requirement_class = Dependabot::Utils.requirement_class_for_package_manager(dep.package_manager)
         version_class = Dependabot::Utils.version_class_for_package_manager(dep.package_manager) # necessary for npm
         next unless version_class.correct?(dep.version) # git_submodules don't work here
-        ignore_reqs = ignored_versions_for(dep)
-                        .flat_map { |req| requirement_class.requirements_array(req) }
+
+        ignore_reqs = ignored_versions_for(dep).
+                      flat_map { |req| requirement_class.requirements_array(req) }
         if ignore_reqs.any? { |req| req.satisfied_by?(version_class.new(dep.version)) }
           puts "Update for #{dep.name} #{dep.version} is no longer required."
           next
@@ -880,9 +895,9 @@ if $options[:close_unwanted]
           azure_client.pull_request_abandon(pr_id)
         end
       end
-
     rescue StandardError => e
       raise e if $options[:fail_on_exception]
+
       puts "Error checking whether to abandon (or abandoning) PR ##{pr_id} (continuing)"
       puts e.full_message
     end
@@ -890,3 +905,7 @@ if $options[:close_unwanted]
 end
 
 puts "Done"
+
+# rubocop:enable Metrics/BlockLength
+
+# rubocop:enable Style/GlobalVars
