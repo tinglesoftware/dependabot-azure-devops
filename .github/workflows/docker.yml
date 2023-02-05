@@ -49,6 +49,7 @@ jobs:
     - name: Setup Ruby
       uses: ruby/setup-ruby@v1
       with:
+        ruby-version: '3.1'
         bundler-cache: true
 
     - name: bundle exec rspec spec
