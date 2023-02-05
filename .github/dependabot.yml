@@ -17,6 +17,12 @@ updates:
     interval: "weekly"
     time: "04:00"
   open-pull-requests-limit: 10
+- package-ecosystem: "gitsubmodule" # See documentation for possible values
+  directory: "/script" # Location of package manifests
+  schedule:
+    interval: "weekly"
+    time: "04:00"
+  open-pull-requests-limit: 10
 - package-ecosystem: "npm" # See documentation for possible values
   directory: "/extension" # Location of package manifests
   schedule:

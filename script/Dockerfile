@@ -12,6 +12,9 @@ RUN mkdir -p ${CODE_DIR}
 COPY --chown=dependabot:dependabot Gemfile Gemfile.lock ${CODE_DIR}/
 WORKDIR ${CODE_DIR}
 
+# Copy core logic
+COPY dependabot-core dependabot-core/
+
 # Install dependencies
 RUN bundle config set --local path "vendor" \
   && bundle install --jobs 4 --retry 3

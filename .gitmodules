@@ -1,0 +1,3 @@
+[submodule "script/dependabot-core"]
+	path = script/dependabot-core
+	url = https://github.com/dependabot/dependabot-core.git
