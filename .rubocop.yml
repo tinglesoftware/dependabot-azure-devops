@@ -4,13 +4,11 @@ require: rubocop-performance
 AllCops:
   DisplayCopNames: true
   Exclude:
-    - "../*/vendor/**/*"
-    - "../*/bin/**/*"
-    - "../**/tmp/**/*"
-    - "../*/spec/fixtures/**/*"
-    - "../vendor/**/*"
-    - "../dry-run/**/*"
     - "dependabot-core/**/*"
+    - "../*/bin/**/*" # TODO: remove this once files in bin have been distributed
+    - "updater/tmp/**/*"
+    - "updater/spec/fixtures/**/*"
+    - "updater/vendor/**/*"
   NewCops: enable
   SuggestExtensions: false
 Gemspec/DeprecatedAttributeAssignment:
