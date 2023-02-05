@@ -6,20 +6,20 @@
 # FROM dependabot/dependabot-core:0.215.0
 FROM dependabot/dependabot-core@sha256:3681373aeb07e29fdf30c7a03713195424636fd1cafd569c424a96af27d37735
 
-# Copy core logic
-COPY dependabot-core dependabot-core/
+ENV DEPENDABOT_HOME /home/dependabot
+WORKDIR ${DEPENDABOT_HOME}
 
-# Copy Gemfile and Gemfile.lock
-ARG CODE_DIR=/home/dependabot/dependabot-script
-RUN mkdir -p ${CODE_DIR}
-COPY --chown=dependabot:dependabot script/Gemfile script/Gemfile.lock ${CODE_DIR}/
-WORKDIR ${CODE_DIR}
+COPY --chown=dependabot:dependabot updater/Gemfile updater/Gemfile.lock dependabot-updater/
+COPY --chown=dependabot:dependabot dependabot-core dependabot-core/
 
-# Install dependencies
-RUN bundle config set --local path "vendor" \
-  && bundle install --jobs 4 --retry 3
+WORKDIR $DEPENDABOT_HOME/dependabot-updater
 
-# Script files are known to change more frequently than Gemfiles.
+RUN bundle config set --local path 'vendor' && \
+    bundle config set --local frozen 'true' && \
+    bundle config set --local without 'development' && \
+    bundle install
+
+# Project files are known to change more frequently than Gemfiles.
 # They are copied after installation of dependencies so that the
 # image layers that change less frequently are available for caching
 # and hence be reused in subsequent builds.
@@ -27,19 +27,17 @@ RUN bundle config set --local path "vendor" \
 # https://docs.docker.com/develop/develop-images/build_enhancements/
 # https://testdriven.io/blog/faster-ci-builds-with-docker-cache/
 
-# Copy the Ruby scripts
-COPY --chown=dependabot:dependabot script/update-script.rb ${CODE_DIR}
-COPY --chown=dependabot:dependabot script/azure_helpers.rb ${CODE_DIR}
-COPY --chown=dependabot:dependabot script/vulnerabilities.rb ${CODE_DIR}
-COPY --chown=dependabot:dependabot --chmod=755 script/entrypoint.sh ${CODE_DIR}
+# Add project
+COPY --chown=dependabot:dependabot LICENSE $DEPENDABOT_HOME
+# The chmod=755 is only for entrypoint.sh
+COPY --chown=dependabot:dependabot --chmod=755 updater $DEPENDABOT_HOME/dependabot-updater
+
+WORKDIR $DEPENDABOT_HOME/dependabot-updater
 
 # This entrypoint exists to solve specific setup problems.
 # It is only used with the extension and directly on Docker.
 # Hosted version does not allow this.
-#
-# If you have trouble when running locally, recreate the file to fix the line endings.
-# Ideally should not happen, but it does at times. Oops! This is just to help you, ninja!
-ENTRYPOINT ["./entrypoint.sh"]
+ENTRYPOINT ["bin/entrypoint.sh"]
 
 # Run update script
-CMD ["bundle", "exec", "ruby", "./update-script.rb"]
+CMD ["bundle", "exec", "ruby", "bin/update-script.rb"]
