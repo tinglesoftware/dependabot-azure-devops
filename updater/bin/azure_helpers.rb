@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "json"
 require "dependabot/shared_helpers"
 require "excon"
@@ -5,15 +7,14 @@ require "excon"
 module Dependabot
   module Clients
     class Azure
-
       def pull_requests_active(user_id, default_branch)
         # https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-requests/get-pull-requests?view=azure-devops-rest-6.0&tabs=HTTP
         response = get(source.api_endpoint +
              source.organization + "/" + source.project +
              "/_apis/git/repositories/" + source.unscoped_repo +
              "/pullrequests?api-version=6.0&searchCriteria.status=active" \
-              "&searchCriteria.creatorId=#{user_id}" \
-              "&searchCriteria.targetRefName=refs/heads/#{default_branch}")
+             "&searchCriteria.creatorId=#{user_id}" \
+             "&searchCriteria.targetRefName=refs/heads/#{default_branch}")
 
         JSON.parse(response.body).fetch("value")
       end
@@ -23,7 +24,7 @@ module Dependabot
           status: "abandoned"
         }
 
-        response = patch(source.api_endpoint +
+        patch(source.api_endpoint +
              source.organization + "/" + source.project +
              "/_apis/git/repositories/" + source.unscoped_repo +
              "/pullrequests/#{pull_request_id}?api-version=6.0", content.to_json)
@@ -44,7 +45,7 @@ module Dependabot
           }
         ]
 
-        response = post(source.api_endpoint +
+        post(source.api_endpoint +
             source.organization + "/" + source.project +
             "/_apis/git/repositories/" + source.unscoped_repo +
             "/refs?api-version=6.0", content.to_json)
@@ -73,7 +74,7 @@ module Dependabot
           }
         }
 
-        response = patch(source.api_endpoint +
+        patch(source.api_endpoint +
              source.organization + "/" + source.project +
              "/_apis/git/repositories/" + source.unscoped_repo +
              "/pullrequests/#{pull_request_id}?api-version=6.0", content.to_json)
@@ -82,10 +83,12 @@ module Dependabot
       def get_user_id(token = nil)
         # https://learn.microsoft.com/en-us/javascript/api/azure-devops-extension-api/connectiondata
         # https://stackoverflow.com/a/53227325
-        response = token ?
-                     get_with_token(source.api_endpoint + source.organization + "/_apis/connectionData", token) :
+        response = if token
+                     get_with_token(source.api_endpoint + source.organization + "/_apis/connectionData", token)
+                   else
                      get(source.api_endpoint + source.organization + "/_apis/connectionData")
-        JSON.parse(response.body).fetch("authenticatedUser")['id']
+                   end
+        JSON.parse(response.body).fetch("authenticatedUser")["id"]
       end
 
       def pull_request_approve(pull_request_id, reviewer_token)
@@ -97,11 +100,10 @@ module Dependabot
           vote: 10
         }
 
-        response = put_with_token(source.api_endpoint +
-                source.organization + "/" + source.project +
-                "/_apis/git/repositories/" + source.unscoped_repo +
-                "/pullrequests/#{pull_request_id}/reviewers/#{user_id}?api-version=6.0",
-              content.to_json, reviewer_token)
+        put_with_token(source.api_endpoint + source.organization + "/" + source.project +
+                       "/_apis/git/repositories/" + source.unscoped_repo +
+                       "/pullrequests/#{pull_request_id}/reviewers/#{user_id}" \
+                       "?api-version=6.0", content.to_json, reviewer_token)
       end
 
       def get_with_token(url, token)
