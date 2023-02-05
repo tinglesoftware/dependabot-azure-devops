@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "octokit"
 
 module Dependabot
@@ -16,7 +18,7 @@ module Dependabot
         "pip" => "PIP",
         "pub" => "PUB",
         "bundler" => "RUBYGEMS",
-        "cargo" => "RUST",
+        "cargo" => "RUST"
       }.freeze
 
       GRAPHQL_QUERY = <<-GRAPHQL
@@ -34,31 +36,30 @@ module Dependabot
 
       def initialize(package_manager, github_token)
         @ecosystem = ECOSYSTEM_LOOKUP.fetch(package_manager, nil)
-        @client ||= Octokit::Client.new(:access_token => github_token)
+        @client ||= Octokit::Client.new(access_token: github_token)
       end
 
       def fetch(dependency_name)
         [] unless @ecosystem
 
         variables = { ecosystem: @ecosystem, package: dependency_name }
-        response = @client.post'/graphql', { query: GRAPHQL_QUERY, variables: variables }.to_json
-        raise(QueryError, response[:errors]&.map{|e| e.message }&.join(", ")) if response[:errors]
+        response = @client.post "/graphql", { query: GRAPHQL_QUERY, variables: variables }.to_json
+        raise(QueryError, response[:errors]&.map(&:message)&.join(", ")) if response[:errors]
 
         vulnerabilities = []
-        response.data[:securityVulnerabilities][:nodes].map do | node |
+        response.data[:securityVulnerabilities][:nodes].map do |node|
           vulnerable_version_range = node[:vulnerableVersionRange]
           first_patched_version = node.dig :firstPatchedVersion, :identifier
           vulnerabilities << {
             "dependency-name" => dependency_name,
             "affected-versions" => [vulnerable_version_range],
             "patched-versions" => [first_patched_version],
-            "unaffected-versions" => [],
+            "unaffected-versions" => []
           }
         end
 
         vulnerabilities
       end
-
     end
   end
 end
