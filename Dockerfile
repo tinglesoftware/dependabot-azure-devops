@@ -29,8 +29,7 @@ RUN bundle config set --local path 'vendor' && \
 
 # Add project
 COPY --chown=dependabot:dependabot LICENSE $DEPENDABOT_HOME
-# The chmod=755 is only for entrypoint.sh
-COPY --chown=dependabot:dependabot --chmod=755 updater $DEPENDABOT_HOME/dependabot-updater
+COPY --chown=dependabot:dependabot updater $DEPENDABOT_HOME/dependabot-updater
 
 WORKDIR $DEPENDABOT_HOME/dependabot-updater
 
