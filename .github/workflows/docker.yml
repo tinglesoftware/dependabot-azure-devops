@@ -10,7 +10,7 @@ on:
     - "script/**"
     - "Dockerfile"
     - ".github/workflows/docker.yml"
-    - "!script/README.md"
+    - "!docs/**"
   pull_request:
     branches:
     # Only trigger for PRs against `main` branch.
@@ -19,7 +19,7 @@ on:
     - "script/**"
     - "Dockerfile"
     - ".github/workflows/docker.yml"
-    - "!script/README.md"
+    - "!docs/**"
 
 jobs:
   dockerize:

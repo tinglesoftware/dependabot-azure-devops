@@ -10,6 +10,7 @@ on:
     - "extension/**"
     - ".github/workflows/extension.yml"
     - "!extension/README.md"
+    - "!docs/**"
   pull_request:
     branches:
     # Only trigger for PRs against `main` branch.
@@ -18,6 +19,7 @@ on:
     - "extension/**"
     - ".github/workflows/extension.yml"
     - "!extension/README.md"
+    - "!docs/**"
 
 jobs:
   Build:
