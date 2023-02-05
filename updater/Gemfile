@@ -26,6 +26,8 @@ group :test do
   deps_shared_with_core = %w(
     debug
     rspec
+    rubocop
+    rubocop-performance
     vcr
     webmock
   )

@@ -52,6 +52,10 @@ jobs:
         ruby-version: '3.1'
         bundler-cache: true
 
+    - name: bundle exec rubocop
+      run: bundle exec rubocop
+      working-directory: updater
+
     - name: bundle exec rspec spec
       run: bundle exec rspec spec
       working-directory: updater
