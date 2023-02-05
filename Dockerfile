@@ -6,14 +6,14 @@
 # FROM dependabot/dependabot-core:0.215.0
 FROM dependabot/dependabot-core@sha256:3681373aeb07e29fdf30c7a03713195424636fd1cafd569c424a96af27d37735
 
-# Copy the Gemfile and Gemfile.lock
+# Copy core logic
+COPY dependabot-core dependabot-core/
+
+# Copy Gemfile and Gemfile.lock
 ARG CODE_DIR=/home/dependabot/dependabot-script
 RUN mkdir -p ${CODE_DIR}
 COPY --chown=dependabot:dependabot script/Gemfile script/Gemfile.lock ${CODE_DIR}/
 WORKDIR ${CODE_DIR}
-
-# Copy core logic
-COPY dependabot-core dependabot-core/
 
 # Install dependencies
 RUN bundle config set --local path "vendor" \
