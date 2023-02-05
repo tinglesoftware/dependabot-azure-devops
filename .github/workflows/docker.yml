@@ -28,6 +28,8 @@ jobs:
     env:
       IMAGE_NAME: 'dependabot-azure-devops'
       DOCKER_BUILDKIT: 1 # Enable Docker BuildKit
+      # $BUNDLE_GEMFILE must be set at the job level, so it is set for all steps
+      BUNDLE_GEMFILE: ${{ github.workspace }}/updater/Gemfile
 
     steps:
     - name: Checkout
