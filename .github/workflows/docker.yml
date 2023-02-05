@@ -46,6 +46,15 @@ jobs:
       with:
         useConfigFile: true
 
+    - name: Setup Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        bundler-cache: true
+
+    - name: bundle exec rspec spec
+      run: bundle exec rspec spec
+      working-directory: updater
+
     - name: Pull Docker base image & warm Docker cache
       run: docker pull "tingle/$IMAGE_NAME:latest"
 
@@ -67,13 +76,11 @@ jobs:
 
     - name: Push image to Docker Hub (latest)
       if: github.ref == 'refs/heads/main'
-      run: |
-        docker push "tingle/$IMAGE_NAME:latest"
+      run: docker push "tingle/$IMAGE_NAME:latest"
 
     - name: Push image to Docker Hub (FullSemVer)
       if: "!startsWith(github.ref, 'refs/pull')"
-      run: |
-        docker push "tingle/$IMAGE_NAME:$GITVERSION_FULLSEMVER"
+      run: docker push "tingle/$IMAGE_NAME:$GITVERSION_FULLSEMVER"
 
     - name: Push image to Docker Hub (major, minor)
       if: startsWith(github.ref, 'refs/tags')
