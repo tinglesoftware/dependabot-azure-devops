@@ -1,17 +1,17 @@
 PATH
-  remote: dependabot-core/bundler
+  remote: ../dependabot-core/bundler
   specs:
     dependabot-bundler (0.215.0)
       dependabot-common (= 0.215.0)
 
 PATH
-  remote: dependabot-core/cargo
+  remote: ../dependabot-core/cargo
   specs:
     dependabot-cargo (0.215.0)
       dependabot-common (= 0.215.0)
 
 PATH
-  remote: dependabot-core/common
+  remote: ../dependabot-core/common
   specs:
     dependabot-common (0.215.0)
       activesupport (>= 6.0.0)
@@ -30,87 +30,87 @@ PATH
       toml-rb (>= 1.1.2, < 3.0)
 
 PATH
-  remote: dependabot-core/composer
+  remote: ../dependabot-core/composer
   specs:
     dependabot-composer (0.215.0)
       dependabot-common (= 0.215.0)
 
 PATH
-  remote: dependabot-core/docker
+  remote: ../dependabot-core/docker
   specs:
     dependabot-docker (0.215.0)
       dependabot-common (= 0.215.0)
 
 PATH
-  remote: dependabot-core/elm
+  remote: ../dependabot-core/elm
   specs:
     dependabot-elm (0.215.0)
       dependabot-common (= 0.215.0)
 
 PATH
-  remote: dependabot-core/git_submodules
+  remote: ../dependabot-core/git_submodules
   specs:
     dependabot-git_submodules (0.215.0)
       dependabot-common (= 0.215.0)
       parseconfig (~> 1.0, < 1.1.0)
 
 PATH
-  remote: dependabot-core/github_actions
+  remote: ../dependabot-core/github_actions
   specs:
     dependabot-github_actions (0.215.0)
       dependabot-common (= 0.215.0)
 
 PATH
-  remote: dependabot-core/go_modules
+  remote: ../dependabot-core/go_modules
   specs:
     dependabot-go_modules (0.215.0)
       dependabot-common (= 0.215.0)
 
 PATH
-  remote: dependabot-core/gradle
+  remote: ../dependabot-core/gradle
   specs:
     dependabot-gradle (0.215.0)
       dependabot-common (= 0.215.0)
       dependabot-maven (= 0.215.0)
 
 PATH
-  remote: dependabot-core/hex
+  remote: ../dependabot-core/hex
   specs:
     dependabot-hex (0.215.0)
       dependabot-common (= 0.215.0)
 
 PATH
-  remote: dependabot-core/maven
+  remote: ../dependabot-core/maven
   specs:
     dependabot-maven (0.215.0)
       dependabot-common (= 0.215.0)
 
 PATH
-  remote: dependabot-core/npm_and_yarn
+  remote: ../dependabot-core/npm_and_yarn
   specs:
     dependabot-npm_and_yarn (0.215.0)
       dependabot-common (= 0.215.0)
 
 PATH
-  remote: dependabot-core/nuget
+  remote: ../dependabot-core/nuget
   specs:
     dependabot-nuget (0.215.0)
       dependabot-common (= 0.215.0)
 
 PATH
-  remote: dependabot-core/pub
+  remote: ../dependabot-core/pub
   specs:
     dependabot-pub (0.215.0)
       dependabot-common (= 0.215.0)
 
 PATH
-  remote: dependabot-core/python
+  remote: ../dependabot-core/python
   specs:
     dependabot-python (0.215.0)
       dependabot-common (= 0.215.0)
 
 PATH
-  remote: dependabot-core/terraform
+  remote: ../dependabot-core/terraform
   specs:
     dependabot-terraform (0.215.0)
       dependabot-common (= 0.215.0)

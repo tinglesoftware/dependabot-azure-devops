@@ -5,14 +5,8 @@
 
 version: 2
 updates:
-- package-ecosystem: "bundler" # See documentation for possible values
-  directory: "/script" # Location of package manifests
-  schedule:
-    interval: "weekly"
-    time: "04:00"
-  open-pull-requests-limit: 10
-- package-ecosystem: "docker" # See documentation for possible values
-  directory: "/script" # Location of package manifests
+- package-ecosystem: "github-actions" # See documentation for possible values
+  directory: "/" # Location of package manifests
   schedule:
     interval: "weekly"
     time: "04:00"
@@ -23,14 +17,20 @@ updates:
     interval: "weekly"
     time: "04:00"
   open-pull-requests-limit: 10
-- package-ecosystem: "npm" # See documentation for possible values
-  directory: "/extension" # Location of package manifests
+- package-ecosystem: "bundler" # See documentation for possible values
+  directory: "/script" # Location of package manifests
   schedule:
     interval: "weekly"
     time: "04:00"
   open-pull-requests-limit: 10
-- package-ecosystem: "github-actions" # See documentation for possible values
+- package-ecosystem: "docker" # See documentation for possible values
   directory: "/" # Location of package manifests
+  schedule:
+    interval: "weekly"
+    time: "04:00"
+  open-pull-requests-limit: 10
+- package-ecosystem: "npm" # See documentation for possible values
+  directory: "/extension" # Location of package manifests
   schedule:
     interval: "weekly"
     time: "04:00"
