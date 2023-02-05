@@ -8,6 +8,7 @@ on:
     - '*'
     paths:
     - "script/**"
+    - "Dockerfile"
     - ".github/workflows/docker.yml"
     - "!script/README.md"
   pull_request:
@@ -16,6 +17,7 @@ on:
     - main
     paths:
     - "script/**"
+    - "Dockerfile"
     - ".github/workflows/docker.yml"
     - "!script/README.md"
 
@@ -50,14 +52,14 @@ jobs:
     - name: Build image
       run: |
         docker build \
-        -f script/Dockerfile \
+        -f Dockerfile \
         -t "tingle/$IMAGE_NAME:latest" \
         -t "tingle/$IMAGE_NAME:$GITVERSION_FULLSEMVER" \
         -t "tingle/$IMAGE_NAME:$GITVERSION_MAJOR.$GITVERSION_MINOR" \
         -t "tingle/$IMAGE_NAME:$GITVERSION_MAJOR" \
         --cache-from tingle/$IMAGE_NAME:latest \
         --build-arg BUILDKIT_INLINE_CACHE=1 \
-        script
+        .
 
     - name: Log into registry (Docker Hub)
       if: ${{ (github.ref == 'refs/heads/main') || (!startsWith(github.ref, 'refs/pull')) || startsWith(github.ref, 'refs/tags') }}

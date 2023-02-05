@@ -9,7 +9,7 @@ FROM dependabot/dependabot-core@sha256:3681373aeb07e29fdf30c7a03713195424636fd1c
 # Copy the Gemfile and Gemfile.lock
 ARG CODE_DIR=/home/dependabot/dependabot-script
 RUN mkdir -p ${CODE_DIR}
-COPY --chown=dependabot:dependabot Gemfile Gemfile.lock ${CODE_DIR}/
+COPY --chown=dependabot:dependabot script/Gemfile script/Gemfile.lock ${CODE_DIR}/
 WORKDIR ${CODE_DIR}
 
 # Copy core logic
@@ -28,10 +28,10 @@ RUN bundle config set --local path "vendor" \
 # https://testdriven.io/blog/faster-ci-builds-with-docker-cache/
 
 # Copy the Ruby scripts
-COPY --chown=dependabot:dependabot update-script.rb ${CODE_DIR}
-COPY --chown=dependabot:dependabot azure_helpers.rb ${CODE_DIR}
-COPY --chown=dependabot:dependabot vulnerabilities.rb ${CODE_DIR}
-COPY --chown=dependabot:dependabot --chmod=755 entrypoint.sh ${CODE_DIR}
+COPY --chown=dependabot:dependabot script/update-script.rb ${CODE_DIR}
+COPY --chown=dependabot:dependabot script/azure_helpers.rb ${CODE_DIR}
+COPY --chown=dependabot:dependabot script/vulnerabilities.rb ${CODE_DIR}
+COPY --chown=dependabot:dependabot --chmod=755 script/entrypoint.sh ${CODE_DIR}
 
 # This entrypoint exists to solve specific setup problems.
 # It is only used with the extension and directly on Docker.

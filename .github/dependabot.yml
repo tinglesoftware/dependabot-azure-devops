@@ -12,7 +12,7 @@ updates:
     time: "04:00"
   open-pull-requests-limit: 10
 - package-ecosystem: "docker" # See documentation for possible values
-  directory: "/script" # Location of package manifests
+  directory: "/" # Location of package manifests
   schedule:
     interval: "weekly"
     time: "04:00"
