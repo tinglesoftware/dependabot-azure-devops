@@ -280,12 +280,17 @@ function parseRegistries(config: any): IDependabotRegistry[] {
       parsed["replaces-base"] = replacesBase;
     }
 
-    // In Ruby, the some credentials use 'registry' property/field name instead of 'url'
     if (url) {
-      var useRegistryProperty = type.includes("npm") || type.includes("docker"); // This may also apply for terraform but we don't have enough tests to know
+      // In Ruby, the some credentials use 'registry' property/field name instead of 'url'
+      // For simplicity sake, we check if the type contains 'registry'
+      // This may also apply for terraform but we don't have enough tests to know
 
-      parsed.url = useRegistryProperty ? null : url;
-      parsed.registry = useRegistryProperty ? url : null;
+      if (type.includes('registry')) { // works for npm_registry, docker_registry, and terraform_registry
+        parsed.registry = url;
+      }
+      else {
+        parsed.url = url;
+      }
     }
   });
   return registries;
