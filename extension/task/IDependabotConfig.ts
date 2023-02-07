@@ -135,13 +135,7 @@ export interface IDependabotRegistry {
   "replaces-base"?: string;
 }
 
-export type DependabotDependencyType =
-  | "direct"
-  | "all"
-  | "production"
-  | "development";
-
-export type DependabotPackageEcosystemType =
+export type DependabotPackageEcosystemType = // TODO: make use of this instead of switching in the task.json file
   | "bundler"
   | "cargo"
   | "composer"
@@ -158,10 +152,3 @@ export type DependabotPackageEcosystemType =
   | "nuget"
   | "pip"
   | "terraform";
-
-export type DependabotVersioningStrategyType =
-  | "lock-file-only"
-  | "auto"
-  | "widen"
-  | "increase"
-  | "increase-if-necessary";
