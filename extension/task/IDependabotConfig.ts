@@ -95,51 +95,50 @@ export interface IDependabotUpdateSchedule {
 }
 
 export interface IDependabotRegistry {
-  /**
-   * Identifies the type of registry
-   */
+  /** Identifies the type of registry*/
   type: string;
+
   /**
-   * The URL to use to access the dependencies in this registry.
-   * The protocol is optional. If not specified, `https://` is assumed.
+   * The URL to use to access the dependencies.
    * Dependabot adds or ignores trailing slashes as required.
-   */
-  url?: string;
-  /**
-   * The URL of the registry to use to access the dependencies in this registry.
    * The protocol is optional. If not specified, `https://` is assumed.
+   */
+  url?: string | null | undefined;
+  /**
+   * The URL of the registry to use to access the dependencies.
    * Dependabot adds or ignores trailing slashes as required.
+   * It should not have the scheme.
    */
-  registry?: string;
-  /**
-   * The username to access the registry
-   */
-  username?: string;
-  /**
-   *  A password for the username to access this registry
-   */
-  password?: string;
-  /**
-   *  An access key for this registry
-   */
-  key?: string;
-  /**
-   *  An access token for this registry
-   */
-  token?: string;
+  registry?: string | null | undefined;
+  /** The hostname for 'terraform_registry' types */
+  host?: string | null | undefined;
+
+  /** The username to access the registry */
+  username?: string | null | undefined;
+  /** A password for the username to access this registry */
+  password?: string | null | undefined;
+  /** An access key for this registry */
+  key?: string | null | undefined;
+  /** An access token for this registry */
+  token?: string | null | undefined;
+
+  /** Organization for 'hex_organization' types */
+  organization?: string | null | undefined;
+
+  /** Repository for 'hex_repository' types */
+  repo?: string | null | undefined;
+  /** Repository for 'hex_repository' types */
+  "auth-key"?: string | null | undefined;
+  /** Fingerprint of the public key for the Hex repository */
+  "public-key-fingerprint"?: string | null | undefined;
+
   /**
    * 	For registries with type: python-index,
    *  if the boolean value is `true`, pip resolves dependencies by using the specified URL
    *  rather than the base URL of the Python Package Index (by default https://pypi.org/simple).
    */
-  "replaces-base"?: string;
+  "replaces-base"?: boolean | null | undefined;
 }
-
-export type DependabotDependencyType =
-  | "direct"
-  | "all"
-  | "production"
-  | "development";
 
 export type DependabotPackageEcosystemType =
   | "bundler"
@@ -158,10 +157,3 @@ export type DependabotPackageEcosystemType =
   | "nuget"
   | "pip"
   | "terraform";
-
-export type DependabotVersioningStrategyType =
-  | "lock-file-only"
-  | "auto"
-  | "widen"
-  | "increase"
-  | "increase-if-necessary";

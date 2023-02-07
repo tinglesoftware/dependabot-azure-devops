@@ -2,7 +2,7 @@ import * as tl from "azure-pipelines-task-lib/task"
 import { ToolRunner } from "azure-pipelines-task-lib/toolrunner"
 import { IDependabotConfig, IDependabotUpdate } from "./IDependabotConfig";
 import getSharedVariables from "./utils/getSharedVariables";
-import parseConfigFile from "./utils/parseConfigFile";
+import { parseConfigFile } from "./utils/parseConfigFile";
 
 async function run() {
   try {
@@ -32,7 +32,7 @@ async function run() {
     const targetIds = variables.targetUpdateIds;
     if (targetIds && targetIds.length > 0) {
       for (const id of targetIds) {
-        updates.push(config.updates[id])
+        updates.push(config.updates[id]);
       }
     } else {
       updates = config.updates;
@@ -127,11 +127,9 @@ async function run() {
       }
 
       // Set the extra credentials
-      if (config.registries != undefined) {
-        if (config.registries.length > 0) {
-          let extraCredentials = JSON.stringify(config.registries);
-          dockerRunner.arg(["-e", `DEPENDABOT_EXTRA_CREDENTIALS=${extraCredentials}`]);
-        }
+      if (config.registries != undefined && config.registries.length > 0) {
+        let extraCredentials = JSON.stringify(config.registries, (k, v) => v === null ? undefined : v);
+        dockerRunner.arg(["-e", `DEPENDABOT_EXTRA_CREDENTIALS=${extraCredentials}`]);
       }
 
       // Set exception behaviour if true

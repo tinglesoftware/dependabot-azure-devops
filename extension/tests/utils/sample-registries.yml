@@ -1,0 +1,59 @@
+version: 2
+registries:
+  composer:
+    type: composer-repository
+    url: https://repo.packagist.com/example-company/
+    username: octocat
+    password: 'pwd_1234567890'
+  dockerhub:
+    type: docker-registry
+    url: https://registry.hub.docker.com
+    username: octocat
+    password: 'pwd_1234567890'
+    replaces-base: true
+  github-octocat:
+    type: git
+    url: https://github.com
+    username: x-access-token
+    password: 'pwd_1234567890'
+  github-hex-org:
+    type: hex-organization
+    organization: github
+    key: 'key_1234567890'
+  github-hex-repository:
+    type: hex-repository
+    repo: private-repo
+    url: https://private-repo.example.com
+    auth-key: 'ak_1234567890'
+    public-key-fingerprint: 'pkf_1234567890'
+  maven-artifactory:
+    type: maven-repository
+    url: https://artifactory.example.com
+    username: octocat
+    password: 'pwd_1234567890'
+    replaces-base: true
+  npm-github:
+    type: npm-registry
+    url: https://npm.pkg.github.com
+    token: 'tkn_1234567890'
+    replaces-base: true
+  nuget-azure-devops:
+    type: nuget-feed
+    url: https://pkgs.dev.azure.com/contoso/_packaging/My_Feed/nuget/v3/index.json
+    username: octocat@example.com
+    password: 'pwd_1234567890'
+  python-azure:
+    type: python-index
+    url: https://pkgs.dev.azure.com/octocat/_packaging/my-feed/pypi/example
+    username: octocat@example.com
+    password: 'pwd_1234567890'
+    replaces-base: true
+  ruby-github:
+    type: rubygems-server
+    url: https://rubygems.pkg.github.com/octocat/github_api
+    token: 'tkn_1234567890'
+    replaces-base: false
+  terraform-example:
+    type: terraform-registry
+    url: https://terraform.example.com
+    token: 'tkn_1234567890'
