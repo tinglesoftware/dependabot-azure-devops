@@ -2,7 +2,7 @@ import * as tl from "azure-pipelines-task-lib/task"
 import { ToolRunner } from "azure-pipelines-task-lib/toolrunner"
 import { IDependabotConfig, IDependabotUpdate } from "./IDependabotConfig";
 import getSharedVariables from "./utils/getSharedVariables";
-import parseConfigFile from "./utils/parseConfigFile";
+import { parseConfigFile } from "./utils/parseConfigFile";
 
 async function run() {
   try {

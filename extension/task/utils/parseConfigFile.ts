@@ -23,9 +23,7 @@ import axios from "axios";
  * @param variables the shared variables of the task
  * @returns {IDependabotConfig} config - the dependabot configuration
  */
-export default async function parseConfigFile(
-  variables: ISharedVariables
-): Promise<IDependabotConfig> {
+async function parseConfigFile(variables: ISharedVariables): Promise<IDependabotConfig> {
   const possibleFilePaths = [
     "/.github/dependabot.yaml",
     "/.github/dependabot.yml",
@@ -252,3 +250,5 @@ function parseRegistries(config: any): IDependabotRegistry[] {
   });
   return registries;
 }
+
+export { parseConfigFile, parseUpdates, parseRegistries, };
