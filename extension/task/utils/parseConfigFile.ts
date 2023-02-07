@@ -273,7 +273,6 @@ function parseRegistries(config: any): IDependabotRegistry[] {
     parsed.key = convertPlaceholder(registryConfig["key"]);
     parsed.token = convertPlaceholder(registryConfig["token"]);
 
-
     // add "replaces-base" if present
     var replacesBase = registryConfig["replaces-base"];
     if (replacesBase !== undefined) {
@@ -281,12 +280,15 @@ function parseRegistries(config: any): IDependabotRegistry[] {
     }
 
     if (url) {
-      // In Ruby, the some credentials use 'registry' property/field name instead of 'url'
-      // For simplicity sake, we check if the type contains 'registry'
-      // This may also apply for terraform but we don't have enough tests to know
+      // Some credentials do not use the 'url' property in the Ruby updater.
+      // npm_registry and docker_registry use 'registry' which should be stripped off the scheme.
+      // terraform_registry uses 'host' which is the hostname from the given URL.
 
-      if (type.includes('registry')) { // works for npm_registry, docker_registry, and terraform_registry
+      if (type === 'docker_registry' || type === 'npm_registry') {
         parsed.registry = url;
+      }
+      else if (type === 'terraform_registry') {
+        parsed.host = new URL(url).hostname;
       }
       else {
         parsed.url = url;
