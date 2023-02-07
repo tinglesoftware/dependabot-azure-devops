@@ -32,7 +32,7 @@ async function run() {
     const targetIds = variables.targetUpdateIds;
     if (targetIds && targetIds.length > 0) {
       for (const id of targetIds) {
-        updates.push(config.updates[id])
+        updates.push(config.updates[id]);
       }
     } else {
       updates = config.updates;
