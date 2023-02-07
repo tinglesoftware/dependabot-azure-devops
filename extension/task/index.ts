@@ -127,11 +127,9 @@ async function run() {
       }
 
       // Set the extra credentials
-      if (config.registries != undefined) {
-        if (config.registries.length > 0) {
-          let extraCredentials = JSON.stringify(config.registries, (k, v) => v === null ? undefined : v);
-          dockerRunner.arg(["-e", `DEPENDABOT_EXTRA_CREDENTIALS=${extraCredentials}`]);
-        }
+      if (config.registries != undefined && config.registries.length > 0) {
+        let extraCredentials = JSON.stringify(config.registries, (k, v) => v === null ? undefined : v);
+        dockerRunner.arg(["-e", `DEPENDABOT_EXTRA_CREDENTIALS=${extraCredentials}`]);
       }
 
       // Set exception behaviour if true

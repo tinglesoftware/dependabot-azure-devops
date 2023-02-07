@@ -214,41 +214,95 @@ function parseRegistries(config: any): IDependabotRegistry[] {
   Object.entries(rawRegistries).forEach((item) => {
     var registryConfigKey = item[0];
     var registryConfig = item[1];
-    var type = registryConfig["type"]?.replace("-", "_");
-    if (!type) {
-      // Consider checking against known values for the field
+
+    // parse the type
+    var rawType = registryConfig["type"]
+    if (!rawType) {
       throw new Error(
         `The value for 'type' in dependency registry config '${registryConfigKey}' is missing`
       );
     }
 
+    // ensure the type is a known one
+    if (!KnownRegistryTypes.includes(rawType)) {
+      throw new Error(
+        `The value '${rawType}' for 'type' in dependency registry config '${registryConfigKey}' is not among the supported values.`
+      );
+    }
+    var type = rawType?.replace("-", "_");
+
+    var parsed: IDependabotRegistry = { type: type, };
+    registries.push(parsed);
+
+    // handle special fields for 'hex-organization' types
+    if (type === 'hex_organization') {
+      var organization = registryConfig["organization"];
+      if (!organization) {
+        throw new Error(
+          `The value 'organization' in dependency registry config '${registryConfigKey}' is missing`
+        );
+      }
+      parsed.organization = organization;
+    }
+
+    // handle special fields for 'hex-repository' types
+    if (type === 'hex_repository') {
+      var repo = registryConfig["repo"];
+      if (!repo) {
+        throw new Error(
+          `The value 'repo' in dependency registry config '${registryConfigKey}' is missing`
+        );
+      }
+
+      parsed.repo = repo;
+      parsed["auth-key"] = registryConfig["auth-key"];
+      parsed["public-key-fingerprint"] = registryConfig["public-key-fingerprint"];
+    }
+
+    // parse the url
     var url = registryConfig["url"];
-    if (!url && type !== 'hex_organization' && type !== 'hex_repository') {
+    if (!url && type !== 'hex_organization') {
       throw new Error(
         `The value 'url' in dependency registry config '${registryConfigKey}' is missing`
       );
     }
 
+    // parse username, password, key, and token while replacing tokens where necessary
+    parsed.username = registryConfig["username"];
+    parsed.password = convertPlaceholder(registryConfig["password"]);
+    parsed.key = convertPlaceholder(registryConfig["key"]);
+    parsed.token = convertPlaceholder(registryConfig["token"]);
+
+
+    // add "replaces-base" if present
+    var replacesBase = registryConfig["replaces-base"];
+    if (replacesBase !== undefined) {
+      parsed["replaces-base"] = replacesBase;
+    }
+
     // In Ruby, the some credentials use 'registry' property/field name instead of 'url'
-    var useRegistryProperty = type.includes("npm") || type.includes("docker"); // This may also apply for terraform but we don't have enough tests to know
+    if (url) {
+      var useRegistryProperty = type.includes("npm") || type.includes("docker"); // This may also apply for terraform but we don't have enough tests to know
 
-    var dependabotRegistry: IDependabotRegistry = {
-      type: type,
-
-      url: useRegistryProperty ? null : url,
-      registry: useRegistryProperty ? url : null,
-
-      username: registryConfig["username"],
-      password: convertPlaceholder(registryConfig["password"]),
-      key: convertPlaceholder(registryConfig["key"]),
-      token: convertPlaceholder(registryConfig["token"]),
-
-      "replaces-base": registryConfig["replaces-base"],
-    };
-
-    registries.push(dependabotRegistry);
+      parsed.url = useRegistryProperty ? null : url;
+      parsed.registry = useRegistryProperty ? url : null;
+    }
   });
   return registries;
 }
+
+const KnownRegistryTypes = [
+  "composer-repository",
+  "docker-registry",
+  "git",
+  "hex-organization",
+  "hex-repository",
+  "maven-repository",
+  "npm-registry",
+  "nuget-feed",
+  "python-index",
+  "rubygems-server",
+  "terraform-registry",
+];
 
 export { parseConfigFile, parseUpdates, parseRegistries, };
