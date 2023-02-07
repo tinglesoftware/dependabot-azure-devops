@@ -51,7 +51,7 @@ updates:
 Note:
 
 1. `${{VARIABLE_NAME}}` notation is used liked described [here](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/managing-encrypted-secrets-for-dependabot)
-BUT the values will be used from Environment Variables in the pipeline/environment.
+BUT the values will be used from Environment Variables in the pipeline/environment. Template variables are not supported for this replacement.
 
 2. When using a token the notation should be `PAT:${{VARIABLE_NAME}}`. Otherwise the wrong authentication mechanism is used by dependabot, see [here](https://github.com/tinglesoftware/dependabot-azure-devops/issues/50).
 
