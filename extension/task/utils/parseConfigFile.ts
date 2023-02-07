@@ -223,7 +223,7 @@ function parseRegistries(config: any): IDependabotRegistry[] {
     }
 
     var url = registryConfig["url"];
-    if (!url) {
+    if (!url && type !== 'hex_organization' && type !== 'hex_repository') {
       throw new Error(
         `The value 'url' in dependency registry config '${registryConfigKey}' is missing`
       );

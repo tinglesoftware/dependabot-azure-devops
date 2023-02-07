@@ -16,6 +16,16 @@ registries:
     url: https://github.com
     username: x-access-token
     password: '1234567890'
+  github-hex-org:
+    type: hex-organization
+    organization: github
+    key: '1234567890'
+  github-hex-repository:
+    type: hex-repository
+    repo: private-repo
+    url: https://private-repo.example.com
+    auth-key: '1234567890'
+    public-key-fingerprint: '1234567890'
   maven-artifactory:
     type: maven-repository
     url: https://artifactory.example.com
@@ -47,13 +57,3 @@ registries:
     type: terraform-registry
     url: https://terraform.example.com
     token: '1234567890'
-  # github-hex-org:
-  #   type: hex-organization
-  #   organization: github
-  #   key: '1234567890'
-  # github-hex-repository:
-  #   type: hex-repository
-  #   repo: private-repo
-  #   url: https://private-repo.example.com
-  #   auth-key: '1234567890'
-  #   public-key-fingerprint: '1234567890'

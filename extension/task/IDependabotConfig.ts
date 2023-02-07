@@ -135,7 +135,7 @@ export interface IDependabotRegistry {
   "replaces-base"?: string;
 }
 
-export type DependabotPackageEcosystemType = // TODO: make use of this instead of switching in the task.json file
+export type DependabotPackageEcosystemType =
   | "bundler"
   | "cargo"
   | "composer"
