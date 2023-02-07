@@ -259,14 +259,6 @@ function parseRegistries(config: any): IDependabotRegistry[] {
       parsed["public-key-fingerprint"] = registryConfig["public-key-fingerprint"];
     }
 
-    // parse the url
-    var url = registryConfig["url"];
-    if (!url && type !== 'hex_organization') {
-      throw new Error(
-        `The value 'url' in dependency registry config '${registryConfigKey}' is missing`
-      );
-    }
-
     // parse username, password, key, and token while replacing tokens where necessary
     parsed.username = registryConfig["username"];
     parsed.password = convertPlaceholder(registryConfig["password"]);
@@ -279,13 +271,20 @@ function parseRegistries(config: any): IDependabotRegistry[] {
       parsed["replaces-base"] = replacesBase;
     }
 
+    // parse the url
+    var url = registryConfig["url"];
+    if (!url && type !== 'hex_organization') {
+      throw new Error(
+        `The value 'url' in dependency registry config '${registryConfigKey}' is missing`
+      );
+    }
     if (url) {
       // Some credentials do not use the 'url' property in the Ruby updater.
       // npm_registry and docker_registry use 'registry' which should be stripped off the scheme.
       // terraform_registry uses 'host' which is the hostname from the given URL.
 
       if (type === 'docker_registry' || type === 'npm_registry') {
-        parsed.registry = url;
+        parsed.registry = url.replace("https://", "").replace("http://", "");
       }
       else if (type === 'terraform_registry') {
         parsed.host = new URL(url).hostname;
