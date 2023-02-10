@@ -7,7 +7,7 @@ on:
     tags:
     - '*'
     paths:
-    - "script/**"
+    - "updater/**"
     - "Dockerfile"
     - ".github/workflows/docker.yml"
     - "!docs/**"
@@ -16,7 +16,7 @@ on:
     # Only trigger for PRs against `main` branch.
     - main
     paths:
-    - "script/**"
+    - "updater/**"
     - "Dockerfile"
     - ".github/workflows/docker.yml"
     - "!docs/**"

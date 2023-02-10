@@ -38,5 +38,4 @@ WORKDIR $DEPENDABOT_HOME/dependabot-updater
 # Hosted version does not allow this.
 ENTRYPOINT ["bin/entrypoint.sh"]
 
-# Run update script
 CMD ["bundle", "exec", "ruby", "bin/update-script.rb"]
