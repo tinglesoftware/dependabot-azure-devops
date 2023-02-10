@@ -30,4 +30,6 @@ coverage/
 .tool-versions
 .rspec_status
 .rdbg_history
+local-*.sh
+local/**.sh
 .idea
