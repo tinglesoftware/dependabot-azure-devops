@@ -73,10 +73,10 @@ jobs:
         -t "tingle/$IMAGE_NAME:$GITVERSION_FULLSEMVER" \
         -t "tingle/$IMAGE_NAME:$GITVERSION_MAJOR.$GITVERSION_MINOR" \
         -t "tingle/$IMAGE_NAME:$GITVERSION_MAJOR" \
-        -t "tingle/$IMAGE_NAME_GHCR:latest" \
-        -t "tingle/$IMAGE_NAME_GHCR:$GITVERSION_FULLSEMVER" \
-        -t "tingle/$IMAGE_NAME_GHCR:$GITVERSION_MAJOR.$GITVERSION_MINOR" \
-        -t "tingle/$IMAGE_NAME_GHCR:$GITVERSION_MAJOR" \
+        -t "tinglesoftware/$IMAGE_NAME_GHCR:latest" \
+        -t "tinglesoftware/$IMAGE_NAME_GHCR:$GITVERSION_FULLSEMVER" \
+        -t "tinglesoftware/$IMAGE_NAME_GHCR:$GITVERSION_MAJOR.$GITVERSION_MINOR" \
+        -t "tinglesoftware/$IMAGE_NAME_GHCR:$GITVERSION_MAJOR" \
         --cache-from tingle/$IMAGE_NAME:latest \
         --build-arg BUILDKIT_INLINE_CACHE=1 \
         .
