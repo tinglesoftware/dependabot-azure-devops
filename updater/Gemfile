@@ -2,7 +2,7 @@
 
 source "https://rubygems.org"
 
-git "https://github.com/dependabot/dependabot-core.git", :ref => "0672e3b" do
+git "https://github.com/dependabot/dependabot-core.git", ref: "0672e3b" do
   gem "dependabot-bundler"
   gem "dependabot-cargo"
   gem "dependabot-common"
