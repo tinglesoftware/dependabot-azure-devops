@@ -205,6 +205,7 @@
       "label": "Container registry override",
       "groupName": "advanced",
       "helpMarkDown": "The docker registry to use when pulling the docker container used by the task if needed. By default this will use docker hub. This can be useful if the container needs to come from an internal docker registry mirror or alternative source for testing. If the mirror requires authentication add a `docker login` task before this task. Example: `contoso.azurecr.io`",
+      "defaultValue": "ghcr.io",
       "required": false
     },
     {
@@ -212,7 +213,7 @@
       "label": "Docker Container repository",
       "type": "string",
       "helpMarkDown": "The docker container repository to use when pulling the docker container used by the task if needed. This can be useful if the default container requires customizations such as custom certs.",
-      "defaultValue": "tingle/dependabot-azure-devops",
+      "defaultValue": "tinglesoftware/dependabot-updater",
       "required": true,
       "groupName": "advanced"
     },
