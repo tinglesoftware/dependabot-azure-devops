@@ -14,13 +14,12 @@ PATH
   remote: ../dependabot-core/common
   specs:
     dependabot-common (0.215.0)
-      activesupport (>= 6.0.0)
       aws-sdk-codecommit (~> 1.28)
       aws-sdk-ecr (~> 1.5)
       bundler (>= 1.16, < 3.0.0)
       commonmarker (>= 0.20.1, < 0.24.0)
       docker_registry2 (~> 1.11, >= 1.11.0)
-      excon (~> 0.96, < 0.99)
+      excon (~> 0.96, < 0.100)
       faraday (= 2.7.4)
       faraday-retry (= 2.0.0)
       gitlab (= 4.19.0)
@@ -118,11 +117,6 @@ PATH
 GEM
   remote: https://rubygems.org/
   specs:
-    activesupport (7.0.4.2)
-      concurrent-ruby (~> 1.0, >= 1.0.2)
-      i18n (>= 1.6, < 2)
-      minitest (>= 5.1)
-      tzinfo (~> 2.0)
     addressable (2.8.1)
       public_suffix (>= 2.0.2, < 6.0)
     ast (2.4.2)
@@ -143,7 +137,6 @@ GEM
       aws-eventstream (~> 1, >= 1.0.2)
     citrus (3.0.2)
     commonmarker (0.23.8)
-    concurrent-ruby (1.2.0)
     crack (0.4.5)
       rexml
     diff-lcs (1.5.0)
@@ -168,15 +161,12 @@ GEM
     httparty (0.21.0)
       mini_mime (>= 1.0.0)
       multi_xml (>= 0.5.2)
-    i18n (1.12.0)
-      concurrent-ruby (~> 1.0)
     jmespath (1.6.2)
     json (2.6.3)
     mime-types (3.4.1)
       mime-types-data (~> 3.2015)
     mime-types-data (3.2022.0105)
     mini_mime (1.1.2)
-    minitest (5.17.0)
     multi_xml (0.6.0)
     netrc (0.11.0)
     nokogiri (1.14.1-arm64-darwin)
@@ -225,7 +215,7 @@ GEM
       unicode-display_width (>= 2.4.0, < 3.0)
     rubocop-ast (1.24.1)
       parser (>= 3.1.1.0)
-    rubocop-performance (1.15.2)
+    rubocop-performance (1.16.0)
       rubocop (>= 1.7.0, < 2.0)
       rubocop-ast (>= 0.4.0)
     ruby-progressbar (1.11.0)
@@ -237,8 +227,6 @@ GEM
       unicode-display_width (>= 1.1.1, < 3)
     toml-rb (2.2.0)
       citrus (~> 3.0, > 3.0)
-    tzinfo (2.0.6)
-      concurrent-ruby (~> 1.0)
     unf (0.1.4)
       unf_ext
     unf_ext (0.0.8.2)
@@ -273,7 +261,7 @@ DEPENDENCIES
   dependabot-terraform!
   rspec (~> 3.12)
   rubocop (~> 1.44.0)
-  rubocop-performance (~> 1.15.2)
+  rubocop-performance (~> 1.16.0)
   vcr (~> 6.1)
   webmock (~> 3.18)
 
