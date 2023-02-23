@@ -374,7 +374,7 @@ def peer_dependency_should_update_instead?(dependency_name, updated_deps, files,
   end
 end
 
-ActiveSupport::Notifications.subscribe(/excon/) do |*args|
+Dependabot::SimpleInstrumentor.subscribe do |*args|
   name = args.first
 
   payload = args.last
