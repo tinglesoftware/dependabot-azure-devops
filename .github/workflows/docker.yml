@@ -26,8 +26,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      IMAGE_NAME: 'dependabot-azure-devops'
-      IMAGE_NAME_GHCR: 'dependabot-updater'
+      IMAGE_NAME: 'dependabot-updater'
       DOCKER_BUILDKIT: 1 # Enable Docker BuildKit
       # $BUNDLE_GEMFILE must be set at the job level, so it is set for all steps
       BUNDLE_GEMFILE: ${{ github.workspace }}/updater/Gemfile
@@ -63,56 +62,34 @@ jobs:
       working-directory: updater
 
     - name: Pull Docker base image & warm Docker cache
-      run: docker pull "tingle/$IMAGE_NAME:latest"
+      run: docker pull "ghcr.io/tinglesoftware/$IMAGE_NAME:latest"
 
     - name: Build image
       run: |
         docker build \
         -f Dockerfile \
-        -t "tingle/$IMAGE_NAME:latest" \
-        -t "tingle/$IMAGE_NAME:$GITVERSION_FULLSEMVER" \
-        -t "tingle/$IMAGE_NAME:$GITVERSION_MAJOR.$GITVERSION_MINOR" \
-        -t "tingle/$IMAGE_NAME:$GITVERSION_MAJOR" \
-        -t "ghcr.io/tinglesoftware/$IMAGE_NAME_GHCR:latest" \
-        -t "ghcr.io/tinglesoftware/$IMAGE_NAME_GHCR:$GITVERSION_FULLSEMVER" \
-        -t "ghcr.io/tinglesoftware/$IMAGE_NAME_GHCR:$GITVERSION_MAJOR.$GITVERSION_MINOR" \
-        -t "ghcr.io/tinglesoftware/$IMAGE_NAME_GHCR:$GITVERSION_MAJOR" \
-        --cache-from tingle/$IMAGE_NAME:latest \
+        -t "ghcr.io/tinglesoftware/$IMAGE_NAME:latest" \
+        -t "ghcr.io/tinglesoftware/$IMAGE_NAME:$GITVERSION_FULLSEMVER" \
+        -t "ghcr.io/tinglesoftware/$IMAGE_NAME:$GITVERSION_MAJOR.$GITVERSION_MINOR" \
+        -t "ghcr.io/tinglesoftware/$IMAGE_NAME:$GITVERSION_MAJOR" \
+        --cache-from ghcr.io/tinglesoftware/$IMAGE_NAME:latest \
         --build-arg BUILDKIT_INLINE_CACHE=1 \
         .
 
-    - name: Log into registry (Docker Hub)
-      if: ${{ (github.ref == 'refs/heads/main') || (!startsWith(github.ref, 'refs/pull')) || startsWith(github.ref, 'refs/tags') }}
-      run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
-
-    - name: Log into registry (GHCR)
+    - name: Log into registry
       if: ${{ (github.ref == 'refs/heads/main') || (!startsWith(github.ref, 'refs/pull')) || startsWith(github.ref, 'refs/tags') }}
       run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login https://ghcr.io -u ${{ github.actor }} --password-stdin
 
-    - name: Push image to Docker Hub (latest)
+    - name: Push image (latest)
       if: github.ref == 'refs/heads/main'
-      run: docker push "tingle/$IMAGE_NAME:latest"
+      run: docker push "ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:latest"
 
-    - name: Push image to GHCR (latest)
-      if: github.ref == 'refs/heads/main'
-      run: docker push "ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME_GHCR:latest"
-
-    - name: Push image to Docker Hub (FullSemVer)
+    - name: Push image (FullSemVer)
       if: "!startsWith(github.ref, 'refs/pull')"
-      run: docker push "tingle/$IMAGE_NAME:$GITVERSION_FULLSEMVER"
+      run: docker push "ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:$GITVERSION_FULLSEMVER"
 
-    - name: Push image to GHCR (FullSemVer)
-      if: "!startsWith(github.ref, 'refs/pull')"
-      run: docker push "ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME_GHCR:$GITVERSION_FULLSEMVER"
-
-    - name: Push image to Docker Hub (major, minor)
+    - name: Push image (major, minor)
       if: startsWith(github.ref, 'refs/tags')
       run: |
-        docker push "tingle/$IMAGE_NAME:$GITVERSION_MAJOR.$GITVERSION_MINOR"
-        docker push "tingle/$IMAGE_NAME:$GITVERSION_MAJOR"
-
-    - name: Push image to GHCR (major, minor)
-      if: startsWith(github.ref, 'refs/tags')
-      run: |
-        docker push "ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME_GHCR:$GITVERSION_MAJOR.$GITVERSION_MINOR"
-        docker push "ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME_GHCR:$GITVERSION_MAJOR"
+        docker push "ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:$GITVERSION_MAJOR.$GITVERSION_MINOR"
+        docker push "ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:$GITVERSION_MAJOR"
