@@ -10,7 +10,6 @@ ENV DEPENDABOT_HOME /home/dependabot
 WORKDIR ${DEPENDABOT_HOME}
 
 COPY --chown=dependabot:dependabot updater/Gemfile updater/Gemfile.lock dependabot-updater/
-COPY --chown=dependabot:dependabot dependabot-core dependabot-core/
 
 WORKDIR $DEPENDABOT_HOME/dependabot-updater
 
@@ -30,8 +29,6 @@ RUN bundle config set --local path 'vendor' && \
 # Add project
 COPY --chown=dependabot:dependabot LICENSE $DEPENDABOT_HOME
 COPY --chown=dependabot:dependabot updater $DEPENDABOT_HOME/dependabot-updater
-
-WORKDIR $DEPENDABOT_HOME/dependabot-updater
 
 # This entrypoint exists to solve specific setup problems.
 # It is only used with the extension and directly on Docker.

@@ -11,12 +11,6 @@ updates:
     interval: "weekly"
     time: "04:00"
   open-pull-requests-limit: 10
-- package-ecosystem: "gitsubmodule" # See documentation for possible values
-  directory: "/" # Location of package manifests
-  schedule:
-    interval: "weekly"
-    time: "04:00"
-  open-pull-requests-limit: 10
 - package-ecosystem: "bundler" # See documentation for possible values
   directory: "/updater" # Location of package manifests
   schedule:

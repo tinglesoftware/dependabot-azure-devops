@@ -4,7 +4,6 @@ require: rubocop-performance
 AllCops:
   DisplayCopNames: true
   Exclude:
-    - "dependabot-core/**/*"
     - "../*/bin/**/*" # TODO: remove this once files in bin have been distributed
     - "updater/tmp/**/*"
     - "updater/spec/fixtures/**/*"
