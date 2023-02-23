@@ -1,4 +1,0 @@
-[submodule "dependabot-core"]
-	shallow = true
-	path = dependabot-core
-	url = https://github.com/dependabot/dependabot-core.git

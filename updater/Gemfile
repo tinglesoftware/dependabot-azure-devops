@@ -2,40 +2,31 @@
 
 source "https://rubygems.org"
 
-gem "dependabot-bundler", path: "../dependabot-core/bundler"
-gem "dependabot-cargo", path: "../dependabot-core/cargo"
-gem "dependabot-common", path: "../dependabot-core/common"
-gem "dependabot-composer", path: "../dependabot-core/composer"
-gem "dependabot-docker", path: "../dependabot-core/docker"
-gem "dependabot-elm", path: "../dependabot-core/elm"
-gem "dependabot-github_actions", path: "../dependabot-core/github_actions"
-gem "dependabot-git_submodules", path: "../dependabot-core/git_submodules"
-gem "dependabot-go_modules", path: "../dependabot-core/go_modules"
-gem "dependabot-gradle", path: "../dependabot-core/gradle"
-gem "dependabot-hex", path: "../dependabot-core/hex"
-gem "dependabot-maven", path: "../dependabot-core/maven"
-gem "dependabot-npm_and_yarn", path: "../dependabot-core/npm_and_yarn"
-gem "dependabot-nuget", path: "../dependabot-core/nuget"
-gem "dependabot-pub", path: "../dependabot-core/pub"
-gem "dependabot-python", path: "../dependabot-core/python"
-gem "dependabot-terraform", path: "../dependabot-core/terraform"
+git "https://github.com/dependabot/dependabot-core.git", :ref => "0672e3b" do
+  gem "dependabot-bundler"
+  gem "dependabot-cargo"
+  gem "dependabot-common"
+  gem "dependabot-composer"
+  gem "dependabot-docker"
+  gem "dependabot-elm"
+  gem "dependabot-github_actions"
+  gem "dependabot-git_submodules"
+  gem "dependabot-go_modules"
+  gem "dependabot-gradle"
+
+  gem "dependabot-hex"
+  gem "dependabot-maven"
+  gem "dependabot-npm_and_yarn"
+  gem "dependabot-nuget"
+  gem "dependabot-pub"
+  gem "dependabot-python"
+  gem "dependabot-terraform"
+end
 
 group :test do
-  common_gemspec = File.expand_path("../dependabot-core/common/dependabot-common.gemspec", __dir__)
-
-  deps_shared_with_core = %w(
-    rspec
-    rubocop
-    rubocop-performance
-    vcr
-    webmock
-  )
-
-  Dir.chdir(File.dirname(common_gemspec)) do
-    Gem::Specification.load(common_gemspec).development_dependencies.each do |dep|
-      next unless deps_shared_with_core.include?(dep.name)
-
-      gem dep.name, *dep.requirement.as_list
-    end
-  end
+  gem "rspec"
+  gem "rubocop"
+  gem "rubocop-performance"
+  gem "vcr"
+  gem "webmock"
 end
