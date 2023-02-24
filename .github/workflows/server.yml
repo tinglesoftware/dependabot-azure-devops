@@ -1,0 +1,131 @@
+name: Build and Publish
+
+on:
+  push:
+    branches:
+    - main
+    tags:
+    - '*'
+    paths:
+    - "server/**"
+    - ".github/workflows/server.yml"
+    - "!docs/**"
+  pull_request:
+    branches:
+    # Only trigger for PRs against `main` branch.
+    - main
+    paths:
+    - "server/**"
+    - ".github/workflows/server.yml"
+    - "!docs/**"
+
+jobs:
+  Build:
+    runs-on: ubuntu-latest
+    env:
+      buildConfiguration: 'Release'
+      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+      IMAGE_NAME: 'dependabot-server'
+      DOCKER_BUILDKIT: 1 # Enable Docker BuildKit
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0 # Required for GitVersion
+
+    - name: Install GitVersion
+      uses: gittools/actions/gitversion/setup@v0
+      with:
+        versionSpec: '5.x'
+
+    - name: Determine Version
+      uses: gittools/actions/gitversion/execute@v0
+      with:
+        useConfigFile: true
+
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '7.x'
+        source-url: ${{ secrets.PRIVATE_FEED_URL }}
+      env:
+        NUGET_AUTH_TOKEN: ${{ secrets.PRIVATE_FEED_API_KEY }}
+
+    - name: Test
+      run: dotnet test -c $buildConfiguration --verbosity normal --collect "Code coverage"
+
+    - name: Publish
+      run: |
+        dotnet publish \
+        $GITHUB_WORKSPACE/Tingle.Dependabot/Tingle.Dependabot.csproj \
+        -c $buildConfiguration \
+        -o $GITHUB_WORKSPACE/drop/Tingle.Dependabot
+
+    - name: Replace tokens
+      uses: cschleiden/replace-tokens@v1
+      with:
+        files: '["${{ github.workspace }}/main.bicep"]'
+
+    - name: Build bicep file
+      uses: azure/CLI@v1
+      with:
+        inlineScript: |
+          cp $GITHUB_WORKSPACE/main.bicep $GITHUB_WORKSPACE/drop/main.bicep
+          az bicep build --file main.bicep --outfile $GITHUB_WORKSPACE/drop/main.json
+
+    - name: Pull Docker base image & warm Docker cache
+      run: docker pull "ghcr.io/tinglesoftware/$IMAGE_NAME:latest"
+      continue-on-error: true # TODO: remove after the first run
+
+    - name: Build image
+      run: |
+        docker build \
+        -f Tingle.Dependabot/Dockerfile.CI \
+        --label com.github.image.run.id=$GITHUB_RUN_ID \
+        --label com.github.image.run.number=$GITHUB_RUN_NUMBER \
+        --label com.github.image.job.id=$GITHUB_JOB \
+        --label com.github.image.source.sha=$GITHUB_SHA \
+        --label com.github.image.source.branch=$GITHUB_REF \
+        -t "ghcr.io/tinglesoftware/$IMAGE_NAME:latest" \
+        -t "ghcr.io/tinglesoftware/$IMAGE_NAME:$GITVERSION_NUGETVERSIONV2" \
+        -t "ghcr.io/tinglesoftware/$IMAGE_NAME:$GITVERSION_MAJOR.$GITVERSION_MINOR" \
+        -t "ghcr.io/tinglesoftware/$IMAGE_NAME:$GITVERSION_MAJOR" \
+        --cache-from ghcr.io/tinglesoftware/$IMAGE_NAME:latest \
+        --build-arg BUILDKIT_INLINE_CACHE=1 \
+        $GITHUB_WORKSPACE/drop/Tingle.Dependabot
+
+    - name: Log into registry
+      if: ${{ (github.ref == 'refs/heads/main') || (!startsWith(github.ref, 'refs/pull')) || startsWith(github.ref, 'refs/tags') }}
+      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login https://ghcr.io -u ${{ github.actor }} --password-stdin
+
+    - name: Push image (latest)
+      if: github.ref == 'refs/heads/main'
+      run: docker push "ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:latest"
+
+    - name: Push image (NuGetVersionV2)
+      if: "!startsWith(github.ref, 'refs/pull')"
+      run: docker push "ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:$GITVERSION_NUGETVERSIONV2"
+
+    - name: Push image (major, minor)
+      if: startsWith(github.ref, 'refs/tags')
+      run: |
+        docker push "ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:$GITVERSION_MAJOR.$GITVERSION_MINOR"
+        docker push "ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:$GITVERSION_MAJOR"
+
+    - name: Publish Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        path: ${{ github.workspace }}/drop/*
+        name: drop
+
+    - name: Upload Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: ncipollo/release-action@v1
+      with:
+        artifacts: >
+          ${{ github.workspace }}/drop/main.bicep,
+          ${{ github.workspace }}/drop/main.json
+        token: ${{ secrets.GITHUB_TOKEN }}
+        draft: true
+        allowUpdates: true
