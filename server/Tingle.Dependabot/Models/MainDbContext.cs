@@ -21,7 +21,7 @@ public class MainDbContext : DbContext, IDataProtectionKeyContext
             b.HasIndex(r => r.Created).IsDescending(); // faster filtering
             b.HasIndex(r => r.ProviderId).IsUnique();
 
-            b.OwnsMany(r => r.Updates).ToJson();
+            b.Property(r => r.Updates).HasJsonConversion();
             b.OwnsMany(r => r.Registries).ToJson();
         });
 
