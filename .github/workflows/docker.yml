@@ -67,6 +67,11 @@ jobs:
       run: |
         docker build \
         -f Dockerfile \
+        --label com.github.image.run.id=$GITHUB_RUN_ID \
+        --label com.github.image.run.number=$GITHUB_RUN_NUMBER \
+        --label com.github.image.job.id=$GITHUB_JOB \
+        --label com.github.image.source.sha=$GITHUB_SHA \
+        --label com.github.image.source.branch=$GITHUB_REF \
         -t "ghcr.io/tinglesoftware/$IMAGE_NAME:latest" \
         -t "ghcr.io/tinglesoftware/$IMAGE_NAME:$GITVERSION_FULLSEMVER" \
         -t "ghcr.io/tinglesoftware/$IMAGE_NAME:$GITVERSION_MAJOR.$GITVERSION_MINOR" \
