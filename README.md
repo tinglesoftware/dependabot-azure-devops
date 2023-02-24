@@ -2,7 +2,7 @@
 
 This repository contains tools for updating dependencies in Azure DevOps repositories using [Dependabot](https://dependabot.com).
 
-![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/tinglesoftware/dependabot-azure-devops/docker.yml?branch=main&style=flat-square)
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/tinglesoftware/dependabot-azure-devops/updater.yml?branch=main&style=flat-square)
 [![Release](https://img.shields.io/github/release/tinglesoftware/dependabot-azure-devops.svg?style=flat-square)](https://github.com/tinglesoftware/dependabot-azure-devops/releases/latest)
 [![license](https://img.shields.io/github/license/tinglesoftware/dependabot-azure-devops.svg?style=flat-square)](LICENSE)
 
@@ -66,7 +66,7 @@ A GitHub access token with `public_repo` access is required to perform the GitHu
 
 ## Kubernetes CronJob
 
-A Kubernetes CronJobs is a useful resource for running tasks (a.k.a Jobs) on a recurring schedule. For more information on them read the [documentation](https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/). Using the Docker image, we can create a CronJob and have it run periodically. The [environment variables](./docs/docker.md#environment-variables) are supplied in the job template but can be stored in a [ConfigMap](https://kubernetes.io/docs/concepts/configuration/configmap/) for ease of reuse.
+A Kubernetes CronJobs is a useful resource for running tasks (a.k.a Jobs) on a recurring schedule. For more information on them read the [documentation](https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/). Using the updater docker image, we can create a CronJob and have it run periodically. The [environment variables](./docs/updater.md#environment-variables) are supplied in the job template but can be stored in a [ConfigMap](https://kubernetes.io/docs/concepts/configuration/configmap/) for ease of reuse.
 
 Use the [template provided](./cronjob-template.yaml) and replace the parameters in curly braces (e.g. replace `{{azure_organization}}` with the actual value for your organization), then deploy it. Be sure to replace the `{{k8s_schedule}}` variable with the desired schedule as per the [Cron format](https://en.wikipedia.org/wiki/Cron).
 

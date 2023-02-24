@@ -1,4 +1,4 @@
-name: Docker
+name: Updater
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
     paths:
     - "updater/**"
     - "Dockerfile"
-    - ".github/workflows/docker.yml"
+    - ".github/workflows/updater.yml"
     - "!docs/**"
   pull_request:
     branches:
@@ -18,11 +18,11 @@ on:
     paths:
     - "updater/**"
     - "Dockerfile"
-    - ".github/workflows/docker.yml"
+    - ".github/workflows/updater.yml"
     - "!docs/**"
 
 jobs:
-  dockerize:
+  Build:
     runs-on: ubuntu-latest
 
     env:
