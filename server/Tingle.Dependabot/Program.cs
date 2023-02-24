@@ -70,11 +70,6 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.AllowTrailingCommas = true;
     options.SerializerOptions.ReadCommentHandling = JsonCommentHandling.Skip;
-
-    options.SerializerOptions.Converters.Add(
-        new Tingle.Extensions.Json.JsonStringEnumMemberConverter(
-            namingPolicy: options.SerializerOptions.PropertyNamingPolicy,
-            allowIntegerValues: true));
 });
 builder.Services.AddNotificationsHandler();
 builder.Services.AddWorkflowServices(builder.Configuration.GetSection("Workflow"));

@@ -212,6 +212,7 @@ public class AzureDevOpsEventRepositoryProject
     public string? Url { get; set; }
 }
 
+[JsonConverter(typeof(JsonStringEnumMemberConverter))]
 public enum AzureDevOpsEventType
 {
     /// <summary>Code pushed</summary>

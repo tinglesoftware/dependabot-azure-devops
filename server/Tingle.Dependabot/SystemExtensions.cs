@@ -1,6 +1,8 @@
-﻿namespace System.Collections.Generic;
+﻿using System.Runtime.Serialization;
 
-internal static class CollectionExtensions
+namespace System;
+
+internal static class SystemExtensions
 {
     /// <summary>
     /// Adds an element with the provided key and value,
@@ -23,5 +25,21 @@ internal static class CollectionExtensions
         }
 
         return dictionary;
+    }
+
+    /// <summary>Gets the value declared on the member using <see cref="EnumMemberAttribute"/> or the default.</summary>
+    /// <typeparam name="T">The <see cref="Type"/> of the enum.</typeparam>
+    /// <param name="value">The value of the enum member/field.</param>
+    public static string GetEnumMemberAttrValueOrDefault<T>(this T value) where T : struct, Enum
+    {
+        var type = typeof(T);
+        if (!type.IsEnum) throw new InvalidOperationException("Only enum types are allowed.");
+
+        var mi = type.GetMember(value.ToString()!);
+        var attr = mi.FirstOrDefault()?.GetCustomAttributes(false)
+                     .OfType<EnumMemberAttribute>()
+                     .FirstOrDefault();
+
+        return attr?.Value ?? value.ToString()!.ToLowerInvariant();
     }
 }
