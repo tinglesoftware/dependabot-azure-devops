@@ -48,9 +48,6 @@ jobs:
       uses: actions/setup-dotnet@v3
       with:
         dotnet-version: '7.x'
-        source-url: ${{ secrets.PRIVATE_FEED_URL }}
-      env:
-        NUGET_AUTH_TOKEN: ${{ secrets.PRIVATE_FEED_API_KEY }}
 
     - name: Test
       run: dotnet test -c $buildConfiguration --verbosity normal --collect "Code coverage"
