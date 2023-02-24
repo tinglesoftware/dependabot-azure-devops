@@ -671,7 +671,12 @@ dependencies.select(&:top_level?).each do |dep|
         commit_message_options: $update_config.commit_message_options.to_h,
         github_redirection_service: Dependabot::PullRequestCreator::DEFAULT_GITHUB_REDIRECTION_SERVICE
       ).message
-      puts "Skipping creating/updating Pull Request. Title: #{msg.pr_name}"
+      puts "Skipping creating/updating Pull Request."
+      puts "Title: #{msg.pr_name}"
+      puts "Description:\r\n#{msg.pr_message}\r\n"
+      puts "Commit:\r\n#{msg.commit_message}\r\n"
+      puts "------------------------"
+      puts ""
       pull_requests_count += 1
       next
     end
