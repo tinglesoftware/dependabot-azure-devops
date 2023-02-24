@@ -294,6 +294,9 @@ function parseRegistries(config: any): IDependabotRegistry[] {
       else if (type === 'terraform_registry') {
         parsed.host = new URL(url).hostname;
       }
+      else if (type === 'python_index') {
+        parsed["index-url"] = url;
+      }
       else {
         parsed.url = url;
       }

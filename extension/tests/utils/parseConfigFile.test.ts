@@ -13,6 +13,7 @@ describe("Parse registries", () => {
     var registry = registries[0];
     expect(registry.type).toBe('composer_repository');
     expect(registry.url).toBe('https://repo.packagist.com/example-company/');
+    expect(registry["index-url"]).toBe(undefined);
     expect(registry.registry).toBe(undefined);
     expect(registry.host).toBe(undefined);
     expect(registry.key).toBe(undefined);
@@ -29,6 +30,7 @@ describe("Parse registries", () => {
     registry = registries[1];
     expect(registry.type).toBe('docker_registry');
     expect(registry.url).toBe(undefined);
+    expect(registry["index-url"]).toBe(undefined);
     expect(registry.registry).toBe('registry.hub.docker.com');
     expect(registry.host).toBe(undefined);
     expect(registry.key).toBe(undefined);
@@ -45,6 +47,7 @@ describe("Parse registries", () => {
     registry = registries[2];
     expect(registry.type).toBe('git');
     expect(registry.url).toBe('https://github.com');
+    expect(registry["index-url"]).toBe(undefined);
     expect(registry.registry).toBe(undefined);
     expect(registry.host).toBe(undefined);
     expect(registry.key).toBe(undefined);
@@ -61,6 +64,7 @@ describe("Parse registries", () => {
     registry = registries[3];
     expect(registry.type).toBe('hex_organization');
     expect(registry.url).toBe(undefined);
+    expect(registry["index-url"]).toBe(undefined);
     expect(registry.registry).toBe(undefined);
     expect(registry.host).toBe(undefined);
     expect(registry.key).toBe('key_1234567890');
@@ -93,6 +97,7 @@ describe("Parse registries", () => {
     registry = registries[5];
     expect(registry.type).toBe('maven_repository');
     expect(registry.url).toBe('https://artifactory.example.com');
+    expect(registry["index-url"]).toBe(undefined);
     expect(registry.registry).toBe(undefined);
     expect(registry.host).toBe(undefined);
     expect(registry.key).toBe(undefined);
@@ -109,6 +114,7 @@ describe("Parse registries", () => {
     registry = registries[6];
     expect(registry.type).toBe('npm_registry');
     expect(registry.url).toBe(undefined);
+    expect(registry["index-url"]).toBe(undefined);
     expect(registry.registry).toBe('npm.pkg.github.com');
     expect(registry.host).toBe(undefined);
     expect(registry.key).toBe(undefined);
@@ -125,6 +131,7 @@ describe("Parse registries", () => {
     registry = registries[7];
     expect(registry.type).toBe('nuget_feed');
     expect(registry.url).toBe('https://pkgs.dev.azure.com/contoso/_packaging/My_Feed/nuget/v3/index.json');
+    expect(registry["index-url"]).toBe(undefined);
     expect(registry.registry).toBe(undefined);
     expect(registry.host).toBe(undefined);
     expect(registry.key).toBe(undefined);
@@ -140,7 +147,8 @@ describe("Parse registries", () => {
     // python-index
     registry = registries[8];
     expect(registry.type).toBe('python_index');
-    expect(registry.url).toBe('https://pkgs.dev.azure.com/octocat/_packaging/my-feed/pypi/example');
+    expect(registry.url).toBe(undefined);
+    expect(registry["index-url"]).toBe('https://pkgs.dev.azure.com/octocat/_packaging/my-feed/pypi/example');
     expect(registry.registry).toBe(undefined);
     expect(registry.host).toBe(undefined);
     expect(registry.key).toBe(undefined);
@@ -157,6 +165,7 @@ describe("Parse registries", () => {
     registry = registries[9];
     expect(registry.type).toBe('rubygems_server');
     expect(registry.url).toBe('https://rubygems.pkg.github.com/octocat/github_api');
+    expect(registry["index-url"]).toBe(undefined);
     expect(registry.registry).toBe(undefined);
     expect(registry.host).toBe(undefined);
     expect(registry.key).toBe(undefined);
@@ -173,6 +182,7 @@ describe("Parse registries", () => {
     registry = registries[10];
     expect(registry.type).toBe('terraform_registry');
     expect(registry.url).toBe(undefined);
+    expect(registry["index-url"]).toBe(undefined);
     expect(registry.registry).toBe(undefined);
     expect(registry.host).toBe('terraform.example.com');
     expect(registry.key).toBe(undefined);

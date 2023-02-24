@@ -104,6 +104,8 @@ export interface IDependabotRegistry {
    * The protocol is optional. If not specified, `https://` is assumed.
    */
   url?: string | null | undefined;
+  "index-url"?: string | null | undefined; // only flor python_index
+
   /**
    * The URL of the registry to use to access the dependencies.
    * Dependabot adds or ignores trailing slashes as required.
