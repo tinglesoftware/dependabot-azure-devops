@@ -7,22 +7,21 @@ on:
 
 jobs:
   build:
-
-    strategy:
-      matrix:
-        package-name:
-        - "dependabot-updater"
-        - "dependabot-server"
-
     runs-on: ubuntu-latest
 
     steps:
-    - name: Delete old packages
+    - name: Delete old dependabot-updater images
       uses: actions/delete-package-versions@v4
       with:
-        owner: ${{ env.repository_owner }}
-        repo: ${{ github.event.repository.name }}
-        token: ${{ secrets.GITHUB_TOKEN }}
-        package-name: ${{ matrix.package-name }}
+        package-name: 'dependabot-updater'
+        package-type: 'container'
         min-versions-to-keep: 20
-        delete-only-pre-release-versions: true
+        delete-only-pre-release-versions: "true"
+
+    - name: Delete old dependabot-server images
+      uses: actions/delete-package-versions@v4
+      with:
+        package-name: 'dependabot-server'
+        package-type: 'container'
+        min-versions-to-keep: 20
+        delete-only-pre-release-versions: "true"
