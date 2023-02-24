@@ -1,4 +1,4 @@
-name: cleanup
+name: Cleanup
 
 on:
   workflow_dispatch:
