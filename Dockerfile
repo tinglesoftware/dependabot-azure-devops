@@ -3,8 +3,8 @@
 # When the changes to this repository are no longer many/major,
 # we can switch back to using the tagged versions.
 
-# FROM dependabot/dependabot-core:0.215.0
-FROM dependabot/dependabot-core@sha256:3681373aeb07e29fdf30c7a03713195424636fd1cafd569c424a96af27d37735
+# FROM ghcr.io/dependabot/dependabot-core:0.215.0
+FROM ghcr.io/dependabot/dependabot-core@sha256:3681373aeb07e29fdf30c7a03713195424636fd1cafd569c424a96af27d37735
 
 ENV DEPENDABOT_HOME /home/dependabot
 WORKDIR ${DEPENDABOT_HOME}
