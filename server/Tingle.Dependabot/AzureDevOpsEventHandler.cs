@@ -10,13 +10,11 @@ namespace Tingle.Dependabot;
 internal class AzureDevOpsEventHandler
 {
     private readonly IEventPublisher publisher;
-    private readonly JsonOptions jsonOptions;
     private readonly ILogger logger;
 
-    public AzureDevOpsEventHandler(IEventPublisher publisher, IOptions<JsonOptions> jsonOptions, ILogger<AzureDevOpsEventHandler> logger)
+    public AzureDevOpsEventHandler(IEventPublisher publisher, ILogger<AzureDevOpsEventHandler> logger)
     {
         this.publisher = publisher ?? throw new ArgumentNullException(nameof(publisher));
-        this.jsonOptions = jsonOptions?.Value ?? throw new ArgumentNullException(nameof(jsonOptions));
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -30,7 +28,7 @@ internal class AzureDevOpsEventHandler
 
         if (type is AzureDevOpsEventType.GitPush)
         {
-            var resource = JsonSerializer.Deserialize<AzureDevOpsEventCodePushResource>(model.Resource, jsonOptions.SerializerOptions)!;
+            var resource = JsonSerializer.Deserialize<AzureDevOpsEventCodePushResource>(model.Resource)!;
             var adoRepository = resource.Repository!;
             var adoRepositoryId = adoRepository.Id;
             var defaultBranch = adoRepository.DefaultBranch;
@@ -46,7 +44,7 @@ internal class AzureDevOpsEventHandler
         }
         else if (type is AzureDevOpsEventType.GitPullRequestUpdated or AzureDevOpsEventType.GitPullRequestMerged)
         {
-            var resource = JsonSerializer.Deserialize<AzureDevOpsEventPullRequestResource>(model.Resource, jsonOptions.SerializerOptions)!;
+            var resource = JsonSerializer.Deserialize<AzureDevOpsEventPullRequestResource>(model.Resource)!;
             var adoRepository = resource.Repository!;
             var prId = resource.PullRequestId;
             var status = resource.Status;
@@ -74,7 +72,7 @@ internal class AzureDevOpsEventHandler
         }
         else if (type is AzureDevOpsEventType.GitPullRequestCommentEvent)
         {
-            var resource = JsonSerializer.Deserialize<AzureDevOpsEventPullRequestCommentEventResource>(model.Resource, jsonOptions.SerializerOptions)!;
+            var resource = JsonSerializer.Deserialize<AzureDevOpsEventPullRequestCommentEventResource>(model.Resource)!;
             var comment = resource.Comment!;
             var pr = resource.PullRequest!;
             var adoRepository = pr.Repository!;

@@ -4,7 +4,6 @@ using System.ComponentModel.DataAnnotations;
 using Tingle.Dependabot.Events;
 using Tingle.Dependabot.Models;
 using Tingle.EventBus;
-using Tingle.Extensions;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -150,7 +149,7 @@ internal class Synchronizer
         {
             repository = new Repository
             {
-                Id = Ksuid.Generate(),
+                Id = Guid.NewGuid().ToString("n"),
                 Created = DateTimeOffset.UtcNow,
                 ProviderId = providerInfo.Id,
             };

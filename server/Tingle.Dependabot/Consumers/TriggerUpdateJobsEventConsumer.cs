@@ -3,7 +3,6 @@ using Tingle.Dependabot.Events;
 using Tingle.Dependabot.Models;
 using Tingle.Dependabot.Workflow;
 using Tingle.EventBus;
-using Tingle.Extensions;
 
 namespace Tingle.Dependabot.Consumers;
 
@@ -73,7 +72,7 @@ internal class TriggerUpdateJobsEventConsumer : IEventConsumer<TriggerUpdateJobs
                 // create the job
                 job = new UpdateJob
                 {
-                    Id = SequenceNumber.Generate().ToString(),
+                    Id = FlakeId.Id.Create().ToString(),
 
                     Created = DateTimeOffset.UtcNow,
                     Status = UpdateJobStatus.Scheduled,
@@ -87,7 +86,7 @@ internal class TriggerUpdateJobsEventConsumer : IEventConsumer<TriggerUpdateJobs
                     PackageEcosystem = ecosystem,
                     Directory = update.Directory,
                     Resources = resources,
-                    AuthKey = Keygen.Create(25),
+                    AuthKey = Guid.NewGuid().ToString("n"),
 
                     Start = null,
                     End = null,

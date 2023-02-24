@@ -150,6 +150,7 @@ public class DependabotRegistry
     public string? PublicKeyFingerprint { get; set; }
 }
 
+[JsonConverter(typeof(JsonStringEnumMemberConverter))]
 public enum DependabotPackageEcosystem
 {
     Bundler,
@@ -186,6 +187,7 @@ public enum DependabotDependencyType { Direct, All, Production, Development, }
 public enum DependabotRebaseStrategy { Disabled, Auto, }
 public enum DependabotInsecureExternalCodeExecution { Allow, Deny, }
 
+[JsonConverter(typeof(JsonStringEnumMemberConverter))]
 public enum DependabotVersioningStrategy
 {
     Auto,

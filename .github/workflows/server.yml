@@ -48,9 +48,6 @@ jobs:
       uses: actions/setup-dotnet@v3
       with:
         dotnet-version: '7.x'
-        source-url: ${{ secrets.PRIVATE_FEED_URL }}
-      env:
-        NUGET_AUTH_TOKEN: ${{ secrets.PRIVATE_FEED_API_KEY }}
 
     - name: Test
       run: dotnet test -c $buildConfiguration --verbosity normal --collect "Code coverage"
@@ -76,7 +73,6 @@ jobs:
 
     - name: Pull Docker base image & warm Docker cache
       run: docker pull "ghcr.io/tinglesoftware/$IMAGE_NAME:latest"
-      continue-on-error: true # TODO: remove after the first run
 
     - name: Build image
       run: |

@@ -222,14 +222,6 @@ public class AzureDevOpsEventHandlerTests
                 services.AddNotificationsHandler();
                 services.AddSingleton<AzureDevOpsEventHandler, ModifiedAzureDevOpsEventHandler>();
 
-                services.ConfigureHttpJsonOptions(options =>
-                {
-                    options.SerializerOptions.Converters.Add(
-                        new Extensions.Json.JsonStringEnumMemberConverter(
-                            namingPolicy: options.SerializerOptions.PropertyNamingPolicy,
-                            allowIntegerValues: true));
-                });
-
                 services.AddAuthentication()
                         .AddBasic<BasicUserValidationService>(AuthConstants.SchemeNameServiceHooks, options => options.Realm = "Dependabot");
 
@@ -285,8 +277,8 @@ public class AzureDevOpsEventHandlerTests
 
     class ModifiedAzureDevOpsEventHandler : AzureDevOpsEventHandler
     {
-        public ModifiedAzureDevOpsEventHandler(IEventPublisher publisher, IOptions<JsonOptions> jsonOptions, ILogger<AzureDevOpsEventHandler> logger)
-            : base(publisher, jsonOptions, logger) { }
+        public ModifiedAzureDevOpsEventHandler(IEventPublisher publisher, ILogger<AzureDevOpsEventHandler> logger)
+            : base(publisher, logger) { }
 
         public List<AzureDevOpsEvent> Calls { get; } = new();
 

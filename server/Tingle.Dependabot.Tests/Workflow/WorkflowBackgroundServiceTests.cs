@@ -7,7 +7,6 @@ using Tingle.Dependabot.Models;
 using Tingle.Dependabot.Workflow;
 using Tingle.EventBus;
 using Tingle.EventBus.Transports.InMemory;
-using Tingle.Extensions;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -112,7 +111,7 @@ public class WorkflowBackgroundServiceTests
                 Created = DateTimeOffset.UtcNow.AddMinutes(-19),
                 Directory = "/",
                 Resources = new(0.25, 0.2),
-                AuthKey = Keygen.Create(25),
+                AuthKey = Guid.NewGuid().ToString("n"),
                 Status = UpdateJobStatus.Succeeded,
             });
             await context.UpdateJobs.AddAsync(new UpdateJob
@@ -123,7 +122,7 @@ public class WorkflowBackgroundServiceTests
                 Created = DateTimeOffset.UtcNow.AddHours(-100),
                 Directory = "/",
                 Resources = new(0.25, 0.2),
-                AuthKey = Keygen.Create(25),
+                AuthKey = Guid.NewGuid().ToString("n"),
                 Status = UpdateJobStatus.Succeeded,
             });
             await context.UpdateJobs.AddAsync(new UpdateJob
@@ -134,7 +133,7 @@ public class WorkflowBackgroundServiceTests
                 Created = DateTimeOffset.UtcNow.AddMinutes(-30),
                 Directory = "/",
                 Resources = new(0.25, 0.2),
-                AuthKey = Keygen.Create(25),
+                AuthKey = Guid.NewGuid().ToString("n"),
                 Status = UpdateJobStatus.Running,
             });
             await context.SaveChangesAsync();
@@ -162,7 +161,7 @@ public class WorkflowBackgroundServiceTests
                 Created = DateTimeOffset.UtcNow.AddDays(-80),
                 Directory = "/",
                 Resources = new(0.25, 0.2),
-                AuthKey = Keygen.Create(25),
+                AuthKey = Guid.NewGuid().ToString("n"),
             });
             await context.UpdateJobs.AddAsync(new UpdateJob
             {
@@ -172,7 +171,7 @@ public class WorkflowBackgroundServiceTests
                 Created = DateTimeOffset.UtcNow.AddDays(-100),
                 Directory = "/",
                 Resources = new(0.25, 0.2),
-                AuthKey = Keygen.Create(25),
+                AuthKey = Guid.NewGuid().ToString("n"),
             });
             await context.UpdateJobs.AddAsync(new UpdateJob
             {
@@ -182,7 +181,7 @@ public class WorkflowBackgroundServiceTests
                 Created = DateTimeOffset.UtcNow.AddDays(-120),
                 Directory = "/",
                 Resources = new(0.25, 0.2),
-                AuthKey = Keygen.Create(25),
+                AuthKey = Guid.NewGuid().ToString("n"),
             });
             await context.SaveChangesAsync();
 

@@ -25,6 +25,8 @@
     <PackageReference Include="Azure.Monitor.Query" Version="1.1.0" />
     <PackageReference Include="Azure.ResourceManager.AppContainers" Version="1.0.2" />
     <PackageReference Include="Azure.ResourceManager.ContainerInstance" Version="1.0.1" />
+    <PackageReference Include="FlakeId" Version="1.1.0" />
+    <PackageReference Include="Macross.Json.Extensions" Version="3.0.0" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.21.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.3" />
     <PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" Version="7.0.3" />
@@ -39,7 +41,7 @@
     <PackageReference Include="MiniValidation" Version="0.7.2" />
     <PackageReference Include="Tingle.EventBus.Transports.Azure.ServiceBus" Version="0.18.1" />
     <PackageReference Include="Tingle.EventBus.Transports.InMemory" Version="0.18.1" />
-    <PackageReference Include="Tingle.Extensions.EntityFrameworkCore" Version="3.13.1-ci1316" />
+    <PackageReference Include="Tingle.Extensions.DataAnnotations" Version="3.8.1" />
     <PackageReference Include="Tingle.PeriodicTasks" Version="0.1.0-ci0074" />
     <PackageReference Include="YamlDotNet" Version="13.0.1" />
   </ItemGroup>
