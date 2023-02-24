@@ -62,14 +62,14 @@ jobs:
     - name: Replace tokens
       uses: cschleiden/replace-tokens@v1
       with:
-        files: '["${{ github.workspace }}/main.bicep"]'
+        files: '["${{ github.workspace }}/server/main.bicep"]'
 
     - name: Build bicep file
       uses: azure/CLI@v1
       with:
         inlineScript: |
-          cp $GITHUB_WORKSPACE/main.bicep $GITHUB_WORKSPACE/drop/main.bicep
-          az bicep build --file main.bicep --outfile $GITHUB_WORKSPACE/drop/main.json
+          cp $GITHUB_WORKSPACE/server/main.bicep $GITHUB_WORKSPACE/drop/main.bicep
+          az bicep build --file server/main.bicep --outfile $GITHUB_WORKSPACE/drop/main.json
 
     - name: Pull Docker base image & warm Docker cache
       run: docker pull "ghcr.io/tinglesoftware/$IMAGE_NAME:latest"
