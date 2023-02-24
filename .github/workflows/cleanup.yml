@@ -12,6 +12,7 @@ jobs:
       matrix:
         package-name:
         - "dependabot-updater"
+        - "dependabot-server"
 
     runs-on: ubuntu-latest
 
@@ -24,3 +25,4 @@ jobs:
         token: ${{ secrets.GITHUB_TOKEN }}
         package-name: ${{ matrix.package-name }}
         min-versions-to-keep: 20
+        delete-only-pre-release-versions: true
