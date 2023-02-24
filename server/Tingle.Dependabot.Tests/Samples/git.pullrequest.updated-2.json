@@ -1,0 +1,147 @@
+{
+  "subscriptionId": "435e539d-3ce2-4283-8da9-8f3c0fe2e45e",
+  "notificationId": 3,
+  "id": "43236d01-b085-4739-80a6-153d305a902b",
+  "eventType": "git.pullrequest.updated",
+  "publisherId": "tfs",
+  "message": null,
+  "detailedMessage": null,
+  "resource": {
+    "repository": {
+      "id": "d5bb1147-bd9f-4ae1-8554-aec3d164f94c",
+      "name": "dependabot-sample",
+      "url": "https://dev.azure.com/dependabot/cea8cb01-dd13-4588-b27a-55fa170e4e94/_apis/git/repositories/d5bb1147-bd9f-4ae1-8554-aec3d164f94c",
+      "project": {
+        "id": "cea8cb01-dd13-4588-b27a-55fa170e4e94",
+        "name": "Core",
+        "description": "All engineering happens here",
+        "url": "https://dev.azure.com/dependabot/_apis/projects/cea8cb01-dd13-4588-b27a-55fa170e4e94",
+        "state": "wellFormed",
+        "revision": 770,
+        "visibility": "private",
+        "lastUpdateTime": "2020-07-15T14:09:49.98Z"
+      },
+      "size": 3568380,
+      "remoteUrl": "https://dependabot@dev.azure.com/dependabot/Core/_git/dependabot-sample",
+      "sshUrl": "git@ssh.dev.azure.com:v3/dependabot/Core/dependabot-sample",
+      "webUrl": "https://dev.azure.com/dependabot/Core/_git/dependabot-sample",
+      "isDisabled": false,
+      "isInMaintenance": false
+    },
+    "pullRequestId": 22568,
+    "codeReviewId": 23493,
+    "status": "completed",
+    "createdBy": {
+      "displayName": "dependabot",
+      "url": "https://spsprodweu2.vssps.visualstudio.com/A1f76e76f-721c-4b92-8ff3-bd07abce2671/_apis/Identities/961314fa-c312-68ab-8dce-cbb71e30c268",
+      "_links": {
+        "avatar": {
+          "href": "https://dev.azure.com/dependabot/_apis/GraphProfile/MemberAvatars/aad.OTYxMzE0ZmEtYzMxMi03OGFiLThkY2UtY2JiNzFlMzBjMjY4"
+        }
+      },
+      "id": "961314fa-c312-68ab-8dce-cbb71e30c268",
+      "uniqueName": "dependabot@tingle.software",
+      "imageUrl": "https://dev.azure.com/dependabot/_api/_common/identityImage?id=961314fa-c312-68ab-8dce-cbb71e30c268",
+      "descriptor": "aad.OTYxMzE0ZmEtYzMxMi03OGFiLThkY2UtY2JiNzFlMzBjMjY4"
+    },
+    "creationDate": "2023-01-18T02:05:34.3260021Z",
+    "closedDate": "2023-01-18T04:03:21.203845Z",
+    "title": "Bump Tingle.EventBus.Transports.InMemory from 0.17.2-ci0016 to 0.18.0",
+    "description": "Bumps [Tingle.EventBus.Transports.InMemory](https://github.com/tinglesoftware/eventbus) from 0.17.2-ci0016 to 0.18.0.\n<p>#Release notes</p>\n<p><em>Sourced from <a href=\"https://github.com/tinglesoftware/eventbus/releases\">Tingle.EventBus.Transports.InMemory's releases</a>.</em></p>\n<blockquote>\n<h2>0.18.0</h2>\n<p>Happy New Year and a shiny new version with lots of new stuff since last year.</p>\n<h2>NEW</h2>\n<ul>\n<li><a href=\"https://redirect.github.com/tinglesoftware/eventbus/pull/487\">#487</a>: Support the use of <code>IConfiguration</code> to configure transports, events, and consumers. This makes it easier to manage different values for different environments or transports.</li>\n<li><a href=\"https://redirect.github.com/tinglesoftware/eventbus/pull/488\">#488</a>: Wait for transport to be started can now be configured per transport.</li>\n<li><a href=\"https://redirect.github.com/tinglesoftware/eventbus/pull/491\">#491</a>: Support for consuming dead-lettered events via <code>IDeadLetteredEventConsumer&lt;TEvent&gt;</code> and <code>DeadLetteredEventContext&lt;TEvent&gt;</code>.</li>\n<li><a href=\"https://redirect.github.com/tinglesoftware/eventbus/pull/489\">#489</a>: Duplicate detection settings can now be configured per event with defaults on  the transport and the entire bus.</li>\n</ul>\n<h2>Fixes</h2>\n<ul>\n<li><a href=\"https://redirect.github.com/tinglesoftware/eventbus/pull/486\">#486</a>: Include transport name in logs to disambiguate them.</li>\n<li><a href=\"https://redirect.github.com/tinglesoftware/eventbus/pull/490\">#490</a>: Prevent transport options configuration from being called multiple times.</li>\n<li><a href=\"https://redirect.github.com/tinglesoftware/eventbus/pull/485\">#485</a>: Expose extensions on <code>EventData</code> for easier working with Azure IoT Hub.</li>\n</ul>\n<p><strong>Full Changelog</strong>: <a href=\"https://github.com/tinglesoftware/eventbus/compare/0.17.1...0.18.0\">https://github.com/tinglesoftware/eventbus/compare/0.17.1...0.18.0</a></p>\n</blockquote>\n<p>#Commits</p>\n<ul>\n<li>See full diff in <a href=\"https://github.com/tinglesoftware/eventbus/commits/0.18.0\">compare view</a></li>\n</ul>\n",
+    "sourceRefName": "refs/heads/dependabot/nuget/Tingle.EventBus.Transports.InMemory-0.18.0",
+    "targetRefName": "refs/heads/main",
+    "mergeStatus": "succeeded",
+    "isDraft": false,
+    "mergeId": "e8fdd34f-4785-43e1-8513-560c415dba45",
+    "lastMergeSourceCommit": {
+      "commitId": "6258a2efa589c277ed97e3246b6a59faf0e29859",
+      "url": "https://dev.azure.com/dependabot/cea8cb01-dd13-4588-b27a-55fa170e4e94/_apis/git/repositories/d5bb1147-bd9f-4ae1-8554-aec3d164f94c/commits/6258a2efa589c277ed97e3246b6a59faf0e29859"
+    },
+    "lastMergeTargetCommit": {
+      "commitId": "c02450ec2c61650a1251c8a8281a0637829b87da",
+      "url": "https://dev.azure.com/dependabot/cea8cb01-dd13-4588-b27a-55fa170e4e94/_apis/git/repositories/d5bb1147-bd9f-4ae1-8554-aec3d164f94c/commits/c02450ec2c61650a1251c8a8281a0637829b87da"
+    },
+    "lastMergeCommit": {
+      "commitId": "74f9ceb316ef52762eea289d63fbac6c8f2a224d",
+      "author": {
+        "name": "dependabot",
+        "email": "dependabot@tingle.software",
+        "date": "2023-01-18T04:03:20Z"
+      },
+      "committer": {
+        "name": "dependabot",
+        "email": "dependabot@tingle.software",
+        "date": "2023-01-18T04:03:20Z"
+      },
+      "comment": "Merge pull request 22568 from dependabot/nuget/Tingle.EventBus.Transports.InMemory-0.18.0 into main",
+      "url": "https://dev.azure.com/dependabot/cea8cb01-dd13-4588-b27a-55fa170e4e94/_apis/git/repositories/d5bb1147-bd9f-4ae1-8554-aec3d164f94c/commits/74f9ceb316ef52762eea289d63fbac6c8f2a224d"
+    },
+    "reviewers": [
+      {
+        "reviewerUrl": "https://dev.azure.com/dependabot/cea8cb01-dd13-4588-b27a-55fa170e4e94/_apis/git/repositories/d5bb1147-bd9f-4ae1-8554-aec3d164f94c/pullRequests/22568/reviewers/ddc45be0-f1fe-6042-87ac-e6dbbdbc3b45",
+        "vote": 10,
+        "hasDeclined": false,
+        "isRequired": true,
+        "isFlagged": false,
+        "displayName": "Maxwell Weru",
+        "url": "https://spsprodweu2.vssps.visualstudio.com/A1f76e76f-721c-4b92-8ff3-bd07abce2671/_apis/Identities/ddc45be0-f1fe-6042-87ac-e6dbbdbc3b45",
+        "_links": {
+          "avatar": {
+            "href": "https://dev.azure.com/dependabot/_apis/GraphProfile/MemberAvatars/aad.ZGRjNDViZTAtZjFmZS03MDQyLTg3YWMtZTZkYmJkYmMzYjQ1"
+          }
+        },
+        "id": "ddc45be0-f1fe-6042-87ac-e6dbbdbc3b45",
+        "uniqueName": "mburumaxwell@tingle.software",
+        "imageUrl": "https://dev.azure.com/dependabot/_api/_common/identityImage?id=ddc45be0-f1fe-6042-87ac-e6dbbdbc3b45"
+      }
+    ],
+    "url": "https://dev.azure.com/dependabot/cea8cb01-dd13-4588-b27a-55fa170e4e94/_apis/git/repositories/d5bb1147-bd9f-4ae1-8554-aec3d164f94c/pullRequests/22568",
+    "_links": {
+      "web": {
+        "href": "https://dev.azure.com/dependabot/Core/_git/dependabot-sample/pullrequest/22568"
+      },
+      "statuses": {
+        "href": "https://dev.azure.com/dependabot/cea8cb01-dd13-4588-b27a-55fa170e4e94/_apis/git/repositories/d5bb1147-bd9f-4ae1-8554-aec3d164f94c/pullRequests/22568/statuses"
+      }
+    },
+    "completionOptions": {
+      "deleteSourceBranch": true,
+      "squashMerge": true,
+      "mergeStrategy": "squash",
+      "triggeredByAutoComplete": true,
+      "autoCompleteIgnoreConfigIds": []
+    },
+    "supportsIterations": true,
+    "completionQueueTime": "2023-01-18T04:03:20.0206329Z",
+    "closedBy": {
+      "displayName": "dependabot",
+      "url": "https://spsprodweu2.vssps.visualstudio.com/A1f76e76f-721c-4b92-8ff3-bd07abce2671/_apis/Identities/961314fa-c312-68ab-8dce-cbb71e30c268",
+      "_links": {
+        "avatar": {
+          "href": "https://dev.azure.com/dependabot/_apis/GraphProfile/MemberAvatars/aad.OTYxMzE0ZmEtYzMxMi03OGFiLThkY2UtY2JiNzFlMzBjMjY4"
+        }
+      },
+      "id": "961314fa-c312-68ab-8dce-cbb71e30c268",
+      "uniqueName": "dependabot@tingle.software",
+      "imageUrl": "https://dev.azure.com/dependabot/_api/_common/identityImage?id=961314fa-c312-68ab-8dce-cbb71e30c268",
+      "descriptor": "aad.OTYxMzE0ZmEtYzMxMi03OGFiLThkY2UtY2JiNzFlMzBjMjY4"
+    },
+    "artifactId": "vstfs:///Git/PullRequestId/cea8cb01-dd13-4588-b27a-55fa170e4e94%2fd5bb1147-bd9f-4ae1-8554-aec3d164f94c%2f22568"
+  },
+  "resourceVersion": "1.0",
+  "resourceContainers": {
+    "collection": {
+      "id": "3fba1bb9-6e8c-4087-b435-29157f94e9a1",
+      "baseUrl": "https://dev.azure.com/dependabot/"
+    },
+    "account": {
+      "id": "1f76e76f-721c-4b92-8ff3-bd07abce2671",
+      "baseUrl": "https://dev.azure.com/dependabot/"
+    },
+    "project": {
+      "id": "cea8cb01-dd13-4588-b27a-55fa170e4e94",
+      "baseUrl": "https://dev.azure.com/dependabot/"
+    }
+  },
+  "createdDate": "2023-01-18T04:03:28.114Z"
+}
