@@ -73,7 +73,7 @@ jobs:
         --label com.github.image.source.sha=$GITHUB_SHA \
         --label com.github.image.source.branch=$GITHUB_REF \
         -t "ghcr.io/tinglesoftware/$IMAGE_NAME:latest" \
-        -t "ghcr.io/tinglesoftware/$IMAGE_NAME:$GITVERSION_FULLSEMVER" \
+        -t "ghcr.io/tinglesoftware/$IMAGE_NAME:$GITVERSION_NUGETVERSIONV2" \
         -t "ghcr.io/tinglesoftware/$IMAGE_NAME:$GITVERSION_MAJOR.$GITVERSION_MINOR" \
         -t "ghcr.io/tinglesoftware/$IMAGE_NAME:$GITVERSION_MAJOR" \
         --cache-from ghcr.io/tinglesoftware/$IMAGE_NAME:latest \
@@ -88,9 +88,9 @@ jobs:
       if: github.ref == 'refs/heads/main'
       run: docker push "ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:latest"
 
-    - name: Push image (FullSemVer)
+    - name: Push image (NuGetVersionV2)
       if: "!startsWith(github.ref, 'refs/pull')"
-      run: docker push "ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:$GITVERSION_FULLSEMVER"
+      run: docker push "ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:$GITVERSION_NUGETVERSIONV2"
 
     - name: Push image (major, minor)
       if: startsWith(github.ref, 'refs/tags')
