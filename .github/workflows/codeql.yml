@@ -54,6 +54,12 @@ jobs:
         # Details on CodeQL's query packs refer to : https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/configuring-code-scanning#using-queries-in-ql-packs
         # queries: security-extended,security-and-quality
 
+    - name: Setup NuGet Private Feed
+      if: matrix.language == 'csharp'
+      run: |
+        dotnet nuget remove source tingle
+        dotnet nuget add source ${{ secrets.PRIVATE_FEED_URL }} --name tingle --username az --password ${{ secrets.PRIVATE_FEED_API_KEY }}
+        dotnet restore
 
     # Autobuild attempts to build any compiled languages  (C/C++, C#, Go, or Java).
     # If this step fails, then you should remove it and run the build manually (see below)

@@ -20,7 +20,7 @@ on:
     - "!docs/**"
 
 jobs:
-  Server:
+  Build:
     runs-on: ubuntu-latest
     env:
       buildConfiguration: 'Release'
