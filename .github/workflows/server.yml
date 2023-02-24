@@ -58,7 +58,7 @@ jobs:
     - name: Publish
       run: |
         dotnet publish \
-        $GITHUB_WORKSPACE/Tingle.Dependabot/Tingle.Dependabot.csproj \
+        $GITHUB_WORKSPACE/server/Tingle.Dependabot/Tingle.Dependabot.csproj \
         -c $buildConfiguration \
         -o $GITHUB_WORKSPACE/drop/Tingle.Dependabot
 
@@ -81,7 +81,7 @@ jobs:
     - name: Build image
       run: |
         docker build \
-        -f Tingle.Dependabot/Dockerfile.CI \
+        -f server/Tingle.Dependabot/Dockerfile.CI \
         --label com.github.image.run.id=$GITHUB_RUN_ID \
         --label com.github.image.run.number=$GITHUB_RUN_NUMBER \
         --label com.github.image.job.id=$GITHUB_JOB \
