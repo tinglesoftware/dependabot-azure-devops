@@ -1,0 +1,26 @@
+name: cleanup
+
+on:
+  workflow_dispatch:
+  schedule:
+  - cron: '0 0 * * 1'
+
+jobs:
+  build:
+
+    strategy:
+      matrix:
+        package-name:
+        - "dependabot-updater"
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Delete old packages
+      uses: actions/delete-package-versions@v4
+      with:
+        owner: ${{ env.repository_owner }}
+        repo: ${{ github.event.repository.name }}
+        token: ${{ secrets.GITHUB_TOKEN }}
+        package-name: ${{ matrix.package-name }}
+        min-versions-to-keep: 20
