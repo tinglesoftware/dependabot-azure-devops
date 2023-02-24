@@ -1,6 +1,6 @@
-# Running on Docker
+# Running the updater
 
-First, you need to pull the image locally to your machine:
+First, you need to pull the docker image locally to your machine:
 
 ```bash
 docker pull ghcr.io/tinglesoftware/dependabot-updater
