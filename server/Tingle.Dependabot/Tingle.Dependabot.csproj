@@ -1,0 +1,47 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <LangVersion>11.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TargetFramework>net7.0</TargetFramework>
+    <Deterministic>true</Deterministic>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591;CA1819;CA1031</NoWarn>
+    <VersionPrefix Condition="'$(GITVERSION_NUGETVERSION)' != ''">$(GITVERSION_NUGETVERSION)</VersionPrefix>
+    <UserSecretsId>e58d698d-4791-43fc-8b76-ce1f01cbd092</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <DockerfileContext>..\..</DockerfileContext>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Tingle.Dependabot.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AspNetCore.Authentication.ApiKey" Version="7.0.0" />
+    <PackageReference Include="AspNetCore.Authentication.Basic" Version="7.0.0" />
+    <PackageReference Include="Azure.Identity" Version="1.8.2" />
+    <PackageReference Include="Azure.Monitor.Query" Version="1.1.0" />
+    <PackageReference Include="Azure.ResourceManager.AppContainers" Version="1.0.2" />
+    <PackageReference Include="Azure.ResourceManager.ContainerInstance" Version="1.0.1" />
+    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.21.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.3" />
+    <PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" Version="7.0.3" />
+    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="7.0.3" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.3" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="7.0.3" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="7.0.3" />
+    <PackageReference Include="Microsoft.TeamFoundationServer.Client" Version="19.210.0-preview" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.17.0" />
+    <PackageReference Include="Microsoft.VisualStudio.Services.ServiceHooks.WebApi" Version="19.210.0-preview" />
+    <PackageReference Include="MiniValidation" Version="0.7.2" />
+    <PackageReference Include="Tingle.EventBus.Transports.Azure.ServiceBus" Version="0.18.1" />
+    <PackageReference Include="Tingle.EventBus.Transports.InMemory" Version="0.18.1" />
+    <PackageReference Include="Tingle.Extensions.EntityFrameworkCore" Version="3.13.1-ci1316" />
+    <PackageReference Include="Tingle.PeriodicTasks" Version="0.1.0-ci0074" />
+    <PackageReference Include="YamlDotNet" Version="13.0.1" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,99 @@
+{
+  "subscriptionId": "435e539d-3ce2-4283-8da9-8f3c0fe2e45e",
+  "notificationId": 3,
+  "id": "799c2a17-84d0-4bf8-ac8c-53493eebec3a",
+  "eventType": "git.push",
+  "publisherId": "tfs",
+  "message": null,
+  "detailedMessage": null,
+  "resource": {
+    "commits": [
+      {
+        "commitId": "aaf58235f187b26d98a1ad66b6d094501f311afe",
+        "author": {
+          "name": "dependabot[bot]",
+          "email": "noreply@github.com",
+          "date": "2020-12-23T02:04:46Z"
+        },
+        "committer": {
+          "name": "Maxwell Weru",
+          "email": "example@contoso.com",
+          "date": "2020-12-23T02:04:46Z"
+        },
+        "comment": "build(deps-dev): bump webpack-merge from 4.2.2 to 5.7.3\n\nBumps [webpack-merge](https://github.com/survivejs/webpack-merge) from 4.2.2 to 5.7.3.\n- [Release notes](https://github.com/survivejs/webpack-merge/releases)\n- [Changelog](https://github.com/survivejs/webpack-merge/blob/develop/CHANGELOG.md)\n- [Commits](https://github.com/survivejs/webpack-merge/compare/v4.2.2...v5.7.3)",
+        "url": "https://dev.azure.com/dependabot/_apis/git/repositories/e502622f-ac2b-4635-bec7-5e43d8865f71/commits/aaf58235f187b26d98a1ad66b6d094501f311afe"
+      }
+    ],
+    "refUpdates": [
+      {
+        "name": "refs/heads/dependabot/npm_and_yarn/webpack-merge-5.7.3",
+        "oldObjectId": "0000000000000000000000000000000000000000",
+        "newObjectId": "aaf58235f187b26d98a1ad66b6d094501f311afe"
+      }
+    ],
+    "repository": {
+      "id": "e502622f-ac2b-4635-bec7-5e43d8865f71",
+      "name": "tingle",
+      "url": "https://dev.azure.com/dependabot/_apis/git/repositories/e502622f-ac2b-4635-bec7-5e43d8865f71",
+      "project": {
+        "id": "cea8cb01-dd13-4588-b27a-55fa170e4e94",
+        "name": "Core",
+        "url": "https://dev.azure.com/dependabot/_apis/projects/cea8cb01-dd13-4588-b27a-55fa170e4e94",
+        "state": "wellFormed",
+        "visibility": "unchanged",
+        "lastUpdateTime": "0001-01-01T00:00:00"
+      },
+      "defaultBranch": "refs/heads/main",
+      "remoteUrl": "https://dev.azure.com/dependabot/Core/_git/dependabot"
+    },
+    "pushedBy": {
+      "displayName": "Maxwell Weru",
+      "url": "https://spsprodweu2.vssps.visualstudio.com/A1f76e76f-721c-4b92-8ff3-bd07abce2671/_apis/Identities/ddc45be0-f1fe-6042-87ac-e6dbbdbc3b45",
+      "_links": {
+        "avatar": {
+          "href": "https://dev.azure.com/dependabot/_apis/GraphProfile/MemberAvatars/aad.ZGRjNDViZTAtZjFmZS03MDQyLTg3YWMtZTZkYmJkYmMzYjQ1"
+        }
+      },
+      "id": "ddc45be0-f1fe-6042-87ac-e6dbbdbc3b45",
+      "uniqueName": "example@contoso.com",
+      "imageUrl": "https://dev.azure.com/dependabot/_api/_common/identityImage?id=ddc45be0-f1fe-6042-87ac-e6dbbdbc3b45",
+      "descriptor": "aad.ZGRjNDViZTAtZjFmZS03MDQyLTg3YWMtZTZkYmJkYmMzYjQ1"
+    },
+    "pushId": 34770,
+    "date": "2020-12-23T02:04:47.3801166Z",
+    "url": "https://dev.azure.com/dependabot/_apis/git/repositories/e502622f-ac2b-4635-bec7-5e43d8865f71/pushes/34770",
+    "_links": {
+      "self": {
+        "href": "https://dev.azure.com/dependabot/_apis/git/repositories/e502622f-ac2b-4635-bec7-5e43d8865f71/pushes/34770"
+      },
+      "repository": {
+        "href": "https://dev.azure.com/dependabot/cea8cb01-dd13-4588-b27a-55fa170e4e94/_apis/git/repositories/e502622f-ac2b-4635-bec7-5e43d8865f71"
+      },
+      "commits": {
+        "href": "https://dev.azure.com/dependabot/_apis/git/repositories/e502622f-ac2b-4635-bec7-5e43d8865f71/pushes/34770/commits"
+      },
+      "pusher": {
+        "href": "https://spsprodweu2.vssps.visualstudio.com/A1f76e76f-721c-4b92-8ff3-bd07abce2671/_apis/Identities/ddc45be0-f1fe-6042-87ac-e6dbbdbc3b45"
+      },
+      "refs": {
+        "href": "https://dev.azure.com/dependabot/cea8cb01-dd13-4588-b27a-55fa170e4e94/_apis/git/repositories/e502622f-ac2b-4635-bec7-5e43d8865f71/refs/heads/dependabot/npm_and_yarn/webpack-merge-5.7.3"
+      }
+    }
+  },
+  "resourceVersion": "1.0",
+  "resourceContainers": {
+    "collection": {
+      "id": "3fba1bb9-6e8c-4087-b435-29157f94e9a1",
+      "baseUrl": "https://dev.azure.com/dependabot/"
+    },
+    "account": {
+      "id": "1f76e76f-721c-4b92-8ff3-bd07abce2671",
+      "baseUrl": "https://dev.azure.com/dependabot/"
+    },
+    "project": {
+      "id": "cea8cb01-dd13-4588-b27a-55fa170e4e94",
+      "baseUrl": "https://dev.azure.com/dependabot/"
+    }
+  },
+  "createdDate": "2020-12-23T02:04:55.1406608Z"
+}

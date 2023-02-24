@@ -1,0 +1,12 @@
+# There are a number of reasons as to why this docker file is not used for restore, build, test and publish
+# 1. The project requires nuget packages that require authentication which would make it complex
+# 2. The solution is made up of multiple projects which makes copying of files complex
+#
+# As a result, we only copy publish output and put it in the container
+
+FROM mcr.microsoft.com/dotnet/aspnet:7.0-bullseye-slim AS base
+EXPOSE 80
+EXPOSE 443
+WORKDIR /app
+COPY . .
+ENTRYPOINT ["dotnet", "Tingle.Dependabot.dll"]

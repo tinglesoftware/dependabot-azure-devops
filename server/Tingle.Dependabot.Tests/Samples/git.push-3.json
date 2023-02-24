@@ -1,0 +1,114 @@
+{
+  "subscriptionId": "435e539d-3ce2-4283-8da9-8f3c0fe2e45e",
+  "notificationId": 3,
+  "id": "56e81d32-b0e8-44e2-a92a-55eb7b6ccdce",
+  "eventType": "git.push",
+  "publisherId": "tfs",
+  "message": null,
+  "detailedMessage": null,
+  "resource": {
+    "commits": [
+      {
+        "commitId": "b8a410b1b75ecb203fb5dda54adce2f9d2c87a27",
+        "author": {
+          "name": "Maxwell Weru",
+          "email": "mburumaxwell@gmail.com",
+          "date": "2020-12-23T05:46:01Z"
+        },
+        "committer": {
+          "name": "Maxwell Weru",
+          "email": "mburumaxwell@gmail.com",
+          "date": "2020-12-23T05:46:01Z"
+        },
+        "comment": "Added models for events from AzureDevOps on git.push",
+        "url": "https://dev.azure.com/dependabot/_apis/git/repositories/d5bb1147-bd9f-4ae1-8554-aec3d164f94c/commits/b8a410b1b75ecb203fb5dda54adce2f9d2c87a27"
+      },
+      {
+        "commitId": "cdebf445da23c0c2d501cb46d4c496e37b40a6fe",
+        "author": {
+          "name": "Maxwell Weru",
+          "email": "mburumaxwell@gmail.com",
+          "date": "2020-12-23T05:39:43Z"
+        },
+        "committer": {
+          "name": "Maxwell Weru",
+          "email": "mburumaxwell@gmail.com",
+          "date": "2020-12-23T05:39:43Z"
+        },
+        "comment": "Update IEventBusPublisher to IEventPublisher",
+        "url": "https://dev.azure.com/dependabot/_apis/git/repositories/d5bb1147-bd9f-4ae1-8554-aec3d164f94c/commits/cdebf445da23c0c2d501cb46d4c496e37b40a6fe"
+      }
+    ],
+    "refUpdates": [
+      {
+        "name": "refs/heads/main",
+        "oldObjectId": "dd6ba920a4b4243162033737c0a1abbd937f4c40",
+        "newObjectId": "b8a410b1b75ecb203fb5dda54adce2f9d2c87a27"
+      }
+    ],
+    "repository": {
+      "id": "d5bb1147-bd9f-4ae1-8554-aec3d164f94c",
+      "name": "dependabot-sample",
+      "url": "https://dev.azure.com/dependabot/_apis/git/repositories/d5bb1147-bd9f-4ae1-8554-aec3d164f94c",
+      "project": {
+        "id": "cea8cb01-dd13-4588-b27a-55fa170e4e94",
+        "name": "Core",
+        "url": "https://dev.azure.com/dependabot/_apis/projects/cea8cb01-dd13-4588-b27a-55fa170e4e94",
+        "state": "wellFormed",
+        "visibility": "unchanged",
+        "lastUpdateTime": "0001-01-01T00:00:00"
+      },
+      "defaultBranch": "refs/heads/main",
+      "remoteUrl": "https://dev.azure.com/dependabot/Core/_git/dependabot-sample"
+    },
+    "pushedBy": {
+      "displayName": "Maxwell Weru",
+      "url": "https://spsprodweu2.vssps.visualstudio.com/A1f76e76f-721c-4b92-8ff3-bd07abce2671/_apis/Identities/ddc45be0-f1fe-6042-87ac-e6dbbdbc3b45",
+      "_links": {
+        "avatar": {
+          "href": "https://dev.azure.com/dependabot/_apis/GraphProfile/MemberAvatars/aad.ZGRjNDViZTAtZjFmZS03MDQyLTg3YWMtZTZkYmJkYmMzYjQ1"
+        }
+      },
+      "id": "ddc45be0-f1fe-6042-87ac-e6dbbdbc3b45",
+      "uniqueName": "example@contoso.com",
+      "imageUrl": "https://dev.azure.com/dependabot/_api/_common/identityImage?id=ddc45be0-f1fe-6042-87ac-e6dbbdbc3b45",
+      "descriptor": "aad.ZGRjNDViZTAtZjFmZS03MDQyLTg3YWMtZTZkYmJkYmMzYjQ1"
+    },
+    "pushId": 34772,
+    "date": "2020-12-23T05:47:12.0015512Z",
+    "url": "https://dev.azure.com/dependabot/_apis/git/repositories/d5bb1147-bd9f-4ae1-8554-aec3d164f94c/pushes/34772",
+    "_links": {
+      "self": {
+        "href": "https://dev.azure.com/dependabot/_apis/git/repositories/d5bb1147-bd9f-4ae1-8554-aec3d164f94c/pushes/34772"
+      },
+      "repository": {
+        "href": "https://dev.azure.com/dependabot/cea8cb01-dd13-4588-b27a-55fa170e4e94/_apis/git/repositories/d5bb1147-bd9f-4ae1-8554-aec3d164f94c"
+      },
+      "commits": {
+        "href": "https://dev.azure.com/dependabot/_apis/git/repositories/d5bb1147-bd9f-4ae1-8554-aec3d164f94c/pushes/34772/commits"
+      },
+      "pusher": {
+        "href": "https://spsprodweu2.vssps.visualstudio.com/A1f76e76f-721c-4b92-8ff3-bd07abce2671/_apis/Identities/ddc45be0-f1fe-6042-87ac-e6dbbdbc3b45"
+      },
+      "refs": {
+        "href": "https://dev.azure.com/dependabot/cea8cb01-dd13-4588-b27a-55fa170e4e94/_apis/git/repositories/d5bb1147-bd9f-4ae1-8554-aec3d164f94c/refs/heads/main"
+      }
+    }
+  },
+  "resourceVersion": "1.0",
+  "resourceContainers": {
+    "collection": {
+      "id": "3fba1bb9-6e8c-4087-b435-29157f94e9a1",
+      "baseUrl": "https://dev.azure.com/dependabot/"
+    },
+    "account": {
+      "id": "1f76e76f-721c-4b92-8ff3-bd07abce2671",
+      "baseUrl": "https://dev.azure.com/dependabot/"
+    },
+    "project": {
+      "id": "cea8cb01-dd13-4588-b27a-55fa170e4e94",
+      "baseUrl": "https://dev.azure.com/dependabot/"
+    }
+  },
+  "createdDate": "2020-12-23T05:47:19.8108134Z"
+}

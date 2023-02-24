@@ -339,24 +339,6 @@ ASALocalRun/
 # BeatPulse healthcheck temp database
 healthchecksdb
 
-/.bundle/
-/.env
-/.envrc
-/tmp
-Gemfile.lock
-!updater/spec/fixtures/**/Gemfile.lock
-!updater/Gemfile.lock
-*.pyc
-/.vscode/
-/.vscode-server/
-/.vscode-server-insiders/
-/.core-bash_history
-coverage/
-.tool-versions
-.rspec_status
-.rdbg_history
-local-*.sh
-local/**.sh
+.idea
 .DS_Store
 *git.store
-.idea
