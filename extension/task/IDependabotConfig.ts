@@ -139,21 +139,3 @@ export interface IDependabotRegistry {
    */
   "replaces-base"?: boolean | null | undefined;
 }
-
-export type DependabotPackageEcosystemType =
-  | "bundler"
-  | "cargo"
-  | "composer"
-  | "docker"
-  | "hex"
-  | "elm"
-  | "gitsubmodules"
-  | "github-actions"
-  | "gomod"
-  | "gradle"
-  | "maven"
-  | "mix"
-  | "npm"
-  | "nuget"
-  | "pip"
-  | "terraform";

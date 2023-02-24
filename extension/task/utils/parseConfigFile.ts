@@ -93,13 +93,14 @@ async function parseConfigFile(variables: ISharedVariables): Promise<IDependabot
   }
 
   // Ensure we have file contents. Otherwise throw a well readable error.
-  tl.debug(`Contents:\r\n${contents}`);
   if (!contents || typeof contents !== "string") {
     throw new Error(
       `Configuration file not found at possible locations: ${possibleFilePaths.join(
         ", "
       )}`
     );
+  } else {
+    tl.debug("Configuration file contents read.");
   }
 
   let config: any = load(contents);
@@ -107,6 +108,8 @@ async function parseConfigFile(variables: ISharedVariables): Promise<IDependabot
   // Ensure the config object parsed is an object
   if (config === null || typeof config !== "object") {
     throw new Error("Invalid dependabot config object");
+  } else {
+    tl.debug("Parsed YAML content from configuration file contents.");
   }
 
   const rawVersion = config["version"];
@@ -124,10 +127,11 @@ async function parseConfigFile(variables: ISharedVariables): Promise<IDependabot
   }
 
   // Ensure the version is == 2
-  if (version !== 2)
+  if (version !== 2) {
     throw new Error(
       "Only version 2 of dependabot is supported. Version specified: " + version
     );
+  }
 
   var dependabotConfig: IDependabotConfig = {
     version: version,
@@ -145,10 +149,11 @@ function parseUpdates(config: any): IDependabotUpdate[] {
   var rawUpdates = config["updates"];
 
   // Check if the array of updates exists
-  if (!Array.isArray(rawUpdates))
+  if (!Array.isArray(rawUpdates)) {
     throw new Error(
       "Invalid dependabot config object: Dependency updates config array not found"
     );
+  }
 
   // Parse the value of each of the updates obtained from the file
   rawUpdates.forEach((update) => {
