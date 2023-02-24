@@ -52,7 +52,7 @@ export interface ISharedVariables {
   updaterOptions: string;
 
   /** override value for allow */
-  allowOvr: string; // TODO: remove this in 0.16.0
+  allowOvr: string; // TODO: remove this in 0.17.0
 
   /** List of update identifiers to run */
   targetUpdateIds: number[];
