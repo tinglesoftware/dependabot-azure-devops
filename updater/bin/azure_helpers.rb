@@ -145,28 +145,6 @@ module Dependabot
 
         response
       end
-
-      def patch(url, json)
-        response = Excon.patch(
-          url,
-          body: json,
-          user: credentials&.fetch("username", nil),
-          password: credentials&.fetch("password", nil),
-          idempotent: true,
-          **SharedHelpers.excon_defaults(
-            headers: auth_header.merge(
-              {
-                "Content-Type" => "application/json"
-              }
-            )
-          )
-        )
-        raise Unauthorized if response.status == 401
-        raise Forbidden if response.status == 403
-        raise NotFound if response.status == 404
-
-        response
-      end
     end
   end
 end
