@@ -41,7 +41,7 @@ public class Repository
     /// Updates for the repository, extracted from the configuration file.
     /// When <c>null</c> or empty, there was a parsing exception.
     /// </summary>
-    public IList<RepositoryUpdate> Updates { get; set; } = new List<RepositoryUpdate>();
+    public List<RepositoryUpdate> Updates { get; set; } = new List<RepositoryUpdate>();
 
     /// <summary>
     /// Registries for the repository, extracted from the configuration file.
