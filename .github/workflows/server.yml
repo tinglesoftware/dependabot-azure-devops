@@ -1,4 +1,4 @@
-name: Build and Publish
+name: Server
 
 on:
   push:
@@ -20,7 +20,7 @@ on:
     - "!docs/**"
 
 jobs:
-  Build:
+  Server:
     runs-on: ubuntu-latest
     env:
       buildConfiguration: 'Release'
