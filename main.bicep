@@ -76,6 +76,7 @@ param maxReplicas int = 1
 var sqlServerAdministratorLogin = uniqueString(resourceGroup().id) // e.g. zecnx476et7xm (13 characters)
 var sqlServerAdministratorLoginPassword = '${skip(uniqueString(resourceGroup().id), 5)}%${uniqueString('sql-password', resourceGroup().id)}' // e.g. abcde%zecnx476et7xm (19 characters)
 var hasDockerImageRegistry = (dockerImageRegistry != null && !empty(dockerImageRegistry))
+var isAcrServer = hasDockerImageRegistry && endsWith(dockerImageRegistry, environment().suffixes.acrLoginServer)
 // avoid conflicts across multiple deployments for resources that generate FQDN based on the name
 var collisionSuffix = uniqueString(resourceGroup().id) // e.g. zecnx476et7xm (13 characters)
 
@@ -205,7 +206,7 @@ resource app 'Microsoft.App/containerApps@2022-06-01-preview' = {
           }
         ]
       }
-      registries: hasDockerImageRegistry ? [
+      registries: isAcrServer ? [
         {
           identity: managedIdentity.id
           server: dockerImageRegistry
