@@ -2,6 +2,7 @@ GIT
   remote: https://github.com/dependabot/dependabot-core.git
   revision: 0672e3b867bb1959d3b57dd8f543f932cc1febf0
   ref: 0672e3b
+  branch: main
   specs:
     dependabot-bundler (0.215.0)
       dependabot-common (= 0.215.0)
@@ -59,7 +60,7 @@ GEM
       public_suffix (>= 2.0.2, < 6.0)
     ast (2.4.2)
     aws-eventstream (1.2.0)
-    aws-partitions (1.715.0)
+    aws-partitions (1.716.0)
     aws-sdk-codecommit (1.53.0)
       aws-sdk-core (~> 3, >= 3.165.0)
       aws-sigv4 (~> 1.1)

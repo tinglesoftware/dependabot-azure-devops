@@ -2,7 +2,13 @@
 
 source "https://rubygems.org"
 
-git "https://github.com/dependabot/dependabot-core.git", ref: "0672e3b" do
+# Using a fixed version/ref will not work with automatic updates because the
+# version is checked using a list of refs at
+# https://github.com/dependabot/dependabot-core.git/info/refs?service=git-upload-pack
+# They are so many, our reference won't be found for it to be updated.
+# Hence adding the branch.
+
+git "https://github.com/dependabot/dependabot-core.git", branch: "main", ref: "0672e3b" do
   gem "dependabot-bundler"
   gem "dependabot-cargo"
   gem "dependabot-common"
