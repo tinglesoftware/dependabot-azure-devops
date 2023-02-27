@@ -1,6 +1,7 @@
 name: Updater
 
 on:
+  workflow_dispatch:
   push:
     branches:
     - main
