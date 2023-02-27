@@ -93,10 +93,7 @@ async function run() {
       }
 
       // Set the dependencies to allow
-      if (variables.allowOvr) {
-        tl.warning(`Using 'DEPENDABOT_ALLOW_CONDITIONS' is no longer supported when using a config file. Specify the same values in the .github/dependabot.yml file.`);
-      }
-      let allow = update.allow || variables.allowOvr;
+      let allow = update.allow;
       if (allow) {
         dockerRunner.arg(["-e", `DEPENDABOT_ALLOW_CONDITIONS=${allow}`]);
       }
