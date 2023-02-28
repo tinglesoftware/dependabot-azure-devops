@@ -45,9 +45,9 @@ internal class UpdateJobEventsConsumer : IEventConsumer<UpdateJobCheckStateEvent
         {
             logger.LogInformation("The runner did not provide a state for job '{UpdateJobId}'.", jobId);
 
-            // delete the job if we have been waiting for over 90 minutes and still do not have state
+            // delete the job if we have been waiting for over 180 minutes and still do not have state
             var diff = DateTimeOffset.UtcNow - job.Created;
-            if (diff > TimeSpan.FromMinutes(90))
+            if (diff > TimeSpan.FromMinutes(180))
             {
                 logger.LogWarning("Deleting job '{UpdateJobId}' as it has been pending for more than 90 minutes.", jobId);
 
