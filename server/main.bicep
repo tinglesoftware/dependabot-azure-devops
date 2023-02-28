@@ -43,7 +43,7 @@ param synchronizeOnStartup bool = false
 param createOrUpdateWebhooksOnStartup bool = false
 
 @description('Whether to set auto complete on created pull requests.')
-param autoComplete bool = false
+param autoComplete bool = true
 
 @description('Identifiers of configs to be ignored in auto complete. E.g 3,4,10')
 param autoCompleteIgnoreConfigs array = []
@@ -58,7 +58,7 @@ param autoCompleteIgnoreConfigs array = []
 param autoCompleteMergeStrategy string = 'Squash'
 
 @description('Whether to automatically approve created pull requests.')
-param autoApprove bool = true
+param autoApprove bool = false
 
 @description('Access token for authenticating requests to GitHub.')
 param githubToken string = ''
