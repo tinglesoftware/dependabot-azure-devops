@@ -51,9 +51,6 @@ export interface ISharedVariables {
   excludeRequirementsToUnlock: string;
   updaterOptions: string;
 
-  /** override value for allow */
-  allowOvr: string; // TODO: remove this in 0.17.0
-
   /** List of update identifiers to run */
   targetUpdateIds: number[];
 
@@ -126,9 +123,6 @@ export default function getSharedVariables(): ISharedVariables {
     tl.getInput("excludeRequirementsToUnlock") || "";
   let updaterOptions = tl.getInput("updaterOptions");
 
-  // Get the override values for allow, and ignore
-  let allowOvr = tl.getVariable("DEPENDABOT_ALLOW_CONDITIONS");
-
   // Get the target identifiers
   let targetUpdateIds = tl
     .getDelimitedInput("targetUpdateIds", ";", false)
@@ -186,8 +180,6 @@ export default function getSharedVariables(): ISharedVariables {
     failOnException,
     excludeRequirementsToUnlock,
     updaterOptions,
-
-    allowOvr,
 
     targetUpdateIds,
     securityAdvisoriesFile,
