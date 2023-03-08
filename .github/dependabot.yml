@@ -30,7 +30,7 @@ updates:
   directory: "/" # Location of package manifests
   schedule:
     interval: "weekly"
-    time: "02:00"
+    time: "04:00"
   open-pull-requests-limit: 10
   ignore:
   - dependency-name: "Microsoft.*"
