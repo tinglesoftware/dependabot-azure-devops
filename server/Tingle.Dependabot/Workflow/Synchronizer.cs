@@ -69,7 +69,7 @@ internal class Synchronizer
         var deleted = await dbContext.Repositories.Where(r => !providerIdsToKeep.Contains(r.ProviderId!)).ExecuteDeleteAsync(cancellationToken);
         if (deleted > 0)
         {
-            logger.LogInformation("Deleted {Count} repositories that are no longer needed", deleted);
+            logger.LogInformation("Deleted {Count} repositories that are no longer present in the project.", deleted);
         }
 
         // synchronize each repository
@@ -124,6 +124,7 @@ internal class Synchronizer
             // delete repository
             if (repository is not null)
             {
+                logger.LogInformation("Deleting '{RepositorySlug}' as it no longer has a configuration file.", repository.Slug);
                 dbContext.Repositories.Remove(repository);
                 await dbContext.SaveChangesAsync(cancellationToken);
 
@@ -138,9 +139,9 @@ internal class Synchronizer
         // check if the file changed (different commit)
         bool commitChanged = true; // assume changes unless otherwise
         var commitId = providerInfo.CommitId;
-        if (repository is not null && (commitChanged = !string.Equals(commitId, repository.LatestCommit)))
+        if (repository is not null)
         {
-            logger.LogDebug("Configuration file for '{Slug}' is new or has been updated.", repository.Slug);
+            commitChanged = !string.Equals(commitId, repository.LatestCommit);
         }
 
         // create repository
@@ -162,6 +163,8 @@ internal class Synchronizer
 
         if (commitChanged)
         {
+            logger.LogDebug("Configuration file for '{RepositorySlug}' is new or has been updated.", repository.Slug);
+
             // set/update existing values
             repository.Updated = DateTimeOffset.UtcNow;
             repository.Name = providerInfo.Name;
@@ -190,12 +193,12 @@ internal class Synchronizer
             }
             catch (YamlDotNet.Core.YamlException ye)
             {
-                logger.LogWarning(ye, "Skipping '{Slug}'. The YAML file is invalid.", repository.Slug);
+                logger.LogWarning(ye, "Skipping '{RepositorySlug}'. The YAML file is invalid.", repository.Slug);
                 repository.SyncException = ye.Message;
             }
             catch (ValidationException ve)
             {
-                logger.LogWarning(ve, "Configuration file for '{Slug}' is invalid.", repository.Slug);
+                logger.LogWarning(ve, "Configuration file for '{RepositorySlug}' is invalid.", repository.Slug);
                 repository.SyncException = ve.Message;
             }
 

@@ -21,10 +21,10 @@ internal class AzureDevOpsEventHandler
     public virtual async Task HandleAsync(AzureDevOpsEvent model, CancellationToken cancellationToken = default)
     {
         var type = model.EventType;
-        logger.LogInformation("Received {EventType} notification {NotificationId} on subscription {SubscriptionId}",
-                              type,
-                              model.NotificationId,
-                              model.SubscriptionId);
+        logger.LogDebug("Received {EventType} notification {NotificationId} on subscription {SubscriptionId}",
+                        type,
+                        model.NotificationId,
+                        model.SubscriptionId);
 
         if (type is AzureDevOpsEventType.GitPush)
         {
@@ -79,10 +79,10 @@ internal class AzureDevOpsEventHandler
             var prId = pr.PullRequestId;
             var status = pr.Status;
 
-            logger.LogInformation("PR {PullRequestId} in {RepositoryUrl} was commented on: {Comment}",
+            logger.LogInformation("PR {PullRequestId} in {RepositoryUrl} was commented on: {Content}",
                                   prId,
                                   adoRepository.RemoteUrl,
-                                  comment);
+                                  comment.Content);
 
             // TODO: handle the logic for comments here using events
         }
