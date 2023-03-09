@@ -159,7 +159,7 @@ function parseUpdates(config: any): IDependabotUpdate[] {
   rawUpdates.forEach((update) => {
     var dependabotUpdate: IDependabotUpdate = {
       packageEcosystem: update["package-ecosystem"],
-      directory: update["directory"],
+      directory: convertPlaceholder(update["directory"]),
 
       openPullRequestsLimit: update["open-pull-requests-limit"],
 
