@@ -1,0 +1,530 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "Location for all resources."
+      }
+    },
+    "name": {
+      "type": "string",
+      "defaultValue": "dependabot",
+      "metadata": {
+        "description": "Name of the resources"
+      }
+    },
+    "projectUrl": {
+      "type": "string",
+      "metadata": {
+        "description": "URL of the project. For example \"https://dev.azure.com/fabrikam/DefaultCollection\""
+      }
+    },
+    "projectToken": {
+      "type": "string",
+      "metadata": {
+        "description": "Token for accessing the project."
+      }
+    },
+    "synchronizeOnStartup": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "Whether to synchronize repositories on startup."
+      }
+    },
+    "createOrUpdateWebhooksOnStartup": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "Whether to create or update subscriptions on startup."
+      }
+    },
+    "githubToken": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Access token for authenticating requests to GitHub."
+      }
+    },
+    "autoComplete": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "description": "Whether to set auto complete on created pull requests."
+      }
+    },
+    "autoCompleteIgnoreConfigs": {
+      "type": "array",
+      "defaultValue": [],
+      "metadata": {
+        "description": "Identifiers of configs to be ignored in auto complete. E.g 3,4,10"
+      }
+    },
+    "autoCompleteMergeStrategy": {
+      "type": "string",
+      "defaultValue": "Squash",
+      "metadata": {
+        "description": "Merge strategy to use when setting auto complete on created pull requests."
+      },
+      "allowedValues": [
+        "NoFastForward",
+        "Rebase",
+        "RebaseMerge",
+        "Squash"
+      ]
+    },
+    "autoApprove": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "Whether to automatically approve created pull requests."
+      }
+    },
+    "jobHostType": {
+      "type": "string",
+      "defaultValue": "ContainerInstances",
+      "metadata": {
+        "description": "Where to host new update jobs."
+      },
+      "allowedValues": [
+        "ContainerInstances"
+      ]
+    },
+    "notificationsPassword": {
+      "type": "string",
+      "defaultValue": "[uniqueString('service-hooks', resourceGroup().id)]",
+      "metadata": {
+        "description": "Password for Webhooks, ServiceHooks, and Notifications from Azure DevOps."
+      }
+    },
+    "dockerImageRegistry": {
+      "type": "string",
+      "defaultValue": "ghcr.io",
+      "metadata": {
+        "description": "Registry of the docker image. E.g. \"contoso.azurecr.io\". Leave empty unless you have a private registry mirroring the image from docker hub"
+      }
+    },
+    "serverImageRepository": {
+      "type": "string",
+      "defaultValue": "tinglesoftware/dependabot-server",
+      "metadata": {
+        "description": "Registry and repository of the server docker image. Ideally, you do not need to edit this value."
+      }
+    },
+    "serverImageTag": {
+      "type": "string",
+      "defaultValue": "#{GITVERSION_NUGETVERSIONV2}#",
+      "metadata": {
+        "description": "Tag of the server docker image."
+      }
+    },
+    "updaterImageRepository": {
+      "type": "string",
+      "defaultValue": "tinglesoftware/dependabot-updater",
+      "metadata": {
+        "description": "Registry and repository of the updater docker image. Ideally, you do not need to edit this value."
+      }
+    },
+    "updaterImageTag": {
+      "type": "string",
+      "defaultValue": "#{GITVERSION_NUGETVERSIONV2}#",
+      "metadata": {
+        "description": "Tag of the updater docker image."
+      }
+    },
+    "minReplicas": {
+      "type": "int",
+      "defaultValue": 1,
+      "metadata": {
+        "description": "The minimum number of replicas"
+      },
+      "maxValue": 2,
+      "minValue": 1
+    },
+    "maxReplicas": {
+      "type": "int",
+      "defaultValue": 1,
+      "metadata": {
+        "description": "The maximum number of replicas"
+      },
+      "maxValue": 5,
+      "minValue": 1
+    }
+  },
+  "variables": {
+    "sqlServerAdministratorLogin": "[uniqueString(resourceGroup().id)]",
+    "sqlServerAdministratorLoginPassword": "[format('{0}%{1}', skip(uniqueString(resourceGroup().id), 5), uniqueString('sql-password', resourceGroup().id))]",
+    "hasDockerImageRegistry": "[and(not(equals(parameters('dockerImageRegistry'), null())), not(empty(parameters('dockerImageRegistry'))))]",
+    "isAcrServer": "[and(variables('hasDockerImageRegistry'), endsWith(parameters('dockerImageRegistry'), environment().suffixes.acrLoginServer))]",
+    "collisionSuffix": "[uniqueString(resourceGroup().id)]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+      "apiVersion": "2018-11-30",
+      "name": "[parameters('name')]",
+      "location": "[parameters('location')]"
+    },
+    {
+      "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+      "apiVersion": "2018-11-30",
+      "name": "[format('{0}-jobs', parameters('name'))]",
+      "location": "[parameters('location')]"
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces",
+      "apiVersion": "2021-11-01",
+      "name": "[format('{0}-{1}', parameters('name'), variables('collisionSuffix'))]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "disableLocalAuth": false,
+        "zoneRedundant": false
+      },
+      "sku": {
+        "name": "Basic"
+      }
+    },
+    {
+      "type": "Microsoft.Sql/servers",
+      "apiVersion": "2022-05-01-preview",
+      "name": "[format('{0}-{1}', parameters('name'), variables('collisionSuffix'))]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "publicNetworkAccess": "Enabled",
+        "administratorLogin": "[variables('sqlServerAdministratorLogin')]",
+        "administratorLoginPassword": "[variables('sqlServerAdministratorLoginPassword')]",
+        "primaryUserAssignedIdentityId": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name'))]",
+        "restrictOutboundNetworkAccess": "Disabled"
+      },
+      "identity": {
+        "type": "UserAssigned",
+        "userAssignedIdentities": {
+          "[format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')))]": {}
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Sql/servers/databases",
+      "apiVersion": "2022-05-01-preview",
+      "name": "[format('{0}/{1}', format('{0}-{1}', parameters('name'), variables('collisionSuffix')), parameters('name'))]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "Basic"
+      },
+      "properties": {
+        "collation": "SQL_Latin1_General_CP1_CI_AS",
+        "maxSizeBytes": 2147483648,
+        "catalogCollation": "SQL_Latin1_General_CP1_CI_AS",
+        "zoneRedundant": false,
+        "readScale": "Disabled",
+        "requestedBackupStorageRedundancy": "Geo",
+        "isLedgerOn": false
+      },
+      "identity": {
+        "type": "UserAssigned",
+        "userAssignedIdentities": {
+          "[format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')))]": {}
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name'))]",
+        "[resourceId('Microsoft.Sql/servers', format('{0}-{1}', parameters('name'), variables('collisionSuffix')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.OperationalInsights/workspaces",
+      "apiVersion": "2022-10-01",
+      "name": "[parameters('name')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "sku": {
+          "name": "PerGB2018"
+        },
+        "workspaceCapping": {
+          "dailyQuotaGb": "[json('0.167')]"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.App/managedEnvironments",
+      "apiVersion": "2022-06-01-preview",
+      "name": "[parameters('name')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "appLogsConfiguration": {
+          "destination": "log-analytics",
+          "logAnalyticsConfiguration": {
+            "customerId": "[reference(resourceId('Microsoft.OperationalInsights/workspaces', parameters('name')), '2022-10-01').customerId]",
+            "sharedKey": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces', parameters('name')), '2022-10-01').primarySharedKey]"
+          }
+        },
+        "zoneRedundant": false
+      },
+      "sku": {
+        "name": "Consumption"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('name'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Insights/components",
+      "apiVersion": "2020-02-02",
+      "name": "[parameters('name')]",
+      "location": "[parameters('location')]",
+      "kind": "web",
+      "properties": {
+        "Application_Type": "web"
+      }
+    },
+    {
+      "type": "Microsoft.App/containerApps",
+      "apiVersion": "2022-06-01-preview",
+      "name": "[parameters('name')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "managedEnvironmentId": "[resourceId('Microsoft.App/managedEnvironments', parameters('name'))]",
+        "configuration": {
+          "ingress": {
+            "external": true,
+            "targetPort": 80,
+            "traffic": [
+              {
+                "latestRevision": true,
+                "weight": 100
+              }
+            ]
+          },
+          "registries": "[if(variables('isAcrServer'), createArray(createObject('identity', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')), 'server', parameters('dockerImageRegistry'))), createArray())]",
+          "secrets": [
+            {
+              "name": "connection-strings-application-insights",
+              "value": "[reference(resourceId('Microsoft.Insights/components', parameters('name')), '2020-02-02').ConnectionString]"
+            },
+            {
+              "name": "connection-strings-sql",
+              "value": "[join(createArray(format('Server=tcp:{0},1433', reference(resourceId('Microsoft.Sql/servers', format('{0}-{1}', parameters('name'), variables('collisionSuffix'))), '2022-05-01-preview').fullyQualifiedDomainName), format('Initial Catalog={0}', parameters('name')), format('User ID={0}', variables('sqlServerAdministratorLogin')), format('Password={0}', variables('sqlServerAdministratorLoginPassword')), 'Persist Security Info=False', 'MultipleActiveResultSets=False', 'Encrypt=True', 'TrustServerCertificate=False', 'Connection Timeout=30'), ';')]"
+            },
+            {
+              "name": "notifications-password",
+              "value": "[parameters('notificationsPassword')]"
+            },
+            {
+              "name": "project-token",
+              "value": "[parameters('projectToken')]"
+            },
+            {
+              "name": "log-analytics-workspace-key",
+              "value": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces', parameters('name')), '2022-10-01').primarySharedKey]"
+            }
+          ]
+        },
+        "template": {
+          "containers": [
+            {
+              "image": "[format('{0}{1}:{2}', format('{0}', if(variables('hasDockerImageRegistry'), format('{0}/', parameters('dockerImageRegistry')), '')), parameters('serverImageRepository'), parameters('serverImageTag'))]",
+              "name": "dependabot",
+              "env": [
+                {
+                  "name": "AZURE_CLIENT_ID",
+                  "value": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')), '2018-11-30').clientId]"
+                },
+                {
+                  "name": "ASPNETCORE_FORWARDEDHEADERS_ENABLED",
+                  "value": "true"
+                },
+                {
+                  "name": "EFCORE_PERFORM_MIGRATIONS",
+                  "value": "true"
+                },
+                {
+                  "name": "ApplicationInsights__ConnectionString",
+                  "secretRef": "connection-strings-application-insights"
+                },
+                {
+                  "name": "ConnectionStrings__Sql",
+                  "secretRef": "connection-strings-sql"
+                },
+                {
+                  "name": "Workflow__SynchronizeOnStartup",
+                  "value": "[if(parameters('synchronizeOnStartup'), 'true', 'false')]"
+                },
+                {
+                  "name": "Workflow__LoadSchedulesOnStartup",
+                  "value": "true"
+                },
+                {
+                  "name": "Workflow__CreateOrUpdateWebhooksOnStartup",
+                  "value": "[if(parameters('createOrUpdateWebhooksOnStartup'), 'true', 'false')]"
+                },
+                {
+                  "name": "Workflow__ProjectUrl",
+                  "value": "[parameters('projectUrl')]"
+                },
+                {
+                  "name": "Workflow__ProjectToken",
+                  "secretRef": "project-token"
+                },
+                {
+                  "name": "Workflow__WebhookEndpoint",
+                  "value": "[format('https://{0}.{1}/webhooks/azure', parameters('name'), reference(resourceId('Microsoft.App/managedEnvironments', parameters('name')), '2022-06-01-preview').defaultDomain)]"
+                },
+                {
+                  "name": "Workflow__ResourceGroupId",
+                  "value": "[resourceGroup().id]"
+                },
+                {
+                  "name": "Workflow__LogAnalyticsWorkspaceId",
+                  "value": "[reference(resourceId('Microsoft.OperationalInsights/workspaces', parameters('name')), '2022-10-01').customerId]"
+                },
+                {
+                  "name": "Workflow__LogAnalyticsWorkspaceKey",
+                  "secretRef": "log-analytics-workspace-key"
+                },
+                {
+                  "name": "Workflow__ManagedIdentityId",
+                  "value": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-jobs', parameters('name')))]"
+                },
+                {
+                  "name": "Workflow__UpdaterContainerImage",
+                  "value": "[format('{0}{1}:{2}', format('{0}', if(variables('hasDockerImageRegistry'), format('{0}/', parameters('dockerImageRegistry')), '')), parameters('updaterImageRepository'), parameters('updaterImageTag'))]"
+                },
+                {
+                  "name": "Workflow__AutoComplete",
+                  "value": "[if(parameters('autoComplete'), 'true', 'false')]"
+                },
+                {
+                  "name": "Workflow__AutoCompleteIgnoreConfigs",
+                  "value": "[join(parameters('autoCompleteIgnoreConfigs'), ';')]"
+                },
+                {
+                  "name": "Workflow__AutoCompleteMergeStrategy",
+                  "value": "[parameters('autoCompleteMergeStrategy')]"
+                },
+                {
+                  "name": "Workflow__AutoApprove",
+                  "value": "[if(parameters('autoApprove'), 'true', 'false')]"
+                },
+                {
+                  "name": "Workflow__GithubToken",
+                  "value": "[parameters('githubToken')]"
+                },
+                {
+                  "name": "Workflow__JobHostType",
+                  "value": "[parameters('jobHostType')]"
+                },
+                {
+                  "name": "Workflow__Location",
+                  "value": "[parameters('location')]"
+                },
+                {
+                  "name": "Authentication__Schemes__Management__Authority",
+                  "value": "[format('{0}{1}/v2.0', environment().authentication.loginEndpoint, subscription().tenantId)]"
+                },
+                {
+                  "name": "Authentication__Schemes__Management__ValidAudiences__0",
+                  "value": "[format('https://{0}.{1}', parameters('name'), reference(resourceId('Microsoft.App/managedEnvironments', parameters('name')), '2022-06-01-preview').defaultDomain)]"
+                },
+                {
+                  "name": "Authentication__Schemes__ServiceHooks__Credentials__vsts",
+                  "secretRef": "notifications-password"
+                },
+                {
+                  "name": "EventBus__SelectedTransport",
+                  "value": "ServiceBus"
+                },
+                {
+                  "name": "EventBus__Transports__azure-service-bus__FullyQualifiedNamespace",
+                  "value": "[split(split(reference(resourceId('Microsoft.ServiceBus/namespaces', format('{0}-{1}', parameters('name'), variables('collisionSuffix'))), '2021-11-01').serviceBusEndpoint, '/')[2], ':')[0]]"
+                }
+              ],
+              "resources": {
+                "cpu": "[json('0.25')]",
+                "memory": "0.5Gi"
+              }
+            }
+          ],
+          "scale": {
+            "minReplicas": "[parameters('minReplicas')]",
+            "maxReplicas": "[parameters('maxReplicas')]"
+          }
+        }
+      },
+      "identity": {
+        "type": "UserAssigned",
+        "userAssignedIdentities": {
+          "[format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')))]": {}
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.App/managedEnvironments', parameters('name'))]",
+        "[resourceId('Microsoft.Insights/components', parameters('name'))]",
+        "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('name'))]",
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name'))]",
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-jobs', parameters('name')))]",
+        "[resourceId('Microsoft.ServiceBus/namespaces', format('{0}-{1}', parameters('name'), variables('collisionSuffix')))]",
+        "[resourceId('Microsoft.Sql/servers', format('{0}-{1}', parameters('name'), variables('collisionSuffix')))]",
+        "[resourceId('Microsoft.Sql/servers/databases', format('{0}-{1}', parameters('name'), variables('collisionSuffix')), parameters('name'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "name": "[guid(resourceGroup().id, 'managedIdentity', 'ContributorRoleAssignment')]",
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
+        "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')), '2018-11-30').principalId]",
+        "principalType": "ServicePrincipal"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "name": "[guid(resourceGroup().id, 'managedIdentity', 'AzureServiceBusDataOwner')]",
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '090c5cfd-751d-490a-894a-3ce6f1109419')]",
+        "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')), '2018-11-30').principalId]",
+        "principalType": "ServicePrincipal"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "name": "[guid(resourceGroup().id, 'managedIdentity', 'LogAnalyticsReader')]",
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '73c42c96-874c-492b-b04d-ab87d138a893')]",
+        "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')), '2018-11-30').principalId]",
+        "principalType": "ServicePrincipal"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name'))]"
+      ]
+    }
+  ],
+  "outputs": {
+    "sqlServerAdministratorLoginPassword": {
+      "type": "string",
+      "value": "[variables('sqlServerAdministratorLoginPassword')]"
+    },
+    "webhookEndpoint": {
+      "type": "string",
+      "value": "[format('https://{0}.{1}/webhooks/azure', parameters('name'), reference(resourceId('Microsoft.App/managedEnvironments', parameters('name')), '2022-06-01-preview').defaultDomain)]"
+    },
+    "notificationsPassword": {
+      "type": "string",
+      "value": "[parameters('notificationsPassword')]"
+    }
+  }
+}

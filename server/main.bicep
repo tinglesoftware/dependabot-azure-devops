@@ -4,6 +4,50 @@ param location string = resourceGroup().location
 @description('Name of the resources')
 param name string = 'dependabot'
 
+@description('URL of the project. For example "https://dev.azure.com/fabrikam/DefaultCollection"')
+param projectUrl string
+
+@description('Token for accessing the project.')
+param projectToken string
+
+@description('Whether to synchronize repositories on startup.')
+param synchronizeOnStartup bool = false
+
+@description('Whether to create or update subscriptions on startup.')
+param createOrUpdateWebhooksOnStartup bool = false
+
+@description('Access token for authenticating requests to GitHub.')
+param githubToken string = ''
+
+@description('Whether to set auto complete on created pull requests.')
+param autoComplete bool = true
+
+@description('Identifiers of configs to be ignored in auto complete. E.g 3,4,10')
+param autoCompleteIgnoreConfigs array = []
+
+@allowed([
+  'NoFastForward'
+  'Rebase'
+  'RebaseMerge'
+  'Squash'
+])
+@description('Merge strategy to use when setting auto complete on created pull requests.')
+param autoCompleteMergeStrategy string = 'Squash'
+
+@description('Whether to automatically approve created pull requests.')
+param autoApprove bool = false
+
+@allowed([
+  'ContainerInstances'
+  // 'ContainerApps' // TODO: resotre this once jobs support is added
+])
+@description('Where to host new update jobs.')
+param jobHostType string = 'ContainerInstances'
+
+@description('Password for Webhooks, ServiceHooks, and Notifications from Azure DevOps.')
+#disable-next-line secure-secrets-in-params // need sensible defaults
+param notificationsPassword string = uniqueString('service-hooks', resourceGroup().id) // e.g. zecnx476et7xm (13 characters)
+
 @description('Registry of the docker image. E.g. "contoso.azurecr.io". Leave empty unless you have a private registry mirroring the image from docker hub')
 param dockerImageRegistry string = 'ghcr.io'
 
@@ -18,50 +62,6 @@ param updaterImageRepository string = 'tinglesoftware/dependabot-updater'
 
 @description('Tag of the updater docker image.')
 param updaterImageTag string = '#{GITVERSION_NUGETVERSIONV2}#'
-
-@allowed([
-  'ContainerInstances'
-  'ContainerApps'
-])
-@description('Where to host new update jobs.')
-param jobHostType string = 'ContainerInstances'
-
-@description('Password for Webhooks, ServiceHooks, and Notifications from Azure DevOps.')
-#disable-next-line secure-secrets-in-params // need sensible defaults
-param notificationsPassword string = uniqueString('service-hooks', resourceGroup().id) // e.g. zecnx476et7xm (13 characters)
-
-@description('URL of the project. For example "https://dev.azure.com/fabrikam/DefaultCollection"')
-param projectUrl string
-
-@description('Token for accessing the project.')
-param projectToken string
-
-@description('Whether to synchronize repositories on startup.')
-param synchronizeOnStartup bool = false
-
-@description('Whether to create or update subscriptions on startup.')
-param createOrUpdateWebhooksOnStartup bool = false
-
-@description('Whether to set auto complete on created pull requests.')
-param autoComplete bool = true
-
-@description('Identifiers of configs to be ignored in auto complete. E.g 3,4,10')
-param autoCompleteIgnoreConfigs array = []
-
-@allowed([
-  'NoFastForward'
-  'Rebase'
-  'RebaseMerge'
-  'Squash'
-])
-@description('Where to host new update jobs.')
-param autoCompleteMergeStrategy string = 'Squash'
-
-@description('Whether to automatically approve created pull requests.')
-param autoApprove bool = false
-
-@description('Access token for authenticating requests to GitHub.')
-param githubToken string = ''
 
 @minValue(1)
 @maxValue(2)
