@@ -8,10 +8,11 @@ This repository contains tools for updating dependencies in Azure DevOps reposit
 
 In this repository you'll find:
 
-1. Dependabot [updater](./updater) in Ruby.
+1. Dependabot [updater](./updater) in Ruby. See [docs](./docs/updater.md).
 2. Dockerfile and build/image for running the updater via Docker [here](./Dockerfile).
-3. Azure DevOps [Extension](https://marketplace.visualstudio.com/items?itemName=tingle-software.dependabot) and [source](./extension).
-4. Kubernetes CronJob [template](#kubernetes-cronjob).
+3. Dependabot [server](./server/) in .NET/C#. See [docs](./docs/server.md).
+4. Azure DevOps [Extension](https://marketplace.visualstudio.com/items?itemName=tingle-software.dependabot) and [source](./extension).
+5. Kubernetes CronJob [template](#kubernetes-cronjob).
 
 ## Using a configuration file
 
