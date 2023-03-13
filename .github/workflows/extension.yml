@@ -137,6 +137,7 @@ jobs:
       run: npm install -g tfx-cli@0.12.0
 
     - name: Publish to marketplace (dev)
+      if: github.ref == 'refs/heads/main'
       run: >
         tfx extension publish
         --vsix $GITHUB_WORKSPACE/dev/*.vsix
