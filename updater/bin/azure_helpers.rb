@@ -32,23 +32,11 @@ module Dependabot
 
       def branch_delete(name)
         branch_name = name.gsub("refs/heads/", "")
-        branch_object = branch(branch_name)
-        branch_object_id = branch_object["objectId"]
+        branch_object_id = branch(branch_name)["objectId"]
 
         # https://developercommunity.visualstudio.com/t/delete-tags-or-branches-using-rest-apis/698220
         # https://github.com/MicrosoftDocs/azure-devops-docs/issues/2648
-        content = [
-          {
-            name: name,
-            oldObjectId: branch_object_id,
-            newObjectId: "0000000000000000000000000000000000000000"
-          }
-        ]
-
-        post(source.api_endpoint +
-            source.organization + "/" + source.project +
-            "/_apis/git/repositories/" + source.unscoped_repo +
-            "/refs?api-version=6.0", content.to_json)
+        update_ref(branch_name, branch_object_id, "0000000000000000000000000000000000000000")
       end
 
       def pull_request_commits(pull_request_id)
