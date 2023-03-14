@@ -49,6 +49,18 @@
         "description": "Access token for authenticating requests to GitHub."
       }
     },
+    "eventBusTransport": {
+      "type": "string",
+      "defaultValue": "ServiceBus",
+      "metadata": {
+        "description": "Merge strategy to use when setting auto complete on created pull requests."
+      },
+      "allowedValues": [
+        "InMemory",
+        "ServiceBus",
+        "QueueStorage"
+      ]
+    },
     "autoComplete": {
       "type": "bool",
       "defaultValue": true,
@@ -175,6 +187,27 @@
       "location": "[parameters('location')]"
     },
     {
+      "condition": "[equals(parameters('eventBusTransport'), 'QueueStorage')]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2022-09-01",
+      "name": "[format('{0}-{1}', parameters('name'), variables('collisionSuffix'))]",
+      "location": "[parameters('location')]",
+      "kind": "StorageV2",
+      "sku": {
+        "name": "Standard_LRS"
+      },
+      "properties": {
+        "accessTier": "Hot",
+        "supportsHttpsTrafficOnly": true,
+        "allowBlobPublicAccess": true,
+        "networkAcls": {
+          "bypass": "AzureServices",
+          "defaultAction": "Allow"
+        }
+      }
+    },
+    {
+      "condition": "[equals(parameters('eventBusTransport'), 'ServiceBus')]",
       "type": "Microsoft.ServiceBus/namespaces",
       "apiVersion": "2021-11-01",
       "name": "[format('{0}-{1}', parameters('name'), variables('collisionSuffix'))]",
@@ -437,11 +470,15 @@
                 },
                 {
                   "name": "EventBus__SelectedTransport",
-                  "value": "ServiceBus"
+                  "value": "[parameters('eventBusTransport')]"
                 },
                 {
                   "name": "EventBus__Transports__azure-service-bus__FullyQualifiedNamespace",
-                  "value": "[split(split(reference(resourceId('Microsoft.ServiceBus/namespaces', format('{0}-{1}', parameters('name'), variables('collisionSuffix'))), '2021-11-01').serviceBusEndpoint, '/')[2], ':')[0]]"
+                  "value": "[if(equals(parameters('eventBusTransport'), 'ServiceBus'), split(split(reference(resourceId('Microsoft.ServiceBus/namespaces', format('{0}-{1}', parameters('name'), variables('collisionSuffix'))), '2021-11-01').serviceBusEndpoint, '/')[2], ':')[0], '')]"
+                },
+                {
+                  "name": "EventBus__Transports__azure-queue-storage__ServiceUrl",
+                  "value": "[if(equals(parameters('eventBusTransport'), 'QueueStorage'), reference(resourceId('Microsoft.Storage/storageAccounts', format('{0}-{1}', parameters('name'), variables('collisionSuffix'))), '2022-09-01').primaryEndpoints.queue, '')]"
                 }
               ],
               "resources": {
@@ -470,7 +507,8 @@
         "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-jobs', parameters('name')))]",
         "[resourceId('Microsoft.ServiceBus/namespaces', format('{0}-{1}', parameters('name'), variables('collisionSuffix')))]",
         "[resourceId('Microsoft.Sql/servers', format('{0}-{1}', parameters('name'), variables('collisionSuffix')))]",
-        "[resourceId('Microsoft.Sql/servers/databases', format('{0}-{1}', parameters('name'), variables('collisionSuffix')), parameters('name'))]"
+        "[resourceId('Microsoft.Sql/servers/databases', format('{0}-{1}', parameters('name'), variables('collisionSuffix')), parameters('name'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', format('{0}-{1}', parameters('name'), variables('collisionSuffix')))]"
       ]
     },
     {
