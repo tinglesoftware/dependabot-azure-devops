@@ -19,6 +19,14 @@ param createOrUpdateWebhooksOnStartup bool = false
 @description('Access token for authenticating requests to GitHub.')
 param githubToken string = ''
 
+@allowed([
+  'InMemory'
+  'ServiceBus'
+  'QueueStorage'
+])
+@description('Merge strategy to use when setting auto complete on created pull requests.')
+param eventBusTransport string = 'ServiceBus'
+
 @description('Whether to set auto complete on created pull requests.')
 param autoComplete bool = true
 
@@ -39,7 +47,7 @@ param autoApprove bool = false
 
 @allowed([
   'ContainerInstances'
-  // 'ContainerApps' // TODO: resotre this once jobs support is added
+  // 'ContainerApps' // TODO: restore this once jobs support is added
 ])
 @description('Where to host new update jobs.')
 param jobHostType string = 'ContainerInstances'
@@ -90,8 +98,25 @@ resource managedIdentityJobs 'Microsoft.ManagedIdentity/userAssignedIdentities@2
   location: location
 }
 
-/* Service Bus namespace */
-resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2021-11-01' = {
+/* Storage Account and Service Bus namespace */
+resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = if (eventBusTransport == 'QueueStorage') {
+  name: '${name}-${collisionSuffix}'
+  location: location
+  kind: 'StorageV2'
+  sku: {
+    name: 'Standard_LRS'
+  }
+  properties: {
+    accessTier: 'Hot'
+    supportsHttpsTrafficOnly: true
+    allowBlobPublicAccess: true // CDN does not work without this
+    networkAcls: {
+      bypass: 'AzureServices'
+      defaultAction: 'Allow'
+    }
+  }
+}
+resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2021-11-01' = if (eventBusTransport == 'ServiceBus') {
   name: '${name}-${collisionSuffix}'
   location: location
   properties: {
@@ -273,10 +298,15 @@ resource app 'Microsoft.App/containerApps@2022-06-01-preview' = {
             { name: 'Authentication__Schemes__Management__ValidAudiences__0', value: 'https://${name}.${appEnvironment.properties.defaultDomain}' }
             { name: 'Authentication__Schemes__ServiceHooks__Credentials__vsts', secretRef: 'notifications-password' }
 
-            { name: 'EventBus__SelectedTransport', value: 'ServiceBus' }
+            { name: 'EventBus__SelectedTransport', value: eventBusTransport }
             {
               name: 'EventBus__Transports__azure-service-bus__FullyQualifiedNamespace'
-              value: split(split(serviceBusNamespace.properties.serviceBusEndpoint, '/')[2], ':')[0] // manipulating https://{your-namespace}.servicebus.windows.net:443/
+              // manipulating https://{your-namespace}.servicebus.windows.net:443/
+              value: eventBusTransport == 'ServiceBus' ? split(split(serviceBusNamespace.properties.serviceBusEndpoint, '/')[2], ':')[0] : ''
+            }
+            {
+              name: 'EventBus__Transports__azure-queue-storage__ServiceUrl'
+              value: eventBusTransport == 'QueueStorage' ? storageAccount.properties.primaryEndpoints.queue : ''
             }
           ]
           resources: { // these are the least resources we can provision

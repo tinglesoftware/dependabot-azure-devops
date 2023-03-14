@@ -91,6 +91,11 @@ builder.Services.AddEventBus(builder =>
         builder.AddAzureServiceBusTransport(
             options => ((AzureServiceBusTransportCredentials)options.Credentials).TokenCredential = credential);
     }
+    else if (selectedTransport is EventBusTransportKind.QueueStorage)
+    {
+        builder.AddAzureQueueStorageTransport(
+            options => ((AzureQueueStorageTransportCredentials)options.Credentials).TokenCredential = credential);
+    }
     else if (selectedTransport is EventBusTransportKind.InMemory)
     {
         builder.AddInMemoryTransport();
@@ -119,7 +124,7 @@ await AppSetup.SetupAsync(app);
 
 await app.RunAsync();
 
-internal enum EventBusTransportKind { InMemory, ServiceBus, }
+internal enum EventBusTransportKind { InMemory, ServiceBus, QueueStorage, }
 
 internal static class AuthConstants
 {
