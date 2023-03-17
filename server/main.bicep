@@ -27,6 +27,9 @@ param githubToken string = ''
 @description('Merge strategy to use when setting auto complete on created pull requests.')
 param eventBusTransport string = 'ServiceBus'
 
+@description('Whether update jobs should fail when an exception occurs.')
+param failOnException bool = false
+
 @description('Whether to set auto complete on created pull requests.')
 param autoComplete bool = true
 
@@ -282,6 +285,7 @@ resource app 'Microsoft.App/containerApps@2022-06-01-preview' = {
             { name: 'Workflow__LogAnalyticsWorkspaceKey', secretRef: 'log-analytics-workspace-key' }
             { name: 'Workflow__ManagedIdentityId', value: managedIdentityJobs.id }
             { name: 'Workflow__UpdaterContainerImage', value: '${'${hasDockerImageRegistry ? '${dockerImageRegistry}/' : ''}'}${updaterImageRepository}:${updaterImageTag}' }
+            { name: 'Workflow__FailOnException', value: failOnException ? 'true' : 'false' }
             { name: 'Workflow__AutoComplete', value: autoComplete ? 'true' : 'false' }
             { name: 'Workflow__AutoCompleteIgnoreConfigs', value: join(autoCompleteIgnoreConfigs, ';') }
             { name: 'Workflow__AutoCompleteMergeStrategy', value: autoCompleteMergeStrategy }

@@ -61,6 +61,13 @@
         "QueueStorage"
       ]
     },
+    "failOnException": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "Whether update jobs should fail when an exception occurs."
+      }
+    },
     "autoComplete": {
       "type": "bool",
       "defaultValue": true,
@@ -427,6 +434,10 @@
                 {
                   "name": "Workflow__UpdaterContainerImage",
                   "value": "[format('{0}{1}:{2}', format('{0}', if(variables('hasDockerImageRegistry'), format('{0}/', parameters('dockerImageRegistry')), '')), parameters('updaterImageRepository'), parameters('updaterImageTag'))]"
+                },
+                {
+                  "name": "Workflow__FailOnException",
+                  "value": "[if(parameters('failOnException'), 'true', 'false')]"
                 },
                 {
                   "name": "Workflow__AutoComplete",
