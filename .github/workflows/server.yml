@@ -68,6 +68,7 @@ jobs:
     - name: Build bicep file
       uses: azure/CLI@v1
       with:
+        azcliversion: 2.45.0 # somehow 2.46.0 is failing
         inlineScript: |
           cp $GITHUB_WORKSPACE/server/main.bicep $GITHUB_WORKSPACE/drop/main.bicep
           az bicep build --file server/main.bicep --outfile $GITHUB_WORKSPACE/drop/main.json
