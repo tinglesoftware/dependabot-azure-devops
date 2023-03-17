@@ -51,6 +51,9 @@ public class WorkflowOptions
     /// <summary>Authentication token for accessing the project.</summary>
     public string? ProjectToken { get; set; }
 
+    /// <summary>Whether update jobs should fail when an exception occurs.</summary>
+    public bool FailOnException { get; set; }
+
     /// <summary>Whether to set automatic completion of pull requests.</summary>
     public bool? AutoComplete { get; set; }
 

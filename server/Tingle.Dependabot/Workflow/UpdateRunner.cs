@@ -214,7 +214,7 @@ internal partial class UpdateRunner
               .AddIfNotDefault("DEPENDABOT_LABELS", ToJson(update.Labels))
               .AddIfNotDefault("DEPENDABOT_BRANCH_NAME_SEPARATOR", update.PullRequestBranchName?.Separator)
               .AddIfNotDefault("DEPENDABOT_MILESTONE", update.Milestone?.ToString())
-              .AddIfNotDefault("DEPENDABOT_FAIL_ON_EXCEPTION", "true");
+              .AddIfNotDefault("DEPENDABOT_FAIL_ON_EXCEPTION", options.FailOnException.ToString().ToLowerInvariant());
 
         var secrets = new Dictionary<string, string>(options.Secrets) { ["DEFAULT_TOKEN"] = options.ProjectToken!, };
 
