@@ -6,7 +6,7 @@ require "dependabot/config/file"
 module Dependabot
   module Config
     class CustomFileFetcher < Dependabot::FileFetchers::Base
-      CONFIG_FILE_PATHS = [".azuredevops/dependabot.yml", ".azuredevops/dependabot.yaml", options.custom_file_location]
+      CONFIG_FILE_PATHS = [".azuredevops/dependabot.yml", ".azuredevops/dependabot.yaml", options.config_file_location]
 
       def self.required_files_in?(filenames)
         CONFIG_FILE_PATHS.any? { |file| filenames.include?(file) }
