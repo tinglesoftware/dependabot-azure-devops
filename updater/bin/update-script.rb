@@ -460,7 +460,7 @@ $config_file = begin
   cfg_file = Dependabot::Config::CustomFileFetcher.new(
     source: cfg_source,
     credentials: $options[:credentials],
-    options: $options[:custom_file_location]
+    options: $options[:config_file_location]
   ).config_file
   puts "Using configuration file at '#{cfg_file.path}' 😎"
   Dependabot::Config::File.parse(cfg_file.content)

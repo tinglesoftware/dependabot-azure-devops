@@ -42,8 +42,8 @@ spec:
             - name: GITHUB_ACCESS_TOKEN
               value: '{{github_access_token}}'
 
-            - name: CUSTOM_FILE_LOCATION
-              value: '{{custom_file_location}}'
+            - name: Config_File_Location
+              value: '{{config_file_location}}'
 
             - name: DEPENDABOT_PACKAGE_MANAGER
               value: '{{dependabot_package_manager}}'
