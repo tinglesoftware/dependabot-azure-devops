@@ -28,7 +28,7 @@ async function parseConfigFile(variables: ISharedVariables): Promise<IDependabot
     "/.github/dependabot.yaml",
     "/.github/dependabot.yml",
     "/.azuredevops/dependabot.yaml",
-    "/.azuredevops/dependabot.yml",
+    "/.azuredevops/dependabot.yml"
   ];
 
   if (variables.configFileLocation !== "") {

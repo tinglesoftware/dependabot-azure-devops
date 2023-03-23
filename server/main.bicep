@@ -16,11 +16,11 @@ param synchronizeOnStartup bool = false
 @description('Whether to create or update subscriptions on startup.')
 param createOrUpdateWebhooksOnStartup bool = false
 
-@description('Access token for authenticating requests to GitHub.')
-param githubToken string = ''
+@description('Defines a custom file path for the Dependabot configuration file.')
+param configFileLocation string = ''
 
 @description('Access token for authenticating requests to GitHub.')
-param configFileLocation string = ''
+param githubToken string = ''
 
 @allowed([
   'InMemory'
