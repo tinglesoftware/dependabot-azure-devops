@@ -27,6 +27,9 @@ export interface ISharedVariables {
   /** Whether the repository was overridden via input */
   repositoryOverridden: boolean;
 
+  /** Defines a custom file path for the Dependabot configuration file */
+  configFileLocation: string;
+
   /** The github token */
   githubAccessToken: string;
   /** The access User for Azure DevOps Repos */
@@ -99,7 +102,9 @@ export default function getSharedVariables(): ISharedVariables {
     );
     repository = tl.getVariable("Build.Repository.Name");
   }
-  repository = encodeURI(repository); // encode special characters like spaces
+    repository = encodeURI(repository); // encode special characters like spaces
+
+  let configFileLocation = tl.getInput("configFileLocation");
 
   // Prepare the access credentials
   let githubAccessToken: string = getGithubAccessToken();
@@ -165,6 +170,8 @@ export default function getSharedVariables(): ISharedVariables {
     project,
     repository,
     repositoryOverridden,
+
+    configFileLocation,
 
     githubAccessToken,
     systemAccessUser,

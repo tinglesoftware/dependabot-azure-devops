@@ -6,6 +6,8 @@ This is the unofficial [dependabot](https://github.com/Dependabot/dependabot-cor
 
 Add a configuration file stored at `.github/dependabot.yml` or  `.github/dependabot.yaml` conforming to the [official spec](https://docs.github.com/en/github/administering-a-repository/configuration-options-for-dependency-updates).
 
+Optionally, specify your own config file location using the `configFileLocation` option.
+
 To use in a YAML pipeline:
 
 ```yaml
@@ -41,6 +43,7 @@ This task makes use of a docker image, which may take time to install. Subsequen
 
 |Input|Description|
 |--|--|
+|configFileLocation|**_Optional_. Specify a custom file location for the dependabot configuration file. Example: `/Automation/dependabot.yml`.|
 |failOnException|**_Optional_**. Determines if the execution should fail when an exception occurs. Defaults to `true`.|
 |updaterOptions|**_Optional_**. Comma separated list of updater options; available options depend on the ecosystem. Example: `goprivate=true,kubernetes_updates=true`.|
 |setAutoComplete|**_Optional_**. Determines if the pull requests that dependabot creates should have auto complete set. When set to `true`, pull requests that pass all policies will be merged automatically. Defaults to `false`.|

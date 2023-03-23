@@ -24,10 +24,14 @@ import axios from "axios";
  * @returns {IDependabotConfig} config - the dependabot configuration
  */
 async function parseConfigFile(variables: ISharedVariables): Promise<IDependabotConfig> {
-  const possibleFilePaths = [
+  let possibleFilePaths = [
     "/.github/dependabot.yaml",
     "/.github/dependabot.yml",
   ];
+
+  if (variables.configFileLocation !== "") {
+    possibleFilePaths = [variables.configFileLocation];
+  }
 
   let contents: null | string;
 

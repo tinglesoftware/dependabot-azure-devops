@@ -21,10 +21,10 @@ async function run() {
     tl.debug("Checking for docker install ...");
     tl.which("docker", true);
 
-    // prepare the shared variables
+    // Prepare the shared variables
     const variables = getSharedVariables();
 
-    // parse the configuration file
+    // Parse the configuration file
     const config = await parseConfigFile(variables);
 
     // if update identifiers are specified, select then otherwise handle all

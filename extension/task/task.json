@@ -48,7 +48,14 @@
       "required": false,
       "helpMarkDown": "Determines if the task will pick config values specified from the yaml file located at `.github/dependabot.yml` or `.github/dependabot.yaml`"
     },
-
+    {
+      "name": "configFileLocation",
+      "type": "string",
+      "label": "Custom Path for the Dependabot YAML file.",
+      "defaultValue": "",
+      "required": false,
+      "helpMarkDown": "Determines a custom location for the Dependabot YAML file."
+    },
     {
       "name": "failOnException",
       "type": "boolean",
