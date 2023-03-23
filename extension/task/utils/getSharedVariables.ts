@@ -102,7 +102,7 @@ export default function getSharedVariables(): ISharedVariables {
     );
     repository = tl.getVariable("Build.Repository.Name");
   }
-    repository = encodeURI(repository); // encode special characters like spaces
+  repository = encodeURI(repository); // encode special characters like spaces
 
   let configFileLocation = tl.getInput("configFileLocation");
 
