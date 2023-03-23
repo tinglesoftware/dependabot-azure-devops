@@ -17,7 +17,6 @@ require "dependabot/update_checkers"
 require "dependabot/file_updaters"
 require "dependabot/pull_request_creator"
 require "dependabot/pull_request_updater"
-require "dependabot/config/file_fetcher"
 
 require "dependabot/bundler"
 require "dependabot/cargo"
@@ -36,6 +35,7 @@ require "dependabot/pub"
 require "dependabot/python"
 require "dependabot/terraform"
 
+require_relative "customfilefetcher"
 require_relative "azure_helpers"
 require_relative "vulnerabilities"
 
@@ -48,6 +48,8 @@ $options = {
 
   directory: ENV["DEPENDABOT_DIRECTORY"] || "/", # Directory where the base dependency files are.
   branch: ENV["DEPENDABOT_TARGET_BRANCH"] || nil, # Branch against which to create PRs
+
+  config_file_location: ENV["CONFIG_FILE_LOCATION"] || nil,
 
   allow_conditions: [],
   reject_external_code: ENV["DEPENDABOT_REJECT_EXTERNAL_CODE"] == "true",
@@ -455,10 +457,10 @@ $config_file = begin
   # See https://github.com/tinglesoftware/dependabot-azure-devops/issues/399
   cfg_source = $source.clone
   cfg_source.directory = "/"
-  cfg_file = Dependabot::Config::FileFetcher.new(
+  cfg_file = Dependabot::Config::CustomFileFetcher.new(
     source: cfg_source,
     credentials: $options[:credentials],
-    options: $options[:updater_options]
+    options: $options[:custom_file_location]
   ).config_file
   puts "Using configuration file at '#{cfg_file.path}' 😎"
   Dependabot::Config::File.parse(cfg_file.content)
