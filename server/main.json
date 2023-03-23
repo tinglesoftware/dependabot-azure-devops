@@ -42,6 +42,13 @@
         "description": "Whether to create or update subscriptions on startup."
       }
     },
+    "configFileLocation": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Defines a custom file path for the Dependabot configuration file."
+      }
+    },
     "githubToken": {
       "type": "string",
       "defaultValue": "",
@@ -454,6 +461,10 @@
                 {
                   "name": "Workflow__AutoApprove",
                   "value": "[if(parameters('autoApprove'), 'true', 'false')]"
+                },
+                {
+                  "name": "Workflow__ConfigFileLocation",
+                  "value": "[parameters('configFileLocation')]"
                 },
                 {
                   "name": "Workflow__GithubToken",

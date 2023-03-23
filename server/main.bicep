@@ -19,6 +19,9 @@ param createOrUpdateWebhooksOnStartup bool = false
 @description('Access token for authenticating requests to GitHub.')
 param githubToken string = ''
 
+@description('Access token for authenticating requests to GitHub.')
+param configFileLocation string = ''
+
 @allowed([
   'InMemory'
   'ServiceBus'
@@ -290,6 +293,7 @@ resource app 'Microsoft.App/containerApps@2022-06-01-preview' = {
             { name: 'Workflow__AutoCompleteIgnoreConfigs', value: join(autoCompleteIgnoreConfigs, ';') }
             { name: 'Workflow__AutoCompleteMergeStrategy', value: autoCompleteMergeStrategy }
             { name: 'Workflow__AutoApprove', value: autoApprove ? 'true' : 'false' }
+            { name: 'Workflow__ConfigFileLocation', value: configFileLocation }
             { name: 'Workflow__GithubToken', value: githubToken }
             { name: 'Workflow__JobHostType', value: jobHostType }
             { name: 'Workflow__Location', value: location }

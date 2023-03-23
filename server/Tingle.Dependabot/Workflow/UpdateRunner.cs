@@ -204,7 +204,8 @@ internal partial class UpdateRunner
         };
 
         // Add optional values
-        values.AddIfNotDefault("GITHUB_ACCESS_TOKEN", options.GithubToken)
+        values.AddIfNotDefault("CONFIG_FILE_LOCATION", options.ConfigFileLocation)
+              .AddIfNotDefault("GITHUB_ACCESS_TOKEN", options.GithubToken)
               .AddIfNotDefault("DEPENDABOT_REBASE_STRATEGY", update.RebaseStrategy.GetEnumMemberAttrValueOrDefault())
               .AddIfNotDefault("DEPENDABOT_TARGET_BRANCH", update.TargetBranch)
               .AddIfNotDefault("DEPENDABOT_VENDOR", update.Vendor ? "true" : null)

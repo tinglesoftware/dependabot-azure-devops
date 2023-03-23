@@ -35,7 +35,7 @@ require "dependabot/pub"
 require "dependabot/python"
 require "dependabot/terraform"
 
-require_relative "customfilefetcher"
+require_relative "azure_config_fetcher"
 require_relative "azure_helpers"
 require_relative "vulnerabilities"
 
@@ -457,7 +457,7 @@ $config_file = begin
   # See https://github.com/tinglesoftware/dependabot-azure-devops/issues/399
   cfg_source = $source.clone
   cfg_source.directory = "/"
-  cfg_file = Dependabot::Config::CustomFileFetcher.new(
+  cfg_file = Dependabot::Config::AzureConfigFetcher.new(
     source: cfg_source,
     credentials: $options[:credentials],
     options: $options[:config_file_location]
