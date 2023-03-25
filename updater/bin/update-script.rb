@@ -374,6 +374,30 @@ def peer_dependency_should_update_instead?(dependency_name, updated_deps, files,
   end
 end
 
+def show_diff(original_file, updated_file)
+  return unless original_file
+
+  if original_file.content == updated_file.content
+    puts "    No change to #{original_file.name}"
+    return
+  end
+
+  original_tmp_file = Tempfile.new("original")
+  original_tmp_file.write(original_file.content)
+  original_tmp_file.close
+
+  updated_tmp_file = Tempfile.new("updated")
+  updated_tmp_file.write(updated_file.content)
+  updated_tmp_file.close
+
+  diff = `diff #{original_tmp_file.path} #{updated_tmp_file.path}`
+  puts "    ± #{original_file.name}"
+  puts "    ~~~"
+  puts diff.lines.map { |line| "    " + line }.join
+  puts "    ~~~"
+  puts
+end
+
 Dependabot::SimpleInstrumentor.subscribe do |*args|
   name = args.first
 
@@ -675,8 +699,27 @@ dependencies.select(&:top_level?).each do |dep|
       puts "Title: #{msg.pr_name}"
       puts "Description:\r\n#{msg.pr_message}\r\n"
       puts "Commit:\r\n#{msg.commit_message}\r\n"
+
+      # We are printing the file diffs and a message as a way to test file changes
+      # when testing issue
+      # https://github.com/tinglesoftware/dependabot-azure-devops/issues/512
+      puts "\r\nChanges:\r\n"
+      updated_files.each do |updated_file|
+        if updated_file.operation == Dependabot::DependencyFile::Operation::DELETE
+          puts "    Deleted #{updated_file.name}"
+        else
+          original_file = files.find { |f| f.name == updated_file.name }
+          if original_file
+            show_diff(original_file, updated_file)
+          else
+            puts "    Added #{updated_file.name}"
+          end
+        end
+      end
+
       puts "------------------------"
       puts ""
+
       pull_requests_count += 1
       next
     end
