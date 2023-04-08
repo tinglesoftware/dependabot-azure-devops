@@ -48,25 +48,34 @@ module Dependabot
         JSON.parse(response.body).fetch("value")
       end
 
-      def pull_request_auto_complete(pull_request_id, user_id, merge_strategy, ignore_config_ids)
-        # https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-requests/update?view=azure-devops-rest-6.0
+      # Exists until https://github.com/dependabot/dependabot-core/pull/6780 is merged
+      # rubocop:disable Metrics/ParameterLists
+      def pull_request_auto_complete(pull_request_id, auto_complete_set_by, merge_commit_message,
+                                     delete_source_branch = true, squash_merge = true, merge_strategy = "squash",
+                                     trans_work_items = false, ignore_config_ids = [])
+
         content = {
           autoCompleteSetBy: {
-            id: user_id
+            id: auto_complete_set_by
           },
           completionOptions: {
-            autoCompleteIgnoreConfigIds: ignore_config_ids,
+            mergeCommitMessage: merge_commit_message,
+            deleteSourceBranch: delete_source_branch,
+            squashMerge: squash_merge,
             mergeStrategy: merge_strategy,
-            deleteSourceBranch: true,
-            transitionWorkItems: false
+            transitionWorkItems: trans_work_items,
+            autoCompleteIgnoreConfigIds: ignore_config_ids
           }
         }
 
-        patch(source.api_endpoint +
-             source.organization + "/" + source.project +
-             "/_apis/git/repositories/" + source.unscoped_repo +
-             "/pullrequests/#{pull_request_id}?api-version=6.0", content.to_json)
+        response = patch(source.api_endpoint +
+                         source.organization + "/" + source.project +
+                         "/_apis/git/repositories/" + source.unscoped_repo +
+                         "/pullrequests/#{pull_request_id}?api-version=6.0", content.to_json)
+
+        JSON.parse(response.body)
       end
+      # rubocop:enable Metrics/ParameterLists
 
       def get_user_id(token = nil)
         # https://learn.microsoft.com/en-us/javascript/api/azure-devops-extension-api/connectiondata

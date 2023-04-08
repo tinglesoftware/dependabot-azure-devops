@@ -90,6 +90,7 @@ $options = {
   set_auto_complete: ENV["AZURE_SET_AUTO_COMPLETE"] == "true", # Set auto complete on created pull requests
   auto_complete_ignore_config_ids: JSON.parse(ENV["AZURE_AUTO_COMPLETE_IGNORE_CONFIG_IDS"] || "[]"), # default to empty
   merge_strategy: ENV["AZURE_MERGE_STRATEGY"] || "squash", # default to squash
+  trans_work_items: false,
 
   # Automatic Approval
   auto_approve_pr: ENV["AZURE_AUTO_APPROVE_PR"] == "true",
@@ -678,6 +679,19 @@ dependencies.select(&:top_level?).each do |dep|
 
     updated_files = updater.updated_dependency_files
 
+    # Create shared MessageBuilder
+    msg = Dependabot::PullRequestCreator::MessageBuilder.new(
+      source: $source,
+      dependencies: updated_deps,
+      files: updated_files,
+      credentials: $options[:credentials],
+      commit_message_options: $update_config.commit_message_options.to_h,
+      # pr_message_header: ,
+      # pr_message_footer: ,
+      # vulnerabilities_fixed: ,
+      github_redirection_service: Dependabot::PullRequestCreator::DEFAULT_GITHUB_REDIRECTION_SERVICE
+    )
+
     # Skip creating/updating PR
     if $options[:skip_pull_requests]
       # We are building a message as a way to test if commit-message in the config
@@ -687,14 +701,6 @@ dependencies.select(&:top_level?).each do |dep|
       #
       # puts "Skipping creating/updating Pull Request for #{dep.name} as instructed."
 
-      msg = Dependabot::PullRequestCreator::MessageBuilder.new(
-        dependencies: updated_deps,
-        files: updated_files,
-        credentials: $options[:credentials],
-        source: $source,
-        commit_message_options: $update_config.commit_message_options.to_h,
-        github_redirection_service: Dependabot::PullRequestCreator::DEFAULT_GITHUB_REDIRECTION_SERVICE
-      ).message
       puts "Skipping creating/updating Pull Request."
       puts "Title: #{msg.pr_name}"
       puts "Description:\r\n#{msg.pr_message}\r\n"
@@ -825,7 +831,8 @@ dependencies.select(&:top_level?).each do |dep|
         github_redirection_service: Dependabot::PullRequestCreator::DEFAULT_GITHUB_REDIRECTION_SERVICE,
         provider_metadata: {
           work_item: $options[:milestone]
-        }
+        },
+        message: msg
       )
 
       puts "Submitting #{dep.name} pull request for creation."
@@ -877,7 +884,11 @@ dependencies.select(&:top_level?).each do |dep|
         # Adding argument names will fail! Maybe because there is no spec?
         pull_request_id,
         auto_complete_user_id,
+        msg.commit_message,
+        true, # delete_source_branch
+        true, # squash_merge
         $options[:merge_strategy],
+        $options[:trans_work_items],
         $options[:auto_complete_ignore_config_ids]
       )
     end
