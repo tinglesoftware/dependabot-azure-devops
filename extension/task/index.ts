@@ -92,6 +92,12 @@ async function run() {
         dockerRunner.arg(["-e", 'DEPENDABOT_REJECT_EXTERNAL_CODE=true']);
       }
 
+      // We are well aware that ignore is not passed here. It is intentional.
+      // The ruby script in the docker container does it automatically.
+      // If you are having issues, search for related issues such as https://github.com/tinglesoftware/dependabot-azure-devops/pull/582
+      // before creating a new issue.
+      // You can also test against various reproductions such as https://dev.azure.com/tingle/dependabot/_git/repro-582
+
       // Set the dependencies to allow
       let allow = update.allow;
       if (allow) {
