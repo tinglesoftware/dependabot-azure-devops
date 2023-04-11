@@ -880,11 +880,11 @@ dependencies.select(&:top_level?).each do |dep|
     if $options[:set_auto_complete]
       auto_complete_user_id = pull_request["createdBy"]["id"]
       puts "Setting auto complete on ##{pull_request_id}."
-      azure_client.pull_request_auto_complete(
+      azure_client.autocomplete_pull_request(
         # Adding argument names will fail! Maybe because there is no spec?
         pull_request_id,
         auto_complete_user_id,
-        msg.commit_message,
+        msg.commit_message, # merge_commit_message
         true, # delete_source_branch
         true, # squash_merge
         $options[:merge_strategy],
