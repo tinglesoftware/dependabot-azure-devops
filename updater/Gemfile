@@ -8,26 +8,7 @@ source "https://rubygems.org"
 # They are so many, our reference won't be found for it to be updated.
 # Hence adding the branch.
 
-git "https://github.com/dependabot/dependabot-core.git", branch: "main" do
-  gem "dependabot-bundler"
-  gem "dependabot-cargo"
-  gem "dependabot-common"
-  gem "dependabot-composer"
-  gem "dependabot-docker"
-  gem "dependabot-elm"
-  gem "dependabot-github_actions"
-  gem "dependabot-git_submodules"
-  gem "dependabot-go_modules"
-  gem "dependabot-gradle"
-
-  gem "dependabot-hex"
-  gem "dependabot-maven"
-  gem "dependabot-npm_and_yarn"
-  gem "dependabot-nuget"
-  gem "dependabot-pub"
-  gem "dependabot-python"
-  gem "dependabot-terraform"
-end
+gem "dependabot-omnibus", github: "dependabot/dependabot-core", branch: "main"
 
 group :test do
   gem "rspec"
