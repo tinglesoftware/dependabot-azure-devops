@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <LangVersion>11.0</LangVersion>
@@ -44,7 +44,7 @@
     <PackageReference Include="Tingle.EventBus.Transports.InMemory" Version="0.18.1" />
     <PackageReference Include="Tingle.Extensions.DataAnnotations" Version="4.0.0" />
     <PackageReference Include="Tingle.PeriodicTasks" Version="0.1.0-ci0074" />
-    <PackageReference Include="YamlDotNet" Version="13.0.2" />
+    <PackageReference Include="YamlDotNet" Version="13.1.0" />
   </ItemGroup>
 
 </Project>
