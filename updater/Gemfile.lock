@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/dependabot/dependabot-core.git
-  revision: 9e564b90b2b36e7babfe01869ac295b5625bdc06
+  revision: e02718538024cd6f5df684eba3426ae105bda3e8
   branch: main
   specs:
     dependabot-bundler (0.216.1)
