@@ -882,6 +882,17 @@ dependencies.select(&:top_level?).each do |dep|
     # Set auto complete for this Pull Request
     # Pull requests that pass all policies will be merged automatically.
     # Optional policies can be ignored by passing their identifiers
+    #
+    # The merge commit message should contain the PR number and title for tracking.
+    # This is the default behaviour in Azure DevOps
+    # Example:
+    # Merged PR 24093: Bump Tingle.Extensions.Logging.LogAnalytics from 3.4.2-ci0005 to 3.4.2-ci0006
+    #
+    # Bumps [Tingle.Extensions.Logging.LogAnalytics](...) from 3.4.2-ci0005 to 3.4.2-ci0006
+    # - [Release notes](....)
+    # - [Changelog](....)
+    # - [Commits](....)
+    merge_commit_message = "Merged PR #{pull_request_id}: #{msg.pr_name}\n\n#{msg.commit_message}"
     if $options[:set_auto_complete]
       auto_complete_user_id = pull_request["createdBy"]["id"]
       puts "Setting auto complete on ##{pull_request_id}."
@@ -889,7 +900,7 @@ dependencies.select(&:top_level?).each do |dep|
         # Adding argument names will fail! Maybe because there is no spec?
         pull_request_id,
         auto_complete_user_id,
-        msg.commit_message, # merge_commit_message
+        merge_commit_message,
         true, # delete_source_branch
         true, # squash_merge
         $options[:merge_strategy],
