@@ -36,12 +36,6 @@ updates:
     time: "04:00"
   open-pull-requests-limit: 10
   ignore:
-  - dependency-name: "Microsoft.*"
-    update-types: ["version-update:semver-patch"]
-  - dependency-name: "System.*"
-    update-types: ["version-update:semver-patch"]
-  - dependency-name: "Azure.*"
-    update-types: ["version-update:semver-patch"]
   - dependency-name: "Moq"
     update-types: ["version-update:semver-patch"]
 
