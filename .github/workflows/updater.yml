@@ -7,11 +7,7 @@ on:
     - main
     tags:
     - '*'
-    paths:
-    - "updater/**"
-    - "Dockerfile"
-    - ".github/workflows/updater.yml"
-    - "!docs/**"
+    # No path filters ensures we always have a docker image matching the latest commit on main
   pull_request:
     branches:
     # Only trigger for PRs against `main` branch.
