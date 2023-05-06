@@ -149,7 +149,10 @@ internal class WorkflowBackgroundService : BackgroundService
 
         // delete old jobs
         var cutoff = DateTimeOffset.UtcNow.AddDays(-90);
-        jobs = await dbContext.UpdateJobs.Where(j => j.Created <= cutoff).Take(100).ToListAsync(cancellationToken);
+        jobs = await (from j in dbContext.UpdateJobs
+                      where j.Created <= cutoff
+                      orderby j.Created ascending
+                      select j).Take(100).ToListAsync(cancellationToken);
         if (jobs.Count > 0)
         {
             dbContext.UpdateJobs.RemoveRange(jobs);
