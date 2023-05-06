@@ -210,6 +210,20 @@
       "location": "[parameters('location')]"
     },
     {
+      "condition": "[equals(parameters('eventBusTransport'), 'ServiceBus')]",
+      "type": "Microsoft.ServiceBus/namespaces",
+      "apiVersion": "2021-11-01",
+      "name": "[format('{0}-{1}', parameters('name'), variables('collisionSuffix'))]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "disableLocalAuth": false,
+        "zoneRedundant": false
+      },
+      "sku": {
+        "name": "Basic"
+      }
+    },
+    {
       "condition": "[equals(parameters('eventBusTransport'), 'QueueStorage')]",
       "type": "Microsoft.Storage/storageAccounts",
       "apiVersion": "2022-09-01",
@@ -227,20 +241,6 @@
           "bypass": "AzureServices",
           "defaultAction": "Allow"
         }
-      }
-    },
-    {
-      "condition": "[equals(parameters('eventBusTransport'), 'ServiceBus')]",
-      "type": "Microsoft.ServiceBus/namespaces",
-      "apiVersion": "2021-11-01",
-      "name": "[format('{0}-{1}', parameters('name'), variables('collisionSuffix'))]",
-      "location": "[parameters('location')]",
-      "properties": {
-        "disableLocalAuth": false,
-        "zoneRedundant": false
-      },
-      "sku": {
-        "name": "Basic"
       }
     },
     {
@@ -539,7 +539,7 @@
     {
       "type": "Microsoft.Authorization/roleAssignments",
       "apiVersion": "2022-04-01",
-      "name": "[guid(resourceGroup().id, 'managedIdentity', 'ContributorRoleAssignment')]",
+      "name": "[guid(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')), 'ContributorRoleAssignment')]",
       "properties": {
         "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
         "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')), '2018-11-30').principalId]",
@@ -550,9 +550,10 @@
       ]
     },
     {
+      "condition": "[equals(parameters('eventBusTransport'), 'ServiceBus')]",
       "type": "Microsoft.Authorization/roleAssignments",
       "apiVersion": "2022-04-01",
-      "name": "[guid(resourceGroup().id, 'managedIdentity', 'AzureServiceBusDataOwner')]",
+      "name": "[guid(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')), 'AzureServiceBusDataOwner')]",
       "properties": {
         "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '090c5cfd-751d-490a-894a-3ce6f1109419')]",
         "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')), '2018-11-30').principalId]",
@@ -563,9 +564,23 @@
       ]
     },
     {
+      "condition": "[equals(parameters('eventBusTransport'), 'QueueStorage')]",
       "type": "Microsoft.Authorization/roleAssignments",
       "apiVersion": "2022-04-01",
-      "name": "[guid(resourceGroup().id, 'managedIdentity', 'LogAnalyticsReader')]",
+      "name": "[guid(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')), 'StorageQueueDataContributor')]",
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '974c5e8b-45b9-4653-ba55-5f855dd0fb88')]",
+        "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')), '2018-11-30').principalId]",
+        "principalType": "ServicePrincipal"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "name": "[guid(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')), 'LogAnalyticsReader')]",
       "properties": {
         "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '73c42c96-874c-492b-b04d-ab87d138a893')]",
         "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')), '2018-11-30').principalId]",
