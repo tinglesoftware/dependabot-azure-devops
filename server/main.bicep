@@ -74,6 +74,9 @@ param updaterImageRepository string = 'tinglesoftware/dependabot-updater'
 @description('Tag of the updater docker image.')
 param updaterImageTag string = '#{GITVERSION_NUGETVERSIONV2}#'
 
+@description('Resource identifier of the ContainerApp Environment to deply to. If none is provided, a new one is created.')
+param appEnvironmentId string = ''
+
 @minValue(1)
 @maxValue(2)
 @description('The minimum number of replicas')
@@ -88,6 +91,7 @@ var sqlServerAdministratorLogin = uniqueString(resourceGroup().id) // e.g. zecnx
 var sqlServerAdministratorLoginPassword = '${skip(uniqueString(resourceGroup().id), 5)}%${uniqueString('sql-password', resourceGroup().id)}' // e.g. abcde%zecnx476et7xm (19 characters)
 var hasDockerImageRegistry = (dockerImageRegistry != null && !empty(dockerImageRegistry))
 var isAcrServer = hasDockerImageRegistry && endsWith(dockerImageRegistry, environment().suffixes.acrLoginServer)
+var providedAppEnvironment = (appEnvironmentId != null && !empty(appEnvironmentId))
 // avoid conflicts across multiple deployments for resources that generate FQDN based on the name
 var collisionSuffix = uniqueString(resourceGroup().id) // e.g. zecnx476et7xm (13 characters)
 
@@ -145,7 +149,7 @@ resource sqlServer 'Microsoft.Sql/servers@2022-05-01-preview' = {
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
-      '${managedIdentity.id}': { /*ttk bug*/}
+      '${managedIdentity.id}': {/*ttk bug*/ }
     }
   }
 }
@@ -168,7 +172,7 @@ resource sqlServerDatabase 'Microsoft.Sql/servers/databases@2022-05-01-preview' 
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
-      '${managedIdentity.id}': { /*ttk bug*/}
+      '${managedIdentity.id}': {/*ttk bug*/ }
     }
   }
 }
@@ -188,7 +192,7 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10
 }
 
 /* Container App Environment */
-resource appEnvironment 'Microsoft.App/managedEnvironments@2022-06-01-preview' = {
+resource appEnvironment 'Microsoft.App/managedEnvironments@2022-03-01' = if (!providedAppEnvironment) {
   name: name
   location: location
   properties: {
@@ -199,10 +203,6 @@ resource appEnvironment 'Microsoft.App/managedEnvironments@2022-06-01-preview' =
         sharedKey: logAnalyticsWorkspace.listKeys().primarySharedKey
       }
     }
-    zoneRedundant: false // enabling this requires a custom VNET with an intrastrucutre Subnet
-  }
-  sku: {
-    name: 'Consumption'
   }
 }
 
@@ -222,7 +222,7 @@ resource app 'Microsoft.App/containerApps@2022-06-01-preview' = {
   name: name
   location: location
   properties: {
-    managedEnvironmentId: appEnvironment.id
+    managedEnvironmentId: providedAppEnvironment ? appEnvironmentId : appEnvironment.id
     configuration: {
       ingress: {
         external: true
@@ -313,7 +313,7 @@ resource app 'Microsoft.App/containerApps@2022-06-01-preview' = {
               value: eventBusTransport == 'QueueStorage' ? storageAccount.properties.primaryEndpoints.queue : ''
             }
           ]
-          resources: { // these are the least resources we can provision
+          resources: {// these are the least resources we can provision
             cpu: json('0.25')
             memory: '0.5Gi'
           }
@@ -328,13 +328,13 @@ resource app 'Microsoft.App/containerApps@2022-06-01-preview' = {
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
-      '${managedIdentity.id}': { /*ttk bug*/}
+      '${managedIdentity.id}': {/*ttk bug*/ }
     }
   }
 }
 
 /* Role Assignments */
-resource contributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = { // needed for creating jobs
+resource contributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {// needed for creating jobs
   name: guid(resourceGroup().id, 'managedIdentity', 'ContributorRoleAssignment')
   scope: resourceGroup()
   properties: {
