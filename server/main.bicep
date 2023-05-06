@@ -74,8 +74,12 @@ param updaterImageRepository string = 'tinglesoftware/dependabot-updater'
 @description('Tag of the updater docker image.')
 param updaterImageTag string = '#{GITVERSION_NUGETVERSIONV2}#'
 
-@description('Resource identifier of the ContainerApp Environment to deply to. If none is provided, a new one is created.')
+@description('Resource identifier of the ContainerApp Environment to deploy to. If none is provided, a new one is created.')
 param appEnvironmentId string = ''
+
+// Example: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/Fabrikam/providers/Microsoft.OperationalInsights/workspaces/fabrikam
+@description('Resource identifier of the LogAnalytics Workspace to use. If none is provided, a new one is created.')
+param logAnalyticsWorkspaceId string = ''
 
 @minValue(1)
 @maxValue(2)
@@ -91,7 +95,8 @@ var sqlServerAdministratorLogin = uniqueString(resourceGroup().id) // e.g. zecnx
 var sqlServerAdministratorLoginPassword = '${skip(uniqueString(resourceGroup().id), 5)}%${uniqueString('sql-password', resourceGroup().id)}' // e.g. abcde%zecnx476et7xm (19 characters)
 var hasDockerImageRegistry = (dockerImageRegistry != null && !empty(dockerImageRegistry))
 var isAcrServer = hasDockerImageRegistry && endsWith(dockerImageRegistry, environment().suffixes.acrLoginServer)
-var providedAppEnvironment = (appEnvironmentId != null && !empty(appEnvironmentId))
+var hasProvidedLogAnalyticsWorkspace = (logAnalyticsWorkspaceId != null && !empty(logAnalyticsWorkspaceId))
+var hasProvidedAppEnvironment = (appEnvironmentId != null && !empty(appEnvironmentId))
 // avoid conflicts across multiple deployments for resources that generate FQDN based on the name
 var collisionSuffix = uniqueString(resourceGroup().id) // e.g. zecnx476et7xm (13 characters)
 
@@ -178,7 +183,7 @@ resource sqlServerDatabase 'Microsoft.Sql/servers/databases@2022-05-01-preview' 
 }
 
 /* LogAnalytics */
-resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
+resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' = if (!hasProvidedLogAnalyticsWorkspace) {
   name: name
   location: location
   properties: {
@@ -190,17 +195,26 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10
     }
   }
 }
+resource providedLogAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = if (hasProvidedLogAnalyticsWorkspace) {
+  // Inspired by https://github.com/Azure/bicep/issues/1722#issuecomment-952118402
+  // Example: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/Fabrikam/providers/Microsoft.OperationalInsights/workspaces/fabrikam
+  // 0 -> '', 1 -> 'subscriptions', 2 -> '00000000-0000-0000-0000-000000000000', 3 -> 'resourceGroups'
+  // 4 -> 'Fabrikam', 5 -> 'providers', 6 -> 'Microsoft.OperationalInsights' 7 -> 'workspaces'
+  // 8 -> 'fabrikam'
+  name: split(logAnalyticsWorkspaceId, '/')[8]
+  scope: resourceGroup(split(logAnalyticsWorkspaceId, '/')[2], split(logAnalyticsWorkspaceId, '/')[4])
+}
 
 /* Container App Environment */
-resource appEnvironment 'Microsoft.App/managedEnvironments@2022-03-01' = if (!providedAppEnvironment) {
+resource appEnvironment 'Microsoft.App/managedEnvironments@2022-03-01' = if (!hasProvidedAppEnvironment) {
   name: name
   location: location
   properties: {
     appLogsConfiguration: {
       destination: 'log-analytics'
       logAnalyticsConfiguration: {
-        customerId: logAnalyticsWorkspace.properties.customerId
-        sharedKey: logAnalyticsWorkspace.listKeys().primarySharedKey
+        customerId: hasProvidedLogAnalyticsWorkspace ? providedLogAnalyticsWorkspace.properties.customerId : logAnalyticsWorkspace.properties.customerId
+        sharedKey: hasProvidedLogAnalyticsWorkspace ? providedLogAnalyticsWorkspace.listKeys().primarySharedKey : logAnalyticsWorkspace.listKeys().primarySharedKey
       }
     }
   }
@@ -222,7 +236,7 @@ resource app 'Microsoft.App/containerApps@2022-06-01-preview' = {
   name: name
   location: location
   properties: {
-    managedEnvironmentId: providedAppEnvironment ? appEnvironmentId : appEnvironment.id
+    managedEnvironmentId: hasProvidedAppEnvironment ? appEnvironmentId : appEnvironment.id
     configuration: {
       ingress: {
         external: true
@@ -258,7 +272,10 @@ resource app 'Microsoft.App/containerApps@2022-06-01-preview' = {
         }
         { name: 'notifications-password', value: notificationsPassword }
         { name: 'project-token', value: projectToken }
-        { name: 'log-analytics-workspace-key', value: logAnalyticsWorkspace.listKeys().primarySharedKey }
+        {
+          name: 'log-analytics-workspace-key'
+          value: hasProvidedLogAnalyticsWorkspace ? providedLogAnalyticsWorkspace.listKeys().primarySharedKey : logAnalyticsWorkspace.listKeys().primarySharedKey
+        }
       ]
     }
     template: {
@@ -281,7 +298,10 @@ resource app 'Microsoft.App/containerApps@2022-06-01-preview' = {
             { name: 'Workflow__ProjectToken', secretRef: 'project-token' }
             { name: 'Workflow__WebhookEndpoint', value: 'https://${name}.${appEnvironment.properties.defaultDomain}/webhooks/azure' }
             { name: 'Workflow__ResourceGroupId', value: resourceGroup().id }
-            { name: 'Workflow__LogAnalyticsWorkspaceId', value: logAnalyticsWorkspace.properties.customerId }
+            {
+              name: 'Workflow__LogAnalyticsWorkspaceId'
+              value: hasProvidedLogAnalyticsWorkspace ? providedLogAnalyticsWorkspace.properties.customerId : logAnalyticsWorkspace.properties.customerId
+            }
             { name: 'Workflow__LogAnalyticsWorkspaceKey', secretRef: 'log-analytics-workspace-key' }
             { name: 'Workflow__ManagedIdentityId', value: managedIdentityJobs.id }
             { name: 'Workflow__UpdaterContainerImage', value: '${'${hasDockerImageRegistry ? '${dockerImageRegistry}/' : ''}'}${updaterImageRepository}:${updaterImageTag}' }
