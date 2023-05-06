@@ -110,7 +110,18 @@ resource managedIdentityJobs 'Microsoft.ManagedIdentity/userAssignedIdentities@2
   location: location
 }
 
-/* Storage Account and Service Bus namespace */
+/* Service Bus namespace and Storage Account*/
+resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2021-11-01' = if (eventBusTransport == 'ServiceBus') {
+  name: '${name}-${collisionSuffix}'
+  location: location
+  properties: {
+    disableLocalAuth: false
+    zoneRedundant: false
+  }
+  sku: {
+    name: 'Basic'
+  }
+}
 resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = if (eventBusTransport == 'QueueStorage') {
   name: '${name}-${collisionSuffix}'
   location: location
@@ -126,17 +137,6 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = if (eve
       bypass: 'AzureServices'
       defaultAction: 'Allow'
     }
-  }
-}
-resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2021-11-01' = if (eventBusTransport == 'ServiceBus') {
-  name: '${name}-${collisionSuffix}'
-  location: location
-  properties: {
-    disableLocalAuth: false
-    zoneRedundant: false
-  }
-  sku: {
-    name: 'Basic'
   }
 }
 
@@ -363,7 +363,7 @@ resource contributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022
     principalType: 'ServicePrincipal'
   }
 }
-resource serviceBusDataOwnerRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+resource serviceBusDataOwnerRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (eventBusTransport == 'ServiceBus') {
   name: guid(managedIdentity.id, 'AzureServiceBusDataOwner')
   scope: resourceGroup()
   properties: {
