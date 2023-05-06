@@ -372,6 +372,15 @@ resource serviceBusDataOwnerRoleAssignment 'Microsoft.Authorization/roleAssignme
     principalType: 'ServicePrincipal'
   }
 }
+resource storageQueueDataContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (eventBusTransport == 'QueueStorage') {
+  name: guid(managedIdentity.id, 'StorageQueueDataContributor')
+  scope: resourceGroup()
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '974c5e8b-45b9-4653-ba55-5f855dd0fb88')
+    principalId: managedIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
 resource logAnalyticsReaderRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: guid(managedIdentity.id, 'LogAnalyticsReader')
   scope: resourceGroup()
