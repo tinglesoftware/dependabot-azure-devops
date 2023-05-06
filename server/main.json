@@ -154,6 +154,20 @@
         "description": "Tag of the updater docker image."
       }
     },
+    "logAnalyticsWorkspaceId": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Resource identifier of the LogAnalytics Workspace to use. If none is provided, a new one is created."
+      }
+    },
+    "appEnvironmentId": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Resource identifier of the ContainerApp Environment to deploy to. If none is provided, a new one is created."
+      }
+    },
     "minReplicas": {
       "type": "int",
       "defaultValue": 1,
@@ -178,6 +192,8 @@
     "sqlServerAdministratorLoginPassword": "[format('{0}%{1}', skip(uniqueString(resourceGroup().id), 5), uniqueString('sql-password', resourceGroup().id))]",
     "hasDockerImageRegistry": "[and(not(equals(parameters('dockerImageRegistry'), null())), not(empty(parameters('dockerImageRegistry'))))]",
     "isAcrServer": "[and(variables('hasDockerImageRegistry'), endsWith(parameters('dockerImageRegistry'), environment().suffixes.acrLoginServer))]",
+    "hasProvidedLogAnalyticsWorkspace": "[and(not(equals(parameters('logAnalyticsWorkspaceId'), null())), not(empty(parameters('logAnalyticsWorkspaceId'))))]",
+    "hasProvidedAppEnvironment": "[and(not(equals(parameters('appEnvironmentId'), null())), not(empty(parameters('appEnvironmentId'))))]",
     "collisionSuffix": "[uniqueString(resourceGroup().id)]"
   },
   "resources": [
@@ -278,6 +294,7 @@
       ]
     },
     {
+      "condition": "[not(variables('hasProvidedLogAnalyticsWorkspace'))]",
       "type": "Microsoft.OperationalInsights/workspaces",
       "apiVersion": "2022-10-01",
       "name": "[parameters('name')]",
@@ -292,22 +309,19 @@
       }
     },
     {
+      "condition": "[not(variables('hasProvidedAppEnvironment'))]",
       "type": "Microsoft.App/managedEnvironments",
-      "apiVersion": "2022-06-01-preview",
+      "apiVersion": "2022-03-01",
       "name": "[parameters('name')]",
       "location": "[parameters('location')]",
       "properties": {
         "appLogsConfiguration": {
           "destination": "log-analytics",
           "logAnalyticsConfiguration": {
-            "customerId": "[reference(resourceId('Microsoft.OperationalInsights/workspaces', parameters('name')), '2022-10-01').customerId]",
-            "sharedKey": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces', parameters('name')), '2022-10-01').primarySharedKey]"
+            "customerId": "[if(variables('hasProvidedLogAnalyticsWorkspace'), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', split(parameters('logAnalyticsWorkspaceId'), '/')[2], split(parameters('logAnalyticsWorkspaceId'), '/')[4]), 'Microsoft.OperationalInsights/workspaces', split(parameters('logAnalyticsWorkspaceId'), '/')[8]), '2022-10-01').customerId, reference(resourceId('Microsoft.OperationalInsights/workspaces', parameters('name')), '2022-10-01').customerId)]",
+            "sharedKey": "[if(variables('hasProvidedLogAnalyticsWorkspace'), listKeys(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', split(parameters('logAnalyticsWorkspaceId'), '/')[2], split(parameters('logAnalyticsWorkspaceId'), '/')[4]), 'Microsoft.OperationalInsights/workspaces', split(parameters('logAnalyticsWorkspaceId'), '/')[8]), '2022-10-01').primarySharedKey, listKeys(resourceId('Microsoft.OperationalInsights/workspaces', parameters('name')), '2022-10-01').primarySharedKey)]"
           }
-        },
-        "zoneRedundant": false
-      },
-      "sku": {
-        "name": "Consumption"
+        }
       },
       "dependsOn": [
         "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('name'))]"
@@ -329,7 +343,7 @@
       "name": "[parameters('name')]",
       "location": "[parameters('location')]",
       "properties": {
-        "managedEnvironmentId": "[resourceId('Microsoft.App/managedEnvironments', parameters('name'))]",
+        "managedEnvironmentId": "[if(variables('hasProvidedAppEnvironment'), parameters('appEnvironmentId'), resourceId('Microsoft.App/managedEnvironments', parameters('name')))]",
         "configuration": {
           "ingress": {
             "external": true,
@@ -361,7 +375,7 @@
             },
             {
               "name": "log-analytics-workspace-key",
-              "value": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces', parameters('name')), '2022-10-01').primarySharedKey]"
+              "value": "[if(variables('hasProvidedLogAnalyticsWorkspace'), listKeys(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', split(parameters('logAnalyticsWorkspaceId'), '/')[2], split(parameters('logAnalyticsWorkspaceId'), '/')[4]), 'Microsoft.OperationalInsights/workspaces', split(parameters('logAnalyticsWorkspaceId'), '/')[8]), '2022-10-01').primarySharedKey, listKeys(resourceId('Microsoft.OperationalInsights/workspaces', parameters('name')), '2022-10-01').primarySharedKey)]"
             }
           ]
         },
@@ -413,7 +427,7 @@
                 },
                 {
                   "name": "Workflow__WebhookEndpoint",
-                  "value": "[format('https://{0}.{1}/webhooks/azure', parameters('name'), reference(resourceId('Microsoft.App/managedEnvironments', parameters('name')), '2022-06-01-preview').defaultDomain)]"
+                  "value": "[format('https://{0}.{1}/webhooks/azure', parameters('name'), reference(resourceId('Microsoft.App/managedEnvironments', parameters('name')), '2022-03-01').defaultDomain)]"
                 },
                 {
                   "name": "Workflow__ResourceGroupId",
@@ -421,7 +435,7 @@
                 },
                 {
                   "name": "Workflow__LogAnalyticsWorkspaceId",
-                  "value": "[reference(resourceId('Microsoft.OperationalInsights/workspaces', parameters('name')), '2022-10-01').customerId]"
+                  "value": "[if(variables('hasProvidedLogAnalyticsWorkspace'), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', split(parameters('logAnalyticsWorkspaceId'), '/')[2], split(parameters('logAnalyticsWorkspaceId'), '/')[4]), 'Microsoft.OperationalInsights/workspaces', split(parameters('logAnalyticsWorkspaceId'), '/')[8]), '2022-10-01').customerId, reference(resourceId('Microsoft.OperationalInsights/workspaces', parameters('name')), '2022-10-01').customerId)]"
                 },
                 {
                   "name": "Workflow__LogAnalyticsWorkspaceKey",
@@ -473,7 +487,7 @@
                 },
                 {
                   "name": "Authentication__Schemes__Management__ValidAudiences__0",
-                  "value": "[format('https://{0}.{1}', parameters('name'), reference(resourceId('Microsoft.App/managedEnvironments', parameters('name')), '2022-06-01-preview').defaultDomain)]"
+                  "value": "[format('https://{0}.{1}', parameters('name'), reference(resourceId('Microsoft.App/managedEnvironments', parameters('name')), '2022-03-01').defaultDomain)]"
                 },
                 {
                   "name": "Authentication__Schemes__ServiceHooks__Credentials__vsts",
@@ -569,7 +583,7 @@
     },
     "webhookEndpoint": {
       "type": "string",
-      "value": "[format('https://{0}.{1}/webhooks/azure', parameters('name'), reference(resourceId('Microsoft.App/managedEnvironments', parameters('name')), '2022-06-01-preview').defaultDomain)]"
+      "value": "[format('https://{0}.{1}/webhooks/azure', parameters('name'), reference(resourceId('Microsoft.App/managedEnvironments', parameters('name')), '2022-03-01').defaultDomain)]"
     },
     "notificationsPassword": {
       "type": "string",

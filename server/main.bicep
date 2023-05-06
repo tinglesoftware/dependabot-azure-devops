@@ -74,12 +74,12 @@ param updaterImageRepository string = 'tinglesoftware/dependabot-updater'
 @description('Tag of the updater docker image.')
 param updaterImageTag string = '#{GITVERSION_NUGETVERSIONV2}#'
 
-@description('Resource identifier of the ContainerApp Environment to deploy to. If none is provided, a new one is created.')
-param appEnvironmentId string = ''
-
 // Example: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/Fabrikam/providers/Microsoft.OperationalInsights/workspaces/fabrikam
 @description('Resource identifier of the LogAnalytics Workspace to use. If none is provided, a new one is created.')
 param logAnalyticsWorkspaceId string = ''
+
+@description('Resource identifier of the ContainerApp Environment to deploy to. If none is provided, a new one is created.')
+param appEnvironmentId string = ''
 
 @minValue(1)
 @maxValue(2)
