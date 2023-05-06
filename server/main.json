@@ -154,6 +154,20 @@
         "description": "Tag of the updater docker image."
       }
     },
+    "serviceBusNamespaceId": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Resource identifier of the ServiceBus namespace to use. If none is provided, a new one is created."
+      }
+    },
+    "storageAccountId": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Resource identifier of the storage account to use. If none is provided, a new one is created."
+      }
+    },
     "logAnalyticsWorkspaceId": {
       "type": "string",
       "defaultValue": "",
@@ -192,6 +206,8 @@
     "sqlServerAdministratorLoginPassword": "[format('{0}%{1}', skip(uniqueString(resourceGroup().id), 5), uniqueString('sql-password', resourceGroup().id))]",
     "hasDockerImageRegistry": "[and(not(equals(parameters('dockerImageRegistry'), null())), not(empty(parameters('dockerImageRegistry'))))]",
     "isAcrServer": "[and(variables('hasDockerImageRegistry'), endsWith(parameters('dockerImageRegistry'), environment().suffixes.acrLoginServer))]",
+    "hasProvidedServiceBusNamespace": "[and(not(equals(parameters('serviceBusNamespaceId'), null())), not(empty(parameters('serviceBusNamespaceId'))))]",
+    "hasProvidedStorageAccount": "[and(not(equals(parameters('storageAccountId'), null())), not(empty(parameters('storageAccountId'))))]",
     "hasProvidedLogAnalyticsWorkspace": "[and(not(equals(parameters('logAnalyticsWorkspaceId'), null())), not(empty(parameters('logAnalyticsWorkspaceId'))))]",
     "hasProvidedAppEnvironment": "[and(not(equals(parameters('appEnvironmentId'), null())), not(empty(parameters('appEnvironmentId'))))]",
     "collisionSuffix": "[uniqueString(resourceGroup().id)]"
@@ -210,7 +226,7 @@
       "location": "[parameters('location')]"
     },
     {
-      "condition": "[equals(parameters('eventBusTransport'), 'ServiceBus')]",
+      "condition": "[and(equals(parameters('eventBusTransport'), 'ServiceBus'), not(variables('hasProvidedServiceBusNamespace')))]",
       "type": "Microsoft.ServiceBus/namespaces",
       "apiVersion": "2021-11-01",
       "name": "[format('{0}-{1}', parameters('name'), variables('collisionSuffix'))]",
@@ -224,7 +240,7 @@
       }
     },
     {
-      "condition": "[equals(parameters('eventBusTransport'), 'QueueStorage')]",
+      "condition": "[and(equals(parameters('eventBusTransport'), 'QueueStorage'), not(variables('hasProvidedStorageAccount')))]",
       "type": "Microsoft.Storage/storageAccounts",
       "apiVersion": "2022-09-01",
       "name": "[format('{0}-{1}', parameters('name'), variables('collisionSuffix'))]",
@@ -499,11 +515,11 @@
                 },
                 {
                   "name": "EventBus__Transports__azure-service-bus__FullyQualifiedNamespace",
-                  "value": "[if(equals(parameters('eventBusTransport'), 'ServiceBus'), split(split(reference(resourceId('Microsoft.ServiceBus/namespaces', format('{0}-{1}', parameters('name'), variables('collisionSuffix'))), '2021-11-01').serviceBusEndpoint, '/')[2], ':')[0], '')]"
+                  "value": "[if(equals(parameters('eventBusTransport'), 'ServiceBus'), split(split(if(variables('hasProvidedServiceBusNamespace'), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', split(parameters('serviceBusNamespaceId'), '/')[2], split(parameters('serviceBusNamespaceId'), '/')[4]), 'Microsoft.ServiceBus/namespaces', split(parameters('serviceBusNamespaceId'), '/')[8]), '2021-11-01').serviceBusEndpoint, reference(resourceId('Microsoft.ServiceBus/namespaces', format('{0}-{1}', parameters('name'), variables('collisionSuffix'))), '2021-11-01').serviceBusEndpoint), '/')[2], ':')[0], '')]"
                 },
                 {
                   "name": "EventBus__Transports__azure-queue-storage__ServiceUrl",
-                  "value": "[if(equals(parameters('eventBusTransport'), 'QueueStorage'), reference(resourceId('Microsoft.Storage/storageAccounts', format('{0}-{1}', parameters('name'), variables('collisionSuffix'))), '2022-09-01').primaryEndpoints.queue, '')]"
+                  "value": "[if(equals(parameters('eventBusTransport'), 'QueueStorage'), if(variables('hasProvidedStorageAccount'), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', split(parameters('storageAccountId'), '/')[2], split(parameters('storageAccountId'), '/')[4]), 'Microsoft.Storage/storageAccounts', split(parameters('storageAccountId'), '/')[8]), '2021-09-01').primaryEndpoints.queue, reference(resourceId('Microsoft.Storage/storageAccounts', format('{0}-{1}', parameters('name'), variables('collisionSuffix'))), '2022-09-01').primaryEndpoints.queue), '')]"
                 }
               ],
               "resources": {
