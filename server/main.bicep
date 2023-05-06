@@ -355,7 +355,7 @@ resource app 'Microsoft.App/containerApps@2022-06-01-preview' = {
 
 /* Role Assignments */
 resource contributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {// needed for creating jobs
-  name: guid(resourceGroup().id, 'managedIdentity', 'ContributorRoleAssignment')
+  name: guid(managedIdentity.id, 'ContributorRoleAssignment')
   scope: resourceGroup()
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')
@@ -364,7 +364,7 @@ resource contributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022
   }
 }
 resource serviceBusDataOwnerRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(resourceGroup().id, 'managedIdentity', 'AzureServiceBusDataOwner')
+  name: guid(managedIdentity.id, 'AzureServiceBusDataOwner')
   scope: resourceGroup()
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '090c5cfd-751d-490a-894a-3ce6f1109419')
@@ -373,7 +373,7 @@ resource serviceBusDataOwnerRoleAssignment 'Microsoft.Authorization/roleAssignme
   }
 }
 resource logAnalyticsReaderRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(resourceGroup().id, 'managedIdentity', 'LogAnalyticsReader')
+  name: guid(managedIdentity.id, 'LogAnalyticsReader')
   scope: resourceGroup()
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '73c42c96-874c-492b-b04d-ab87d138a893')
