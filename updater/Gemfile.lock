@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/dependabot/dependabot-core.git
-  revision: 8f494eb9f3fa0c450af90ae7202552bb84b9989a
+  revision: 664ff229f0d52e24b96bbb1ab10dffd293085b49
   branch: main
   specs:
     dependabot-bundler (0.217.0)
@@ -12,7 +12,7 @@ GIT
       aws-sdk-ecr (~> 1.5)
       bundler (>= 1.16, < 3.0.0)
       commonmarker (>= 0.20.1, < 0.24.0)
-      docker_registry2 (~> 1.14)
+      docker_registry2 (~> 1.14.0)
       excon (~> 0.96, < 0.100)
       faraday (= 2.7.4)
       faraday-retry (= 2.1.0)
@@ -78,11 +78,11 @@ GEM
       public_suffix (>= 2.0.2, < 6.0)
     ast (2.4.2)
     aws-eventstream (1.2.0)
-    aws-partitions (1.759.0)
+    aws-partitions (1.760.0)
     aws-sdk-codecommit (1.53.0)
       aws-sdk-core (~> 3, >= 3.165.0)
       aws-sigv4 (~> 1.1)
-    aws-sdk-core (3.171.0)
+    aws-sdk-core (3.171.1)
       aws-eventstream (~> 1, >= 1.0.2)
       aws-partitions (~> 1, >= 1.651.0)
       aws-sigv4 (~> 1.5)
@@ -97,7 +97,7 @@ GEM
     crack (0.4.5)
       rexml
     diff-lcs (1.5.0)
-    docker_registry2 (1.15.0)
+    docker_registry2 (1.14.0)
       rest-client (>= 1.8.0)
     domain_name (0.5.20190701)
       unf (>= 0.0.5, < 1.0.0)
