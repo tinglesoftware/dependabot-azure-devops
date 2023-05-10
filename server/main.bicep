@@ -348,6 +348,7 @@ resource app 'Microsoft.App/containerApps@2022-06-01-preview' = {
               name: 'Workflow__WebhookEndpoint'
               value: 'https://${name}.${hasProvidedAppEnvironment ? providedAppEnvironment.properties.defaultDomain : appEnvironment.properties.defaultDomain}/webhooks/azure'
             }
+            { name: 'Workflow__SubscriptionPassword', secretRef: 'notifications-password' }
             {
               name: 'Workflow__ResourceGroupId'
               // Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}

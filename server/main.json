@@ -621,7 +621,7 @@
     },
     "webhookEndpoint": {
       "type": "string",
-      "value": "[format('https://{0}.{1}/webhooks/azure', parameters('name'), reference(resourceId('Microsoft.App/managedEnvironments', parameters('name')), '2022-03-01').defaultDomain)]"
+      "value": "[format('https://{0}/webhooks/azure', reference(resourceId('Microsoft.App/containerApps', parameters('name')), '2022-06-01-preview').configuration.ingress.fqdn)]"
     },
     "notificationsPassword": {
       "type": "string",
