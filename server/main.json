@@ -289,6 +289,18 @@
       ]
     },
     {
+      "type": "Microsoft.Sql/servers/firewallRules",
+      "apiVersion": "2022-08-01-preview",
+      "name": "[format('{0}/{1}', format('{0}-{1}', parameters('name'), variables('collisionSuffix')), 'AllowAllWindowsAzureIps')]",
+      "properties": {
+        "endIpAddress": "0.0.0.0",
+        "startIpAddress": "0.0.0.0"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Sql/servers', format('{0}-{1}', parameters('name'), variables('collisionSuffix')))]"
+      ]
+    },
+    {
       "type": "Microsoft.Sql/servers/databases",
       "apiVersion": "2022-05-01-preview",
       "name": "[format('{0}/{1}', format('{0}-{1}', parameters('name'), variables('collisionSuffix')), parameters('name'))]",
@@ -366,7 +378,7 @@
       "name": "[parameters('name')]",
       "location": "[parameters('location')]",
       "properties": {
-        "managedEnvironmentId": "[if(variables('hasProvidedAppEnvironment'), parameters('appEnvironmentId'), resourceId('Microsoft.App/managedEnvironments', parameters('name')))]",
+        "managedEnvironmentId": "[if(variables('hasProvidedAppEnvironment'), extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', split(parameters('appEnvironmentId'), '/')[2], split(parameters('appEnvironmentId'), '/')[4]), 'Microsoft.App/managedEnvironments', split(parameters('appEnvironmentId'), '/')[8]), resourceId('Microsoft.App/managedEnvironments', parameters('name')))]",
         "configuration": {
           "ingress": {
             "external": true,
@@ -450,7 +462,11 @@
                 },
                 {
                   "name": "Workflow__WebhookEndpoint",
-                  "value": "[format('https://{0}.{1}/webhooks/azure', parameters('name'), reference(resourceId('Microsoft.App/managedEnvironments', parameters('name')), '2022-03-01').defaultDomain)]"
+                  "value": "[format('https://{0}.{1}/webhooks/azure', parameters('name'), if(variables('hasProvidedAppEnvironment'), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', split(parameters('appEnvironmentId'), '/')[2], split(parameters('appEnvironmentId'), '/')[4]), 'Microsoft.App/managedEnvironments', split(parameters('appEnvironmentId'), '/')[8]), '2022-10-01').defaultDomain, reference(resourceId('Microsoft.App/managedEnvironments', parameters('name')), '2022-03-01').defaultDomain))]"
+                },
+                {
+                  "name": "Workflow__SubscriptionPassword",
+                  "secretRef": "notifications-password"
                 },
                 {
                   "name": "Workflow__ResourceGroupId",
@@ -510,7 +526,7 @@
                 },
                 {
                   "name": "Authentication__Schemes__Management__ValidAudiences__0",
-                  "value": "[format('https://{0}.{1}', parameters('name'), reference(resourceId('Microsoft.App/managedEnvironments', parameters('name')), '2022-03-01').defaultDomain)]"
+                  "value": "[format('https://{0}.{1}', parameters('name'), if(variables('hasProvidedAppEnvironment'), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', split(parameters('appEnvironmentId'), '/')[2], split(parameters('appEnvironmentId'), '/')[4]), 'Microsoft.App/managedEnvironments', split(parameters('appEnvironmentId'), '/')[8]), '2022-10-01').defaultDomain, reference(resourceId('Microsoft.App/managedEnvironments', parameters('name')), '2022-03-01').defaultDomain))]"
                 },
                 {
                   "name": "Authentication__Schemes__ServiceHooks__Credentials__vsts",
