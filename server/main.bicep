@@ -189,6 +189,14 @@ resource sqlServer 'Microsoft.Sql/servers@2022-05-01-preview' = {
     }
   }
 }
+resource sqlServerFirewallRuleForAzure 'Microsoft.Sql/servers/firewallRules@2022-08-01-preview' = {
+  parent: sqlServer
+  name: 'AllowAllWindowsAzureIps'
+  properties: {
+    endIpAddress: '0.0.0.0'
+    startIpAddress: '0.0.0.0'
+  }
+}
 resource sqlServerDatabase 'Microsoft.Sql/servers/databases@2022-05-01-preview' = {
   parent: sqlServer
   name: name
