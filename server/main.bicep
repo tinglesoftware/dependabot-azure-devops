@@ -250,6 +250,15 @@ resource appEnvironment 'Microsoft.App/managedEnvironments@2022-03-01' = if (!ha
     }
   }
 }
+resource providedAppEnvironment 'Microsoft.App/managedEnvironments@2022-10-01' existing = if (hasProvidedAppEnvironment) {
+  // Inspired by https://github.com/Azure/bicep/issues/1722#issuecomment-952118402
+  // Example: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/Fabrikam/providers/Microsoft.App/managedEnvironments/fabrikam
+  // 0 -> '', 1 -> 'subscriptions', 2 -> '00000000-0000-0000-0000-000000000000', 3 -> 'resourceGroups'
+  // 4 -> 'Fabrikam', 5 -> 'providers', 6 -> 'Microsoft.App' 7 -> 'managedEnvironments'
+  // 8 -> 'fabrikam'
+  name: split(appEnvironmentId, '/')[8]
+  scope: resourceGroup(split(appEnvironmentId, '/')[2], split(appEnvironmentId, '/')[4])
+}
 
 /* Application Insights */
 resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
@@ -267,7 +276,7 @@ resource app 'Microsoft.App/containerApps@2022-06-01-preview' = {
   name: name
   location: location
   properties: {
-    managedEnvironmentId: hasProvidedAppEnvironment ? appEnvironmentId : appEnvironment.id
+    managedEnvironmentId: hasProvidedAppEnvironment ? providedAppEnvironment.id : appEnvironment.id
     configuration: {
       ingress: {
         external: true
@@ -327,7 +336,10 @@ resource app 'Microsoft.App/containerApps@2022-06-01-preview' = {
             { name: 'Workflow__CreateOrUpdateWebhooksOnStartup', value: createOrUpdateWebhooksOnStartup ? 'true' : 'false' }
             { name: 'Workflow__ProjectUrl', value: projectUrl }
             { name: 'Workflow__ProjectToken', secretRef: 'project-token' }
-            { name: 'Workflow__WebhookEndpoint', value: 'https://${name}.${appEnvironment.properties.defaultDomain}/webhooks/azure' }
+            {
+              name: 'Workflow__WebhookEndpoint'
+              value: 'https://${name}.${hasProvidedAppEnvironment ? providedAppEnvironment.properties.defaultDomain : appEnvironment.properties.defaultDomain}/webhooks/azure'
+            }
             {
               name: 'Workflow__ResourceGroupId'
               // Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}
@@ -354,7 +366,10 @@ resource app 'Microsoft.App/containerApps@2022-06-01-preview' = {
               // Format: https://login.microsoftonline.com/{tenant-id}/v2.0
               value: '${environment().authentication.loginEndpoint}${subscription().tenantId}/v2.0'
             }
-            { name: 'Authentication__Schemes__Management__ValidAudiences__0', value: 'https://${name}.${appEnvironment.properties.defaultDomain}' }
+            {
+              name: 'Authentication__Schemes__Management__ValidAudiences__0'
+              value: 'https://${name}.${hasProvidedAppEnvironment ? providedAppEnvironment.properties.defaultDomain : appEnvironment.properties.defaultDomain}'
+            }
             { name: 'Authentication__Schemes__ServiceHooks__Credentials__vsts', secretRef: 'notifications-password' }
 
             { name: 'EventBus__SelectedTransport', value: eventBusTransport }
@@ -430,6 +445,6 @@ resource logAnalyticsReaderRoleAssignment 'Microsoft.Authorization/roleAssignmen
 // output fqdn string = app.properties.configuration.ingress.fqdn
 #disable-next-line outputs-should-not-contain-secrets
 output sqlServerAdministratorLoginPassword string = sqlServerAdministratorLoginPassword
-output webhookEndpoint string = 'https://${name}.${appEnvironment.properties.defaultDomain}/webhooks/azure'
+output webhookEndpoint string = 'https://${app.properties.configuration.ingress.fqdn}/webhooks/azure'
 #disable-next-line outputs-should-not-contain-secrets
 output notificationsPassword string = notificationsPassword
