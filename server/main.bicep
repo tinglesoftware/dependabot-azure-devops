@@ -55,6 +55,9 @@ param autoApprove bool = false
 @description('Where to host new update jobs.')
 param jobHostType string = 'ContainerInstances'
 
+@description('Name of the resource group where jobs will be created.')
+param jobsResourceGroupName string = resourceGroup().name
+
 @description('Password for Webhooks, ServiceHooks, and Notifications from Azure DevOps.')
 #disable-next-line secure-secrets-in-params // need sensible defaults
 param notificationsPassword string = uniqueString('service-hooks', resourceGroup().id) // e.g. zecnx476et7xm (13 characters)
@@ -325,7 +328,11 @@ resource app 'Microsoft.App/containerApps@2022-06-01-preview' = {
             { name: 'Workflow__ProjectUrl', value: projectUrl }
             { name: 'Workflow__ProjectToken', secretRef: 'project-token' }
             { name: 'Workflow__WebhookEndpoint', value: 'https://${name}.${appEnvironment.properties.defaultDomain}/webhooks/azure' }
-            { name: 'Workflow__ResourceGroupId', value: resourceGroup().id }
+            {
+              name: 'Workflow__ResourceGroupId'
+              // Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}
+              value: '/subscriptions/${subscription().id}/resourceGroups/${jobsResourceGroupName}'
+            }
             {
               name: 'Workflow__LogAnalyticsWorkspaceId'
               value: hasProvidedLogAnalyticsWorkspace ? providedLogAnalyticsWorkspace.properties.customerId : logAnalyticsWorkspace.properties.customerId

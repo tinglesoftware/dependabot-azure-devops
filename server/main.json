@@ -112,6 +112,13 @@
         "ContainerInstances"
       ]
     },
+    "jobsResourceGroupName": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().name]",
+      "metadata": {
+        "description": "Name of the resource group where jobs will be created."
+      }
+    },
     "notificationsPassword": {
       "type": "string",
       "defaultValue": "[uniqueString('service-hooks', resourceGroup().id)]",
@@ -447,7 +454,7 @@
                 },
                 {
                   "name": "Workflow__ResourceGroupId",
-                  "value": "[resourceGroup().id]"
+                  "value": "[format('/subscriptions/{0}/resourceGroups/{1}', subscription().id, parameters('jobsResourceGroupName'))]"
                 },
                 {
                   "name": "Workflow__LogAnalyticsWorkspaceId",
