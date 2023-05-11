@@ -352,7 +352,7 @@ resource app 'Microsoft.App/containerApps@2022-06-01-preview' = {
             {
               name: 'Workflow__ResourceGroupId'
               // Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}
-              value: '/subscriptions/${subscription().id}/resourceGroups/${jobsResourceGroupName}'
+              value: '${subscription().id}/resourceGroups/${jobsResourceGroupName}'
             }
             {
               name: 'Workflow__LogAnalyticsWorkspaceId'

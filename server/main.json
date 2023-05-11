@@ -470,7 +470,7 @@
                 },
                 {
                   "name": "Workflow__ResourceGroupId",
-                  "value": "[format('/subscriptions/{0}/resourceGroups/{1}', subscription().id, parameters('jobsResourceGroupName'))]"
+                  "value": "[format('{0}/resourceGroups/{1}', subscription().id, parameters('jobsResourceGroupName'))]"
                 },
                 {
                   "name": "Workflow__LogAnalyticsWorkspaceId",
