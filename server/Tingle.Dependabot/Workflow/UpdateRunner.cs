@@ -42,7 +42,7 @@ internal partial class UpdateRunner
 
     public async Task CreateAsync(Repository repository, RepositoryUpdate update, UpdateJob job, CancellationToken cancellationToken = default)
     {
-        var resourceName = MakeResourcename(job);
+        var resourceName = MakeResourceName(job);
         var type = options.JobHostType;
 
         if (type is UpdateJobHostType.ContainerInstances)
@@ -98,7 +98,7 @@ internal partial class UpdateRunner
 
     public async Task DeleteAsync(UpdateJob job, CancellationToken cancellationToken = default)
     {
-        var resourceName = MakeResourcename(job);
+        var resourceName = MakeResourceName(job);
 
         try
         {
@@ -115,7 +115,7 @@ internal partial class UpdateRunner
 
     public async Task<UpdateRunnerState?> GetStateAsync(UpdateJob job, CancellationToken cancellationToken = default)
     {
-        var resourceName = MakeResourcename(job);
+        var resourceName = MakeResourceName(job);
 
         try
         {
@@ -148,7 +148,7 @@ internal partial class UpdateRunner
     public async Task<string?> GetLogsAsync(UpdateJob job, CancellationToken cancellationToken = default)
     {
         var logs = (string?)null;
-        var resourceName = MakeResourcename(job);
+        var resourceName = MakeResourceName(job);
 
         // pull logs from ContainerInstances
         if (string.IsNullOrWhiteSpace(logs))
@@ -177,7 +177,7 @@ internal partial class UpdateRunner
         return logs;
     }
 
-    internal static string MakeResourcename(UpdateJob job) => $"dependabot-job-{job.Id}";
+    internal static string MakeResourceName(UpdateJob job) => $"dependabot-job-{job.Id}";
     internal static bool TryGetAzureContainerRegistry(string input, [NotNullWhen(true)] out string? registry)
     {
         registry = null;
