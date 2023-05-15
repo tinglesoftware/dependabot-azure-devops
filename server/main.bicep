@@ -396,6 +396,16 @@ resource app 'Microsoft.App/containerApps@2022-06-01-preview' = {
             cpu: json('0.25')
             memory: '0.5Gi'
           }
+          probes: [
+            { type: 'Liveness', httpGet: { port: 80, path: '/liveness' } }
+            {
+              type: 'Readiness'
+              httpGet: { port: 80, path: '/health' }
+              failureThreshold: 10
+              initialDelaySeconds: 3
+              timeoutSeconds: 5
+            }
+          ]
         }
       ]
       scale: {
