@@ -33,6 +33,7 @@ COPY --chown=dependabot:dependabot updater $DEPENDABOT_HOME/dependabot-updater
 # This entrypoint exists to solve specific setup problems.
 # It is only used with the extension and directly on Docker.
 # Hosted version does not allow this.
+RUN chmod +x bin/entrypoint.sh
 ENTRYPOINT ["bin/entrypoint.sh"]
 
 CMD ["bundle", "exec", "ruby", "bin/update-script.rb"]
