@@ -112,11 +112,11 @@ var hasProvidedAppEnvironment = (appEnvironmentId != null && !empty(appEnvironme
 var collisionSuffix = uniqueString(resourceGroup().id) // e.g. zecnx476et7xm (13 characters)
 
 /* Managed Identities */
-resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = {
+resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
   name: name
   location: location
 }
-resource managedIdentityJobs 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = {
+resource managedIdentityJobs 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
   name: '${name}-jobs'
   location: location
 }
@@ -161,7 +161,7 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = if (eve
     }
   }
 }
-resource providedStorageAccount 'Microsoft.Storage/storageAccounts@2021-09-01' existing = if (eventBusTransport == 'QueueStorage' && hasProvidedStorageAccount) {
+resource providedStorageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' existing = if (eventBusTransport == 'QueueStorage' && hasProvidedStorageAccount) {
   // Inspired by https://github.com/Azure/bicep/issues/1722#issuecomment-952118402
   // Example: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/Fabrikam/providers/Microsoft.Storage/storageAccounts/fabrikam
   // 0 -> '', 1 -> 'subscriptions', 2 -> '00000000-0000-0000-0000-000000000000', 3 -> 'resourceGroups'
@@ -245,7 +245,7 @@ resource providedLogAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces
 }
 
 /* Container App Environment */
-resource appEnvironment 'Microsoft.App/managedEnvironments@2022-03-01' = if (!hasProvidedAppEnvironment) {
+resource appEnvironment 'Microsoft.App/managedEnvironments@2022-10-01' = if (!hasProvidedAppEnvironment) {
   name: name
   location: location
   properties: {
@@ -280,7 +280,7 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
 }
 
 /* Container App */
-resource app 'Microsoft.App/containerApps@2022-06-01-preview' = {
+resource app 'Microsoft.App/containerApps@2022-10-01' = {
   name: name
   location: location
   properties: {

@@ -222,13 +222,13 @@
   "resources": [
     {
       "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
-      "apiVersion": "2018-11-30",
+      "apiVersion": "2023-01-31",
       "name": "[parameters('name')]",
       "location": "[parameters('location')]"
     },
     {
       "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
-      "apiVersion": "2018-11-30",
+      "apiVersion": "2023-01-31",
       "name": "[format('{0}-jobs', parameters('name'))]",
       "location": "[parameters('location')]"
     },
@@ -346,7 +346,7 @@
     {
       "condition": "[not(variables('hasProvidedAppEnvironment'))]",
       "type": "Microsoft.App/managedEnvironments",
-      "apiVersion": "2022-03-01",
+      "apiVersion": "2022-10-01",
       "name": "[parameters('name')]",
       "location": "[parameters('location')]",
       "properties": {
@@ -374,7 +374,7 @@
     },
     {
       "type": "Microsoft.App/containerApps",
-      "apiVersion": "2022-06-01-preview",
+      "apiVersion": "2022-10-01",
       "name": "[parameters('name')]",
       "location": "[parameters('location')]",
       "properties": {
@@ -422,7 +422,7 @@
               "env": [
                 {
                   "name": "AZURE_CLIENT_ID",
-                  "value": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')), '2018-11-30').clientId]"
+                  "value": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')), '2023-01-31').clientId]"
                 },
                 {
                   "name": "ASPNETCORE_FORWARDEDHEADERS_ENABLED",
@@ -462,7 +462,7 @@
                 },
                 {
                   "name": "Workflow__WebhookEndpoint",
-                  "value": "[format('https://{0}.{1}/webhooks/azure', parameters('name'), if(variables('hasProvidedAppEnvironment'), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', split(parameters('appEnvironmentId'), '/')[2], split(parameters('appEnvironmentId'), '/')[4]), 'Microsoft.App/managedEnvironments', split(parameters('appEnvironmentId'), '/')[8]), '2022-10-01').defaultDomain, reference(resourceId('Microsoft.App/managedEnvironments', parameters('name')), '2022-03-01').defaultDomain))]"
+                  "value": "[format('https://{0}.{1}/webhooks/azure', parameters('name'), if(variables('hasProvidedAppEnvironment'), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', split(parameters('appEnvironmentId'), '/')[2], split(parameters('appEnvironmentId'), '/')[4]), 'Microsoft.App/managedEnvironments', split(parameters('appEnvironmentId'), '/')[8]), '2022-10-01').defaultDomain, reference(resourceId('Microsoft.App/managedEnvironments', parameters('name')), '2022-10-01').defaultDomain))]"
                 },
                 {
                   "name": "Workflow__SubscriptionPassword",
@@ -526,7 +526,7 @@
                 },
                 {
                   "name": "Authentication__Schemes__Management__ValidAudiences__0",
-                  "value": "[format('https://{0}.{1}', parameters('name'), if(variables('hasProvidedAppEnvironment'), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', split(parameters('appEnvironmentId'), '/')[2], split(parameters('appEnvironmentId'), '/')[4]), 'Microsoft.App/managedEnvironments', split(parameters('appEnvironmentId'), '/')[8]), '2022-10-01').defaultDomain, reference(resourceId('Microsoft.App/managedEnvironments', parameters('name')), '2022-03-01').defaultDomain))]"
+                  "value": "[format('https://{0}.{1}', parameters('name'), if(variables('hasProvidedAppEnvironment'), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', split(parameters('appEnvironmentId'), '/')[2], split(parameters('appEnvironmentId'), '/')[4]), 'Microsoft.App/managedEnvironments', split(parameters('appEnvironmentId'), '/')[8]), '2022-10-01').defaultDomain, reference(resourceId('Microsoft.App/managedEnvironments', parameters('name')), '2022-10-01').defaultDomain))]"
                 },
                 {
                   "name": "Authentication__Schemes__ServiceHooks__Credentials__vsts",
@@ -542,7 +542,7 @@
                 },
                 {
                   "name": "EventBus__Transports__azure-queue-storage__ServiceUrl",
-                  "value": "[if(equals(parameters('eventBusTransport'), 'QueueStorage'), if(variables('hasProvidedStorageAccount'), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', split(parameters('storageAccountId'), '/')[2], split(parameters('storageAccountId'), '/')[4]), 'Microsoft.Storage/storageAccounts', split(parameters('storageAccountId'), '/')[8]), '2021-09-01').primaryEndpoints.queue, reference(resourceId('Microsoft.Storage/storageAccounts', format('{0}-{1}', parameters('name'), variables('collisionSuffix'))), '2022-09-01').primaryEndpoints.queue), '')]"
+                  "value": "[if(equals(parameters('eventBusTransport'), 'QueueStorage'), if(variables('hasProvidedStorageAccount'), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', split(parameters('storageAccountId'), '/')[2], split(parameters('storageAccountId'), '/')[4]), 'Microsoft.Storage/storageAccounts', split(parameters('storageAccountId'), '/')[8]), '2022-09-01').primaryEndpoints.queue, reference(resourceId('Microsoft.Storage/storageAccounts', format('{0}-{1}', parameters('name'), variables('collisionSuffix'))), '2022-09-01').primaryEndpoints.queue), '')]"
                 }
               ],
               "resources": {
@@ -600,7 +600,7 @@
       "name": "[guid(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')), 'ContributorRoleAssignment')]",
       "properties": {
         "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
-        "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')), '2018-11-30').principalId]",
+        "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')), '2023-01-31').principalId]",
         "principalType": "ServicePrincipal"
       },
       "dependsOn": [
@@ -614,7 +614,7 @@
       "name": "[guid(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')), 'AzureServiceBusDataOwner')]",
       "properties": {
         "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '090c5cfd-751d-490a-894a-3ce6f1109419')]",
-        "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')), '2018-11-30').principalId]",
+        "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')), '2023-01-31').principalId]",
         "principalType": "ServicePrincipal"
       },
       "dependsOn": [
@@ -628,7 +628,7 @@
       "name": "[guid(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')), 'StorageQueueDataContributor')]",
       "properties": {
         "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '974c5e8b-45b9-4653-ba55-5f855dd0fb88')]",
-        "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')), '2018-11-30').principalId]",
+        "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')), '2023-01-31').principalId]",
         "principalType": "ServicePrincipal"
       },
       "dependsOn": [
@@ -641,7 +641,7 @@
       "name": "[guid(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')), 'LogAnalyticsReader')]",
       "properties": {
         "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '73c42c96-874c-492b-b04d-ab87d138a893')]",
-        "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')), '2018-11-30').principalId]",
+        "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')), '2023-01-31').principalId]",
         "principalType": "ServicePrincipal"
       },
       "dependsOn": [
@@ -656,7 +656,7 @@
     },
     "webhookEndpoint": {
       "type": "string",
-      "value": "[format('https://{0}/webhooks/azure', reference(resourceId('Microsoft.App/containerApps', parameters('name')), '2022-06-01-preview').configuration.ingress.fqdn)]"
+      "value": "[format('https://{0}/webhooks/azure', reference(resourceId('Microsoft.App/containerApps', parameters('name')), '2022-10-01').configuration.ingress.fqdn)]"
     },
     "notificationsPassword": {
       "type": "string",
