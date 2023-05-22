@@ -3,7 +3,7 @@ name: Cleanup
 on:
   workflow_dispatch:
   schedule:
-  - cron: '0 0 * * 1'
+  - cron: '0 0 */14 * *' # every 14 days
 
 jobs:
   cleanup:
