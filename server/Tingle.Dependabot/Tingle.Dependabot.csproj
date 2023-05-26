@@ -31,9 +31,9 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.5" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="7.0.5" PrivateAssets="All" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="7.0.5" />
-    <PackageReference Include="Microsoft.TeamFoundationServer.Client" Version="19.210.0-preview" />
+    <PackageReference Include="Microsoft.TeamFoundationServer.Client" Version="19.221.0-preview" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.18.1" />
-    <PackageReference Include="Microsoft.VisualStudio.Services.ServiceHooks.WebApi" Version="19.210.0-preview" />
+    <PackageReference Include="Microsoft.VisualStudio.Services.ServiceHooks.WebApi" Version="19.221.0-preview" />
     <PackageReference Include="MiniValidation" Version="0.7.4" />
     <PackageReference Include="Tingle.EventBus.Transports.Azure.QueueStorage" Version="0.18.1" />
     <PackageReference Include="Tingle.EventBus.Transports.Azure.ServiceBus" Version="0.18.1" />
