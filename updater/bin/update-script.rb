@@ -55,7 +55,7 @@ $options = {
   security_advisories: [],
   security_updates_only: false,
   ignore_conditions: [],
-  pull_requests_limit: ENV["DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT"]&.to_i || 5,
+  pull_requests_limit: ENV["DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT"].to_i || 5,
   custom_labels: nil, # nil instead of empty array to ensure default labels are passed
   reviewers: nil, # nil instead of empty array to avoid API rejection
   assignees: nil, # nil instead of empty array to avoid API rejection
