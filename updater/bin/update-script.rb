@@ -471,7 +471,8 @@ $source = Dependabot::Source.new(
 )
 
 ## Read the update configuration if present
-puts "Looking for configuration file in the repository ..."
+Excon.defaults[:ssl_verify_peer] = false
+puts "Looking for configuration file in the repository ..."    
 $config_file = begin
   # Using fetcher_args as before or in the examples will result in the
   # config file not being found if the directory specified is not the root.
