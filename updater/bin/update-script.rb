@@ -510,19 +510,28 @@ end
 ##############################
 # Fetch the dependency files #
 ##############################
+
+$source_workaround = Dependabot::Source.new(
+  provider: $options[:provider],
+  hostname: $api_endpoint,
+  api_endpoint: $api_endpoint,
+  repo: $repo_name,
+  directory: $options[:directory],
+  branch: $options[:branch]
+)
 clone = $options[:vendor_dependencies] || Dependabot::Utils.always_clone_for_package_manager?($package_manager)
 $options[:repo_contents_path] ||= File.expand_path(File.join("tmp", $repo_name.split("/"))) if clone
 fetcher_args = {
-  source: $source,
+  source: $source_workaround,
   credentials: $options[:credentials],
   repo_contents_path: $options[:repo_contents_path],
   options: $options[:updater_options]
 }
 fetcher = Dependabot::FileFetchers.for_package_manager($package_manager).new(**fetcher_args)
-puts "The new version"
+puts "The new version 2"
 if clone
   puts "Cloning repository into #{$options[:repo_contents_path]}"
-  # fetcher.clone_repo_contents
+  fetcher.clone_repo_contents
 else
   puts "Fetching #{$package_manager} dependency files ..."
 end
