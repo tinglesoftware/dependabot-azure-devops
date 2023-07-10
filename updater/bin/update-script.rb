@@ -511,9 +511,13 @@ end
 # Fetch the dependency files #
 ##############################
 
+$api_endpoint_workaround = "#{$options[:azure_hostname]}:#{$options[:azure_port]}/"
+unless $options[:azure_virtual_directory].empty?
+  $api_endpoint_workaround = $api_endpoint_workaround + "#{$options[:azure_virtual_directory]}"
+end
 $source_workaround = Dependabot::Source.new(
   provider: $options[:provider],
-  hostname: $api_endpoint,
+  hostname: $api_endpoint_workaround,
   api_endpoint: $api_endpoint,
   repo: $repo_name,
   directory: $options[:directory],
