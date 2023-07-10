@@ -36,7 +36,7 @@
     <PackageReference Include="Microsoft.VisualStudio.Services.ServiceHooks.WebApi" Version="19.221.0-preview" />
     <PackageReference Include="MiniValidation" Version="0.8.0" />
     <PackageReference Include="Tingle.EventBus.Transports.Azure.QueueStorage" Version="0.19.2" />
-    <PackageReference Include="Tingle.EventBus.Transports.Azure.ServiceBus" Version="0.19.0" />
+    <PackageReference Include="Tingle.EventBus.Transports.Azure.ServiceBus" Version="0.19.2" />
     <PackageReference Include="Tingle.EventBus.Transports.InMemory" Version="0.19.2" />
     <PackageReference Include="Tingle.Extensions.DataAnnotations" Version="4.2.0" />
     <PackageReference Include="Tingle.PeriodicTasks" Version="1.1.0" />
