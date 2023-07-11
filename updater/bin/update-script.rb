@@ -18,7 +18,7 @@ credentials = [
     "password" => ENV["GITHUB_ACCESS_TOKEN"] # A GitHub access token with read access to public repos
   }
 ]
-
+Excon.defaults[:ssl_verify_peer] = false
 $options = {
   credentials: [],
   provider: "azure",
