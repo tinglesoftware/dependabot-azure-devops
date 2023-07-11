@@ -139,7 +139,7 @@ $package_manager = PACKAGE_ECOSYSTEM_MAPPING.fetch($package_manager, $package_ma
 ########################################################
 $options[:credentials] << {
   "type" => "git_source",
-  "host" => $options[:azure_hostname].split('/').first,
+  "host" => $options[:azure_hostname].split("/").first,
   "username" => ENV["AZURE_ACCESS_USERNAME"] || "x-access-token",
   "password" => ENV.fetch("AZURE_ACCESS_TOKEN", nil)
 }
