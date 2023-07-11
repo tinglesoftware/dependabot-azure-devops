@@ -513,35 +513,35 @@ end
 # Fetch the dependency files #
 ##############################
 
-# puts "Fetching #{$package_manager} dependency files for #{repo_name}"
-# fetcher = Dependabot::FileFetchers.for_package_manager($package_manager).new(
-#   source: $source,
-#   credentials: $options[:credentials],
-#   repo_contents_path: $options[:repo_contents_path],
-#   options: $options[:updater_options]
-# )
-
-# files = fetcher.files
-# commit = fetcher.commit
-
-clone = $options[:vendor_dependencies] || Dependabot::Utils.always_clone_for_package_manager?($package_manager)
-$options[:repo_contents_path] ||= File.expand_path(File.join("tmp", $repo_name.split("/"))) if clone
-fetcher_args = {
+puts "Fetching #{$package_manager} dependency files for #{$repo_name}"
+fetcher = Dependabot::FileFetchers.for_package_manager($package_manager).new(
   source: $source,
   credentials: $options[:credentials],
   repo_contents_path: $options[:repo_contents_path],
   options: $options[:updater_options]
-}
-fetcher = Dependabot::FileFetchers.for_package_manager($package_manager).new(**fetcher_args)
+)
 
-if clone
-  puts "Cloning repository into #{$options[:repo_contents_path]}"
-  fetcher.clone_repo_contents
-else
-  puts "Fetching #{$package_manager} dependency files ..."
-end
 files = fetcher.files
 commit = fetcher.commit
+
+# clone = $options[:vendor_dependencies] || Dependabot::Utils.always_clone_for_package_manager?($package_manager)
+# $options[:repo_contents_path] ||= File.expand_path(File.join("tmp", $repo_name.split("/"))) if clone
+# fetcher_args = {
+#   source: $source,
+#   credentials: $options[:credentials],
+#   repo_contents_path: $options[:repo_contents_path],
+#   options: $options[:updater_options]
+# }
+# fetcher = Dependabot::FileFetchers.for_package_manager($package_manager).new(**fetcher_args)
+
+# if clone
+#   puts "Cloning repository into #{$options[:repo_contents_path]}"
+#   fetcher.clone_repo_contents
+# else
+#   puts "Fetching #{$package_manager} dependency files ..."
+# end
+# files = fetcher.files
+# commit = fetcher.commit
 puts "Found #{files.length} dependency file(s) at commit #{commit}"
 files.each { |f| puts " - #{f.path}" }
 
