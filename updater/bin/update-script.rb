@@ -525,10 +525,12 @@ fetcher = Dependabot::FileFetchers.for_package_manager($package_manager).new(**f
 
 if clone
   puts "Cloning repository into #{$options[:repo_contents_path]}"
-  # fetcher.clone_repo_contents
+  puts "Credentials are #{$options[:credentials]}"
+  fetcher.clone_repo_contents
 else
   puts "Fetching #{$package_manager} dependency files ..."
 end
+puts "2"
 files = fetcher.files
 commit = fetcher.commit
 puts "Found #{files.length} dependency file(s) at commit #{commit}"
