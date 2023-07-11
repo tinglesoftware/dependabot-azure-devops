@@ -19,8 +19,18 @@ credentials = [
   }
 ]
 
+ azure_organization: ENV.fetch("AZURE_ORGANIZATION", nil),
+ azure_project: ENV.fetch("AZURE_PROJECT", nil),
+ azure_repository: ENV.fetch("AZURE_REPOSITORY", nil),
+ azure_hostname: ENV["AZURE_HOSTNAME"] || "dev.azure.com",
+ azure_protocol: ENV["AZURE_PROTOCOL"] || "https",
+ azure_port: nil,
+ azure_virtual_directory: ENV["AZURE_VIRTUAL_DIRECTORY"] || "",
+
+
 # Full name of the repo you want to create pull requests for.
-repo_name = ENV["PROJECT_PATH"] # namespace/project
+repo_name = "#{azure_organization}/#{azure_project}/_git/#{azure_repository}"
+# repo_name = ENV["PROJECT_PATH"] # namespace/project
 
 # Directory where the base dependency files are.
 directory = ENV["DIRECTORY_PATH"] || "/"
