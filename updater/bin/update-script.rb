@@ -513,8 +513,8 @@ end
 # Fetch the dependency files #
 ##############################
 
-puts "Fetching #{package_manager} dependency files for #{repo_name}"
-fetcher = Dependabot::FileFetchers.for_package_manager(package_manager).new(
+puts "Fetching #{$package_manager} dependency files for #{repo_name}"
+fetcher = Dependabot::FileFetchers.for_package_manager($package_manager).new(
   source: $source,
   credentials: $options[:credentials],
   repo_contents_path: $options[:repo_contents_path],
