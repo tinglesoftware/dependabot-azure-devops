@@ -449,7 +449,8 @@ end
 ####################################################
 # Setup the hostname, protocol and port to be used #
 ####################################################
-$options[:azure_port] = ENV["AZURE_PORT"] || ($options[:azure_protocol] == "http" ? "80" : "443")
+$options[:azure_port] = ""
+# ENV["AZURE_PORT"] || ($options[:azure_protocol] == "http" ? "80" : "443")
 $api_endpoint = "#{$options[:azure_protocol]}://#{$options[:azure_hostname]}:#{$options[:azure_port]}/"
 unless $options[:azure_virtual_directory].empty?
   $api_endpoint = $api_endpoint + "#{$options[:azure_virtual_directory]}/"
@@ -511,27 +512,17 @@ end
 # Fetch the dependency files #
 ##############################
 
-$api_endpoint_workaround = "#{$options[:azure_hostname]}:#{$options[:azure_port]}/"
-$api_endpoint_workaround += $options[:azure_virtual_directory] unless $options[:azure_virtual_directory].empty?
 
-$source_workaround = Dependabot::Source.new(
-  provider: $options[:provider],
-  hostname: $api_endpoint_workaround,
-  api_endpoint: $api_endpoint,
-  repo: $repo_name,
-  directory: $options[:directory],
-  branch: $options[:branch]
-)
 clone = $options[:vendor_dependencies] || Dependabot::Utils.always_clone_for_package_manager?($package_manager)
 $options[:repo_contents_path] ||= File.expand_path(File.join("tmp", $repo_name.split("/"))) if clone
 fetcher_args = {
-  source: clone ? $source_workaround : $source,
+  source: $source,
   credentials: $options[:credentials],
   repo_contents_path: $options[:repo_contents_path],
   options: $options[:updater_options]
 }
 fetcher = Dependabot::FileFetchers.for_package_manager($package_manager).new(**fetcher_args)
-puts "The new version 2"
+
 if clone
   puts "Cloning repository into #{$options[:repo_contents_path]}"
   fetcher.clone_repo_contents
