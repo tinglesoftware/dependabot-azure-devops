@@ -512,9 +512,8 @@ end
 ##############################
 
 $api_endpoint_workaround = "#{$options[:azure_hostname]}:#{$options[:azure_port]}/"
-unless $options[:azure_virtual_directory].empty?
-  $api_endpoint_workaround += $options[:azure_virtual_directory]
-end
+$api_endpoint_workaround += $options[:azure_virtual_directory] unless $options[:azure_virtual_directory].empty?
+
 $source_workaround = Dependabot::Source.new(
   provider: $options[:provider],
   hostname: $api_endpoint_workaround,
