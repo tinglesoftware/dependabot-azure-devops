@@ -19,17 +19,64 @@ credentials = [
   }
 ]
 
- azure_organization: ENV.fetch("AZURE_ORGANIZATION", nil),
- azure_project: ENV.fetch("AZURE_PROJECT", nil),
- azure_repository: ENV.fetch("AZURE_REPOSITORY", nil),
- azure_hostname: ENV["AZURE_HOSTNAME"] || "dev.azure.com",
- azure_protocol: ENV["AZURE_PROTOCOL"] || "https",
- azure_port: nil,
- azure_virtual_directory: ENV["AZURE_VIRTUAL_DIRECTORY"] || "",
+$options = {
+  credentials: [],
+  provider: "azure",
+
+  directory: ENV["DEPENDABOT_DIRECTORY"] || "/", # Directory where the base dependency files are.
+  branch: ENV["DEPENDABOT_TARGET_BRANCH"] || nil, # Branch against which to create PRs
+
+  allow_conditions: [],
+  reject_external_code: ENV["DEPENDABOT_REJECT_EXTERNAL_CODE"] == "true",
+  requirements_update_strategy: nil,
+  security_advisories: [],
+  security_updates_only: false,
+  ignore_conditions: [],
+  pull_requests_limit: ENV["DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT"].to_i || 5,
+  custom_labels: nil, # nil instead of empty array to ensure default labels are passed
+  reviewers: nil, # nil instead of empty array to avoid API rejection
+  assignees: nil, # nil instead of empty array to avoid API rejection
+  branch_name_separator: ENV["DEPENDABOT_BRANCH_NAME_SEPARATOR"] || "/", # Separator used for created branches.
+  milestone: ENV["DEPENDABOT_MILESTONE"] || nil, # Get the work item to attach
+  vendor_dependencies: ENV["DEPENDABOT_VENDOR"] == "true",
+  repo_contents_path: ENV["DEPENDABOT_REPO_CONTENTS_PATH"] || nil,
+  updater_options: {},
+  author_details: {
+    email: ENV["DEPENDABOT_AUTHOR_EMAIL"] || "noreply@github.com",
+    name: ENV["DEPENDABOT_AUTHOR_NAME"] || "dependabot[bot]"
+  },
+  fail_on_exception: ENV["DEPENDABOT_FAIL_ON_EXCEPTION"] == "true", # Stop the job if an exception occurs
+  skip_pull_requests: ENV["DEPENDABOT_SKIP_PULL_REQUESTS"] == "true", # Skip creating/updating Pull Requests
+  close_unwanted: ENV["DEPENDABOT_CLOSE_PULL_REQUESTS"] == "true", # Close unwanted Pull Requests
+
+  # See description of requirements here:
+  # https://github.com/dependabot/dependabot-core/issues/600#issuecomment-407808103
+  # https://github.com/wemake-services/kira-dependencies/pull/210
+  excluded_requirements: ENV["DEPENDABOT_EXCLUDE_REQUIREMENTS_TO_UNLOCK"]&.split(" ")&.map(&:to_sym) || [],
+
+  # Details on the location of the repository
+  azure_organization: ENV.fetch("AZURE_ORGANIZATION", nil),
+  azure_project: ENV.fetch("AZURE_PROJECT", nil),
+  azure_repository: ENV.fetch("AZURE_REPOSITORY", nil),
+  azure_hostname: ENV["AZURE_HOSTNAME"] || "dev.azure.com",
+  azure_protocol: ENV["AZURE_PROTOCOL"] || "https",
+  azure_port: nil,
+  azure_virtual_directory: ENV["AZURE_VIRTUAL_DIRECTORY"] || "",
+
+  # Automatic completion
+  set_auto_complete: ENV["AZURE_SET_AUTO_COMPLETE"] == "true", # Set auto complete on created pull requests
+  auto_complete_ignore_config_ids: JSON.parse(ENV["AZURE_AUTO_COMPLETE_IGNORE_CONFIG_IDS"] || "[]"), # default to empty
+  merge_strategy: ENV["AZURE_MERGE_STRATEGY"] || "squash", # default to squash
+  trans_work_items: false,
+
+  # Automatic Approval
+  auto_approve_pr: ENV["AZURE_AUTO_APPROVE_PR"] == "true",
+  auto_approve_user_token: ENV["AZURE_AUTO_APPROVE_USER_TOKEN"] || ENV.fetch("AZURE_ACCESS_TOKEN", nil)
+}
 
 
 # Full name of the repo you want to create pull requests for.
-repo_name = "#{azure_organization}/#{azure_project}/_git/#{azure_repository}"
+repo_name = "#{$options[:azure_organization]}/#{$options[:azure_project]}/_git/#{$options[:azure_repository]}"
 # repo_name = ENV["PROJECT_PATH"] # namespace/project
 
 # Directory where the base dependency files are.
