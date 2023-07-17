@@ -31,13 +31,14 @@ public class UpdateJobResources
 
     public static UpdateJobResources FromEcosystem(DependabotPackageEcosystem ecosystem)
     {
+        // the minimum we can be billed for on Container Instances is 1vCPU and 1GB, we might as well use it
         return ecosystem switch
         {
-            DependabotPackageEcosystem.NuGet => new(cpu: 0.25, memory: 0.2),
-            DependabotPackageEcosystem.GitSubmodule => new(cpu: 0.1, memory: 0.2),
-            DependabotPackageEcosystem.Terraform => new(cpu: 0.25, memory: 1),
-            DependabotPackageEcosystem.Npm => new(cpu: 0.25, memory: 1),
-            _ => new UpdateJobResources(cpu: 0.25, memory: 0.5),
+            //DependabotPackageEcosystem.NuGet => new(cpu: 0.25, memory: 0.2),
+            //DependabotPackageEcosystem.GitSubmodule => new(cpu: 0.1, memory: 0.2),
+            //DependabotPackageEcosystem.Terraform => new(cpu: 0.25, memory: 1),
+            //DependabotPackageEcosystem.Npm => new(cpu: 0.25, memory: 1),
+            _ => new UpdateJobResources(cpu: 1, memory: 1), // the minimum
         };
     }
 
