@@ -328,7 +328,6 @@ end
 
 # Create an update checker
 def update_checker_for(dependency, files, security_advisories)
-  puts "Creds: #{$options[:credentials]}"
   Dependabot::UpdateCheckers.for_package_manager($package_manager).new(
     dependency: dependency,
     dependency_files: files,
