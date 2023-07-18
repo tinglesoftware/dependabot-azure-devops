@@ -222,7 +222,7 @@ TYPE_HANDLERS = {
 def allow_conditions_for(dep)
   # Find where the name matches then get the type e.g. production, direct, etc
   found = $options[:allow_conditions].find { |al| dep.name.match?(al["dependency-name"]) }
-  found ? found["dependency-type"] : nil
+  found ? found["dependency-type"] : "all" # when not specified, allow all types
 end
 
 #################################################################

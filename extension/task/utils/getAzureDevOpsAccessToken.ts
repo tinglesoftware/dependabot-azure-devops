@@ -14,14 +14,21 @@ import {
  */
 export default function getAzureDevOpsAccessToken() {
   let systemAccessToken: string = getInput("azureDevOpsAccessToken");
-  if (!systemAccessToken) {
-    debug("No custom token provided. The SystemVssConnection's AccessToken shall be used.");
-    systemAccessToken = getEndpointAuthorizationParameter(
-      "SystemVssConnection",
-      "AccessToken",
-      false
-    );
+  if(systemAccessToken) {
+    debug("azureDevOpsAccessToken provided, using for authenticating");
+    return systemAccessToken;
   }
 
-  return systemAccessToken;
+  let serviceConnectionName: string = getInput("azureDevOpsServiceConnection");
+  if(serviceConnectionName) {
+    debug(`Loading authorization for service connection ${serviceConnectionName}`);
+    return getEndpointAuthorizationParameter(serviceConnectionName, "AccessToken", false);
+  }
+  
+  debug("No custom token provided. The SystemVssConnection's AccessToken shall be used.");
+  return getEndpointAuthorizationParameter(
+    "SystemVssConnection",
+    "AccessToken",
+    false
+  );
 }
