@@ -167,6 +167,14 @@
       "helpMarkDown": "The Personal Access Token for accessing Azure DevOps repositories. Supply a value here to avoid using permissions for the Build Service either because you cannot change its permissions or because you prefer that the Pull Requests be done by a different user."
     },
     {
+      "name": "azureDevOpsServiceConnection",
+      "type": "string",
+      "groupName": "advanced",
+      "label": "Azure DevOps Service Connection to use.",
+      "required": false,
+      "helpMarkDown": "Specify a service connection to use, if you want to use a different service principal than the default to create your PRs. Has no effect if azureDevOpsAccessToken is provided."
+    },
+    {
       "name": "targetRepositoryName",
       "type": "string",
       "groupName": "advanced",
