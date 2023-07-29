@@ -63,7 +63,7 @@ jobs:
     - name: Build image
       run: |
         docker build \
-        -f Dockerfile \
+        -f updater/Dockerfile \
         --label com.github.image.run.id=$GITHUB_RUN_ID \
         --label com.github.image.run.number=$GITHUB_RUN_NUMBER \
         --label com.github.image.job.id=$GITHUB_JOB \
