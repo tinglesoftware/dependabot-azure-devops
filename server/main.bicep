@@ -62,7 +62,7 @@ param jobsResourceGroupName string = resourceGroup().name
 #disable-next-line secure-secrets-in-params // need sensible defaults
 param notificationsPassword string = uniqueString('service-hooks', resourceGroup().id) // e.g. zecnx476et7xm (13 characters)
 
-@description('Registry of the docker image. E.g. "contoso.azurecr.io". Leave empty unless you have a private registry mirroring the image from docker hub')
+@description('Registry of the docker image. E.g. "contoso.azurecr.io". Leave empty unless you have a private registry mirroring the image from GHCR')
 param dockerImageRegistry string = 'ghcr.io'
 
 @description('Registry and repository of the server docker image. Ideally, you do not need to edit this value.')

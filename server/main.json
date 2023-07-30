@@ -130,7 +130,7 @@
       "type": "string",
       "defaultValue": "ghcr.io",
       "metadata": {
-        "description": "Registry of the docker image. E.g. \"contoso.azurecr.io\". Leave empty unless you have a private registry mirroring the image from docker hub"
+        "description": "Registry of the docker image. E.g. \"contoso.azurecr.io\". Leave empty unless you have a private registry mirroring the image from GHCR"
       }
     },
     "serverImageRepository": {
