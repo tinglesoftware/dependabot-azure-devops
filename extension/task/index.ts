@@ -221,9 +221,9 @@ async function run() {
         dockerRunner.arg(['--mount', `type=bind,source=/ssh-agent,target=/ssh-agent`]);
       }
 
-      // Form the docker image based on the repository and the tag, e.g. tinglesoftware/dependabot-updater
-      // For custom/enterprise registries, prefix with the registry, e.g. contoso.azurecr.io/tinglesoftware/dependabot-updater
-      let dockerImage: string = `${variables.dockerImageRepository}:${variables.dockerImageTag}`;
+      // Form the docker image based on the ecosystem (repository) and the tag e.g. tinglesoftware/dependabot-updater-nuget
+      // For custom/enterprise registries, prefix with the registry, e.g. contoso.azurecr.io/tinglesoftware/dependabot-updater-nuget
+      let dockerImage: string = `tinglesoftware/dependabot-updater-${update.packageEcosystem}:${variables.dockerImageTag}`
       if (variables.dockerImageRegistry) {
         dockerImage = `${variables.dockerImageRegistry}/${dockerImage}`.replace("//", "/");
       }
