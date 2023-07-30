@@ -217,15 +217,6 @@
       "required": false
     },
     {
-      "name": "dockerImageRepository",
-      "label": "Docker Container repository",
-      "type": "string",
-      "helpMarkDown": "The docker container repository to use when pulling the docker container used by the task if needed. This can be useful if the default container requires customizations such as custom certs.",
-      "defaultValue": "tinglesoftware/dependabot-updater",
-      "required": true,
-      "groupName": "advanced"
-    },
-    {
       "name": "dockerImageTag",
       "type": "string",
       "groupName": "advanced",
