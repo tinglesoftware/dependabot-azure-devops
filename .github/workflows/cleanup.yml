@@ -6,19 +6,44 @@ on:
   - cron: '0 0 */14 * *' # every 14 days
 
 jobs:
-  cleanup:
+  cleanup-updater:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        suite:
+        - { name: bundler }
+        - { name: cargo }
+        - { name: composer }
+        - { name: docker }
+        - { name: elm }
+        - { name: gitsubmodule }
+        - { name: github-actions }
+        - { name: gomod }
+        - { name: gradle }
+        - { name: mix }
+        - { name: maven }
+        - { name: npm }
+        - { name: nuget }
+        - { name: pub }
+        - { name: pip }
+        # TODO: restore swift here once supported elsewhere
+        # - { name: swift }
+        - { name: terraform }
 
-# TODO: run in a loop (use matrix) to clean up all known images
     steps:
-    - name: Delete old dependabot-updater images
+    - name: Delete old dependabot-updater-${{ matrix.suite.ecosystem }} images
       uses: actions/delete-package-versions@v4
       with:
-        package-name: 'dependabot-updater'
+        package-name: 'dependabot-updater-${{ matrix.suite.ecosystem }}'
         package-type: 'container'
         min-versions-to-keep: 20
         delete-only-pre-release-versions: "true"
 
+  cleanup-server:
+    runs-on: ubuntu-latest
+
+    steps:
     - name: Delete old dependabot-server images
       uses: actions/delete-package-versions@v4
       with:
