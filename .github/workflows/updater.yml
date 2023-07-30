@@ -89,7 +89,7 @@ jobs:
         docker build \
         -f updater/Dockerfile \
         --build-arg BUILDKIT_INLINE_CACHE=1 \
-        --build-arg ECOSYSTEM=${{ matrix.suite.ecosystem }}
+        --build-arg ECOSYSTEM=${{ matrix.suite.ecosystem }} \
         --label com.github.image.run.id=$GITHUB_RUN_ID \
         --label com.github.image.run.number=$GITHUB_RUN_NUMBER \
         --label com.github.image.job.id=$GITHUB_JOB \
