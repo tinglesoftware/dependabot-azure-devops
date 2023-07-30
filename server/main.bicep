@@ -71,9 +71,6 @@ param serverImageRepository string = 'tinglesoftware/dependabot-server'
 @description('Tag of the server docker image.')
 param serverImageTag string = '#{GITVERSION_NUGETVERSIONV2}#'
 
-@description('Registry and repository of the updater docker image. Ideally, you do not need to edit this value.')
-param updaterImageRepository string = 'tinglesoftware/dependabot-updater'
-
 @description('Tag of the updater docker image.')
 param updaterImageTag string = '#{GITVERSION_NUGETVERSIONV2}#'
 
@@ -360,7 +357,7 @@ resource app 'Microsoft.App/containerApps@2022-10-01' = {
             }
             { name: 'Workflow__LogAnalyticsWorkspaceKey', secretRef: 'log-analytics-workspace-key' }
             { name: 'Workflow__ManagedIdentityId', value: managedIdentityJobs.id }
-            { name: 'Workflow__UpdaterContainerImage', value: '${'${hasDockerImageRegistry ? '${dockerImageRegistry}/' : ''}'}${updaterImageRepository}:${updaterImageTag}' }
+            { name: 'Workflow__UpdaterContainerImageTemplate', value: '${'${hasDockerImageRegistry ? '${dockerImageRegistry}/' : ''}'}tinglesoftware/dependabot-updater-{{ecosystem}}:${updaterImageTag}' }
             { name: 'Workflow__FailOnException', value: failOnException ? 'true' : 'false' }
             { name: 'Workflow__AutoComplete', value: autoComplete ? 'true' : 'false' }
             { name: 'Workflow__AutoCompleteIgnoreConfigs', value: join(autoCompleteIgnoreConfigs, ';') }

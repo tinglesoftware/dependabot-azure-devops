@@ -57,7 +57,8 @@ internal partial class UpdateRunner
             catch (Azure.RequestFailedException rfe) when (rfe.Status is 404) { }
 
             // prepare the container
-            var container = new ContainerInstanceContainer(UpdaterContainerName, options.UpdaterContainerImage, new(job.Resources!));
+            var image = options.UpdaterContainerImageTemplate!.Replace("{{ecosystem}}", job.PackageEcosystem.GetEnumMemberAttrValueOrDefault());
+            var container = new ContainerInstanceContainer(UpdaterContainerName, image, new(job.Resources!));
             var env = CreateVariables(repository, update, job);
             foreach (var (key, value) in env) container.EnvironmentVariables.Add(new ContainerEnvironmentVariable(key) { Value = value, });
 
@@ -73,7 +74,7 @@ internal partial class UpdateRunner
             };
 
             // add credentials for pulling image(s) from azure container registry
-            if (TryGetAzureContainerRegistry(options.UpdaterContainerImage!, out var registry))
+            if (TryGetAzureContainerRegistry(image, out var registry))
             {
                 data.ImageRegistryCredentials.Add(new ContainerGroupImageRegistryCredential(registry) { Identity = options.ManagedIdentityId, });
             }

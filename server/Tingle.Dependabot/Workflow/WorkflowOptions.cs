@@ -36,14 +36,14 @@ public class WorkflowOptions
     public string? ManagedIdentityId { get; set; }
 
     /// <summary>
-    /// The registry, repository and version of the docker container image to use.
+    /// Template representing the docker container image  to use.
     /// Keeping this value fixed in code is important so that the code that depends on it always works.
     /// More like a dependency.
     /// <br/>
     /// However, in production there maybe an issue that requires a rollback hence the value is placed in options.
     /// </summary>
-    /// <example>ghcr.io/tinglesoftware/dependabot-updater:0.14</example>
-    public string? UpdaterContainerImage { get; set; }
+    /// <example>ghcr.io/tinglesoftware/dependabot-updater-{{ecosystem}}:0.14</example>
+    public string? UpdaterContainerImageTemplate { get; set; }
 
     /// <summary>URL for the project.</summary>
     public AzureDevOpsProjectUrl? ProjectUrl { get; set; }
