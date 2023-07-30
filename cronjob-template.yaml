@@ -36,7 +36,7 @@ spec:
           activeDeadlineSeconds: 3600
           containers:
           - name: dependabot
-            image: 'ghcr.io/tinglesoftware/dependabot-updater' # Use a specific tag otherwise the image may be cached already
+            image: 'ghcr.io/tinglesoftware/dependabot-updater-{{dependabot_package_ecosystem}}' # Use a specific tag otherwise the image may be cached already
             resources: {} # decide based on your usage
             env:
             - name: GITHUB_ACCESS_TOKEN

@@ -9,6 +9,7 @@ jobs:
   cleanup:
     runs-on: ubuntu-latest
 
+# TODO: run in a loop (use matrix) to clean up all known images
     steps:
     - name: Delete old dependabot-updater images
       uses: actions/delete-package-versions@v4
