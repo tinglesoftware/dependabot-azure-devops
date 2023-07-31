@@ -1,8 +1,28 @@
-GIT
-  remote: https://github.com/dependabot/dependabot-core.git
-  revision: cde6c97863027d0ff44c408dbab6cc0738a4d542
-  branch: main
+GEM
+  remote: https://rubygems.org/
   specs:
+    addressable (2.8.4)
+      public_suffix (>= 2.0.2, < 6.0)
+    ast (2.4.2)
+    aws-eventstream (1.2.0)
+    aws-partitions (1.794.0)
+    aws-sdk-codecommit (1.58.0)
+      aws-sdk-core (~> 3, >= 3.177.0)
+      aws-sigv4 (~> 1.1)
+    aws-sdk-core (3.180.0)
+      aws-eventstream (~> 1, >= 1.0.2)
+      aws-partitions (~> 1, >= 1.651.0)
+      aws-sigv4 (~> 1.5)
+      jmespath (~> 1, >= 1.6.1)
+    aws-sdk-ecr (1.63.0)
+      aws-sdk-core (~> 3, >= 3.177.0)
+      aws-sigv4 (~> 1.1)
+    aws-sigv4 (1.6.0)
+      aws-eventstream (~> 1, >= 1.0.2)
+    citrus (3.0.2)
+    commonmarker (0.23.9)
+    crack (0.4.5)
+      rexml
     dependabot-bundler (0.224.0)
       dependabot-common (= 0.224.0)
     dependabot-cargo (0.224.0)
@@ -73,32 +93,6 @@ GIT
       dependabot-common (= 0.224.0)
     dependabot-terraform (0.224.0)
       dependabot-common (= 0.224.0)
-
-GEM
-  remote: https://rubygems.org/
-  specs:
-    addressable (2.8.4)
-      public_suffix (>= 2.0.2, < 6.0)
-    ast (2.4.2)
-    aws-eventstream (1.2.0)
-    aws-partitions (1.794.0)
-    aws-sdk-codecommit (1.58.0)
-      aws-sdk-core (~> 3, >= 3.177.0)
-      aws-sigv4 (~> 1.1)
-    aws-sdk-core (3.180.0)
-      aws-eventstream (~> 1, >= 1.0.2)
-      aws-partitions (~> 1, >= 1.651.0)
-      aws-sigv4 (~> 1.5)
-      jmespath (~> 1, >= 1.6.1)
-    aws-sdk-ecr (1.63.0)
-      aws-sdk-core (~> 3, >= 3.177.0)
-      aws-sigv4 (~> 1.1)
-    aws-sigv4 (1.6.0)
-      aws-eventstream (~> 1, >= 1.0.2)
-    citrus (3.0.2)
-    commonmarker (0.23.9)
-    crack (0.4.5)
-      rexml
     diff-lcs (1.5.0)
     docker_registry2 (1.14.0)
       rest-client (>= 1.8.0)
@@ -208,7 +202,7 @@ PLATFORMS
   x86_64-linux
 
 DEPENDENCIES
-  dependabot-omnibus!
+  dependabot-omnibus (~> 0.224.0)
   rspec
   rubocop
   rubocop-performance
