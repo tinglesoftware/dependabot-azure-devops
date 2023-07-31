@@ -42,7 +42,7 @@ public class WorkflowOptions
     /// <br/>
     /// However, in production there maybe an issue that requires a rollback hence the value is placed in options.
     /// </summary>
-    /// <example>ghcr.io/tinglesoftware/dependabot-updater-{{ecosystem}}:0.14</example>
+    /// <example>ghcr.io/tinglesoftware/dependabot-updater-{{ecosystem}}:1.20</example>
     public string? UpdaterContainerImageTemplate { get; set; }
 
     /// <summary>URL for the project.</summary>

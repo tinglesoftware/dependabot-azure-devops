@@ -222,12 +222,12 @@ public class UpdateRunnerTests
     }
 
     [Theory]
-    [InlineData("contoso.azurecr.io/tinglesoftware/dependabot-updater-nuget:0.11", true, "contoso.azurecr.io")]
-    [InlineData("fabrikam.azurecr.io/tinglesoftware/dependabot-updater-nuget:0.11", true, "fabrikam.azurecr.io")]
-    [InlineData("dependabot.azurecr.io/tinglesoftware/dependabot-updater-nuget:0.11", true, "dependabot.azurecr.io")]
-    [InlineData("ghcr.io/tinglesoftware/dependabot-updater-nuget:0.11", false, null)]
-    [InlineData("tingle/dependabot-updater-nuget:0.11", false, null)]
-    [InlineData("tingle/dependabot-azure-devops:0.11", false, null)]
+    [InlineData("contoso.azurecr.io/tinglesoftware/dependabot-updater-nuget:1.20", true, "contoso.azurecr.io")]
+    [InlineData("fabrikam.azurecr.io/tinglesoftware/dependabot-updater-nuget:1.20", true, "fabrikam.azurecr.io")]
+    [InlineData("dependabot.azurecr.io/tinglesoftware/dependabot-updater-nuget:1.20", true, "dependabot.azurecr.io")]
+    [InlineData("ghcr.io/tinglesoftware/dependabot-updater-nuget:1.20", false, null)]
+    [InlineData("tingle/dependabot-updater-nuget:1.20", false, null)]
+    [InlineData("tingle/dependabot-azure-devops:1.20", false, null)]
     public void TryGetAzureContainerRegistry_Works(string input, bool matches, string? expected)
     {
         var found = UpdateRunner.TryGetAzureContainerRegistry(input, out var actual);
