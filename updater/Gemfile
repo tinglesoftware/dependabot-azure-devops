@@ -8,7 +8,9 @@ source "https://rubygems.org"
 # They are so many, our reference won't be found for it to be updated.
 # Hence adding the branch.
 
-gem "dependabot-omnibus", github: "dependabot/dependabot-core", branch: "main"
+# gem "dependabot-omnibus", github: "dependabot/dependabot-core", branch: "main"
+
+gem "dependabot-omnibus", "~>0.224.0"
 
 group :test do
   gem "rspec"
