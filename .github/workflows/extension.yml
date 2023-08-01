@@ -71,6 +71,13 @@ jobs:
       with:
         files: '["${{ github.workspace }}/extension/overrides*.json"]'
 
+    - name: Update extension version.Major
+      uses: jossef/action-set-json-field@v2
+      with:
+        file: 'extension/task/task.json'
+        field: 'version.Major'
+        value: ${{ steps.gitversion.outputs.major }}
+
     - name: Update extension version.Minor
       uses: jossef/action-set-json-field@v2
       with:
