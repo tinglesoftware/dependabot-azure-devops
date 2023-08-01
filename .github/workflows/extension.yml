@@ -71,26 +71,11 @@ jobs:
       with:
         files: '["${{ github.workspace }}/extension/overrides*.json"]'
 
-    - name: Update extension version.Major
-      uses: jossef/action-set-json-field@v2
-      with:
-        file: 'extension/task/task.json'
-        field: 'version.Major'
-        value: ${{ steps.gitversion.outputs.major }}
-
-    - name: Update extension version.Minor
-      uses: jossef/action-set-json-field@v2
-      with:
-        file: 'extension/task/task.json'
-        field: 'version.Minor'
-        value: ${{ steps.gitversion.outputs.minor }}
-
-    - name: Update extension version.Patch
-      uses: jossef/action-set-json-field@v2
-      with:
-        file: 'extension/task/task.json'
-        field: 'version.Patch'
-        value: ${{ github.run_number }}
+    - name: Update values in extension/task/task.json
+      run: |
+        echo "`jq '.version.Major="${{ steps.gitversion.outputs.major }}"' extension/task/task.json`" > extension/task/task.json
+        echo "`jq '.version.Minor="${{ steps.gitversion.outputs.minor }}"' extension/task/task.json`" > extension/task/task.json
+        echo "`jq '.version.Patch="${{ github.run_number }}"' extension/task/task.json`" > extension/task/task.json
 
     - name: Create Extension (dev)
       run: >
