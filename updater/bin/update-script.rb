@@ -694,7 +694,10 @@ dependencies.select(&:top_level?).each do |dep|
       # pr_message_header: ,
       # pr_message_footer: ,
       # vulnerabilities_fixed: ,
-      github_redirection_service: Dependabot::PullRequestCreator::DEFAULT_GITHUB_REDIRECTION_SERVICE
+      # dependency_group: ,
+      github_redirection_service: Dependabot::PullRequestCreator::DEFAULT_GITHUB_REDIRECTION_SERVICE,
+      pr_message_max_length: Dependabot::Azure::PR_DESCRIPTION_MAX_LENGTH,
+      pr_message_encoding: Dependabot::Azure::PR_DESCRIPTION_ENCODING
     )
 
     # Skip creating/updating PR
