@@ -73,9 +73,9 @@ jobs:
 
     - name: Update values in extension/task/task.json
       run: |
-        echo "`jq '.version.Major="${{ steps.gitversion.outputs.major }}"' extension/task/task.json`" > extension/task/task.json
-        echo "`jq '.version.Minor="${{ steps.gitversion.outputs.minor }}"' extension/task/task.json`" > extension/task/task.json
-        echo "`jq '.version.Patch="${{ github.run_number }}"' extension/task/task.json`" > extension/task/task.json
+        echo "`jq '.version.Major=${{ steps.gitversion.outputs.major }}' extension/task/task.json`" > extension/task/task.json
+        echo "`jq '.version.Minor=${{ steps.gitversion.outputs.minor }}' extension/task/task.json`" > extension/task/task.json
+        echo "`jq '.version.Patch=${{ github.run_number }}' extension/task/task.json`" > extension/task/task.json
 
     - name: Create Extension (dev)
       run: >
