@@ -27,8 +27,7 @@ jobs:
         - { ecosystem: nuget }
         - { ecosystem: pub }
         - { ecosystem: pip }
-        # TODO: restore swift here once supported elsewhere
-        # - { ecosystem: swift }
+        - { ecosystem: swift }
         - { ecosystem: terraform }
 
     steps:
