@@ -221,12 +221,27 @@ async function run() {
         dockerRunner.arg(['--mount', `type=bind,source=/ssh-agent,target=/ssh-agent`]);
       }
 
+      let dockerImageRegistry = variables.dockerImageRegistry;
+      if (variables.dockerImageRegistry) {
+        if (dockerImageRegistry !== 'ghcr.io') { // skip known default value
+          tl.warning(
+            `
+          You supplied the dockerImageRegistry input but it is set to be removed.
+          \n
+          If you have a compelling enough reason why it should be retained, air your views
+          at https://github.com/tinglesoftware/dependabot-azure-devops/issues/736
+          \n
+          Do this before Monday, 11 September, 2023 when we intend to throw errors if the input is set or ignore it altogether.
+          `);
+        }
+      } else {
+        dockerImageRegistry = 'ghcr.io';
+      }
+
       // Form the docker image based on the ecosystem (repository) and the tag e.g. tinglesoftware/dependabot-updater-nuget
       // For custom/enterprise registries, prefix with the registry, e.g. contoso.azurecr.io/tinglesoftware/dependabot-updater-nuget
       let dockerImage: string = `tinglesoftware/dependabot-updater-${update.packageEcosystem}:${variables.dockerImageTag}`
-      if (variables.dockerImageRegistry) {
-        dockerImage = `${variables.dockerImageRegistry}/${dockerImage}`.replace("//", "/");
-      }
+      dockerImage = `${dockerImageRegistry}/${dockerImage}`.replace("//", "/");
 
       tl.debug(`Running docker container -> '${dockerImage}' ...`);
       dockerRunner.arg(dockerImage);

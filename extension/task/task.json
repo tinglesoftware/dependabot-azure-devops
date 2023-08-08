@@ -213,7 +213,6 @@
       "label": "Container registry override",
       "groupName": "advanced",
       "helpMarkDown": "The docker registry to use when pulling the docker container used by the task if needed. By default this will use GHCR. This can be useful if the container needs to come from an internal docker registry mirror or alternative source for testing. If the mirror requires authentication add a `docker login` task before this task. Example: `contoso.azurecr.io`",
-      "defaultValue": "ghcr.io",
       "required": false
     },
     {
