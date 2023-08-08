@@ -179,6 +179,7 @@ public enum DependabotPackageEcosystem
     NuGet,
     Pip,
     Terraform,
+    Swift,
 }
 
 public enum DependabotScheduleInterval { Daily, Weekly, Monthly, }
