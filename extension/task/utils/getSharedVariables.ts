@@ -143,9 +143,7 @@ export default function getSharedVariables(): ISharedVariables {
   );
 
   // Prepare variables for the docker image to use
-  let dockerImageRegistry: string | undefined = tl.getInput(
-    "dockerImageRegistry"
-  );
+  let dockerImageRegistry: string | undefined = tl.getInput("dockerImageRegistry");
   let dockerImageTag: string = getDockerImageTag();
 
   return {
