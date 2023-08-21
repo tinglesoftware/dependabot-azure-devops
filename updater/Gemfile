@@ -9,7 +9,7 @@ source "https://rubygems.org"
 # Hence adding the branch.
 
 # gem "dependabot-omnibus", github: "dependabot/dependabot-core", branch: "main"
-gem "dependabot-omnibus", "~>0.226.0"
+gem "dependabot-omnibus", "~>0.227.0"
 
 group :test do
   gem "rspec"
