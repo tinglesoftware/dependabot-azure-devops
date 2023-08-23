@@ -68,9 +68,8 @@ The deployment exposes the following parameters that can be tuned to suit the se
 |notificationsPassword|The password used to authenticate incoming requests from Azure DevOps|No|&lt;auto-generated&gt;|
 |dockerImageRegistry|The docker registry to use when pulling the docker containers if needed. By default this will GitHub Container Registry. This can be useful if the container needs to come from an internal docker registry mirror or alternative source for testing. If the registry requires authentication ensure to assign `acrPull` permissions to the managed identity.<br />Example: `contoso.azurecr.io`|No|`ghcr.io`|
 |serverImageRepository|The docker container repository to use when pulling the server docker container. This can be useful if the default container requires customizations such as custom certs.|No|`tinglesoftware/dependabot-server`|
-|serverImageTag|The image tag to use when pulling the docker container. A tag also defines the version. You should avoid using `latest`. Example: `0.1.0`|No|&lt;version-downloaded&gt;|
-|updaterImageRepository|The docker container repository to use when pulling the updater docker container. This can be useful if the default container requires customizations such as custom certs.|No|`tinglesoftware/dependabot-updater`|
-|updaterImageTag|The image tag to use when pulling the updater docker container. A tag also defines the version. You should avoid using `latest`. Example: `0.1.0`|No|&lt;version-downloaded&gt;|
+|serverImageTag|The image tag to use when pulling the docker container. A tag also defines the version. You should avoid using `latest`. Example: `1.1.0`|No|&lt;version-downloaded&gt;|
+|updaterImageTag|The image tag to use when pulling the updater docker container. A tag also defines the version. You should avoid using `latest`. Example: `1.1.0`|No|&lt;version-downloaded&gt;|
 |minReplicas|The minimum number of replicas to required for the deployment. Given that scheduling runs in process, this value cannot be less than `1`. This may change in the future.|No|1|
 |maxReplicas|The maximum number of replicas when automatic scaling engages. In most cases, you do not need more than 1.|No|1|
 

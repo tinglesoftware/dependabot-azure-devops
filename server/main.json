@@ -130,7 +130,7 @@
       "type": "string",
       "defaultValue": "ghcr.io",
       "metadata": {
-        "description": "Registry of the docker image. E.g. \"contoso.azurecr.io\". Leave empty unless you have a private registry mirroring the image from docker hub"
+        "description": "Registry of the docker image. E.g. \"contoso.azurecr.io\". Leave empty unless you have a private registry mirroring the image from GHCR"
       }
     },
     "serverImageRepository": {
@@ -145,13 +145,6 @@
       "defaultValue": "#{GITVERSION_NUGETVERSIONV2}#",
       "metadata": {
         "description": "Tag of the server docker image."
-      }
-    },
-    "updaterImageRepository": {
-      "type": "string",
-      "defaultValue": "tinglesoftware/dependabot-updater",
-      "metadata": {
-        "description": "Registry and repository of the updater docker image. Ideally, you do not need to edit this value."
       }
     },
     "updaterImageTag": {
@@ -369,8 +362,12 @@
       "location": "[parameters('location')]",
       "kind": "web",
       "properties": {
-        "Application_Type": "web"
-      }
+        "Application_Type": "web",
+        "WorkspaceResourceId": "[if(variables('hasProvidedLogAnalyticsWorkspace'), extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', split(parameters('logAnalyticsWorkspaceId'), '/')[2], split(parameters('logAnalyticsWorkspaceId'), '/')[4]), 'Microsoft.OperationalInsights/workspaces', split(parameters('logAnalyticsWorkspaceId'), '/')[8]), resourceId('Microsoft.OperationalInsights/workspaces', parameters('name')))]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('name'))]"
+      ]
     },
     {
       "type": "Microsoft.App/containerApps",
@@ -485,8 +482,8 @@
                   "value": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-jobs', parameters('name')))]"
                 },
                 {
-                  "name": "Workflow__UpdaterContainerImage",
-                  "value": "[format('{0}{1}:{2}', format('{0}', if(variables('hasDockerImageRegistry'), format('{0}/', parameters('dockerImageRegistry')), '')), parameters('updaterImageRepository'), parameters('updaterImageTag'))]"
+                  "name": "Workflow__UpdaterContainerImageTemplate",
+                  "value": "[format('{0}tinglesoftware/dependabot-updater-{{{{ecosystem}}}}:{1}', format('{0}', if(variables('hasDockerImageRegistry'), format('{0}/', parameters('dockerImageRegistry')), '')), parameters('updaterImageTag'))]"
                 },
                 {
                   "name": "Workflow__FailOnException",

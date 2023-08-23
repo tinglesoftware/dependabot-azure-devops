@@ -24,16 +24,17 @@ require "dependabot/cargo"
 require "dependabot/composer"
 require "dependabot/docker"
 require "dependabot/elm"
-require "dependabot/github_actions"
 require "dependabot/git_submodules"
+require "dependabot/github_actions"
 require "dependabot/go_modules"
 require "dependabot/gradle"
 require "dependabot/hex"
 require "dependabot/maven"
 require "dependabot/npm_and_yarn"
 require "dependabot/nuget"
-require "dependabot/pub"
 require "dependabot/python"
+require "dependabot/pub"
+require "dependabot/swift"
 require "dependabot/terraform"
 
 require_relative "azure_helpers"
@@ -710,7 +711,10 @@ dependencies.select(&:top_level?).each do |dep|
       # pr_message_header: ,
       # pr_message_footer: ,
       # vulnerabilities_fixed: ,
-      github_redirection_service: Dependabot::PullRequestCreator::DEFAULT_GITHUB_REDIRECTION_SERVICE
+      # dependency_group: ,
+      github_redirection_service: Dependabot::PullRequestCreator::DEFAULT_GITHUB_REDIRECTION_SERVICE,
+      pr_message_max_length: Dependabot::PullRequestCreator::Azure::PR_DESCRIPTION_MAX_LENGTH,
+      pr_message_encoding: Dependabot::PullRequestCreator::Azure::PR_DESCRIPTION_ENCODING
     )
 
     # Skip creating/updating PR

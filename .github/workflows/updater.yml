@@ -14,16 +14,36 @@ on:
     - main
     paths:
     - "updater/**"
-    - "Dockerfile"
     - ".github/workflows/updater.yml"
     - "!docs/**"
 
 jobs:
   Build:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        suite:
+        - { ecosystem: bundler }
+        - { ecosystem: cargo }
+        - { ecosystem: composer }
+        - { ecosystem: docker }
+        - { ecosystem: elm }
+        - { ecosystem: gitsubmodule }
+        - { ecosystem: github-actions }
+        - { ecosystem: gomod }
+        - { ecosystem: gradle }
+        - { ecosystem: mix }
+        - { ecosystem: maven }
+        - { ecosystem: npm }
+        - { ecosystem: nuget }
+        - { ecosystem: pub }
+        - { ecosystem: pip }
+        - { ecosystem: swift }
+        - { ecosystem: terraform }
 
     env:
-      IMAGE_NAME: 'dependabot-updater'
+      IMAGE_NAME: 'dependabot-updater-${{ matrix.suite.ecosystem }}'
       DOCKER_BUILDKIT: 1 # Enable Docker BuildKit
       # $BUNDLE_GEMFILE must be set at the job level, so it is set for all steps
       BUNDLE_GEMFILE: ${{ github.workspace }}/updater/Gemfile
@@ -64,7 +84,9 @@ jobs:
     - name: Build image
       run: |
         docker build \
-        -f Dockerfile \
+        -f updater/Dockerfile \
+        --build-arg BUILDKIT_INLINE_CACHE=1 \
+        --build-arg ECOSYSTEM=${{ matrix.suite.ecosystem }} \
         --label com.github.image.run.id=$GITHUB_RUN_ID \
         --label com.github.image.run.number=$GITHUB_RUN_NUMBER \
         --label com.github.image.job.id=$GITHUB_JOB \
@@ -76,7 +98,6 @@ jobs:
         -t "ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:$GITVERSION_MAJOR.$GITVERSION_MINOR" \
         -t "ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:$GITVERSION_MAJOR" \
         --cache-from ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:latest \
-        --build-arg BUILDKIT_INLINE_CACHE=1 \
         .
 
     - name: Push image (latest, ShortSha)

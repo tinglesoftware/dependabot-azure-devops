@@ -3,7 +3,7 @@
 First, you need to pull the docker image locally to your machine:
 
 ```bash
-docker pull ghcr.io/tinglesoftware/dependabot-updater
+docker pull ghcr.io/tinglesoftware/dependabot-updater-<ecosystem>
 ```
 
 Next create and run a container from the image:
@@ -32,7 +32,7 @@ docker run --rm -t \
            -e AZURE_SET_AUTO_COMPLETE=<true/false> \
            -e AZURE_AUTO_APPROVE_PR=<true/false> \
            -e AZURE_AUTO_APPROVE_USER_TOKEN=<approving-user-token-here> \
-           ghcr.io/tinglesoftware/dependabot-updater
+           ghcr.io/tinglesoftware/dependabot-updater-<ecosystem>
 ```
 
 An example, for Azure DevOps Services:
@@ -58,7 +58,7 @@ docker run --rm -t \
            -e AZURE_SET_AUTO_COMPLETE=true \
            -e AZURE_AUTO_APPROVE_PR=true \
            -e AZURE_AUTO_APPROVE_USER_TOKEN=ijkl..mnop \
-           ghcr.io/tinglesoftware/dependabot-updater
+           ghcr.io/tinglesoftware/dependabot-updater-nuget
 ```
 
 An example, for Azure DevOps Server:
@@ -87,7 +87,7 @@ docker run --rm -t \
            -e AZURE_SET_AUTO_COMPLETE=true \
            -e AZURE_AUTO_APPROVE_PR=true \
            -e AZURE_AUTO_APPROVE_USER_TOKEN=ijkl..mnop \
-           ghcr.io/tinglesoftware/dependabot-updater
+           ghcr.io/tinglesoftware/dependabot-updater-nuget
 ```
 
 ## Environment Variables

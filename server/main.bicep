@@ -62,7 +62,7 @@ param jobsResourceGroupName string = resourceGroup().name
 #disable-next-line secure-secrets-in-params // need sensible defaults
 param notificationsPassword string = uniqueString('service-hooks', resourceGroup().id) // e.g. zecnx476et7xm (13 characters)
 
-@description('Registry of the docker image. E.g. "contoso.azurecr.io". Leave empty unless you have a private registry mirroring the image from docker hub')
+@description('Registry of the docker image. E.g. "contoso.azurecr.io". Leave empty unless you have a private registry mirroring the image from GHCR')
 param dockerImageRegistry string = 'ghcr.io'
 
 @description('Registry and repository of the server docker image. Ideally, you do not need to edit this value.')
@@ -70,9 +70,6 @@ param serverImageRepository string = 'tinglesoftware/dependabot-server'
 
 @description('Tag of the server docker image.')
 param serverImageTag string = '#{GITVERSION_NUGETVERSIONV2}#'
-
-@description('Registry and repository of the updater docker image. Ideally, you do not need to edit this value.')
-param updaterImageRepository string = 'tinglesoftware/dependabot-updater'
 
 @description('Tag of the updater docker image.')
 param updaterImageTag string = '#{GITVERSION_NUGETVERSIONV2}#'
@@ -275,7 +272,7 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
   kind: 'web'
   properties: {
     Application_Type: 'web'
-    // WorkspaceResourceId: logAnalyticsWorkspace.id
+    WorkspaceResourceId: hasProvidedLogAnalyticsWorkspace ? providedLogAnalyticsWorkspace.id : logAnalyticsWorkspace.id
   }
 }
 
@@ -360,7 +357,7 @@ resource app 'Microsoft.App/containerApps@2022-10-01' = {
             }
             { name: 'Workflow__LogAnalyticsWorkspaceKey', secretRef: 'log-analytics-workspace-key' }
             { name: 'Workflow__ManagedIdentityId', value: managedIdentityJobs.id }
-            { name: 'Workflow__UpdaterContainerImage', value: '${'${hasDockerImageRegistry ? '${dockerImageRegistry}/' : ''}'}${updaterImageRepository}:${updaterImageTag}' }
+            { name: 'Workflow__UpdaterContainerImageTemplate', value: '${'${hasDockerImageRegistry ? '${dockerImageRegistry}/' : ''}'}tinglesoftware/dependabot-updater-{{ecosystem}}:${updaterImageTag}' }
             { name: 'Workflow__FailOnException', value: failOnException ? 'true' : 'false' }
             { name: 'Workflow__AutoComplete', value: autoComplete ? 'true' : 'false' }
             { name: 'Workflow__AutoCompleteIgnoreConfigs', value: join(autoCompleteIgnoreConfigs, ';') }

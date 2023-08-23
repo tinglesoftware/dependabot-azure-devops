@@ -23,7 +23,7 @@ updates:
     update-types: ["version-update:semver-patch"]
 
 - package-ecosystem: "docker" # See documentation for possible values
-  directory: "/" # Location of package manifests
+  directory: "/updater" # Location of package manifests
   schedule:
     interval: "weekly"
     time: "04:00"
@@ -35,9 +35,6 @@ updates:
     interval: "weekly"
     time: "04:00"
   open-pull-requests-limit: 10
-  ignore:
-  - dependency-name: "Moq"
-    update-types: ["version-update:semver-patch"]
 
 - package-ecosystem: "npm" # See documentation for possible values
   directory: "/extension" # Location of package manifests
