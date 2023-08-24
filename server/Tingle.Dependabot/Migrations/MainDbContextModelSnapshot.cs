@@ -17,7 +17,7 @@ namespace Tingle.Dependabot.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "7.0.3")
+                .HasAnnotation("ProductVersion", "7.0.10")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -132,8 +132,9 @@ namespace Tingle.Dependabot.Migrations
                     b.Property<string>("Log")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("PackageEcosystem")
-                        .HasColumnType("int");
+                    b.Property<string>("PackageEcosystem")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("RepositoryId")
                         .IsRequired()

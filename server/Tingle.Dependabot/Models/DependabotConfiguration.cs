@@ -1,7 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
-using YamlDotNet.Serialization;
 
 namespace Tingle.Dependabot.Models;
 
@@ -24,7 +22,7 @@ public record DependabotUpdate
     /// <summary>Ecosystem for the update.</summary>
     [Required]
     [JsonPropertyName("package-ecosystem")]
-    public DependabotPackageEcosystem? PackageEcosystem { get; set; }
+    public string? PackageEcosystem { get; set; }
 
     [Required]
     [JsonPropertyName("directory")]
@@ -47,15 +45,15 @@ public record DependabotUpdate
     [JsonPropertyName("pull-request-branch-name")]
     public DependabotPullRequestBranchName? PullRequestBranchName { get; set; }
     [JsonPropertyName("rebase-strategy")]
-    public DependabotRebaseStrategy RebaseStrategy { get; set; } = DependabotRebaseStrategy.Auto;
+    public string RebaseStrategy { get; set; } = "auto";
     [JsonPropertyName("insecure-external-code-execution")]
-    public DependabotInsecureExternalCodeExecution? InsecureExternalCodeExecution { get; set; }
+    public string? InsecureExternalCodeExecution { get; set; }
     [JsonPropertyName("target-branch")]
     public string? TargetBranch { get; set; }
     [JsonPropertyName("vendor")]
     public bool Vendor { get; set; } = false;
     [JsonPropertyName("versioning-strategy")]
-    public DependabotVersioningStrategy VersioningStrategy { get; set; } = DependabotVersioningStrategy.Auto;
+    public string VersioningStrategy { get; set; } = "auto";
 }
 
 public class DependabotUpdateSchedule
@@ -99,7 +97,7 @@ public class DependabotAllowDependency
     [JsonPropertyName("dependency-name")]
     public string? DependencyName { get; set; }
     [JsonPropertyName("dependency-type")]
-    public DependabotDependencyType? DependencyType { get; set; }
+    public string? DependencyType { get; set; }
 
     public bool IsValid() => DependencyName is not null || DependencyType is not null;
 }
@@ -150,56 +148,5 @@ public class DependabotRegistry
     public string? PublicKeyFingerprint { get; set; }
 }
 
-[JsonConverter(typeof(JsonStringEnumMemberConverter))]
-public enum DependabotPackageEcosystem
-{
-    Bundler,
-    Cargo,
-    Composer,
-    Docker,
-    Elixir,
-    Elm,
-
-    [EnumMember(Value = "gitsubmodule")]
-    [YamlMember(Alias = "gitsubmodule")]
-    GitSubmodule,
-
-    [EnumMember(Value = "github-actions")]
-    [YamlMember(Alias = "github-actions")]
-    GithubActions,
-
-    [EnumMember(Value = "gomod")]
-    [YamlMember(Alias = "gomod")]
-    GoModules,
-
-    Gradle,
-    Maven,
-    Mix,
-    Npm,
-    NuGet,
-    Pip,
-    Terraform,
-    Swift,
-}
-
 public enum DependabotScheduleInterval { Daily, Weekly, Monthly, }
 public enum DependabotScheduleDay { Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, }
-public enum DependabotDependencyType { Direct, All, Production, Development, }
-public enum DependabotRebaseStrategy { Disabled, Auto, }
-public enum DependabotInsecureExternalCodeExecution { Allow, Deny, }
-
-[JsonConverter(typeof(JsonStringEnumMemberConverter))]
-public enum DependabotVersioningStrategy
-{
-    Auto,
-    Widen,
-    Increase,
-
-    [EnumMember(Value = "lock-file-only")]
-    [YamlMember(Alias = "lock-file-only")]
-    LockFileOnly,
-
-    [EnumMember(Value = "increase-if-necessary")]
-    [YamlMember(Alias = "increase-if-necessary")]
-    IncreaseIfNecessary,
-}

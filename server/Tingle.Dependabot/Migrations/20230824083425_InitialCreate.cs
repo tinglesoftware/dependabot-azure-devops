@@ -58,7 +58,7 @@ public partial class InitialCreate : Migration
                 RepositorySlug = table.Column<string>(type: "nvarchar(max)", nullable: false),
                 EventBusId = table.Column<string>(type: "nvarchar(450)", nullable: true),
                 Commit = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
-                PackageEcosystem = table.Column<int>(type: "int", nullable: false),
+                PackageEcosystem = table.Column<string>(type: "nvarchar(450)", nullable: false),
                 Directory = table.Column<string>(type: "nvarchar(450)", nullable: false),
                 Resources_Cpu = table.Column<double>(type: "float", nullable: false),
                 Resources_Memory = table.Column<double>(type: "float", nullable: false),

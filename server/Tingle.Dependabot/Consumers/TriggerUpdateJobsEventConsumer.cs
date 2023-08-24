@@ -54,8 +54,10 @@ internal class TriggerUpdateJobsEventConsumer : IEventConsumer<TriggerUpdateJobs
         var eventBusId = context.Id;
         foreach (var update in updates)
         {
+            var ecosystem = update.PackageEcosystem!;
+
             // check if there is an existing one
-            var job = await dbContext.UpdateJobs.SingleOrDefaultAsync(j => j.PackageEcosystem == update.PackageEcosystem && j.Directory == update.Directory && j.EventBusId == eventBusId, cancellationToken);
+            var job = await dbContext.UpdateJobs.SingleOrDefaultAsync(j => j.PackageEcosystem == ecosystem && j.Directory == update.Directory && j.EventBusId == eventBusId, cancellationToken);
             if (job is not null)
             {
                 logger.LogWarning("A job for update '{RepositoryId}({UpdateId})' requested by event '{EventBusId}' already exists. Skipping it ...",
@@ -66,7 +68,6 @@ internal class TriggerUpdateJobsEventConsumer : IEventConsumer<TriggerUpdateJobs
             else
             {
                 // decide the resources based on the ecosystem
-                var ecosystem = update.PackageEcosystem!.Value;
                 var resources = UpdateJobResources.FromEcosystem(ecosystem);
 
                 // create the job

@@ -33,7 +33,7 @@ public sealed record UpdateJobAttributes()
     public required IEnumerable<object> SecurityAdvisories { get; set; }
 
     [JsonPropertyName("package_manager")]
-    public required DependabotPackageEcosystem PackageManager { get; set; }
+    public required string PackageManager { get; set; }
 
     [JsonPropertyName("repo-name")]
     public required string RepoName { get; set; }

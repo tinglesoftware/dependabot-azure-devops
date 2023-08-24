@@ -41,7 +41,7 @@ public class UpdateJob
 
     /// <summary>Ecosystem for the update.</summary>
     [JsonIgnore] // only for internal use
-    public DependabotPackageEcosystem PackageEcosystem { get; set; }
+    public string? PackageEcosystem { get; set; }
 
     /// <summary>Identifier of the repository update.</summary>
     [Required]
