@@ -25,7 +25,7 @@ public class DependabotConfigurationTests
 
         var first = configuration.Updates[0];
         Assert.Equal("/", first.Directory);
-        Assert.Equal(DependabotPackageEcosystem.Docker, first.PackageEcosystem);
+        Assert.Equal("docker", first.PackageEcosystem);
         Assert.Equal(DependabotScheduleInterval.Weekly, first.Schedule?.Interval);
         Assert.Equal(new TimeOnly(3, 0), first.Schedule?.Time);
         Assert.Equal(DependabotScheduleDay.Sunday, first.Schedule?.Day);
@@ -33,10 +33,10 @@ public class DependabotConfigurationTests
 
         var second = configuration.Updates[1];
         Assert.Equal("/client", second.Directory);
-        Assert.Equal(DependabotPackageEcosystem.Npm, second.PackageEcosystem);
+        Assert.Equal("npm", second.PackageEcosystem);
         Assert.Equal(DependabotScheduleInterval.Daily, second.Schedule?.Interval);
         Assert.Equal(new TimeOnly(3, 15), second.Schedule?.Time);
         Assert.Equal(DependabotScheduleDay.Monday, second.Schedule?.Day);
-        Assert.Equal(DependabotInsecureExternalCodeExecution.Deny, second.InsecureExternalCodeExecution);
+        Assert.Equal("deny", second.InsecureExternalCodeExecution);
     }
 }

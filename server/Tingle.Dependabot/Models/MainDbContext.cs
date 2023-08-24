@@ -18,17 +18,18 @@ public class MainDbContext : DbContext, IDataProtectionKeyContext
 
         modelBuilder.Entity<Repository>(b =>
         {
-            b.HasIndex(r => r.Created).IsDescending(); // faster filtering
-            b.HasIndex(r => r.ProviderId).IsUnique();
-
             b.Property(r => r.Updates).HasJsonConversion();
             b.OwnsMany(r => r.Registries).ToJson();
+
+            b.HasIndex(r => r.Created).IsDescending(); // faster filtering
+            b.HasIndex(r => r.ProviderId).IsUnique();
         });
 
         modelBuilder.Entity<UpdateJob>(b =>
         {
-            b.HasIndex(j => j.Created).IsDescending(); // faster filtering
+            b.Property(j => j.PackageEcosystem).IsRequired();
 
+            b.HasIndex(j => j.Created).IsDescending(); // faster filtering
             b.HasIndex(j => j.RepositoryId);
             b.HasIndex(j => new { j.PackageEcosystem, j.Directory, }); // faster filtering
             b.HasIndex(j => new { j.PackageEcosystem, j.Directory, j.EventBusId, }).IsUnique();

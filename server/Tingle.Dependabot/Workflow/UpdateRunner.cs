@@ -57,7 +57,7 @@ internal partial class UpdateRunner
             catch (Azure.RequestFailedException rfe) when (rfe.Status is 404) { }
 
             // prepare the container
-            var image = options.UpdaterContainerImageTemplate!.Replace("{{ecosystem}}", job.PackageEcosystem.GetEnumMemberAttrValueOrDefault());
+            var image = options.UpdaterContainerImageTemplate!.Replace("{{ecosystem}}", job.PackageEcosystem);
             var container = new ContainerInstanceContainer(UpdaterContainerName, image, new(job.Resources!));
             var env = CreateVariables(repository, update, job);
             foreach (var (key, value) in env) container.EnvironmentVariables.Add(new ContainerEnvironmentVariable(key) { Value = value, });
@@ -81,7 +81,7 @@ internal partial class UpdateRunner
 
             // add tags to the data for tracing purposes
             data.Tags["purpose"] = "dependabot";
-            data.Tags.AddIfNotDefault("ecosystem", job.PackageEcosystem.GetEnumMemberAttrValueOrDefault())
+            data.Tags.AddIfNotDefault("ecosystem", job.PackageEcosystem)
                      .AddIfNotDefault("repository", repository.Slug)
                      .AddIfNotDefault("directory", update.Directory)
                      .AddIfNotDefault("machine-name", Environment.MachineName);
@@ -199,18 +199,18 @@ internal partial class UpdateRunner
         // Add compulsory values
         var values = new Dictionary<string, string>
         {
-            ["DEPENDABOT_PACKAGE_MANAGER"] = job.PackageEcosystem.GetEnumMemberAttrValueOrDefault(),
+            ["DEPENDABOT_PACKAGE_MANAGER"] = job.PackageEcosystem!,
             ["DEPENDABOT_DIRECTORY"] = update.Directory!,
             ["DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT"] = update.OpenPullRequestsLimit!.Value.ToString(),
         };
 
         // Add optional values
         values.AddIfNotDefault("GITHUB_ACCESS_TOKEN", options.GithubToken)
-              .AddIfNotDefault("DEPENDABOT_REBASE_STRATEGY", update.RebaseStrategy.GetEnumMemberAttrValueOrDefault())
+              .AddIfNotDefault("DEPENDABOT_REBASE_STRATEGY", update.RebaseStrategy)
               .AddIfNotDefault("DEPENDABOT_TARGET_BRANCH", update.TargetBranch)
               .AddIfNotDefault("DEPENDABOT_VENDOR", update.Vendor ? "true" : null)
-              .AddIfNotDefault("DEPENDABOT_REJECT_EXTERNAL_CODE", (update.InsecureExternalCodeExecution == DependabotInsecureExternalCodeExecution.Deny).ToString().ToLowerInvariant())
-              .AddIfNotDefault("DEPENDABOT_VERSIONING_STRATEGY", update.VersioningStrategy.GetEnumMemberAttrValueOrDefault())
+              .AddIfNotDefault("DEPENDABOT_REJECT_EXTERNAL_CODE", string.Equals(update.InsecureExternalCodeExecution, "deny").ToString().ToLowerInvariant())
+              .AddIfNotDefault("DEPENDABOT_VERSIONING_STRATEGY", update.VersioningStrategy)
               .AddIfNotDefault("DEPENDABOT_ALLOW_CONDITIONS", ToJson(MakeAllowEntries(update.Allow)))
               .AddIfNotDefault("DEPENDABOT_LABELS", ToJson(update.Labels))
               .AddIfNotDefault("DEPENDABOT_BRANCH_NAME_SEPARATOR", update.PullRequestBranchName?.Separator)
@@ -228,7 +228,7 @@ internal partial class UpdateRunner
               .AddIfNotDefault("AZURE_ACCESS_TOKEN", options.ProjectToken)
               .AddIfNotDefault("AZURE_SET_AUTO_COMPLETE", (options.AutoComplete ?? false).ToString().ToLowerInvariant())
               .AddIfNotDefault("AZURE_AUTO_COMPLETE_IGNORE_CONFIG_IDS", ToJson(options.AutoCompleteIgnoreConfigs?.Split(';')))
-              .AddIfNotDefault("AZURE_MERGE_STRATEGY", options.AutoCompleteMergeStrategy?.GetEnumMemberAttrValueOrDefault())
+              .AddIfNotDefault("AZURE_MERGE_STRATEGY", options.AutoCompleteMergeStrategy?.ToString())
               .AddIfNotDefault("AZURE_AUTO_APPROVE_PR", (options.AutoApprove ?? false).ToString().ToLowerInvariant());
 
         // Add extra credentials with replaced secrets
@@ -304,7 +304,7 @@ internal partial class UpdateRunner
         return entries?.Where(e => e.IsValid())
                        .Select(e => new Dictionary<string, string>()
                        .AddIfNotDefault("dependency-name", e.DependencyName)
-                       .AddIfNotDefault("dependency-type", e.DependencyType?.GetEnumMemberAttrValueOrDefault()))
+                       .AddIfNotDefault("dependency-type", e.DependencyType))
                        .ToList();
     }
 }

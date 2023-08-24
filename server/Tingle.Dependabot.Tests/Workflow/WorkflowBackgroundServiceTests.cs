@@ -109,6 +109,7 @@ public class WorkflowBackgroundServiceTests
                 RepositoryId = RepositoryId,
                 RepositorySlug = "test-repo",
                 Created = DateTimeOffset.UtcNow.AddMinutes(-19),
+                PackageEcosystem = "npm",
                 Directory = "/",
                 Resources = new(0.25, 0.2),
                 AuthKey = Guid.NewGuid().ToString("n"),
@@ -120,6 +121,7 @@ public class WorkflowBackgroundServiceTests
                 RepositoryId = RepositoryId,
                 RepositorySlug = "test-repo",
                 Created = DateTimeOffset.UtcNow.AddHours(-100),
+                PackageEcosystem = "nuget",
                 Directory = "/",
                 Resources = new(0.25, 0.2),
                 AuthKey = Guid.NewGuid().ToString("n"),
@@ -131,6 +133,7 @@ public class WorkflowBackgroundServiceTests
                 RepositoryId = RepositoryId,
                 RepositorySlug = "test-repo",
                 Created = DateTimeOffset.UtcNow.AddMinutes(-30),
+                PackageEcosystem = "docker",
                 Directory = "/",
                 Resources = new(0.25, 0.2),
                 AuthKey = Guid.NewGuid().ToString("n"),
@@ -159,6 +162,7 @@ public class WorkflowBackgroundServiceTests
                 RepositoryId = RepositoryId,
                 RepositorySlug = "test-repo",
                 Created = DateTimeOffset.UtcNow.AddDays(-80),
+                PackageEcosystem = "npm",
                 Directory = "/",
                 Resources = new(0.25, 0.2),
                 AuthKey = Guid.NewGuid().ToString("n"),
@@ -169,6 +173,7 @@ public class WorkflowBackgroundServiceTests
                 RepositoryId = RepositoryId,
                 RepositorySlug = "test-repo",
                 Created = DateTimeOffset.UtcNow.AddDays(-100),
+                PackageEcosystem = "nuget",
                 Directory = "/",
                 Resources = new(0.25, 0.2),
                 AuthKey = Guid.NewGuid().ToString("n"),
@@ -179,6 +184,7 @@ public class WorkflowBackgroundServiceTests
                 RepositoryId = RepositoryId,
                 RepositorySlug = "test-repo",
                 Created = DateTimeOffset.UtcNow.AddDays(-120),
+                PackageEcosystem = "docker",
                 Directory = "/",
                 Resources = new(0.25, 0.2),
                 AuthKey = Guid.NewGuid().ToString("n"),
@@ -223,7 +229,7 @@ public class WorkflowBackgroundServiceTests
             {
                 new RepositoryUpdate
                 {
-                    PackageEcosystem = DependabotPackageEcosystem.Npm,
+                    PackageEcosystem = "npm",
                     Directory = "/",
                     Schedule = new DependabotUpdateSchedule
                     {
@@ -234,7 +240,7 @@ public class WorkflowBackgroundServiceTests
                 },
                 new RepositoryUpdate
                 {
-                    PackageEcosystem = DependabotPackageEcosystem.Npm,
+                    PackageEcosystem = "npm",
                     Directory = "/legacy",
                     Schedule = new DependabotUpdateSchedule
                     {
