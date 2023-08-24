@@ -50,6 +50,13 @@ internal class Synchronizer
         // synchronize each project
         foreach (var (adoRepositoryId, adoRepo) in adoReposMap)
         {
+            // skip disabled or fork repositories
+            if (adoRepo.IsDisabled is true || adoRepo.IsFork)
+            {
+                logger.LogInformation("Skipping sync for {RepositoryName} because it is disabled or is a fork", adoRepo.Name);
+                continue;
+            }
+
             // get the repository from the database
             var adoRepositoryName = adoRepo.Name;
             var repository = await (from r in dbContext.Repositories
@@ -85,6 +92,13 @@ internal class Synchronizer
         var adoRepo = await adoProvider.GetRepositoryAsync(repositoryIdOrName: repository.ProviderId!,
                                                            cancellationToken: cancellationToken);
 
+        // skip disabled or fork repository
+        if (adoRepo.IsDisabled is true || adoRepo.IsFork)
+        {
+            logger.LogInformation("Skipping sync for {RepositoryName} because it is disabled or is a fork", adoRepo.Name);
+            return;
+        }
+
         // get the configuration file
         var item = await adoProvider.GetConfigurationFileAsync(repositoryIdOrName: repository.ProviderId!,
                                                                cancellationToken: cancellationToken);
@@ -96,17 +110,24 @@ internal class Synchronizer
 
     public async Task SynchronizeAsync(string? repositoryProviderId, bool trigger, CancellationToken cancellationToken = default)
     {
-        var repository = await (from r in dbContext.Repositories
-                                where r.ProviderId == repositoryProviderId
-                                select r).SingleOrDefaultAsync(cancellationToken);
-
         // get repository
         var adoRepo = await adoProvider.GetRepositoryAsync(repositoryIdOrName: repositoryProviderId!,
                                                            cancellationToken: cancellationToken);
 
+        // skip disabled or fork repository
+        if (adoRepo.IsDisabled is true || adoRepo.IsFork)
+        {
+            logger.LogInformation("Skipping sync for {RepositoryName} because it is disabled or is a fork", adoRepo.Name);
+            return;
+        }
+
         // get the configuration file
         var item = await adoProvider.GetConfigurationFileAsync(repositoryIdOrName: repositoryProviderId!,
                                                                cancellationToken: cancellationToken);
+
+        var repository = await (from r in dbContext.Repositories
+                                where r.ProviderId == repositoryProviderId
+                                select r).SingleOrDefaultAsync(cancellationToken);
 
         // perform synchronization
         var sci = new SynchronizerConfigurationItem(options.ProjectUrl!.Value.MakeRepositorySlug(adoRepo.Name), adoRepo, item);
