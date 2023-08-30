@@ -5,18 +5,19 @@
       "commandName": "Project",
       "launchBrowser": true,
       "launchUrl": "health",
+      "applicationUrl": "https://localhost:44390;http://localhost:59269",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "EFCORE_PERFORM_MIGRATIONS": "true"
-      },
-      "applicationUrl": "https://localhost:44390;http://localhost:59269"
+      }
     },
     "Docker": {
       "commandName": "Docker",
       "launchBrowser": true,
       "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}/health",
-      "publishAllPorts": true,
-      "useSSL": true
+      "environmentVariables": {},
+      "useSSL": true,
+      "publishAllPorts": true
     }
   }
 }
