@@ -61,6 +61,10 @@ internal partial class UpdateRunner
             var container = new ContainerInstanceContainer(UpdaterContainerName, image, new(job.Resources!));
             var env = CreateVariables(repository, update, job);
             foreach (var (key, value) in env) container.EnvironmentVariables.Add(new ContainerEnvironmentVariable(key) { Value = value, });
+
+            // prepare the container command/entrypoint (this is what seems to work)
+            container.Command.Add("/bin/bash");
+            container.Command.Add("bin/run.sh");
             container.Command.Add("update-script");
 
             // prepare the container group
