@@ -18,9 +18,6 @@ RUN bundle config set --local path 'vendor' && \
 COPY --chown=dependabot:dependabot LICENSE $DEPENDABOT_HOME
 COPY --chown=dependabot:dependabot updater $DEPENDABOT_HOME/dependabot-updater
 
-# This entrypoint exists to solve specific setup problems.
-# It is only used with the extension and directly on Docker.
-# Hosted version does not allow this.
-ENTRYPOINT ["bin/entrypoint.sh"]
-
-CMD ["bin/run.sh"]
+# ENTRYPOINT IS USED instead of CMD so as to avoid adding
+# 'bin/run.sh' before the file name when running the image bef
+ENTRYPOINT ["bin/run.sh"]
