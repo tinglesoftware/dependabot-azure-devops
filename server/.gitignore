@@ -339,6 +339,5 @@ ASALocalRun/
 # BeatPulse healthcheck temp database
 healthchecksdb
 
-.idea
 .DS_Store
 *git.store

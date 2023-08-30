@@ -23,4 +23,4 @@ COPY --chown=dependabot:dependabot updater $DEPENDABOT_HOME/dependabot-updater
 # Hosted version does not allow this.
 ENTRYPOINT ["bin/entrypoint.sh"]
 
-CMD ["bundle", "exec", "ruby", "bin/update-script.rb"]
+CMD ["bin/run.sh"]
