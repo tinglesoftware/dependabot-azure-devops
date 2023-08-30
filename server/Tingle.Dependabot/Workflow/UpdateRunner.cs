@@ -64,7 +64,7 @@ internal partial class UpdateRunner
 
             // prepare the container command
             container.Command.Add("bin/run.sh");
-            container.Command.Add("updater-script");
+            container.Command.Add("update-script");
 
             // prepare the container group
             var data = new ContainerGroupData(options.Location!, new[] { container, }, ContainerInstanceOperatingSystemType.Linux)
