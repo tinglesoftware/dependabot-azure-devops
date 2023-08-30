@@ -246,6 +246,9 @@ async function run() {
       tl.debug(`Running docker container -> '${dockerImage}' ...`);
       dockerRunner.arg(dockerImage);
 
+      // set the script to be run
+      dockerRunner.arg('updater-script');
+
       // Now execute using docker
       await dockerRunner.exec();
     }
