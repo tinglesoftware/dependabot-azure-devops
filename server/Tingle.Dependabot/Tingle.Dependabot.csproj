@@ -40,7 +40,7 @@
     <PackageReference Include="Tingle.EventBus.Transports.InMemory" Version="0.19.2" />
     <PackageReference Include="Tingle.Extensions.DataAnnotations" Version="4.2.1" />
     <PackageReference Include="Tingle.PeriodicTasks" Version="1.1.0" />
-    <PackageReference Include="YamlDotNet" Version="13.2.0" />
+    <PackageReference Include="YamlDotNet" Version="13.3.1" />
   </ItemGroup>
 
 </Project>
