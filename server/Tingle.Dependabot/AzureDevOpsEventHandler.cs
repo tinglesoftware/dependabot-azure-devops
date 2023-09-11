@@ -77,12 +77,17 @@ internal class AzureDevOpsEventHandler
             var prId = pr.PullRequestId;
             var status = pr.Status;
 
-            logger.LogInformation("PR {PullRequestId} in {RepositoryUrl} was commented on: {Content}",
-                                  prId,
-                                  adoRepository.RemoteUrl,
-                                  comment.Content);
+            // ensure the comment starts with @dependabot
+            var content = comment.Content?.Trim();
+            if (content is not null && content.StartsWith("@dependabot"))
+            {
+                logger.LogInformation("PR {PullRequestId} in {RepositoryUrl} was commented on: {Content}",
+                                      prId,
+                                      adoRepository.RemoteUrl,
+                                      content);
 
-            // TODO: handle the logic for comments here using events
+                // TODO: handle the logic for comments here using events
+            }
         }
         else
         {
