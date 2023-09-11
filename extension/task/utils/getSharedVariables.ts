@@ -64,8 +64,6 @@ export interface ISharedVariables {
   /** Flag used to forward the host ssh socket */
   forwardHostSshSocket: boolean;
 
-  /** Registry of the docker image to be pulled */
-  dockerImageRegistry: string | undefined;
   /** Tag of the docker image to be pulled */
   dockerImageTag: string;
 }
@@ -143,7 +141,6 @@ export default function getSharedVariables(): ISharedVariables {
   );
 
   // Prepare variables for the docker image to use
-  let dockerImageRegistry: string | undefined = tl.getInput("dockerImageRegistry");
   let dockerImageTag: string = getDockerImageTag();
 
   return {
@@ -180,7 +177,6 @@ export default function getSharedVariables(): ISharedVariables {
     extraEnvironmentVariables,
     forwardHostSshSocket,
 
-    dockerImageRegistry,
     dockerImageTag,
   };
 }

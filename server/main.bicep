@@ -62,9 +62,6 @@ param jobsResourceGroupName string = resourceGroup().name
 #disable-next-line secure-secrets-in-params // need sensible defaults
 param notificationsPassword string = uniqueString('service-hooks', resourceGroup().id) // e.g. zecnx476et7xm (13 characters)
 
-@description('Registry of the docker image. E.g. "contoso.azurecr.io". Leave empty unless you have a private registry mirroring the image from GHCR')
-param dockerImageRegistry string = 'ghcr.io'
-
 @description('Registry and repository of the server docker image. Ideally, you do not need to edit this value.')
 param serverImageRepository string = 'tinglesoftware/dependabot-server'
 
@@ -99,8 +96,6 @@ param maxReplicas int = 1
 
 var sqlServerAdministratorLogin = uniqueString(resourceGroup().id) // e.g. zecnx476et7xm (13 characters)
 var sqlServerAdministratorLoginPassword = '${skip(uniqueString(resourceGroup().id), 5)}%${uniqueString('sql-password', resourceGroup().id)}' // e.g. abcde%zecnx476et7xm (19 characters)
-var hasDockerImageRegistry = (dockerImageRegistry != null && !empty(dockerImageRegistry))
-var isAcrServer = hasDockerImageRegistry && endsWith(dockerImageRegistry, environment().suffixes.acrLoginServer)
 var hasProvidedServiceBusNamespace = (serviceBusNamespaceId != null && !empty(serviceBusNamespaceId))
 var hasProvidedStorageAccount = (storageAccountId != null && !empty(storageAccountId))
 var hasProvidedLogAnalyticsWorkspace = (logAnalyticsWorkspaceId != null && !empty(logAnalyticsWorkspaceId))
@@ -293,12 +288,6 @@ resource app 'Microsoft.App/containerApps@2022-10-01' = {
           }
         ]
       }
-      registries: isAcrServer ? [
-        {
-          identity: managedIdentity.id
-          server: dockerImageRegistry
-        }
-      ] : []
       secrets: [
         { name: 'connection-strings-application-insights', value: appInsights.properties.ConnectionString }
         {
@@ -326,7 +315,7 @@ resource app 'Microsoft.App/containerApps@2022-10-01' = {
     template: {
       containers: [
         {
-          image: '${'${hasDockerImageRegistry ? '${dockerImageRegistry}/' : ''}'}${serverImageRepository}:${serverImageTag}'
+          image: 'ghcr.io/${serverImageRepository}:${serverImageTag}'
           name: 'dependabot'
           env: [
             { name: 'AZURE_CLIENT_ID', value: managedIdentity.properties.clientId } // Specifies the User-Assigned Managed Identity to use. Without this, the app attempt to use the system assigned one.
@@ -357,7 +346,7 @@ resource app 'Microsoft.App/containerApps@2022-10-01' = {
             }
             { name: 'Workflow__LogAnalyticsWorkspaceKey', secretRef: 'log-analytics-workspace-key' }
             { name: 'Workflow__ManagedIdentityId', value: managedIdentityJobs.id }
-            { name: 'Workflow__UpdaterContainerImageTemplate', value: '${'${hasDockerImageRegistry ? '${dockerImageRegistry}/' : ''}'}tinglesoftware/dependabot-updater-{{ecosystem}}:${updaterImageTag}' }
+            { name: 'Workflow__UpdaterContainerImageTemplate', value: 'ghcr.io/tinglesoftware/dependabot-updater-{{ecosystem}}:${updaterImageTag}' }
             { name: 'Workflow__FailOnException', value: failOnException ? 'true' : 'false' }
             { name: 'Workflow__AutoComplete', value: autoComplete ? 'true' : 'false' }
             { name: 'Workflow__AutoCompleteIgnoreConfigs', value: join(autoCompleteIgnoreConfigs, ';') }
