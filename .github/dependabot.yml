@@ -35,6 +35,11 @@ updates:
     interval: "weekly"
     time: "04:00"
   open-pull-requests-limit: 10
+  groups:
+    microsoft:
+      patterns: ["Microsoft.*"]
+    tingle:
+      patterns: ["Tingle.*"]
 
 - package-ecosystem: "npm" # See documentation for possible values
   directory: "/extension" # Location of package manifests
