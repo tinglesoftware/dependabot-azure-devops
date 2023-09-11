@@ -52,14 +52,14 @@
     "eventBusTransport": {
       "type": "string",
       "defaultValue": "ServiceBus",
-      "metadata": {
-        "description": "Merge strategy to use when setting auto complete on created pull requests."
-      },
       "allowedValues": [
         "InMemory",
         "ServiceBus",
         "QueueStorage"
-      ]
+      ],
+      "metadata": {
+        "description": "Merge strategy to use when setting auto complete on created pull requests."
+      }
     },
     "failOnException": {
       "type": "bool",
@@ -85,15 +85,15 @@
     "autoCompleteMergeStrategy": {
       "type": "string",
       "defaultValue": "Squash",
-      "metadata": {
-        "description": "Merge strategy to use when setting auto complete on created pull requests."
-      },
       "allowedValues": [
         "NoFastForward",
         "Rebase",
         "RebaseMerge",
         "Squash"
-      ]
+      ],
+      "metadata": {
+        "description": "Merge strategy to use when setting auto complete on created pull requests."
+      }
     },
     "autoApprove": {
       "type": "bool",
@@ -105,12 +105,12 @@
     "jobHostType": {
       "type": "string",
       "defaultValue": "ContainerInstances",
-      "metadata": {
-        "description": "Where to host new update jobs."
-      },
       "allowedValues": [
         "ContainerInstances"
-      ]
+      ],
+      "metadata": {
+        "description": "Where to host new update jobs."
+      }
     },
     "jobsResourceGroupName": {
       "type": "string",
@@ -185,20 +185,20 @@
     "minReplicas": {
       "type": "int",
       "defaultValue": 1,
+      "minValue": 1,
+      "maxValue": 2,
       "metadata": {
         "description": "The minimum number of replicas"
-      },
-      "maxValue": 2,
-      "minValue": 1
+      }
     },
     "maxReplicas": {
       "type": "int",
       "defaultValue": 1,
+      "minValue": 1,
+      "maxValue": 5,
       "metadata": {
         "description": "The maximum number of replicas"
-      },
-      "maxValue": 5,
-      "minValue": 1
+      }
     }
   },
   "variables": {
@@ -240,7 +240,7 @@
       }
     },
     {
-      "condition": "[and(equals(parameters('eventBusTransport'), 'QueueStorage'), not(variables('hasProvidedStorageAccount')))]",
+      "condition": "[not(variables('hasProvidedStorageAccount'))]",
       "type": "Microsoft.Storage/storageAccounts",
       "apiVersion": "2022-09-01",
       "name": "[format('{0}-{1}', parameters('name'), variables('collisionSuffix'))]",
