@@ -126,13 +126,6 @@
         "description": "Password for Webhooks, ServiceHooks, and Notifications from Azure DevOps."
       }
     },
-    "dockerImageRegistry": {
-      "type": "string",
-      "defaultValue": "ghcr.io",
-      "metadata": {
-        "description": "Registry of the docker image. E.g. \"contoso.azurecr.io\". Leave empty unless you have a private registry mirroring the image from GHCR"
-      }
-    },
     "serverImageRepository": {
       "type": "string",
       "defaultValue": "tinglesoftware/dependabot-server",
@@ -204,8 +197,6 @@
   "variables": {
     "sqlServerAdministratorLogin": "[uniqueString(resourceGroup().id)]",
     "sqlServerAdministratorLoginPassword": "[format('{0}%{1}', skip(uniqueString(resourceGroup().id), 5), uniqueString('sql-password', resourceGroup().id))]",
-    "hasDockerImageRegistry": "[and(not(equals(parameters('dockerImageRegistry'), null())), not(empty(parameters('dockerImageRegistry'))))]",
-    "isAcrServer": "[and(variables('hasDockerImageRegistry'), endsWith(parameters('dockerImageRegistry'), environment().suffixes.acrLoginServer))]",
     "hasProvidedServiceBusNamespace": "[and(not(equals(parameters('serviceBusNamespaceId'), null())), not(empty(parameters('serviceBusNamespaceId'))))]",
     "hasProvidedStorageAccount": "[and(not(equals(parameters('storageAccountId'), null())), not(empty(parameters('storageAccountId'))))]",
     "hasProvidedLogAnalyticsWorkspace": "[and(not(equals(parameters('logAnalyticsWorkspaceId'), null())), not(empty(parameters('logAnalyticsWorkspaceId'))))]",
@@ -387,7 +378,6 @@
               }
             ]
           },
-          "registries": "[if(variables('isAcrServer'), createArray(createObject('identity', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')), 'server', parameters('dockerImageRegistry'))), createArray())]",
           "secrets": [
             {
               "name": "connection-strings-application-insights",
@@ -414,7 +404,7 @@
         "template": {
           "containers": [
             {
-              "image": "[format('{0}{1}:{2}', format('{0}', if(variables('hasDockerImageRegistry'), format('{0}/', parameters('dockerImageRegistry')), '')), parameters('serverImageRepository'), parameters('serverImageTag'))]",
+              "image": "[format('ghcr.io/{0}:{1}', parameters('serverImageRepository'), parameters('serverImageTag'))]",
               "name": "dependabot",
               "env": [
                 {
@@ -483,7 +473,7 @@
                 },
                 {
                   "name": "Workflow__UpdaterContainerImageTemplate",
-                  "value": "[format('{0}tinglesoftware/dependabot-updater-{{{{ecosystem}}}}:{1}', format('{0}', if(variables('hasDockerImageRegistry'), format('{0}/', parameters('dockerImageRegistry')), '')), parameters('updaterImageTag'))]"
+                  "value": "[format('ghcr.io/tinglesoftware/dependabot-updater-{{{{ecosystem}}}}:{0}', parameters('updaterImageTag'))]"
                 },
                 {
                   "name": "Workflow__FailOnException",
