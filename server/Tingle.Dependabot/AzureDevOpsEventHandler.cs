@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Http.Json;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 using Tingle.Dependabot.Events;
 using Tingle.EventBus;

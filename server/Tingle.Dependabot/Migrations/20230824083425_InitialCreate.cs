@@ -38,8 +38,8 @@ public partial class InitialCreate : Migration
                 ConfigFileContents = table.Column<string>(type: "nvarchar(max)", nullable: false),
                 SyncException = table.Column<string>(type: "nvarchar(max)", nullable: true),
                 Updates = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                Etag = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: true),
-                Registries = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                Registries = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                Etag = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: true)
             },
             constraints: table =>
             {

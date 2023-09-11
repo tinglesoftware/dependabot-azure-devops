@@ -24,7 +24,7 @@ export default function getAzureDevOpsAccessToken() {
     debug(`Loading authorization for service connection ${serviceConnectionName}`);
     return getEndpointAuthorizationParameter(serviceConnectionName, "AccessToken", false);
   }
-  
+
   debug("No custom token provided. The SystemVssConnection's AccessToken shall be used.");
   return getEndpointAuthorizationParameter(
     "SystemVssConnection",

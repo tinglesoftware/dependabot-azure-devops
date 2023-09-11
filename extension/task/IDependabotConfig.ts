@@ -16,18 +16,18 @@ export interface IDependabotConfig {
   /**
    *  Optional. Specify authentication details to access private package registries.
    */
-  registries?: IDependabotRegistry[];
+  registries?: Record<string, IDependabotRegistry>;
 }
 
 export interface IDependabotUpdate {
   /**
-   * Location of package manifests.
-   * */
-  directory: string;
-  /**
    * Package manager to use.
    * */
   packageEcosystem: string;
+  /**
+   * Location of package manifests.
+   * */
+  directory: string;
   schedule?: IDependabotUpdateSchedule;
   /**
    * Customize which updates are allowed.
@@ -56,11 +56,15 @@ export interface IDependabotUpdate {
   /**
    * Whether to reject external code
    */
-  rejectExternalCode: boolean;
+  insecureExternalCodeExecution?: string;
   /**
    * 	Limit number of open pull requests for version updates.
    */
   openPullRequestsLimit?: number;
+  /**
+   * 	Registries configured for this update.
+   */
+  registries: string[];
   /**
    * Branch to create pull requests against.
    */
