@@ -48,7 +48,7 @@ public class Repository
     /// When <c>null</c> or empty, there was a parsing exception.
     /// </summary>
     [JsonIgnore] // only for internal use
-    public List<DependabotRegistry> Registries { get; set; } = new List<DependabotRegistry>();
+    public Dictionary<string, DependabotRegistry> Registries { get; set; } = new();
 
     [Timestamp]
     public byte[]? Etag { get; set; }

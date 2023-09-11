@@ -69,6 +69,10 @@ namespace Tingle.Dependabot.Migrations
                     b.Property<string>("ProviderId")
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<string>("Registries")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Slug")
                         .HasColumnType("nvarchar(max)");
 
@@ -170,76 +174,6 @@ namespace Tingle.Dependabot.Migrations
                         .HasFilter("[EventBusId] IS NOT NULL");
 
                     b.ToTable("UpdateJobs");
-                });
-
-            modelBuilder.Entity("Tingle.Dependabot.Models.Repository", b =>
-                {
-                    b.OwnsMany("Tingle.Dependabot.Models.DependabotRegistry", "Registries", b1 =>
-                        {
-                            b1.Property<string>("RepositoryId")
-                                .HasColumnType("nvarchar(50)");
-
-                            b1.Property<int>("Id")
-                                .ValueGeneratedOnAdd()
-                                .HasColumnType("int");
-
-                            b1.Property<string>("AuthKey")
-                                .HasColumnType("nvarchar(max)")
-                                .HasAnnotation("Relational:JsonPropertyName", "auth-key");
-
-                            b1.Property<string>("Key")
-                                .HasColumnType("nvarchar(max)")
-                                .HasAnnotation("Relational:JsonPropertyName", "key");
-
-                            b1.Property<string>("Organization")
-                                .HasColumnType("nvarchar(max)")
-                                .HasAnnotation("Relational:JsonPropertyName", "organization");
-
-                            b1.Property<string>("Password")
-                                .HasColumnType("nvarchar(max)")
-                                .HasAnnotation("Relational:JsonPropertyName", "password");
-
-                            b1.Property<string>("PublicKeyFingerprint")
-                                .HasColumnType("nvarchar(max)")
-                                .HasAnnotation("Relational:JsonPropertyName", "public-key-fingerprint");
-
-                            b1.Property<bool?>("ReplacesBase")
-                                .HasColumnType("bit")
-                                .HasAnnotation("Relational:JsonPropertyName", "replaces-base");
-
-                            b1.Property<string>("Repo")
-                                .HasColumnType("nvarchar(max)")
-                                .HasAnnotation("Relational:JsonPropertyName", "repo");
-
-                            b1.Property<string>("Token")
-                                .HasColumnType("nvarchar(max)")
-                                .HasAnnotation("Relational:JsonPropertyName", "token");
-
-                            b1.Property<string>("Type")
-                                .IsRequired()
-                                .HasColumnType("nvarchar(max)")
-                                .HasAnnotation("Relational:JsonPropertyName", "type");
-
-                            b1.Property<string>("Url")
-                                .IsRequired()
-                                .HasColumnType("nvarchar(max)")
-                                .HasAnnotation("Relational:JsonPropertyName", "url");
-
-                            b1.Property<string>("Username")
-                                .HasColumnType("nvarchar(max)")
-                                .HasAnnotation("Relational:JsonPropertyName", "username");
-
-                            b1.HasKey("RepositoryId", "Id");
-
-                            b1.ToTable("Repositories");
-
-                            b1.ToJson("Registries");
-
-                            b1.WithOwner()
-                                .HasForeignKey("RepositoryId");
-                        });
-
-                    b.Navigation("Registries");
                 });
 
             modelBuilder.Entity("Tingle.Dependabot.Models.UpdateJob", b =>

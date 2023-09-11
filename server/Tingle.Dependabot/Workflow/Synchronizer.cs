@@ -199,7 +199,7 @@ internal class Synchronizer
                 RecursiveValidator.ValidateObjectRecursive(configuration);
 
                 // set the registries
-                repository.Registries = configuration.Registries?.Values.ToList() ?? new List<DependabotRegistry>();
+                repository.Registries = configuration.Registries;
 
                 // set the updates a fresh
                 var updates = configuration.Updates!;

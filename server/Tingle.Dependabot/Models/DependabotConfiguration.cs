@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace Tingle.Dependabot.Models;
 
-public class DependabotConfiguration
+public class DependabotConfiguration : IValidatableObject
 {
     [Required, AllowedValues(2)]
     [JsonPropertyName("version")]
@@ -14,7 +14,28 @@ public class DependabotConfiguration
     public List<DependabotUpdate>? Updates { get; set; }
 
     [JsonPropertyName("registries")]
-    public Dictionary<string, DependabotRegistry>? Registries { get; set; }
+    public Dictionary<string, DependabotRegistry> Registries { get; set; } = new();
+
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        var updates = Updates ?? new();
+        var configured = Registries.Keys;
+        var referenced = updates.SelectMany(r => r.Registries ?? new()).ToList();
+
+        // ensure there are no configured registries that have not been referenced
+        var missingConfiguration = referenced.Except(configured).ToList();
+        if (missingConfiguration.Count > 0)
+        {
+            yield return new ValidationResult($"Referenced registries: '{string.Join(",", missingConfiguration)}' have not been configured in the root of dependabot.yml"); ;
+        }
+
+        // ensure there are no registries referenced but not configured
+        var missingReferences = configured.Except(referenced).ToList();
+        if (missingReferences.Count > 0)
+        {
+            yield return new ValidationResult($"Registries: '{string.Join(",", missingReferences)}' have not been referenced by any update");
+        }
+    }
 }
 
 public record DependabotUpdate
@@ -35,6 +56,9 @@ public record DependabotUpdate
     [Required]
     [JsonPropertyName("open-pull-requests-limit")]
     public int? OpenPullRequestsLimit { get; set; } = 5;
+
+    [JsonPropertyName("registries")]
+    public List<string>? Registries { get; set; }
 
     [JsonPropertyName("allow")]
     public List<DependabotAllowDependency>? Allow { get; set; }

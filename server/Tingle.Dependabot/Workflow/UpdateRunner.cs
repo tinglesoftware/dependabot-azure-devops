@@ -237,7 +237,8 @@ internal partial class UpdateRunner
               .AddIfNotDefault("AZURE_AUTO_APPROVE_PR", (options.AutoApprove ?? false).ToString().ToLowerInvariant());
 
         // Add extra credentials with replaced secrets
-        values.AddIfNotDefault("DEPENDABOT_EXTRA_CREDENTIALS", ToJson(MakeExtraCredentials(repository.Registries, secrets)));
+        var registries = update.Registries?.Select(r => repository.Registries[r]).ToList();
+        values.AddIfNotDefault("DEPENDABOT_EXTRA_CREDENTIALS", ToJson(MakeExtraCredentials(registries, secrets)));
 
         return values;
     }
