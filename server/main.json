@@ -154,13 +154,6 @@
         "description": "Resource identifier of the ServiceBus namespace to use. If none is provided, a new one is created."
       }
     },
-    "storageAccountId": {
-      "type": "string",
-      "defaultValue": "",
-      "metadata": {
-        "description": "Resource identifier of the storage account to use. If none is provided, a new one is created."
-      }
-    },
     "logAnalyticsWorkspaceId": {
       "type": "string",
       "defaultValue": "",
@@ -198,7 +191,6 @@
     "sqlServerAdministratorLogin": "[uniqueString(resourceGroup().id)]",
     "sqlServerAdministratorLoginPassword": "[format('{0}%{1}', skip(uniqueString(resourceGroup().id), 5), uniqueString('sql-password', resourceGroup().id))]",
     "hasProvidedServiceBusNamespace": "[and(not(equals(parameters('serviceBusNamespaceId'), null())), not(empty(parameters('serviceBusNamespaceId'))))]",
-    "hasProvidedStorageAccount": "[and(not(equals(parameters('storageAccountId'), null())), not(empty(parameters('storageAccountId'))))]",
     "hasProvidedLogAnalyticsWorkspace": "[and(not(equals(parameters('logAnalyticsWorkspaceId'), null())), not(empty(parameters('logAnalyticsWorkspaceId'))))]",
     "hasProvidedAppEnvironment": "[and(not(equals(parameters('appEnvironmentId'), null())), not(empty(parameters('appEnvironmentId'))))]",
     "collisionSuffix": "[uniqueString(resourceGroup().id)]"
@@ -231,7 +223,6 @@
       }
     },
     {
-      "condition": "[not(variables('hasProvidedStorageAccount'))]",
       "type": "Microsoft.Storage/storageAccounts",
       "apiVersion": "2022-09-01",
       "name": "[format('{0}-{1}', parameters('name'), variables('collisionSuffix'))]",
@@ -529,7 +520,7 @@
                 },
                 {
                   "name": "EventBus__Transports__azure-queue-storage__ServiceUrl",
-                  "value": "[if(equals(parameters('eventBusTransport'), 'QueueStorage'), if(variables('hasProvidedStorageAccount'), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', split(parameters('storageAccountId'), '/')[2], split(parameters('storageAccountId'), '/')[4]), 'Microsoft.Storage/storageAccounts', split(parameters('storageAccountId'), '/')[8]), '2022-09-01').primaryEndpoints.queue, reference(resourceId('Microsoft.Storage/storageAccounts', format('{0}-{1}', parameters('name'), variables('collisionSuffix'))), '2022-09-01').primaryEndpoints.queue), '')]"
+                  "value": "[if(equals(parameters('eventBusTransport'), 'QueueStorage'), reference(resourceId('Microsoft.Storage/storageAccounts', format('{0}-{1}', parameters('name'), variables('collisionSuffix'))), '2022-09-01').primaryEndpoints.queue, '')]"
                 }
               ],
               "resources": {
