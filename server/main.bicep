@@ -74,9 +74,6 @@ param updaterImageTag string = '#{GITVERSION_NUGETVERSIONV2}#'
 @description('Resource identifier of the ServiceBus namespace to use. If none is provided, a new one is created.')
 param serviceBusNamespaceId string = ''
 
-@description('Resource identifier of the storage account to use. If none is provided, a new one is created.')
-param storageAccountId string = ''
-
 // Example: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/Fabrikam/providers/Microsoft.OperationalInsights/workspaces/fabrikam
 @description('Resource identifier of the LogAnalytics Workspace to use. If none is provided, a new one is created.')
 param logAnalyticsWorkspaceId string = ''
@@ -97,7 +94,6 @@ param maxReplicas int = 1
 var sqlServerAdministratorLogin = uniqueString(resourceGroup().id) // e.g. zecnx476et7xm (13 characters)
 var sqlServerAdministratorLoginPassword = '${skip(uniqueString(resourceGroup().id), 5)}%${uniqueString('sql-password', resourceGroup().id)}' // e.g. abcde%zecnx476et7xm (19 characters)
 var hasProvidedServiceBusNamespace = (serviceBusNamespaceId != null && !empty(serviceBusNamespaceId))
-var hasProvidedStorageAccount = (storageAccountId != null && !empty(storageAccountId))
 var hasProvidedLogAnalyticsWorkspace = (logAnalyticsWorkspaceId != null && !empty(logAnalyticsWorkspaceId))
 var hasProvidedAppEnvironment = (appEnvironmentId != null && !empty(appEnvironmentId))
 // avoid conflicts across multiple deployments for resources that generate FQDN based on the name
@@ -136,7 +132,7 @@ resource providedServiceBusNamespace 'Microsoft.ServiceBus/namespaces@2021-11-01
 }
 
 /* Storage Account */
-resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = if (!hasProvidedStorageAccount) {
+resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = {
   name: '${name}-${collisionSuffix}'
   location: location
   kind: 'StorageV2'
@@ -152,15 +148,6 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = if (!ha
       defaultAction: 'Allow'
     }
   }
-}
-resource providedStorageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' existing = if (hasProvidedStorageAccount) {
-  // Inspired by https://github.com/Azure/bicep/issues/1722#issuecomment-952118402
-  // Example: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/Fabrikam/providers/Microsoft.Storage/storageAccounts/fabrikam
-  // 0 -> '', 1 -> 'subscriptions', 2 -> '00000000-0000-0000-0000-000000000000', 3 -> 'resourceGroups'
-  // 4 -> 'Fabrikam', 5 -> 'providers', 6 -> 'Microsoft.Storage' 7 -> 'storageAccounts'
-  // 8 -> 'fabrikam'
-  name: split(storageAccountId, '/')[8]
-  scope: resourceGroup(split(storageAccountId, '/')[2], split(storageAccountId, '/')[4])
 }
 
 /* SQL Server */
@@ -375,7 +362,7 @@ resource app 'Microsoft.App/containerApps@2022-10-01' = {
             }
             {
               name: 'EventBus__Transports__azure-queue-storage__ServiceUrl'
-              value: eventBusTransport == 'QueueStorage' ? (hasProvidedStorageAccount ? providedStorageAccount.properties.primaryEndpoints.queue : storageAccount.properties.primaryEndpoints.queue) : ''
+              value: eventBusTransport == 'QueueStorage' ? storageAccount.properties.primaryEndpoints.queue : ''
             }
           ]
           resources: {// these are the least resources we can provision
