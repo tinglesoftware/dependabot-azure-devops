@@ -136,13 +136,11 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = {
   name: '${name}-${collisionSuffix}'
   location: location
   kind: 'StorageV2'
-  sku: {
-    name: 'Standard_LRS'
-  }
+  sku: { name: 'Standard_LRS' }
   properties: {
     accessTier: 'Hot'
     supportsHttpsTrafficOnly: true
-    allowBlobPublicAccess: true // CDN does not work without this
+    allowBlobPublicAccess: false
     networkAcls: {
       bypass: 'AzureServices'
       defaultAction: 'Allow'

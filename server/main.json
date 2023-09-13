@@ -234,7 +234,7 @@
       "properties": {
         "accessTier": "Hot",
         "supportsHttpsTrafficOnly": true,
-        "allowBlobPublicAccess": true,
+        "allowBlobPublicAccess": false,
         "networkAcls": {
           "bypass": "AzureServices",
           "defaultAction": "Allow"
