@@ -136,7 +136,7 @@ internal partial class UpdateRunner
             var jobDirectory = Path.Join(options.WorkingDirectory, job.Id);
             if (Directory.Exists(jobDirectory))
             {
-                Directory.Delete(jobDirectory);
+                Directory.Delete(jobDirectory, recursive: true);
             }
 
             // get the period
