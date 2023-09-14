@@ -42,6 +42,13 @@
         "description": "Whether to create or update subscriptions on startup."
       }
     },
+    "debugAllJobs": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "Whether to debug all jobs."
+      }
+    },
     "githubToken": {
       "type": "string",
       "defaultValue": "",
@@ -133,9 +140,35 @@
   "variables": {
     "sqlServerAdministratorLogin": "[uniqueString(resourceGroup().id)]",
     "sqlServerAdministratorLoginPassword": "[format('{0}%{1}', skip(uniqueString(resourceGroup().id), 5), uniqueString('sql-password', resourceGroup().id))]",
-    "collisionSuffix": "[uniqueString(resourceGroup().id)]"
+    "collisionSuffix": "[uniqueString(resourceGroup().id)]",
+    "fileShareName": "working-dir"
   },
   "resources": [
+    {
+      "type": "Microsoft.Storage/storageAccounts/fileServices/shares",
+      "apiVersion": "2022-09-01",
+      "name": "[format('{0}/{1}/{2}', format('{0}{1}', parameters('name'), variables('collisionSuffix')), 'default', variables('fileShareName'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', format('{0}{1}', parameters('name'), variables('collisionSuffix')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.App/managedEnvironments/storages",
+      "apiVersion": "2023-05-01",
+      "name": "[format('{0}/{1}', parameters('name'), variables('fileShareName'))]",
+      "properties": {
+        "azureFile": {
+          "accessMode": "ReadWrite",
+          "shareName": "[variables('fileShareName')]",
+          "accountName": "[format('{0}{1}', parameters('name'), variables('collisionSuffix'))]",
+          "accountKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', format('{0}{1}', parameters('name'), variables('collisionSuffix'))), '2022-09-01').keys[0].value]"
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.App/managedEnvironments', parameters('name'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', format('{0}{1}', parameters('name'), variables('collisionSuffix')))]"
+      ]
+    },
     {
       "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
       "apiVersion": "2023-01-31",
@@ -258,7 +291,7 @@
     },
     {
       "type": "Microsoft.App/managedEnvironments",
-      "apiVersion": "2022-10-01",
+      "apiVersion": "2023-05-01",
       "name": "[parameters('name')]",
       "location": "[parameters('location')]",
       "properties": {
@@ -290,7 +323,7 @@
     },
     {
       "type": "Microsoft.App/containerApps",
-      "apiVersion": "2022-10-01",
+      "apiVersion": "2023-05-01",
       "name": "[parameters('name')]",
       "location": "[parameters('location')]",
       "properties": {
@@ -326,6 +359,10 @@
             {
               "name": "log-analytics-workspace-key",
               "value": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces', parameters('name')), '2022-10-01').primarySharedKey]"
+            },
+            {
+              "name": "storage-account-key",
+              "value": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', format('{0}{1}', parameters('name'), variables('collisionSuffix'))), '2022-09-01').keys[0].value]"
             }
           ]
         },
@@ -334,6 +371,12 @@
             {
               "image": "[format('ghcr.io/tinglesoftware/dependabot-server:{0}', parameters('imageTag'))]",
               "name": "dependabot",
+              "volumeMounts": [
+                {
+                  "mountPath": "/mnt/dependabot",
+                  "volumeName": "[variables('fileShareName')]"
+                }
+              ],
               "env": [
                 {
                   "name": "AZURE_CLIENT_ID",
@@ -376,8 +419,20 @@
                   "secretRef": "project-token"
                 },
                 {
+                  "name": "Workflow__DebugJobs",
+                  "value": "[format('{0}', parameters('debugAllJobs'))]"
+                },
+                {
+                  "name": "Workflow__JobsApiUrl",
+                  "value": "[format('https://{0}.{1}', parameters('name'), reference(resourceId('Microsoft.App/managedEnvironments', parameters('name')), '2023-05-01').defaultDomain)]"
+                },
+                {
+                  "name": "Workflow__WorkingDirectory",
+                  "value": "/mnt/dependabot"
+                },
+                {
                   "name": "Workflow__WebhookEndpoint",
-                  "value": "[format('https://{0}.{1}/webhooks/azure', parameters('name'), reference(resourceId('Microsoft.App/managedEnvironments', parameters('name')), '2022-10-01').defaultDomain)]"
+                  "value": "[format('https://{0}.{1}/webhooks/azure', parameters('name'), reference(resourceId('Microsoft.App/managedEnvironments', parameters('name')), '2023-05-01').defaultDomain)]"
                 },
                 {
                   "name": "Workflow__SubscriptionPassword",
@@ -432,12 +487,24 @@
                   "value": "[parameters('location')]"
                 },
                 {
+                  "name": "Workflow__StorageAccountName",
+                  "value": "[format('{0}{1}', parameters('name'), variables('collisionSuffix'))]"
+                },
+                {
+                  "name": "Workflow__StorageAccountKey",
+                  "secretRef": "storage-account-key"
+                },
+                {
+                  "name": "Workflow__FileShareName",
+                  "value": "[variables('fileShareName')]"
+                },
+                {
                   "name": "Authentication__Schemes__Management__Authority",
                   "value": "[format('{0}{1}/v2.0', environment().authentication.loginEndpoint, subscription().tenantId)]"
                 },
                 {
                   "name": "Authentication__Schemes__Management__ValidAudiences__0",
-                  "value": "[format('https://{0}.{1}', parameters('name'), reference(resourceId('Microsoft.App/managedEnvironments', parameters('name')), '2022-10-01').defaultDomain)]"
+                  "value": "[format('https://{0}.{1}', parameters('name'), reference(resourceId('Microsoft.App/managedEnvironments', parameters('name')), '2023-05-01').defaultDomain)]"
                 },
                 {
                   "name": "Authentication__Schemes__ServiceHooks__Credentials__vsts",
@@ -477,6 +544,13 @@
               ]
             }
           ],
+          "volumes": [
+            {
+              "name": "[variables('fileShareName')]",
+              "storageName": "[variables('fileShareName')]",
+              "storageType": "AzureFile"
+            }
+          ],
           "scale": {
             "minReplicas": "[parameters('minReplicas')]",
             "maxReplicas": "[parameters('maxReplicas')]"
@@ -497,7 +571,8 @@
         "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-jobs', parameters('name')))]",
         "[resourceId('Microsoft.ServiceBus/namespaces', format('{0}-{1}', parameters('name'), variables('collisionSuffix')))]",
         "[resourceId('Microsoft.Sql/servers', format('{0}-{1}', parameters('name'), variables('collisionSuffix')))]",
-        "[resourceId('Microsoft.Sql/servers/databases', format('{0}-{1}', parameters('name'), variables('collisionSuffix')), parameters('name'))]"
+        "[resourceId('Microsoft.Sql/servers/databases', format('{0}-{1}', parameters('name'), variables('collisionSuffix')), parameters('name'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', format('{0}{1}', parameters('name'), variables('collisionSuffix')))]"
       ]
     },
     {
@@ -560,7 +635,7 @@
     },
     "webhookEndpoint": {
       "type": "string",
-      "value": "[format('https://{0}/webhooks/azure', reference(resourceId('Microsoft.App/containerApps', parameters('name')), '2022-10-01').configuration.ingress.fqdn)]"
+      "value": "[format('https://{0}/webhooks/azure', reference(resourceId('Microsoft.App/containerApps', parameters('name')), '2023-05-01').configuration.ingress.fqdn)]"
     },
     "notificationsPassword": {
       "type": "string",
