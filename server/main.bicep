@@ -71,9 +71,6 @@ param serverImageTag string = '#{GITVERSION_NUGETVERSIONV2}#'
 @description('Tag of the updater docker image.')
 param updaterImageTag string = '#{GITVERSION_NUGETVERSIONV2}#'
 
-@description('Resource identifier of the ServiceBus namespace to use. If none is provided, a new one is created.')
-param serviceBusNamespaceId string = ''
-
 @minValue(1)
 @maxValue(2)
 @description('The minimum number of replicas')
@@ -86,7 +83,6 @@ param maxReplicas int = 1
 
 var sqlServerAdministratorLogin = uniqueString(resourceGroup().id) // e.g. zecnx476et7xm (13 characters)
 var sqlServerAdministratorLoginPassword = '${skip(uniqueString(resourceGroup().id), 5)}%${uniqueString('sql-password', resourceGroup().id)}' // e.g. abcde%zecnx476et7xm (19 characters)
-var hasProvidedServiceBusNamespace = (serviceBusNamespaceId != null && !empty(serviceBusNamespaceId))
 // avoid conflicts across multiple deployments for resources that generate FQDN based on the name
 var collisionSuffix = uniqueString(resourceGroup().id) // e.g. zecnx476et7xm (13 characters)
 
@@ -101,7 +97,7 @@ resource managedIdentityJobs 'Microsoft.ManagedIdentity/userAssignedIdentities@2
 }
 
 /* Service Bus namespace */
-resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2021-11-01' = if (eventBusTransport == 'ServiceBus' && !hasProvidedServiceBusNamespace) {
+resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2021-11-01' = if (eventBusTransport == 'ServiceBus') {
   name: '${name}-${collisionSuffix}'
   location: location
   properties: {
@@ -111,15 +107,6 @@ resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2021-11-01' = if (
   sku: {
     name: 'Basic'
   }
-}
-resource providedServiceBusNamespace 'Microsoft.ServiceBus/namespaces@2021-11-01' existing = if (eventBusTransport == 'ServiceBus' && hasProvidedServiceBusNamespace) {
-  // Inspired by https://github.com/Azure/bicep/issues/1722#issuecomment-952118402
-  // Example: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/Fabrikam/providers/Microsoft.ServiceBus/namespaces/fabrikam
-  // 0 -> '', 1 -> 'subscriptions', 2 -> '00000000-0000-0000-0000-000000000000', 3 -> 'resourceGroups'
-  // 4 -> 'Fabrikam', 5 -> 'providers', 6 -> 'Microsoft.ServiceBus' 7 -> 'namespaces'
-  // 8 -> 'fabrikam'
-  name: split(serviceBusNamespaceId, '/')[8]
-  scope: resourceGroup(split(serviceBusNamespaceId, '/')[2], split(serviceBusNamespaceId, '/')[4])
 }
 
 /* Storage Account */
@@ -329,7 +316,7 @@ resource app 'Microsoft.App/containerApps@2022-10-01' = {
             {
               name: 'EventBus__Transports__azure-service-bus__FullyQualifiedNamespace'
               // manipulating https://{your-namespace}.servicebus.windows.net:443/
-              value: eventBusTransport == 'ServiceBus' ? split(split(hasProvidedServiceBusNamespace ? providedServiceBusNamespace.properties.serviceBusEndpoint : serviceBusNamespace.properties.serviceBusEndpoint, '/')[2], ':')[0] : ''
+              value: eventBusTransport == 'ServiceBus' ? split(split(serviceBusNamespace.properties.serviceBusEndpoint, '/')[2], ':')[0] : ''
             }
             {
               name: 'EventBus__Transports__azure-queue-storage__ServiceUrl'
