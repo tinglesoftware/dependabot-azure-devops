@@ -131,10 +131,42 @@
     }
   },
   "variables": {
+    "copy": [
+      {
+        "name": "queueScaleRules",
+        "count": "[length(variables('queueNames'))]",
+        "input": {
+          "name": "[format('azure-servicebus-{0}', variables('queueNames')[copyIndex('queueScaleRules')])]",
+          "custom": {
+            "type": "azure-servicebus",
+            "metadata": {
+              "namespace": "[format('{0}-{1}', parameters('name'), variables('collisionSuffix'))]",
+              "queueName": "[variables('queueNames')[copyIndex('queueScaleRules')]]",
+              "messageCount": "100"
+            },
+            "auth": [
+              {
+                "secretRef": "connection-strings-asb-scaler",
+                "triggerParameter": "connection"
+              }
+            ]
+          }
+        }
+      }
+    ],
     "sqlServerAdministratorLogin": "[uniqueString(resourceGroup().id)]",
     "sqlServerAdministratorLoginPassword": "[format('{0}%{1}', skip(uniqueString(resourceGroup().id), 5), uniqueString('sql-password', resourceGroup().id))]",
     "collisionSuffix": "[uniqueString(resourceGroup().id)]",
-    "fileShareName": "working-dir"
+    "fileShareName": "working-dir",
+    "queueNames": [
+      "process-synchronization",
+      "repository-created",
+      "repository-updated",
+      "repository-deleted",
+      "trigger-update-jobs",
+      "update-job-check-state",
+      "update-job-collect-logs"
+    ]
   },
   "resources": [
     {
@@ -356,6 +388,10 @@
             {
               "name": "storage-account-key",
               "value": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', format('{0}{1}', parameters('name'), variables('collisionSuffix'))), '2022-09-01').keys[0].value]"
+            },
+            {
+              "name": "connection-strings-asb-scaler",
+              "value": "[listKeys(resourceId('Microsoft.ServiceBus/namespaces/AuthorizationRules', format('{0}-{1}', parameters('name'), variables('collisionSuffix')), 'RootManageSharedAccessKey'), '2021-11-01').primaryConnectionString]"
             }
           ]
         },
@@ -546,7 +582,8 @@
           ],
           "scale": {
             "minReplicas": "[parameters('minReplicas')]",
-            "maxReplicas": "[parameters('maxReplicas')]"
+            "maxReplicas": "[parameters('maxReplicas')]",
+            "rules": "[concat(createArray(createObject('name', 'http', 'http', createObject('metadata', createObject('concurrentRequests', '1000')))), variables('queueScaleRules'))]"
           }
         }
       },
