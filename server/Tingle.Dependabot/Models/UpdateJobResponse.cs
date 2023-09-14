@@ -1,4 +1,6 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 
 namespace Tingle.Dependabot.Models;
 
@@ -63,7 +65,7 @@ public sealed record UpdateJobAttributes()
     public bool? Debug { get; set; }
 }
 
-public sealed record UpdateJobAttributesSource()
+public sealed record UpdateJobAttributesSource
 {
     [JsonPropertyName("provider")]
     public required string Provider { get; set; }
@@ -82,4 +84,16 @@ public sealed record UpdateJobAttributesSource()
 
     [JsonPropertyName("api-endpoint")]
     public string? ApiEndpoint { get; set; }
+}
+
+public sealed class UpdateDependencyListModel
+{
+    [Required]
+    [JsonPropertyName("dependencies")]
+    public List<JsonNode>? Dependencies { get; set; }
+
+    [Required]
+    [MinLength(1)]
+    [JsonPropertyName("dependency_files")]
+    public List<string>? DependencyFiles { get; set; }
 }

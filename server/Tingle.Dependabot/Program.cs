@@ -299,7 +299,22 @@ internal static class ApplicationExtensions
         //group.MapPost("/{id}/close_pull_request", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] ClosePullRequestModel model) => { });
         //group.MapPost("/{id}/record_update_job_error", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] RecordUpdateJobErrorModel model) => { });
         //group.MapPatch("/{id}/mark_as_processed", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] MarkAsProcessedModel model) => { });
-        //group.MapPost("/{id}/update_dependency_list", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] UpdateDependencyListModel model) => { });
+
+        group.MapPost("/{id}/update_dependency_list", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] PayloadWithData<UpdateDependencyListModel> model) =>
+        {
+            var job = await dbContext.UpdateJobs.SingleAsync(p => p.Id == id);
+            var repository = await dbContext.Repositories.SingleAsync(r => r.Id == job.RepositoryId);
+            
+            // update the database
+            var update = repository.Updates.SingleOrDefault(u => u.PackageEcosystem == job.PackageEcosystem && u.Directory == job.Directory);
+            if (update is not null)
+            {
+                update.Files = model.Data?.DependencyFiles ?? new();
+            }
+            await dbContext.SaveChangesAsync();
+
+            return Results.Ok();
+        });
 
         group.MapPost("/{id}/record_ecosystem_versions", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] JsonNode model) =>
         {
@@ -316,5 +331,11 @@ internal static class ApplicationExtensions
         });
 
         return builder;
+    }
+
+    public class PayloadWithData<T> where T : new()
+    {
+        [Required]
+        public T? Data { get; set; }
     }
 }
