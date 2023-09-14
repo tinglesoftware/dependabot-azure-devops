@@ -129,7 +129,7 @@ resource providedServiceBusNamespace 'Microsoft.ServiceBus/namespaces@2021-11-01
 
 /* Storage Account */
 resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = {
-  name: '${name}-${collisionSuffix}'
+  name: '${name}${collisionSuffix}' // hyphens not allowed
   location: location
   kind: 'StorageV2'
   sku: { name: 'Standard_LRS' }
