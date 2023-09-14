@@ -43,63 +43,55 @@ internal partial class UpdateRunner
     public async Task CreateAsync(Repository repository, RepositoryUpdate update, UpdateJob job, CancellationToken cancellationToken = default)
     {
         var resourceName = MakeResourceName(job);
-        var type = options.JobHostType;
 
-        if (type is UpdateJobHostType.ContainerInstances)
+        // if we have an existing one, there is nothing more to do
+        var containerGroups = resourceGroup.GetContainerGroups();
+        try
         {
-            // if we have an existing one, there is nothing more to do
-            var containerGroups = resourceGroup.GetContainerGroups();
-            try
-            {
-                var response = await containerGroups.GetAsync(resourceName, cancellationToken);
-                if (response.Value is not null) return;
-            }
-            catch (Azure.RequestFailedException rfe) when (rfe.Status is 404) { }
-
-            // prepare the container
-            var image = options.UpdaterContainerImageTemplate!.Replace("{{ecosystem}}", job.PackageEcosystem);
-            var container = new ContainerInstanceContainer(UpdaterContainerName, image, new(job.Resources!));
-            var env = CreateVariables(repository, update, job);
-            foreach (var (key, value) in env) container.EnvironmentVariables.Add(new ContainerEnvironmentVariable(key) { Value = value, });
-
-            // prepare the container command/entrypoint (this is what seems to work)
-            container.Command.Add("/bin/bash");
-            container.Command.Add("bin/run.sh");
-            container.Command.Add("update-script");
-
-            // prepare the container group
-            var data = new ContainerGroupData(options.Location!, new[] { container, }, ContainerInstanceOperatingSystemType.Linux)
-            {
-                RestartPolicy = ContainerGroupRestartPolicy.Never, // should run to completion without restarts
-                DiagnosticsLogAnalytics = new ContainerGroupLogAnalytics(options.LogAnalyticsWorkspaceId, options.LogAnalyticsWorkspaceKey),
-                Identity = new Azure.ResourceManager.Models.ManagedServiceIdentity(Azure.ResourceManager.Models.ManagedServiceIdentityType.UserAssigned)
-                {
-                    UserAssignedIdentities = { [new(options.ManagedIdentityId!)] = new() { /*ttk bug*/} },
-                },
-            };
-
-            // add credentials for pulling image(s) from azure container registry
-            if (TryGetAzureContainerRegistry(image, out var registry))
-            {
-                data.ImageRegistryCredentials.Add(new ContainerGroupImageRegistryCredential(registry) { Identity = options.ManagedIdentityId, });
-            }
-
-            // add tags to the data for tracing purposes
-            data.Tags["purpose"] = "dependabot";
-            data.Tags.AddIfNotDefault("ecosystem", job.PackageEcosystem)
-                     .AddIfNotDefault("repository", repository.Slug)
-                     .AddIfNotDefault("directory", update.Directory)
-                     .AddIfNotDefault("machine-name", Environment.MachineName);
-
-            // create the container group (do not wait completion because it might take too long, do not use the result)
-            _ = await containerGroups.CreateOrUpdateAsync(Azure.WaitUntil.Started, resourceName, data, cancellationToken);
-            logger.LogInformation("Created ContainerGroup for {UpdateJobId}", job.Id);
-            job.Status = UpdateJobStatus.Running;
+            var response = await containerGroups.GetAsync(resourceName, cancellationToken);
+            if (response.Value is not null) return;
         }
-        else
+        catch (Azure.RequestFailedException rfe) when (rfe.Status is 404) { }
+
+        // prepare the container
+        var image = options.UpdaterContainerImageTemplate!.Replace("{{ecosystem}}", job.PackageEcosystem);
+        var container = new ContainerInstanceContainer(UpdaterContainerName, image, new(job.Resources!));
+        var env = CreateVariables(repository, update, job);
+        foreach (var (key, value) in env) container.EnvironmentVariables.Add(new ContainerEnvironmentVariable(key) { Value = value, });
+
+        // prepare the container command/entrypoint (this is what seems to work)
+        container.Command.Add("/bin/bash");
+        container.Command.Add("bin/run.sh");
+        container.Command.Add("update-script");
+
+        // prepare the container group
+        var data = new ContainerGroupData(options.Location!, new[] { container, }, ContainerInstanceOperatingSystemType.Linux)
         {
-            throw new NotSupportedException($"Hosting jobs on '{type}' is not yet supported.");
+            RestartPolicy = ContainerGroupRestartPolicy.Never, // should run to completion without restarts
+            DiagnosticsLogAnalytics = new ContainerGroupLogAnalytics(options.LogAnalyticsWorkspaceId, options.LogAnalyticsWorkspaceKey),
+            Identity = new Azure.ResourceManager.Models.ManagedServiceIdentity(Azure.ResourceManager.Models.ManagedServiceIdentityType.UserAssigned)
+            {
+                UserAssignedIdentities = { [new(options.ManagedIdentityId!)] = new() { /*ttk bug*/} },
+            },
+        };
+
+        // add credentials for pulling image(s) from azure container registry
+        if (TryGetAzureContainerRegistry(image, out var registry))
+        {
+            data.ImageRegistryCredentials.Add(new ContainerGroupImageRegistryCredential(registry) { Identity = options.ManagedIdentityId, });
         }
+
+        // add tags to the data for tracing purposes
+        data.Tags["purpose"] = "dependabot";
+        data.Tags.AddIfNotDefault("ecosystem", job.PackageEcosystem)
+                 .AddIfNotDefault("repository", repository.Slug)
+                 .AddIfNotDefault("directory", update.Directory)
+                 .AddIfNotDefault("machine-name", Environment.MachineName);
+
+        // create the container group (do not wait completion because it might take too long, do not use the result)
+        _ = await containerGroups.CreateOrUpdateAsync(Azure.WaitUntil.Started, resourceName, data, cancellationToken);
+        logger.LogInformation("Created ContainerGroup for {UpdateJobId}", job.Id);
+        job.Status = UpdateJobStatus.Running;
     }
 
     public async Task DeleteAsync(UpdateJob job, CancellationToken cancellationToken = default)

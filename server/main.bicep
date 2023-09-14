@@ -19,14 +19,6 @@ param createOrUpdateWebhooksOnStartup bool = false
 @description('Access token for authenticating requests to GitHub.')
 param githubToken string = ''
 
-@allowed([
-  'InMemory'
-  'ServiceBus'
-  'QueueStorage'
-])
-@description('Merge strategy to use when setting auto complete on created pull requests.')
-param eventBusTransport string = 'ServiceBus'
-
 @description('Whether update jobs should fail when an exception occurs.')
 param failOnException bool = false
 
@@ -48,13 +40,6 @@ param autoCompleteMergeStrategy string = 'Squash'
 @description('Whether to automatically approve created pull requests.')
 param autoApprove bool = false
 
-@allowed([
-  'ContainerInstances'
-  // 'ContainerApps' // TODO: restore this once jobs support is added
-])
-@description('Where to host new update jobs.')
-param jobHostType string = 'ContainerInstances'
-
 @description('Name of the resource group where jobs will be created.')
 param jobsResourceGroupName string = resourceGroup().name
 
@@ -62,21 +47,8 @@ param jobsResourceGroupName string = resourceGroup().name
 #disable-next-line secure-secrets-in-params // need sensible defaults
 param notificationsPassword string = uniqueString('service-hooks', resourceGroup().id) // e.g. zecnx476et7xm (13 characters)
 
-@description('Registry and repository of the server docker image. Ideally, you do not need to edit this value.')
-param serverImageRepository string = 'tinglesoftware/dependabot-server'
-
-@description('Tag of the server docker image.')
-param serverImageTag string = '#{GITVERSION_NUGETVERSIONV2}#'
-
-@description('Tag of the updater docker image.')
-param updaterImageTag string = '#{GITVERSION_NUGETVERSIONV2}#'
-
-@description('Resource identifier of the ServiceBus namespace to use. If none is provided, a new one is created.')
-param serviceBusNamespaceId string = ''
-
-// Example: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/Fabrikam/providers/Microsoft.OperationalInsights/workspaces/fabrikam
-@description('Resource identifier of the LogAnalytics Workspace to use. If none is provided, a new one is created.')
-param logAnalyticsWorkspaceId string = ''
+@description('Tag of the docker images.')
+param imageTag string = '#{GITVERSION_NUGETVERSIONV2}#'
 
 @minValue(1)
 @maxValue(2)
@@ -90,8 +62,6 @@ param maxReplicas int = 1
 
 var sqlServerAdministratorLogin = uniqueString(resourceGroup().id) // e.g. zecnx476et7xm (13 characters)
 var sqlServerAdministratorLoginPassword = '${skip(uniqueString(resourceGroup().id), 5)}%${uniqueString('sql-password', resourceGroup().id)}' // e.g. abcde%zecnx476et7xm (19 characters)
-var hasProvidedServiceBusNamespace = (serviceBusNamespaceId != null && !empty(serviceBusNamespaceId))
-var hasProvidedLogAnalyticsWorkspace = (logAnalyticsWorkspaceId != null && !empty(logAnalyticsWorkspaceId))
 // avoid conflicts across multiple deployments for resources that generate FQDN based on the name
 var collisionSuffix = uniqueString(resourceGroup().id) // e.g. zecnx476et7xm (13 characters)
 
@@ -106,25 +76,14 @@ resource managedIdentityJobs 'Microsoft.ManagedIdentity/userAssignedIdentities@2
 }
 
 /* Service Bus namespace */
-resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2021-11-01' = if (eventBusTransport == 'ServiceBus' && !hasProvidedServiceBusNamespace) {
+resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2021-11-01' = {
   name: '${name}-${collisionSuffix}'
   location: location
   properties: {
     disableLocalAuth: false
     zoneRedundant: false
   }
-  sku: {
-    name: 'Basic'
-  }
-}
-resource providedServiceBusNamespace 'Microsoft.ServiceBus/namespaces@2021-11-01' existing = if (eventBusTransport == 'ServiceBus' && hasProvidedServiceBusNamespace) {
-  // Inspired by https://github.com/Azure/bicep/issues/1722#issuecomment-952118402
-  // Example: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/Fabrikam/providers/Microsoft.ServiceBus/namespaces/fabrikam
-  // 0 -> '', 1 -> 'subscriptions', 2 -> '00000000-0000-0000-0000-000000000000', 3 -> 'resourceGroups'
-  // 4 -> 'Fabrikam', 5 -> 'providers', 6 -> 'Microsoft.ServiceBus' 7 -> 'namespaces'
-  // 8 -> 'fabrikam'
-  name: split(serviceBusNamespaceId, '/')[8]
-  scope: resourceGroup(split(serviceBusNamespaceId, '/')[2], split(serviceBusNamespaceId, '/')[4])
+  sku: { name: 'Basic' }
 }
 
 /* Storage Account */
@@ -195,7 +154,7 @@ resource sqlServerDatabase 'Microsoft.Sql/servers/databases@2022-05-01-preview' 
 }
 
 /* LogAnalytics */
-resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' = if (!hasProvidedLogAnalyticsWorkspace) {
+resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
   name: name
   location: location
   properties: {
@@ -207,15 +166,6 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10
     }
   }
 }
-resource providedLogAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = if (hasProvidedLogAnalyticsWorkspace) {
-  // Inspired by https://github.com/Azure/bicep/issues/1722#issuecomment-952118402
-  // Example: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/Fabrikam/providers/Microsoft.OperationalInsights/workspaces/fabrikam
-  // 0 -> '', 1 -> 'subscriptions', 2 -> '00000000-0000-0000-0000-000000000000', 3 -> 'resourceGroups'
-  // 4 -> 'Fabrikam', 5 -> 'providers', 6 -> 'Microsoft.OperationalInsights' 7 -> 'workspaces'
-  // 8 -> 'fabrikam'
-  name: split(logAnalyticsWorkspaceId, '/')[8]
-  scope: resourceGroup(split(logAnalyticsWorkspaceId, '/')[2], split(logAnalyticsWorkspaceId, '/')[4])
-}
 
 /* Container App Environment */
 resource appEnvironment 'Microsoft.App/managedEnvironments@2022-10-01' = {
@@ -225,8 +175,8 @@ resource appEnvironment 'Microsoft.App/managedEnvironments@2022-10-01' = {
     appLogsConfiguration: {
       destination: 'log-analytics'
       logAnalyticsConfiguration: {
-        customerId: hasProvidedLogAnalyticsWorkspace ? providedLogAnalyticsWorkspace.properties.customerId : logAnalyticsWorkspace.properties.customerId
-        sharedKey: hasProvidedLogAnalyticsWorkspace ? providedLogAnalyticsWorkspace.listKeys().primarySharedKey : logAnalyticsWorkspace.listKeys().primarySharedKey
+        customerId: logAnalyticsWorkspace.properties.customerId
+        sharedKey: logAnalyticsWorkspace.listKeys().primarySharedKey
       }
     }
   }
@@ -239,7 +189,7 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
   kind: 'web'
   properties: {
     Application_Type: 'web'
-    WorkspaceResourceId: hasProvidedLogAnalyticsWorkspace ? providedLogAnalyticsWorkspace.id : logAnalyticsWorkspace.id
+    WorkspaceResourceId: logAnalyticsWorkspace.id
   }
 }
 
@@ -280,14 +230,14 @@ resource app 'Microsoft.App/containerApps@2022-10-01' = {
         { name: 'project-token', value: projectToken }
         {
           name: 'log-analytics-workspace-key'
-          value: hasProvidedLogAnalyticsWorkspace ? providedLogAnalyticsWorkspace.listKeys().primarySharedKey : logAnalyticsWorkspace.listKeys().primarySharedKey
+          value: logAnalyticsWorkspace.listKeys().primarySharedKey
         }
       ]
     }
     template: {
       containers: [
         {
-          image: 'ghcr.io/${serverImageRepository}:${serverImageTag}'
+          image: 'ghcr.io/tinglesoftware/dependabot-server:${imageTag}'
           name: 'dependabot'
           env: [
             { name: 'AZURE_CLIENT_ID', value: managedIdentity.properties.clientId } // Specifies the User-Assigned Managed Identity to use. Without this, the app attempt to use the system assigned one.
@@ -314,18 +264,17 @@ resource app 'Microsoft.App/containerApps@2022-10-01' = {
             }
             {
               name: 'Workflow__LogAnalyticsWorkspaceId'
-              value: hasProvidedLogAnalyticsWorkspace ? providedLogAnalyticsWorkspace.properties.customerId : logAnalyticsWorkspace.properties.customerId
+              value: logAnalyticsWorkspace.properties.customerId
             }
             { name: 'Workflow__LogAnalyticsWorkspaceKey', secretRef: 'log-analytics-workspace-key' }
             { name: 'Workflow__ManagedIdentityId', value: managedIdentityJobs.id }
-            { name: 'Workflow__UpdaterContainerImageTemplate', value: 'ghcr.io/tinglesoftware/dependabot-updater-{{ecosystem}}:${updaterImageTag}' }
+            { name: 'Workflow__UpdaterContainerImageTemplate', value: 'ghcr.io/tinglesoftware/dependabot-updater-{{ecosystem}}:${imageTag}' }
             { name: 'Workflow__FailOnException', value: failOnException ? 'true' : 'false' }
             { name: 'Workflow__AutoComplete', value: autoComplete ? 'true' : 'false' }
             { name: 'Workflow__AutoCompleteIgnoreConfigs', value: join(autoCompleteIgnoreConfigs, ';') }
             { name: 'Workflow__AutoCompleteMergeStrategy', value: autoCompleteMergeStrategy }
             { name: 'Workflow__AutoApprove', value: autoApprove ? 'true' : 'false' }
             { name: 'Workflow__GithubToken', value: githubToken }
-            { name: 'Workflow__JobHostType', value: jobHostType }
             { name: 'Workflow__Location', value: location }
 
             {
@@ -339,15 +288,11 @@ resource app 'Microsoft.App/containerApps@2022-10-01' = {
             }
             { name: 'Authentication__Schemes__ServiceHooks__Credentials__vsts', secretRef: 'notifications-password' }
 
-            { name: 'EventBus__SelectedTransport', value: eventBusTransport }
+            { name: 'EventBus__SelectedTransport', value: 'ServiceBus' }
             {
               name: 'EventBus__Transports__azure-service-bus__FullyQualifiedNamespace'
               // manipulating https://{your-namespace}.servicebus.windows.net:443/
-              value: eventBusTransport == 'ServiceBus' ? split(split(hasProvidedServiceBusNamespace ? providedServiceBusNamespace.properties.serviceBusEndpoint : serviceBusNamespace.properties.serviceBusEndpoint, '/')[2], ':')[0] : ''
-            }
-            {
-              name: 'EventBus__Transports__azure-queue-storage__ServiceUrl'
-              value: eventBusTransport == 'QueueStorage' ? storageAccount.properties.primaryEndpoints.queue : ''
+              value: split(split(serviceBusNamespace.properties.serviceBusEndpoint, '/')[2], ':')[0]
             }
           ]
           resources: {// these are the least resources we can provision
@@ -390,20 +335,11 @@ resource contributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022
     principalType: 'ServicePrincipal'
   }
 }
-resource serviceBusDataOwnerRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (eventBusTransport == 'ServiceBus') {
+resource serviceBusDataOwnerRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: guid(managedIdentity.id, 'AzureServiceBusDataOwner')
   scope: resourceGroup()
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '090c5cfd-751d-490a-894a-3ce6f1109419')
-    principalId: managedIdentity.properties.principalId
-    principalType: 'ServicePrincipal'
-  }
-}
-resource storageQueueDataContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (eventBusTransport == 'QueueStorage') {
-  name: guid(managedIdentity.id, 'StorageQueueDataContributor')
-  scope: resourceGroup()
-  properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '974c5e8b-45b9-4653-ba55-5f855dd0fb88')
     principalId: managedIdentity.properties.principalId
     principalType: 'ServicePrincipal'
   }

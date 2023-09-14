@@ -38,8 +38,12 @@ updates:
   groups:
     microsoft:
       patterns: ["Microsoft.*"]
+    event-bus:
+      patterns: ["Tingle.EventBus*"]
     tingle:
-      patterns: ["Tingle.*"]
+      patterns:
+      - "Tingle.AspNetCore.*"
+      - "Tingle.Extensions.*"
 
 - package-ecosystem: "npm" # See documentation for possible values
   directory: "/extension" # Location of package manifests

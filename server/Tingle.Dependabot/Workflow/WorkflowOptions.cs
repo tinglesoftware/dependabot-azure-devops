@@ -79,9 +79,6 @@ public class WorkflowOptions
     /// </summary>
     public Dictionary<string, string> Secrets { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
-    /// <summary>Where to host new update jobs.</summary>
-    public UpdateJobHostType JobHostType { get; set; } = UpdateJobHostType.ContainerInstances;
-
     /// <summary>Location/region where to create new update jobs.</summary>
     public string? Location { get; set; } // using Azure.Core.Location does not work when binding from IConfiguration
 
