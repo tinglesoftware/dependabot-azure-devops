@@ -40,9 +40,6 @@ param autoCompleteMergeStrategy string = 'Squash'
 @description('Whether to automatically approve created pull requests.')
 param autoApprove bool = false
 
-@description('Name of the resource group where jobs will be created.')
-param jobsResourceGroupName string = resourceGroup().name
-
 @description('Password for Webhooks, ServiceHooks, and Notifications from Azure DevOps.')
 #disable-next-line secure-secrets-in-params // need sensible defaults
 param notificationsPassword string = uniqueString('service-hooks', resourceGroup().id) // e.g. zecnx476et7xm (13 characters)
@@ -257,11 +254,7 @@ resource app 'Microsoft.App/containerApps@2022-10-01' = {
               value: 'https://${name}.${appEnvironment.properties.defaultDomain}/webhooks/azure'
             }
             { name: 'Workflow__SubscriptionPassword', secretRef: 'notifications-password' }
-            {
-              name: 'Workflow__ResourceGroupId'
-              // Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}
-              value: '${subscription().id}/resourceGroups/${jobsResourceGroupName}'
-            }
+            { name: 'Workflow__ResourceGroupId', value: resourceGroup().id }
             {
               name: 'Workflow__LogAnalyticsWorkspaceId'
               value: logAnalyticsWorkspace.properties.customerId
