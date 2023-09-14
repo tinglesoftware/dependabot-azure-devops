@@ -57,11 +57,8 @@ param notificationsPassword string = uniqueString('service-hooks', resourceGroup
 @description('Registry and repository of the server docker image. Ideally, you do not need to edit this value.')
 param serverImageRepository string = 'tinglesoftware/dependabot-server'
 
-@description('Tag of the server docker image.')
-param serverImageTag string = '#{GITVERSION_NUGETVERSIONV2}#'
-
-@description('Tag of the updater docker image.')
-param updaterImageTag string = '#{GITVERSION_NUGETVERSIONV2}#'
+@description('Tag of the docker images.')
+param imageTag string = '#{GITVERSION_NUGETVERSIONV2}#'
 
 @minValue(1)
 @maxValue(2)
@@ -250,7 +247,7 @@ resource app 'Microsoft.App/containerApps@2022-10-01' = {
     template: {
       containers: [
         {
-          image: 'ghcr.io/${serverImageRepository}:${serverImageTag}'
+          image: 'ghcr.io/${serverImageRepository}:${imageTag}'
           name: 'dependabot'
           env: [
             { name: 'AZURE_CLIENT_ID', value: managedIdentity.properties.clientId } // Specifies the User-Assigned Managed Identity to use. Without this, the app attempt to use the system assigned one.
@@ -281,7 +278,7 @@ resource app 'Microsoft.App/containerApps@2022-10-01' = {
             }
             { name: 'Workflow__LogAnalyticsWorkspaceKey', secretRef: 'log-analytics-workspace-key' }
             { name: 'Workflow__ManagedIdentityId', value: managedIdentityJobs.id }
-            { name: 'Workflow__UpdaterContainerImageTemplate', value: 'ghcr.io/tinglesoftware/dependabot-updater-{{ecosystem}}:${updaterImageTag}' }
+            { name: 'Workflow__UpdaterContainerImageTemplate', value: 'ghcr.io/tinglesoftware/dependabot-updater-{{ecosystem}}:${imageTag}' }
             { name: 'Workflow__FailOnException', value: failOnException ? 'true' : 'false' }
             { name: 'Workflow__AutoComplete', value: autoComplete ? 'true' : 'false' }
             { name: 'Workflow__AutoCompleteIgnoreConfigs', value: join(autoCompleteIgnoreConfigs, ';') }
