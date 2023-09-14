@@ -65,7 +65,6 @@ The deployment exposes the following parameters that can be tuned to suit the se
 |autoApprove|Whether to automatically approve created pull requests.|No|false|
 |jobHostType|Where to host new update jobs. Update jobs are run independent of the server. In the future, `ContainerApps` would be supported or the selection of type be removed. See [upcoming jobs support](https://github.com/microsoft/azure-container-apps/issues/526). Working with `ContainerInstances` is easy, because the instances run to completion and the server cleans up after it.|No|`ContainerInstances`|
 |notificationsPassword|The password used to authenticate incoming requests from Azure DevOps|No|&lt;auto-generated&gt;|
-|serverImageRepository|The docker container repository to use when pulling the server docker container. This can be useful if the default container requires customizations such as custom certs.|No|`tinglesoftware/dependabot-server`|
 |imageTag|The image tag to use when pulling the docker containers. A tag also defines the version. You should avoid using `latest`. Example: `1.1.0`|No|&lt;version-downloaded&gt;|
 |minReplicas|The minimum number of replicas to required for the deployment. Given that scheduling runs in process, this value cannot be less than `1`. This may change in the future.|No|1|
 |maxReplicas|The maximum number of replicas when automatic scaling engages. In most cases, you do not need more than 1.|No|1|

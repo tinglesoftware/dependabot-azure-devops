@@ -54,9 +54,6 @@ param jobsResourceGroupName string = resourceGroup().name
 #disable-next-line secure-secrets-in-params // need sensible defaults
 param notificationsPassword string = uniqueString('service-hooks', resourceGroup().id) // e.g. zecnx476et7xm (13 characters)
 
-@description('Registry and repository of the server docker image. Ideally, you do not need to edit this value.')
-param serverImageRepository string = 'tinglesoftware/dependabot-server'
-
 @description('Tag of the docker images.')
 param imageTag string = '#{GITVERSION_NUGETVERSIONV2}#'
 
@@ -247,7 +244,7 @@ resource app 'Microsoft.App/containerApps@2022-10-01' = {
     template: {
       containers: [
         {
-          image: 'ghcr.io/${serverImageRepository}:${imageTag}'
+          image: 'ghcr.io/tinglesoftware/dependabot-server:${imageTag}'
           name: 'dependabot'
           env: [
             { name: 'AZURE_CLIENT_ID', value: managedIdentity.properties.clientId } // Specifies the User-Assigned Managed Identity to use. Without this, the app attempt to use the system assigned one.
