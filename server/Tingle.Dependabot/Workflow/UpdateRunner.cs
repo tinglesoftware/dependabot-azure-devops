@@ -54,15 +54,20 @@ internal partial class UpdateRunner
         catch (Azure.RequestFailedException rfe) when (rfe.Status is 404) { }
 
         // prepare the container
+        var fileShareName = options.FileShareName;
+        var volumeName = "working-dir";
         var image = options.UpdaterContainerImageTemplate!.Replace("{{ecosystem}}", job.PackageEcosystem);
         var container = new ContainerInstanceContainer(UpdaterContainerName, image, new(job.Resources!));
         var env = CreateVariables(repository, update, job);
         foreach (var (key, value) in env) container.EnvironmentVariables.Add(new ContainerEnvironmentVariable(key) { Value = value, });
 
-        // prepare the container command/entrypoint (this is what seems to work)
+        // set the container command/entrypoint (this is what seems to work)
         container.Command.Add("/bin/bash");
         container.Command.Add("bin/run.sh");
         container.Command.Add("update-script");
+        
+        // add volume mounts
+        container.VolumeMounts.Add(new ContainerVolumeMount(volumeName, "/mnt/dependabot"));
 
         // prepare the container group
         var data = new ContainerGroupData(options.Location!, new[] { container, }, ContainerInstanceOperatingSystemType.Linux)
@@ -80,6 +85,12 @@ internal partial class UpdateRunner
         {
             data.ImageRegistryCredentials.Add(new ContainerGroupImageRegistryCredential(registry) { Identity = options.ManagedIdentityId, });
         }
+
+        // add volumes
+        data.Volumes.Add(new ContainerVolume(volumeName)
+        {
+            AzureFile = new(fileShareName, options.StorageAccountName) { StorageAccountKey = options.StorageAccountKey, },
+        });
 
         // add tags to the data for tracing purposes
         data.Tags["purpose"] = "dependabot";
@@ -130,6 +141,13 @@ internal partial class UpdateRunner
 
             // there is no state for jobs that are running
             if (status is UpdateJobStatus.Running) return null;
+            
+            // delete the job directory f it exists
+            var jobDirectory = Path.Join(options.WorkingDirectory, job.Id);
+            if (Directory.Exists(jobDirectory))
+            {
+                Directory.Delete(jobDirectory);
+            }
 
             // get the period
             var currentState = resource.Data.Containers.Single(c => c.Name == UpdaterContainerName).InstanceView?.CurrentState;
@@ -193,15 +211,27 @@ internal partial class UpdateRunner
     {
         static string? ToJson<T>(T? entries) => entries is null ? null : JsonSerializer.Serialize(entries, serializerOptions); // null ensures we do not add to the values
 
+        var jobDirectory = Path.Join(options.WorkingDirectory, job.Id);
+
         // Add compulsory values
         var values = new Dictionary<string, string>
         {
+            ["DEPENDABOT_JOB_ID"] = job.Id!,
+            ["DEPENDABOT_JOB_TOKEN"] = job.AuthKey!,
+            ["DEPENDABOT_JOB_PATH"] = Path.Join(jobDirectory, "job.json"),
+            ["DEPENDABOT_OUTPUT_PATH"] = Path.Join(jobDirectory, "output"),
+
             ["DEPENDABOT_PACKAGE_MANAGER"] = job.PackageEcosystem!,
             ["DEPENDABOT_DIRECTORY"] = update.Directory!,
             ["DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT"] = update.OpenPullRequestsLimit!.Value.ToString(),
         };
 
         // Add optional values
+        values.AddIfNotDefault("DEPENDABOT_DEBUG", options.DebugJobs?.ToString().ToLower())
+              .AddIfNotDefault("DEPENDABOT_API_URL", options.JobsApiUrl)
+              .AddIfNotDefault("DEPENDABOT_REPO_CONTENTS_PATH", Path.Join(jobDirectory, "repo"))
+              .AddIfNotDefault("UPDATER_DETERMINISTIC", options.DeterministicUpdates?.ToString().ToLower());
+
         values.AddIfNotDefault("GITHUB_ACCESS_TOKEN", options.GithubToken)
               .AddIfNotDefault("DEPENDABOT_REBASE_STRATEGY", update.RebaseStrategy)
               .AddIfNotDefault("DEPENDABOT_TARGET_BRANCH", update.TargetBranch)

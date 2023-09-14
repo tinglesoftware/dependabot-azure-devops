@@ -58,6 +58,9 @@ public sealed record UpdateJobAttributes()
 
     [JsonPropertyName("security-updates-only")]
     public bool? SecurityUpdatesOnly { get; set; }
+
+    [JsonPropertyName("debug")]
+    public bool? Debug { get; set; }
 }
 
 public sealed record UpdateJobAttributesSource()

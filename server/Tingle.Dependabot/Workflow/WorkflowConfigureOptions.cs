@@ -63,9 +63,29 @@ internal class WorkflowConfigureOptions : IPostConfigureOptions<WorkflowOptions>
             return ValidateOptionsResult.Fail($"'{nameof(options.ManagedIdentityId)}' cannot be null or whitespace");
         }
 
+        if (string.IsNullOrWhiteSpace(options.WorkingDirectory))
+        {
+            return ValidateOptionsResult.Fail($"'{nameof(options.WorkingDirectory)}' cannot be null or whitespace");
+        }
+
         if (string.IsNullOrWhiteSpace(options.Location))
         {
             return ValidateOptionsResult.Fail($"'{nameof(options.Location)}' cannot be null or whitespace");
+        }
+
+        if (string.IsNullOrWhiteSpace(options.StorageAccountName))
+        {
+            return ValidateOptionsResult.Fail($"'{nameof(options.StorageAccountName)}' cannot be null or whitespace");
+        }
+
+        if (string.IsNullOrWhiteSpace(options.StorageAccountKey))
+        {
+            return ValidateOptionsResult.Fail($"'{nameof(options.StorageAccountKey)}' cannot be null or whitespace");
+        }
+
+        if (string.IsNullOrWhiteSpace(options.FileShareName))
+        {
+            return ValidateOptionsResult.Fail($"'{nameof(options.FileShareName)}' cannot be null or whitespace");
         }
 
         return ValidateOptionsResult.Success;

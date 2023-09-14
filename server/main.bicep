@@ -16,6 +16,9 @@ param synchronizeOnStartup bool = false
 @description('Whether to create or update subscriptions on startup.')
 param createOrUpdateWebhooksOnStartup bool = false
 
+@description('Whether to debug all jobs.')
+param debugAllJobs bool = false
+
 @description('Access token for authenticating requests to GitHub.')
 param githubToken string = ''
 
@@ -64,6 +67,7 @@ var sqlServerAdministratorLogin = uniqueString(resourceGroup().id) // e.g. zecnx
 var sqlServerAdministratorLoginPassword = '${skip(uniqueString(resourceGroup().id), 5)}%${uniqueString('sql-password', resourceGroup().id)}' // e.g. abcde%zecnx476et7xm (19 characters)
 // avoid conflicts across multiple deployments for resources that generate FQDN based on the name
 var collisionSuffix = uniqueString(resourceGroup().id) // e.g. zecnx476et7xm (13 characters)
+var fileShareName = 'working-dir'
 
 /* Managed Identities */
 resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
@@ -100,6 +104,12 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = {
       bypass: 'AzureServices'
       defaultAction: 'Allow'
     }
+  }
+
+  resource fileServices 'fileServices' existing = {
+    name: 'default'
+
+    resource workingDir 'shares' = { name: fileShareName }
   }
 }
 
@@ -168,7 +178,7 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10
 }
 
 /* Container App Environment */
-resource appEnvironment 'Microsoft.App/managedEnvironments@2022-10-01' = {
+resource appEnvironment 'Microsoft.App/managedEnvironments@2023-05-01' = {
   name: name
   location: location
   properties: {
@@ -177,6 +187,18 @@ resource appEnvironment 'Microsoft.App/managedEnvironments@2022-10-01' = {
       logAnalyticsConfiguration: {
         customerId: logAnalyticsWorkspace.properties.customerId
         sharedKey: logAnalyticsWorkspace.listKeys().primarySharedKey
+      }
+    }
+  }
+
+  resource workingDir 'storages' = {
+    name: fileShareName
+    properties: {
+      azureFile: {
+        accessMode: 'ReadWrite'
+        shareName: fileShareName
+        accountName: storageAccount.name
+        accountKey: storageAccount.listKeys().keys[0].value
       }
     }
   }
@@ -194,7 +216,7 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
 }
 
 /* Container App */
-resource app 'Microsoft.App/containerApps@2022-10-01' = {
+resource app 'Microsoft.App/containerApps@2023-05-01' = {
   name: name
   location: location
   properties: {
@@ -232,6 +254,10 @@ resource app 'Microsoft.App/containerApps@2022-10-01' = {
           name: 'log-analytics-workspace-key'
           value: logAnalyticsWorkspace.listKeys().primarySharedKey
         }
+        {
+          name: 'storage-account-key'
+          value: storageAccount.listKeys().keys[0].value
+        }
       ]
     }
     template: {
@@ -239,6 +265,7 @@ resource app 'Microsoft.App/containerApps@2022-10-01' = {
         {
           image: 'ghcr.io/tinglesoftware/dependabot-server:${imageTag}'
           name: 'dependabot'
+          volumeMounts: [ { mountPath: '/mnt/dependabot', volumeName: fileShareName } ]
           env: [
             { name: 'AZURE_CLIENT_ID', value: managedIdentity.properties.clientId } // Specifies the User-Assigned Managed Identity to use. Without this, the app attempt to use the system assigned one.
             { name: 'ASPNETCORE_FORWARDEDHEADERS_ENABLED', value: 'true' } // Application is behind proxy
@@ -252,6 +279,9 @@ resource app 'Microsoft.App/containerApps@2022-10-01' = {
             { name: 'Workflow__CreateOrUpdateWebhooksOnStartup', value: createOrUpdateWebhooksOnStartup ? 'true' : 'false' }
             { name: 'Workflow__ProjectUrl', value: projectUrl }
             { name: 'Workflow__ProjectToken', secretRef: 'project-token' }
+            { name: 'Workflow__DebugJobs', value: '${debugAllJobs}' }
+            { name: 'Workflow__JobsApiUrl', value: 'https://${name}.${appEnvironment.properties.defaultDomain}' }
+            { name: 'Workflow__WorkingDirectory', value: '/mnt/dependabot' }
             {
               name: 'Workflow__WebhookEndpoint'
               value: 'https://${name}.${appEnvironment.properties.defaultDomain}/webhooks/azure'
@@ -276,6 +306,9 @@ resource app 'Microsoft.App/containerApps@2022-10-01' = {
             { name: 'Workflow__AutoApprove', value: autoApprove ? 'true' : 'false' }
             { name: 'Workflow__GithubToken', value: githubToken }
             { name: 'Workflow__Location', value: location }
+            { name: 'Workflow__StorageAccountName', value: storageAccount.name }
+            { name: 'Workflow__StorageAccountKey', secretRef: 'storage-account-key' }
+            { name: 'Workflow__FileShareName', value: fileShareName }
 
             {
               name: 'Authentication__Schemes__Management__Authority'
@@ -311,6 +344,7 @@ resource app 'Microsoft.App/containerApps@2022-10-01' = {
           ]
         }
       ]
+      volumes: [ { name: fileShareName, storageName: fileShareName, storageType: 'AzureFile' } ]
       scale: {
         minReplicas: minReplicas
         maxReplicas: maxReplicas

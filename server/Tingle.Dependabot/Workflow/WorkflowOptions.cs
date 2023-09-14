@@ -51,6 +51,27 @@ public class WorkflowOptions
     /// <summary>Authentication token for accessing the project.</summary>
     public string? ProjectToken { get; set; }
 
+    /// <summary>Whether to debug all jobs.</summary>
+    public bool? DebugJobs { get; set; }
+
+    /// <summary>URL on which to access the API from the jobs.</summary>
+    /// <example>https://dependabot.dummy-123.westeurope.azurecontainerapps.io</example>
+    public string? JobsApiUrl { get; set; }
+
+    /// <summary>
+    /// Root working directory where file are written during job scheduling and execution.
+    /// This directory is the root for all jobs.
+    /// Subdirectories are created for each job and further for each usage type.
+    /// For example, if this value is set to <c>/mnt/dependabot</c>,
+    /// A job identified as <c>123456789</c> will have files written at <c>/mnt/dependabot/123456789</c>
+    /// and some nested directories in it such as <c>/mnt/dependabot/123456789/repo</c>.
+    /// </summary>
+    /// <example>/mnt/dependabot</example>
+    public string? WorkingDirectory { get; set; }
+
+    /// <summary>Whether updates should be created in the same order.</summary>
+    public bool? DeterministicUpdates { get; set; }
+
     /// <summary>Whether update jobs should fail when an exception occurs.</summary>
     public bool FailOnException { get; set; }
 
@@ -82,6 +103,17 @@ public class WorkflowOptions
     /// <summary>Location/region where to create new update jobs.</summary>
     public string? Location { get; set; } // using Azure.Core.Location does not work when binding from IConfiguration
 
+    /// <summary>Name of the storage account.</summary>
+    /// <example>dependabot-1234567890</example>
+    public string? StorageAccountName { get; set; } // only used with ContainerInstances
+
+    /// <summary>Access key for the storage account.</summary>
+    public string? StorageAccountKey { get; set; } // only used with ContainerInstances
+    
+    /// <summary>Name of the file share for the working directory</summary>
+    /// <example>working-dir</example>
+    public string? FileShareName { get; set; } // only used with ContainerInstances
+    
     /// <summary>
     /// Possible/allowed paths for the configuration files in a repository.
     /// </summary>
