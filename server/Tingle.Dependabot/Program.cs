@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using MiniValidation;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Tingle.Dependabot;
 using Tingle.Dependabot.Consumers;
 using Tingle.Dependabot.Events;
@@ -258,6 +259,8 @@ internal static class ApplicationExtensions
 
     public static IEndpointRouteBuilder MapUpdateJobsApi(this IEndpointRouteBuilder builder)
     {
+        var logger = builder.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("UpdateJobsApi");
+
         var group = builder.MapGroup("update_jobs");
         group.RequireAuthorization(AuthConstants.PolicyNameUpdater);
 
@@ -298,6 +301,13 @@ internal static class ApplicationExtensions
         //group.MapPatch("/{id}/mark_as_processed", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] MarkAsProcessedModel model) => { });
         //group.MapPost("/{id}/update_dependency_list", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] UpdateDependencyListModel model) => { });
         //group.MapPost("/{id}/record_package_manager_version", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] RecordPackageManagerVersionModel model) => { });
+
+        group.MapPost("/{id}/increment_metric", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] JsonNode model) =>
+        {
+            var job = await dbContext.UpdateJobs.SingleAsync(p => p.Id == id);
+            logger.LogInformation("Received metrics for {JobId} but we did nothing with them.\r\n{ModelJson}", id, model.ToJsonString());
+            return Results.Ok();
+        });
 
         return builder;
     }
