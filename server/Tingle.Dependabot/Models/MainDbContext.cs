@@ -32,6 +32,7 @@ public class MainDbContext : DbContext, IDataProtectionKeyContext
         modelBuilder.Entity<UpdateJob>(b =>
         {
             b.Property(j => j.PackageEcosystem).IsRequired();
+            HasJsonConversion(b.Property(j => j.Error));
 
             b.HasIndex(j => j.Created).IsDescending(); // faster filtering
             b.HasIndex(j => j.RepositoryId);

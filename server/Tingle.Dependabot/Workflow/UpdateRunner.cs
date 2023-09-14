@@ -203,6 +203,30 @@ internal partial class UpdateRunner
 
         var jobDirectory = Path.Join(options.WorkingDirectory, job.Id);
 
+        // TODO: write the job definition file (find out if it is YAML/JSON)
+
+        //    var attr = new UpdateJobAttributes(job)
+        //    {
+        //        AllowedUpdates = Array.Empty<object>(),
+        //        CredentialsMetadata = Array.Empty<object>(),
+        //        Dependencies = Array.Empty<object>(),
+        //        Directory = job.Directory!,
+        //        ExistingPullRequests = Array.Empty<object>(),
+        //        IgnoreConditions = Array.Empty<object>(),
+        //        PackageManager = job.PackageEcosystem,
+        //        RepoName = job.RepositorySlug!,
+        //        SecurityAdvisories = Array.Empty<object>(),
+        //        Source = new UpdateJobAttributesSource
+        //        {
+        //            Directory = job.Directory!,
+        //            Provider = "azure",
+        //            Repo = job.RepositorySlug!,
+        //            Branch = job.Branch,
+        //            Hostname = ,
+        //            ApiEndpoint =,
+        //        },
+        //    };
+
         // Add compulsory values
         var values = new Dictionary<string, string>
         {

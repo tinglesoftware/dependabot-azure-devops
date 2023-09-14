@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using MiniValidation;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Tingle.Dependabot;
 using Tingle.Dependabot.Consumers;
 using Tingle.Dependabot.Events;
@@ -258,47 +259,95 @@ internal static class ApplicationExtensions
 
     public static IEndpointRouteBuilder MapUpdateJobsApi(this IEndpointRouteBuilder builder)
     {
+        var logger = builder.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("UpdateJobsApi");
+
+        // endpoints accessed by the updater during execution
+
         var group = builder.MapGroup("update_jobs");
         group.RequireAuthorization(AuthConstants.PolicyNameUpdater);
 
-        // TODO: create endpoints accessed by the updater during execution similar to the one hosted by GitHub
+        // TODO: implement logic for *pull_request endpoints
+        group.MapPost("/{id}/create_pull_request", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] PayloadWithData<CreatePullRequestModel> model) =>
+        {
+            var job = await dbContext.UpdateJobs.SingleAsync(p => p.Id == id);
+            logger.LogInformation("Received request to create a pull request from job {JobId} but we did nothing.\r\n{ModelJson}", id, JsonSerializer.Serialize(model));
+            return Results.Ok();
+        });
+        group.MapPost("/{id}/update_pull_request", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] PayloadWithData<UpdatePullRequestModel> model) =>
+        {
+            var job = await dbContext.UpdateJobs.SingleAsync(p => p.Id == id);
+            logger.LogInformation("Received request to update a pull request from job {JobId} but we did nothing.\r\n{ModelJson}", id, JsonSerializer.Serialize(model));
+            return Results.Ok();
+        });
+        group.MapPost("/{id}/close_pull_request", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] PayloadWithData<ClosePullRequestModel> model) =>
+        {
+            var job = await dbContext.UpdateJobs.SingleAsync(p => p.Id == id);
+            logger.LogInformation("Received request to close a pull request from job {JobId} but we did nothing.\r\n{ModelJson}", id, JsonSerializer.Serialize(model));
+            return Results.Ok();
+        });
 
-        //group.MapGet("/{id}", async (MainDbContext dbContext, [FromRoute, Required] string id) =>
-        //{
-        //    var job = await dbContext.UpdateJobs.SingleAsync(p => p.Id == id);
+        group.MapPost("/{id}/record_update_job_error", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] PayloadWithData<RecordUpdateJobErrorModel> model) =>
+        {
+            var job = await dbContext.UpdateJobs.SingleAsync(p => p.Id == id);
 
-        //    var attr = new UpdateJobAttributes(job)
-        //    {
-        //        AllowedUpdates = Array.Empty<object>(),
-        //        CredentialsMetadata = Array.Empty<object>(),
-        //        Dependencies = Array.Empty<object>(),
-        //        Directory = job.Directory!,
-        //        ExistingPullRequests = Array.Empty<object>(),
-        //        IgnoreConditions = Array.Empty<object>(),
-        //        PackageManager = job.PackageEcosystem,
-        //        RepoName = job.RepositorySlug!,
-        //        SecurityAdvisories = Array.Empty<object>(),
-        //        Source = new UpdateJobAttributesSource
-        //        {
-        //            Directory = job.Directory!,
-        //            Provider = "azure",
-        //            Repo = job.RepositorySlug!,
-        //            Branch = job.Branch,
-        //            Hostname = ,
-        //            ApiEndpoint =,
-        //        },
-        //    };
-        //    return Results.Ok(new UpdateJobResponse(new(attr)));
-        //});
+            job.Error = new UpdateJobError
+            {
+                Type = model.Data!.ErrorType,
+                Detail = model.Data.ErrorDetail,
+            };
 
-        //group.MapPost("/{id}/create_pull_request", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] CreatePullRequestModel model) => { });
-        //group.MapPost("/{id}/update_pull_request", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] UpdatePullRequestModel model) => { });
-        //group.MapPost("/{id}/close_pull_request", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] ClosePullRequestModel model) => { });
-        //group.MapPost("/{id}/record_update_job_error", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] RecordUpdateJobErrorModel model) => { });
-        //group.MapPatch("/{id}/mark_as_processed", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] MarkAsProcessedModel model) => { });
-        //group.MapPost("/{id}/update_dependency_list", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] UpdateDependencyListModel model) => { });
-        //group.MapPost("/{id}/record_package_manager_version", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] RecordPackageManagerVersionModel model) => { });
+            await dbContext.SaveChangesAsync();
+
+            return Results.Ok();
+        });
+        group.MapPatch("/{id}/mark_as_processed", async (IEventPublisher publisher, MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] PayloadWithData<MarkAsProcessedModel> model) =>
+        {
+            var job = await dbContext.UpdateJobs.SingleAsync(p => p.Id == id);
+
+            // publish event that will run update the job and collect logs
+            var evt = new UpdateJobCheckStateEvent { JobId = id, };
+            await publisher.PublishAsync(evt);
+
+            return Results.Ok();
+        });
+        group.MapPost("/{id}/update_dependency_list", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] PayloadWithData<UpdateDependencyListModel> model) =>
+        {
+            var job = await dbContext.UpdateJobs.SingleAsync(p => p.Id == id);
+            var repository = await dbContext.Repositories.SingleAsync(r => r.Id == job.RepositoryId);
+
+            // update the database
+            var update = repository.Updates.SingleOrDefault(u => u.PackageEcosystem == job.PackageEcosystem && u.Directory == job.Directory);
+            if (update is not null)
+            {
+                update.Files = model.Data?.DependencyFiles ?? new();
+            }
+            await dbContext.SaveChangesAsync();
+
+            return Results.Ok();
+        });
+
+        group.MapPost("/{id}/record_ecosystem_versions", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] JsonNode model) =>
+        {
+            var job = await dbContext.UpdateJobs.SingleAsync(p => p.Id == id);
+            logger.LogInformation("Received request to record ecosystem version from job {JobId} but we did nothing.\r\n{ModelJson}", id, model.ToJsonString());
+            return Results.Ok();
+        });
+        group.MapPost("/{id}/increment_metric", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] JsonNode model) =>
+        {
+            var job = await dbContext.UpdateJobs.SingleAsync(p => p.Id == id);
+            logger.LogInformation("Received metrics from job {JobId} but we did nothing with them.\r\n{ModelJson}", id, model.ToJsonString());
+            return Results.Ok();
+        });
 
         return builder;
+    }
+
+    public class PayloadWithData<T> where T : new()
+    {
+        [Required]
+        public T? Data { get; set; }
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public Dictionary<string, object>? Extensions { get; set; }
     }
 }
