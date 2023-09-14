@@ -300,7 +300,13 @@ internal static class ApplicationExtensions
         //group.MapPost("/{id}/record_update_job_error", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] RecordUpdateJobErrorModel model) => { });
         //group.MapPatch("/{id}/mark_as_processed", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] MarkAsProcessedModel model) => { });
         //group.MapPost("/{id}/update_dependency_list", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] UpdateDependencyListModel model) => { });
-        //group.MapPost("/{id}/record_package_manager_version", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] RecordPackageManagerVersionModel model) => { });
+
+        group.MapPost("/{id}/record_ecosystem_versions", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] JsonNode model) =>
+        {
+            var job = await dbContext.UpdateJobs.SingleAsync(p => p.Id == id);
+            logger.LogInformation("Received request to record ecosystem version for {JobId} but we did nothing.\r\n{ModelJson}", id, model.ToJsonString());
+            return Results.Ok();
+        });
 
         group.MapPost("/{id}/increment_metric", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] JsonNode model) =>
         {
