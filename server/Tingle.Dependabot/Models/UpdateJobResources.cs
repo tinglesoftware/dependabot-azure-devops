@@ -32,6 +32,7 @@ public class UpdateJobResources
     public static UpdateJobResources FromEcosystem(string ecosystem)
     {
         // the minimum we can be billed for on Container Instances is 1vCPU and 1GB, we might as well use it
+        // TODO: change to selection per ecosystem when migrate to ContainerApp Jobs
         return ecosystem switch
         {
             //"nuget" => new(cpu: 0.25, memory: 0.2),

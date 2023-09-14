@@ -40,13 +40,6 @@ param autoCompleteMergeStrategy string = 'Squash'
 @description('Whether to automatically approve created pull requests.')
 param autoApprove bool = false
 
-@allowed([
-  'ContainerInstances'
-  // 'ContainerApps' // TODO: restore this once jobs support is added
-])
-@description('Where to host new update jobs.')
-param jobHostType string = 'ContainerInstances'
-
 @description('Name of the resource group where jobs will be created.')
 param jobsResourceGroupName string = resourceGroup().name
 
@@ -282,7 +275,6 @@ resource app 'Microsoft.App/containerApps@2022-10-01' = {
             { name: 'Workflow__AutoCompleteMergeStrategy', value: autoCompleteMergeStrategy }
             { name: 'Workflow__AutoApprove', value: autoApprove ? 'true' : 'false' }
             { name: 'Workflow__GithubToken', value: githubToken }
-            { name: 'Workflow__JobHostType', value: jobHostType }
             { name: 'Workflow__Location', value: location }
 
             {
