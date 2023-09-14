@@ -12,7 +12,6 @@ In this repository you'll find:
 2. Dockerfile and build/image for running the updater via Docker [here](./Dockerfile).
 3. Dependabot [server](./server/) in .NET/C#. See [docs](./docs/server.md).
 4. Azure DevOps [Extension](https://marketplace.visualstudio.com/items?itemName=tingle-software.dependabot) and [source](./extension).
-5. Kubernetes CronJob [template](#kubernetes-cronjob).
 
 ## Using a configuration file
 
@@ -66,12 +65,6 @@ When working with Azure Artifacts, some extra permission steps need to be done:
 Security-only updates ia a mechanism to only create pull requests for dependencies with vulnerabilities by updating them to the earliest available non-vulnerable version. Security updates are supported in the same way as the GitHub-hosted version. In addition, you can provide extra advisories, such as those for an internal dependency, in a JSON file via the `securityAdvisoriesFile` input e.g. `securityAdvisoriesFile: '$(Pipeline.Workspace)/advisories.json'`. A file example is available [here](./advisories-example.json).
 
 A GitHub access token with `public_repo` access is required to perform the GitHub GraphQL for `securityVulnerabilities`.
-
-## Kubernetes CronJob
-
-A Kubernetes CronJobs is a useful resource for running tasks (a.k.a Jobs) on a recurring schedule. For more information on them read the [documentation](https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/). Using the updater docker image, we can create a CronJob and have it run periodically. The [environment variables](./docs/updater.md#environment-variables) are supplied in the job template but can be stored in a [ConfigMap](https://kubernetes.io/docs/concepts/configuration/configmap/) for ease of reuse.
-
-Use the [template provided](./cronjob-template.yaml) and replace the parameters in curly braces (e.g. replace `{{azure_organization}}` with the actual value for your organization), then deploy it. Be sure to replace the `{{k8s_schedule}}` variable with the desired schedule as per the [Cron format](https://en.wikipedia.org/wiki/Cron).
 
 ### Notes
 
