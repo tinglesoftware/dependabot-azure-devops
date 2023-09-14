@@ -19,14 +19,6 @@ param createOrUpdateWebhooksOnStartup bool = false
 @description('Access token for authenticating requests to GitHub.')
 param githubToken string = ''
 
-@allowed([
-  'InMemory'
-  'ServiceBus'
-  'QueueStorage'
-])
-@description('Merge strategy to use when setting auto complete on created pull requests.')
-param eventBusTransport string = 'ServiceBus'
-
 @description('Whether update jobs should fail when an exception occurs.')
 param failOnException bool = false
 
@@ -97,16 +89,14 @@ resource managedIdentityJobs 'Microsoft.ManagedIdentity/userAssignedIdentities@2
 }
 
 /* Service Bus namespace */
-resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2021-11-01' = if (eventBusTransport == 'ServiceBus') {
+resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2021-11-01' = {
   name: '${name}-${collisionSuffix}'
   location: location
   properties: {
     disableLocalAuth: false
     zoneRedundant: false
   }
-  sku: {
-    name: 'Basic'
-  }
+  sku: { name: 'Basic' }
 }
 
 /* Storage Account */
@@ -312,15 +302,11 @@ resource app 'Microsoft.App/containerApps@2022-10-01' = {
             }
             { name: 'Authentication__Schemes__ServiceHooks__Credentials__vsts', secretRef: 'notifications-password' }
 
-            { name: 'EventBus__SelectedTransport', value: eventBusTransport }
+            { name: 'EventBus__SelectedTransport', value: 'ServiceBus' }
             {
               name: 'EventBus__Transports__azure-service-bus__FullyQualifiedNamespace'
               // manipulating https://{your-namespace}.servicebus.windows.net:443/
-              value: eventBusTransport == 'ServiceBus' ? split(split(serviceBusNamespace.properties.serviceBusEndpoint, '/')[2], ':')[0] : ''
-            }
-            {
-              name: 'EventBus__Transports__azure-queue-storage__ServiceUrl'
-              value: eventBusTransport == 'QueueStorage' ? storageAccount.properties.primaryEndpoints.queue : ''
+              value: split(split(serviceBusNamespace.properties.serviceBusEndpoint, '/')[2], ':')[0]
             }
           ]
           resources: {// these are the least resources we can provision
@@ -363,20 +349,11 @@ resource contributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022
     principalType: 'ServicePrincipal'
   }
 }
-resource serviceBusDataOwnerRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (eventBusTransport == 'ServiceBus') {
+resource serviceBusDataOwnerRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: guid(managedIdentity.id, 'AzureServiceBusDataOwner')
   scope: resourceGroup()
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '090c5cfd-751d-490a-894a-3ce6f1109419')
-    principalId: managedIdentity.properties.principalId
-    principalType: 'ServicePrincipal'
-  }
-}
-resource storageQueueDataContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (eventBusTransport == 'QueueStorage') {
-  name: guid(managedIdentity.id, 'StorageQueueDataContributor')
-  scope: resourceGroup()
-  properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '974c5e8b-45b9-4653-ba55-5f855dd0fb88')
     principalId: managedIdentity.properties.principalId
     principalType: 'ServicePrincipal'
   }
