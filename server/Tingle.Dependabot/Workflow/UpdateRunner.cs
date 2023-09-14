@@ -65,7 +65,7 @@ internal partial class UpdateRunner
         container.Command.Add("/bin/bash");
         container.Command.Add("bin/run.sh");
         container.Command.Add("update_script");
-        
+
         // add volume mounts
         container.VolumeMounts.Add(new ContainerVolumeMount(volumeName, "/mnt/dependabot"));
 
@@ -131,7 +131,7 @@ internal partial class UpdateRunner
 
             // there is no state for jobs that are running
             if (status is UpdateJobStatus.Running) return null;
-            
+
             // delete the job directory f it exists
             var jobDirectory = Path.Join(options.WorkingDirectory, job.Id);
             if (Directory.Exists(jobDirectory))
@@ -219,7 +219,8 @@ internal partial class UpdateRunner
         // Add optional values
         values.AddIfNotDefault("DEPENDABOT_DEBUG", options.DebugJobs?.ToString().ToLower())
               .AddIfNotDefault("DEPENDABOT_API_URL", options.JobsApiUrl)
-              .AddIfNotDefault("DEPENDABOT_REPO_CONTENTS_PATH", Path.Join(jobDirectory, "repo"))
+              // Setting DEPENDABOT_REPO_CONTENTS_PATH causes some issues, ignore till we can resolve
+              //.AddIfNotDefault("DEPENDABOT_REPO_CONTENTS_PATH", Path.Join(jobDirectory, "repo"))
               .AddIfNotDefault("UPDATER_DETERMINISTIC", options.DeterministicUpdates?.ToString().ToLower());
 
         values.AddIfNotDefault("GITHUB_ACCESS_TOKEN", options.GithubToken)

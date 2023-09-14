@@ -105,11 +105,11 @@ public class WorkflowOptions
 
     /// <summary>Access key for the storage account.</summary>
     public string? StorageAccountKey { get; set; } // only used with ContainerInstances
-    
+
     /// <summary>Name of the file share for the working directory</summary>
     /// <example>working-dir</example>
     public string? FileShareName { get; set; } // only used with ContainerInstances
-    
+
     /// <summary>
     /// Possible/allowed paths for the configuration files in a repository.
     /// </summary>
