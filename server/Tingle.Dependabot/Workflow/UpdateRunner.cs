@@ -74,17 +74,7 @@ internal partial class UpdateRunner
         {
             RestartPolicy = ContainerGroupRestartPolicy.Never, // should run to completion without restarts
             DiagnosticsLogAnalytics = new ContainerGroupLogAnalytics(options.LogAnalyticsWorkspaceId, options.LogAnalyticsWorkspaceKey),
-            Identity = new Azure.ResourceManager.Models.ManagedServiceIdentity(Azure.ResourceManager.Models.ManagedServiceIdentityType.UserAssigned)
-            {
-                UserAssignedIdentities = { [new(options.ManagedIdentityId!)] = new() { /*ttk bug*/} },
-            },
         };
-
-        // add credentials for pulling image(s) from azure container registry
-        if (TryGetAzureContainerRegistry(image, out var registry))
-        {
-            data.ImageRegistryCredentials.Add(new ContainerGroupImageRegistryCredential(registry) { Identity = options.ManagedIdentityId, });
-        }
 
         // add volumes
         data.Volumes.Add(new ContainerVolume(volumeName)

@@ -58,11 +58,6 @@ internal class WorkflowConfigureOptions : IPostConfigureOptions<WorkflowOptions>
             return ValidateOptionsResult.Fail($"'{nameof(options.UpdaterContainerImageTemplate)}' cannot be null or whitespace");
         }
 
-        if (string.IsNullOrWhiteSpace(options.ManagedIdentityId))
-        {
-            return ValidateOptionsResult.Fail($"'{nameof(options.ManagedIdentityId)}' cannot be null or whitespace");
-        }
-
         if (string.IsNullOrWhiteSpace(options.WorkingDirectory))
         {
             return ValidateOptionsResult.Fail($"'{nameof(options.WorkingDirectory)}' cannot be null or whitespace");

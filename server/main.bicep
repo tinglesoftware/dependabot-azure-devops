@@ -87,13 +87,9 @@ var queueScaleRules = [for qn in queueNames: {
   }
 }]
 
-/* Managed Identities */
+/* Managed Identity */
 resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
   name: name
-  location: location
-}
-resource managedIdentityJobs 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
-  name: '${name}-jobs'
   location: location
 }
 
@@ -308,7 +304,6 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
               value: logAnalyticsWorkspace.properties.customerId
             }
             { name: 'Workflow__LogAnalyticsWorkspaceKey', secretRef: 'log-analytics-workspace-key' }
-            { name: 'Workflow__ManagedIdentityId', value: managedIdentityJobs.id }
             { name: 'Workflow__UpdaterContainerImageTemplate', value: 'ghcr.io/tinglesoftware/dependabot-updater-{{ecosystem}}:${imageTag}' }
             { name: 'Workflow__FailOnException', value: failOnException ? 'true' : 'false' }
             { name: 'Workflow__AutoComplete', value: autoComplete ? 'true' : 'false' }

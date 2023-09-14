@@ -31,10 +31,6 @@ public class WorkflowOptions
     /// <example>AAAAAAAAAAA=</example>
     public string? LogAnalyticsWorkspaceKey { get; set; }
 
-    /// <summary>Resource identifier for the managed identity used to pull container images.</summary>
-    /// <example>/subscriptions/00000000-0000-1111-0001-000000000000/resourceGroups/DEPENDABOT/providers/Microsoft.ManagedIdentity/userAssignedIdentities/dependabot</example>
-    public string? ManagedIdentityId { get; set; }
-
     /// <summary>
     /// Template representing the docker container image  to use.
     /// Keeping this value fixed in code is important so that the code that depends on it always works.

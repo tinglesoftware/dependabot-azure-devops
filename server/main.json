@@ -201,12 +201,6 @@
       "location": "[parameters('location')]"
     },
     {
-      "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
-      "apiVersion": "2023-01-31",
-      "name": "[format('{0}-jobs', parameters('name'))]",
-      "location": "[parameters('location')]"
-    },
-    {
       "type": "Microsoft.ServiceBus/namespaces",
       "apiVersion": "2021-11-01",
       "name": "[format('{0}-{1}', parameters('name'), variables('collisionSuffix'))]",
@@ -480,10 +474,6 @@
                   "secretRef": "log-analytics-workspace-key"
                 },
                 {
-                  "name": "Workflow__ManagedIdentityId",
-                  "value": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-jobs', parameters('name')))]"
-                },
-                {
                   "name": "Workflow__UpdaterContainerImageTemplate",
                   "value": "[format('ghcr.io/tinglesoftware/dependabot-updater-{{{{ecosystem}}}}:{0}', parameters('imageTag'))]"
                 },
@@ -598,7 +588,6 @@
         "[resourceId('Microsoft.Insights/components', parameters('name'))]",
         "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('name'))]",
         "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name'))]",
-        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-jobs', parameters('name')))]",
         "[resourceId('Microsoft.ServiceBus/namespaces', format('{0}-{1}', parameters('name'), variables('collisionSuffix')))]",
         "[resourceId('Microsoft.Sql/servers', format('{0}-{1}', parameters('name'), variables('collisionSuffix')))]",
         "[resourceId('Microsoft.Sql/servers/databases', format('{0}-{1}', parameters('name'), variables('collisionSuffix')), parameters('name'))]",
