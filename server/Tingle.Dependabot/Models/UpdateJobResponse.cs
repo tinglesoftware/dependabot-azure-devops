@@ -86,6 +86,20 @@ public sealed record UpdateJobAttributesSource
     public string? ApiEndpoint { get; set; }
 }
 
+public sealed class ClosePullRequestModel
+{
+    //[Required]
+    //[MinLength(1)]
+    //[JsonPropertyName("dependency-names")]
+    //public List<string>? DependencyNames { get; set; } // This can also be a string that's why it has not been enabled
+
+    [JsonPropertyName("reason")]
+    public string? Reason { get; set; } // convert from string to enum once we know all possible values
+
+    [JsonExtensionData]
+    public Dictionary<string, object>? Extensions { get; set; }
+}
+
 public sealed class RecordUpdateJobErrorModel
 {
     [JsonPropertyName("error-type")]
@@ -93,12 +107,18 @@ public sealed class RecordUpdateJobErrorModel
 
     [JsonPropertyName("error-detail")]
     public JsonNode? ErrorDetail { get; set; }
+
+    [JsonExtensionData]
+    public Dictionary<string, object>? Extensions { get; set; }
 }
 
 public sealed class MarkAsProcessedModel
 {
     [JsonPropertyName("base-commit-sha")]
     public string? BaseCommitSha { get; set; }
+
+    [JsonExtensionData]
+    public Dictionary<string, object>? Extensions { get; set; }
 }
 
 public sealed class UpdateDependencyListModel
@@ -111,4 +131,7 @@ public sealed class UpdateDependencyListModel
     [MinLength(1)]
     [JsonPropertyName("dependency_files")]
     public List<string>? DependencyFiles { get; set; }
+
+    [JsonExtensionData]
+    public Dictionary<string, object>? Extensions { get; set; }
 }

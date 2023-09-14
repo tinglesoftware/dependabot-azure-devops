@@ -296,7 +296,13 @@ internal static class ApplicationExtensions
 
         //group.MapPost("/{id}/create_pull_request", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] CreatePullRequestModel model) => { });
         //group.MapPost("/{id}/update_pull_request", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] UpdatePullRequestModel model) => { });
-        //group.MapPost("/{id}/close_pull_request", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] ClosePullRequestModel model) => { });
+
+        group.MapPost("/{id}/close_pull_request", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] PayloadWithData<ClosePullRequestModel> model) =>
+        {
+            var job = await dbContext.UpdateJobs.SingleAsync(p => p.Id == id);
+            logger.LogInformation("Received request to close pull request from job {JobId} but we did nothing.\r\n{ModelJson}", id, JsonSerializer.Serialize(model));
+            return Results.Ok();
+        });
 
         group.MapPost("/{id}/record_update_job_error", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] PayloadWithData<RecordUpdateJobErrorModel> model) =>
         {
@@ -343,14 +349,14 @@ internal static class ApplicationExtensions
         group.MapPost("/{id}/record_ecosystem_versions", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] JsonNode model) =>
         {
             var job = await dbContext.UpdateJobs.SingleAsync(p => p.Id == id);
-            logger.LogInformation("Received request to record ecosystem version for {JobId} but we did nothing.\r\n{ModelJson}", id, model.ToJsonString());
+            logger.LogInformation("Received request to record ecosystem version from job {JobId} but we did nothing.\r\n{ModelJson}", id, model.ToJsonString());
             return Results.Ok();
         });
 
         group.MapPost("/{id}/increment_metric", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] JsonNode model) =>
         {
             var job = await dbContext.UpdateJobs.SingleAsync(p => p.Id == id);
-            logger.LogInformation("Received metrics for {JobId} but we did nothing with them.\r\n{ModelJson}", id, model.ToJsonString());
+            logger.LogInformation("Received metrics from job {JobId} but we did nothing with them.\r\n{ModelJson}", id, model.ToJsonString());
             return Results.Ok();
         });
 
@@ -361,5 +367,8 @@ internal static class ApplicationExtensions
     {
         [Required]
         public T? Data { get; set; }
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public Dictionary<string, object>? Extensions { get; set; }
     }
 }
