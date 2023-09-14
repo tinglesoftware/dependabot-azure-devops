@@ -78,9 +78,6 @@ param serviceBusNamespaceId string = ''
 @description('Resource identifier of the LogAnalytics Workspace to use. If none is provided, a new one is created.')
 param logAnalyticsWorkspaceId string = ''
 
-@description('Resource identifier of the ContainerApp Environment to deploy to. If none is provided, a new one is created.')
-param appEnvironmentId string = ''
-
 @minValue(1)
 @maxValue(2)
 @description('The minimum number of replicas')
@@ -95,7 +92,6 @@ var sqlServerAdministratorLogin = uniqueString(resourceGroup().id) // e.g. zecnx
 var sqlServerAdministratorLoginPassword = '${skip(uniqueString(resourceGroup().id), 5)}%${uniqueString('sql-password', resourceGroup().id)}' // e.g. abcde%zecnx476et7xm (19 characters)
 var hasProvidedServiceBusNamespace = (serviceBusNamespaceId != null && !empty(serviceBusNamespaceId))
 var hasProvidedLogAnalyticsWorkspace = (logAnalyticsWorkspaceId != null && !empty(logAnalyticsWorkspaceId))
-var hasProvidedAppEnvironment = (appEnvironmentId != null && !empty(appEnvironmentId))
 // avoid conflicts across multiple deployments for resources that generate FQDN based on the name
 var collisionSuffix = uniqueString(resourceGroup().id) // e.g. zecnx476et7xm (13 characters)
 
@@ -222,7 +218,7 @@ resource providedLogAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces
 }
 
 /* Container App Environment */
-resource appEnvironment 'Microsoft.App/managedEnvironments@2022-10-01' = if (!hasProvidedAppEnvironment) {
+resource appEnvironment 'Microsoft.App/managedEnvironments@2022-10-01' = {
   name: name
   location: location
   properties: {
@@ -234,15 +230,6 @@ resource appEnvironment 'Microsoft.App/managedEnvironments@2022-10-01' = if (!ha
       }
     }
   }
-}
-resource providedAppEnvironment 'Microsoft.App/managedEnvironments@2022-10-01' existing = if (hasProvidedAppEnvironment) {
-  // Inspired by https://github.com/Azure/bicep/issues/1722#issuecomment-952118402
-  // Example: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/Fabrikam/providers/Microsoft.App/managedEnvironments/fabrikam
-  // 0 -> '', 1 -> 'subscriptions', 2 -> '00000000-0000-0000-0000-000000000000', 3 -> 'resourceGroups'
-  // 4 -> 'Fabrikam', 5 -> 'providers', 6 -> 'Microsoft.App' 7 -> 'managedEnvironments'
-  // 8 -> 'fabrikam'
-  name: split(appEnvironmentId, '/')[8]
-  scope: resourceGroup(split(appEnvironmentId, '/')[2], split(appEnvironmentId, '/')[4])
 }
 
 /* Application Insights */
@@ -261,7 +248,7 @@ resource app 'Microsoft.App/containerApps@2022-10-01' = {
   name: name
   location: location
   properties: {
-    managedEnvironmentId: hasProvidedAppEnvironment ? providedAppEnvironment.id : appEnvironment.id
+    managedEnvironmentId: appEnvironment.id
     configuration: {
       ingress: {
         external: true
@@ -317,7 +304,7 @@ resource app 'Microsoft.App/containerApps@2022-10-01' = {
             { name: 'Workflow__ProjectToken', secretRef: 'project-token' }
             {
               name: 'Workflow__WebhookEndpoint'
-              value: 'https://${name}.${hasProvidedAppEnvironment ? providedAppEnvironment.properties.defaultDomain : appEnvironment.properties.defaultDomain}/webhooks/azure'
+              value: 'https://${name}.${appEnvironment.properties.defaultDomain}/webhooks/azure'
             }
             { name: 'Workflow__SubscriptionPassword', secretRef: 'notifications-password' }
             {
@@ -348,7 +335,7 @@ resource app 'Microsoft.App/containerApps@2022-10-01' = {
             }
             {
               name: 'Authentication__Schemes__Management__ValidAudiences__0'
-              value: 'https://${name}.${hasProvidedAppEnvironment ? providedAppEnvironment.properties.defaultDomain : appEnvironment.properties.defaultDomain}'
+              value: 'https://${name}.${appEnvironment.properties.defaultDomain}'
             }
             { name: 'Authentication__Schemes__ServiceHooks__Credentials__vsts', secretRef: 'notifications-password' }
 
