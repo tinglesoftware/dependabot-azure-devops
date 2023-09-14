@@ -261,46 +261,28 @@ internal static class ApplicationExtensions
     {
         var logger = builder.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("UpdateJobsApi");
 
+        // endpoints accessed by the updater during execution
+
         var group = builder.MapGroup("update_jobs");
         group.RequireAuthorization(AuthConstants.PolicyNameUpdater);
 
-        // TODO: create endpoints accessed by the updater during execution similar to the one hosted by GitHub
-
-        //group.MapGet("/{id}", async (MainDbContext dbContext, [FromRoute, Required] string id) =>
-        //{
-        //    var job = await dbContext.UpdateJobs.SingleAsync(p => p.Id == id);
-
-        //    var attr = new UpdateJobAttributes(job)
-        //    {
-        //        AllowedUpdates = Array.Empty<object>(),
-        //        CredentialsMetadata = Array.Empty<object>(),
-        //        Dependencies = Array.Empty<object>(),
-        //        Directory = job.Directory!,
-        //        ExistingPullRequests = Array.Empty<object>(),
-        //        IgnoreConditions = Array.Empty<object>(),
-        //        PackageManager = job.PackageEcosystem,
-        //        RepoName = job.RepositorySlug!,
-        //        SecurityAdvisories = Array.Empty<object>(),
-        //        Source = new UpdateJobAttributesSource
-        //        {
-        //            Directory = job.Directory!,
-        //            Provider = "azure",
-        //            Repo = job.RepositorySlug!,
-        //            Branch = job.Branch,
-        //            Hostname = ,
-        //            ApiEndpoint =,
-        //        },
-        //    };
-        //    return Results.Ok(new UpdateJobResponse(new(attr)));
-        //});
-
-        //group.MapPost("/{id}/create_pull_request", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] CreatePullRequestModel model) => { });
-        //group.MapPost("/{id}/update_pull_request", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] UpdatePullRequestModel model) => { });
-
+        // TODO: implement logic for *pull_request endpoints
+        group.MapPost("/{id}/create_pull_request", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] PayloadWithData<CreatePullRequestModel> model) =>
+        {
+            var job = await dbContext.UpdateJobs.SingleAsync(p => p.Id == id);
+            logger.LogInformation("Received request to create a pull request from job {JobId} but we did nothing.\r\n{ModelJson}", id, JsonSerializer.Serialize(model));
+            return Results.Ok();
+        });
+        group.MapPost("/{id}/update_pull_request", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] PayloadWithData<UpdatePullRequestModel> model) =>
+        {
+            var job = await dbContext.UpdateJobs.SingleAsync(p => p.Id == id);
+            logger.LogInformation("Received request to update a pull request from job {JobId} but we did nothing.\r\n{ModelJson}", id, JsonSerializer.Serialize(model));
+            return Results.Ok();
+        });
         group.MapPost("/{id}/close_pull_request", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] PayloadWithData<ClosePullRequestModel> model) =>
         {
             var job = await dbContext.UpdateJobs.SingleAsync(p => p.Id == id);
-            logger.LogInformation("Received request to close pull request from job {JobId} but we did nothing.\r\n{ModelJson}", id, JsonSerializer.Serialize(model));
+            logger.LogInformation("Received request to close a pull request from job {JobId} but we did nothing.\r\n{ModelJson}", id, JsonSerializer.Serialize(model));
             return Results.Ok();
         });
 
@@ -318,7 +300,6 @@ internal static class ApplicationExtensions
 
             return Results.Ok();
         });
-
         group.MapPatch("/{id}/mark_as_processed", async (IEventPublisher publisher, MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] PayloadWithData<MarkAsProcessedModel> model) =>
         {
             var job = await dbContext.UpdateJobs.SingleAsync(p => p.Id == id);
@@ -329,7 +310,6 @@ internal static class ApplicationExtensions
 
             return Results.Ok();
         });
-
         group.MapPost("/{id}/update_dependency_list", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] PayloadWithData<UpdateDependencyListModel> model) =>
         {
             var job = await dbContext.UpdateJobs.SingleAsync(p => p.Id == id);
@@ -352,7 +332,6 @@ internal static class ApplicationExtensions
             logger.LogInformation("Received request to record ecosystem version from job {JobId} but we did nothing.\r\n{ModelJson}", id, model.ToJsonString());
             return Results.Ok();
         });
-
         group.MapPost("/{id}/increment_metric", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] JsonNode model) =>
         {
             var job = await dbContext.UpdateJobs.SingleAsync(p => p.Id == id);

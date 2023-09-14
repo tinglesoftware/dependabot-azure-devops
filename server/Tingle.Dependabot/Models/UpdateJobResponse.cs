@@ -86,6 +86,96 @@ public sealed record UpdateJobAttributesSource
     public string? ApiEndpoint { get; set; }
 }
 
+public sealed class CreatePullRequestModel
+{
+    [Required]
+    [MinLength(1)]
+    [JsonPropertyName("dependencies")]
+    public List<ChangedDependency>? Dependencies { get; set; }
+
+    [Required]
+    [MinLength(1)]
+    [JsonPropertyName("updated-dependency-files")]
+    public List<UpdatedDependencyFile>? DependencyFiles { get; set; }
+
+    [JsonPropertyName("base-commit-sha")]
+    public string? BaseCommitSha { get; set; }
+
+    [JsonExtensionData]
+    public Dictionary<string, object>? Extensions { get; set; }
+}
+
+public sealed class ChangedDependency
+{
+    [JsonPropertyName("name")]
+    public string? Name { get; set; }
+
+    [JsonPropertyName("previous-version")]
+    public string? PreviousVersion { get; set; }
+
+    [Required]
+    [JsonPropertyName("requirements")]
+    public JsonArray? Requirements { get; set; }
+
+    [JsonPropertyName("previous-requirements")]
+    public string? PreviousRequirements { get; set; }
+
+    [JsonPropertyName("version")]
+    public string? Version { get; set; }
+
+    [JsonPropertyName("removed")]
+    public bool? Removed { get; set; }
+}
+
+public sealed class UpdatePullRequestModel
+{
+    [Required]
+    [MinLength(1)]
+    [JsonPropertyName("dependency-names")]
+    public List<string>? DependencyNames { get; set; }
+
+    [Required]
+    [MinLength(1)]
+    [JsonPropertyName("updated-dependency-files")]
+    public List<UpdatedDependencyFile>? DependencyFiles { get; set; }
+
+    [JsonPropertyName("base-commit-sha")]
+    public string? BaseCommitSha { get; set; }
+
+    [JsonExtensionData]
+    public Dictionary<string, object>? Extensions { get; set; }
+}
+
+public sealed class UpdatedDependencyFile
+{
+    [JsonPropertyName("content")]
+    public string? Content { get; set; }
+
+    [JsonPropertyName("content_encoding")]
+    public string? ContentEncoding { get; set; }
+
+    [JsonPropertyName("deleted")]
+    public bool? Deleted { get; set; }
+
+    [JsonPropertyName("directory")]
+    public string? Directory { get; set; }
+
+    [JsonPropertyName("mode")]
+    public string? Mode { get; set; }
+
+    [JsonPropertyName("name")]
+    public string? Name { get; set; }
+
+    [JsonPropertyName("operation")]
+    public string? Operation { get; set; } // convert from string to enum once we know all possible values
+
+    [JsonPropertyName("support_file")]
+    public bool? SupportFile { get; set; }
+
+    [JsonPropertyName("type")]
+    public string? Type { get; set; } // convert from string to enum once we know all possible values
+}
+
 public sealed class ClosePullRequestModel
 {
     //[Required]
@@ -125,7 +215,7 @@ public sealed class UpdateDependencyListModel
 {
     [Required]
     [JsonPropertyName("dependencies")]
-    public List<JsonNode>? Dependencies { get; set; }
+    public JsonArray? Dependencies { get; set; }
 
     [Required]
     [MinLength(1)]
