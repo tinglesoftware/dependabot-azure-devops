@@ -86,6 +86,12 @@ public sealed record UpdateJobAttributesSource
     public string? ApiEndpoint { get; set; }
 }
 
+public sealed class MarkAsProcessedModel
+{
+    [JsonPropertyName("base-commit-sha")]
+    public string? BaseCommitSha { get; set; }
+}
+
 public sealed class UpdateDependencyListModel
 {
     [Required]

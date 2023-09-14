@@ -298,13 +298,23 @@ internal static class ApplicationExtensions
         //group.MapPost("/{id}/update_pull_request", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] UpdatePullRequestModel model) => { });
         //group.MapPost("/{id}/close_pull_request", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] ClosePullRequestModel model) => { });
         //group.MapPost("/{id}/record_update_job_error", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] RecordUpdateJobErrorModel model) => { });
-        //group.MapPatch("/{id}/mark_as_processed", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] MarkAsProcessedModel model) => { });
+
+        group.MapPatch("/{id}/mark_as_processed", async (IEventPublisher publisher, MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] PayloadWithData<MarkAsProcessedModel> model) =>
+        {
+            var job = await dbContext.UpdateJobs.SingleAsync(p => p.Id == id);
+
+            // publish event that will run update the job and collect logs
+            var evt = new UpdateJobCheckStateEvent { JobId = id, };
+            await publisher.PublishAsync(evt);
+
+            return Results.Ok();
+        });
 
         group.MapPost("/{id}/update_dependency_list", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] PayloadWithData<UpdateDependencyListModel> model) =>
         {
             var job = await dbContext.UpdateJobs.SingleAsync(p => p.Id == id);
             var repository = await dbContext.Repositories.SingleAsync(r => r.Id == job.RepositoryId);
-            
+
             // update the database
             var update = repository.Updates.SingleOrDefault(u => u.PackageEcosystem == job.PackageEcosystem && u.Directory == job.Directory);
             if (update is not null)
