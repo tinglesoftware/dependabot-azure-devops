@@ -65,6 +65,27 @@ var sqlServerAdministratorLoginPassword = '${skip(uniqueString(resourceGroup().i
 // avoid conflicts across multiple deployments for resources that generate FQDN based on the name
 var collisionSuffix = uniqueString(resourceGroup().id) // e.g. zecnx476et7xm (13 characters)
 var fileShareName = 'working-dir'
+var queueNames = [
+  'process-synchronization'
+  'repository-created'
+  'repository-updated'
+  'repository-deleted'
+  'trigger-update-jobs'
+  'update-job-check-state'
+  'update-job-collect-logs'
+]
+var queueScaleRules = [for qn in queueNames: {
+  name: 'azure-servicebus-${qn}'
+  custom: {
+    type: 'azure-servicebus'
+    metadata: {
+      namespace: serviceBusNamespace.name // Name of the Azure Service Bus namespace that contains your queue or topic.
+      queueName: qn // Name of the Azure Service Bus queue to scale on.
+      messageCount: '100' // Amount of active messages in your Azure Service Bus queue or topic to scale on.
+    }
+    auth: [ { secretRef: 'connection-strings-asb-scaler', triggerParameter: 'connection' } ]
+  }
+}]
 
 /* Managed Identities */
 resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
@@ -85,6 +106,8 @@ resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2021-11-01' = {
     zoneRedundant: false
   }
   sku: { name: 'Basic' }
+
+  resource authorizationRule 'AuthorizationRules' existing = { name: 'RootManageSharedAccessKey' }
 }
 
 /* Storage Account */
@@ -247,14 +270,9 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
         }
         { name: 'notifications-password', value: notificationsPassword }
         { name: 'project-token', value: projectToken }
-        {
-          name: 'log-analytics-workspace-key'
-          value: logAnalyticsWorkspace.listKeys().primarySharedKey
-        }
-        {
-          name: 'storage-account-key'
-          value: storageAccount.listKeys().keys[0].value
-        }
+        { name: 'log-analytics-workspace-key', value: logAnalyticsWorkspace.listKeys().primarySharedKey }
+        { name: 'storage-account-key', value: storageAccount.listKeys().keys[0].value }
+        { name: 'connection-strings-asb-scaler', value: serviceBusNamespace::authorizationRule.listKeys().primaryConnectionString }
       ]
     }
     template: {
@@ -341,6 +359,9 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
       scale: {
         minReplicas: minReplicas
         maxReplicas: maxReplicas
+        rules: concat(
+          [ { name: 'http', http: { metadata: { concurrentRequests: '1000' } } } ],
+          queueScaleRules)
       }
     }
   }
@@ -390,8 +411,6 @@ resource logAnalyticsReaderRoleAssignment 'Microsoft.Authorization/roleAssignmen
   }
 }
 
-// output id string = app.id
-// output fqdn string = app.properties.configuration.ingress.fqdn
 #disable-next-line outputs-should-not-contain-secrets
 output sqlServerAdministratorLoginPassword string = sqlServerAdministratorLoginPassword
 output webhookEndpoint string = 'https://${app.properties.configuration.ingress.fqdn}/webhooks/azure'
