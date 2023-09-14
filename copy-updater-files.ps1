@@ -3,6 +3,8 @@ Param(
 )
 
 $hash = [ordered]@{
+    ".ruby-version"                               = "../.ruby-version"
+
     "updater/lib/dependabot/environment.rb"       = "lib/dependabot/environment.rb"
     "updater/spec/dependabot/environment_spec.rb" = "spec/dependabot/environment_spec.rb"
     # "updater/spec/spec_helper.rb"                 = "spec/spec_helper.rb"
