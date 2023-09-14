@@ -232,7 +232,7 @@ async function run() {
       dockerRunner.arg(dockerImage);
 
       // set the script to be run
-      dockerRunner.arg('update-script');
+      dockerRunner.arg('update_script');
 
       // Now execute using docker
       await dockerRunner.exec();

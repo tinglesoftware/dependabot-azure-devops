@@ -3,7 +3,7 @@ set -e
 
 command="$1"
 if [ -z "$command" ]; then
-  echo "usage: run [update-script|fetch_files|update_files]"
+  echo "usage: run [update_script|fetch_files|update_files]"
   exit 1
 fi
 

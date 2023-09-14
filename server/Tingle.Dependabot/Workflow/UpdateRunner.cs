@@ -64,7 +64,7 @@ internal partial class UpdateRunner
         // set the container command/entrypoint (this is what seems to work)
         container.Command.Add("/bin/bash");
         container.Command.Add("bin/run.sh");
-        container.Command.Add("update-script");
+        container.Command.Add("update_script");
         
         // add volume mounts
         container.VolumeMounts.Add(new ContainerVolumeMount(volumeName, "/mnt/dependabot"));
