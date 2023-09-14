@@ -67,6 +67,7 @@ public partial class InitialCreate : Migration
                 End = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
                 Duration = table.Column<long>(type: "bigint", nullable: true),
                 Log = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                Error = table.Column<string>(type: "nvarchar(max)", nullable: true),
                 Etag = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: true)
             },
             constraints: table =>

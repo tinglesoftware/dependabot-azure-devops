@@ -86,6 +86,15 @@ public sealed record UpdateJobAttributesSource
     public string? ApiEndpoint { get; set; }
 }
 
+public sealed class RecordUpdateJobErrorModel
+{
+    [JsonPropertyName("error-type")]
+    public string? ErrorType { get; set; }
+
+    [JsonPropertyName("error-detail")]
+    public JsonNode? ErrorDetail { get; set; }
+}
+
 public sealed class MarkAsProcessedModel
 {
     [JsonPropertyName("base-commit-sha")]

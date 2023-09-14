@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 
 namespace Tingle.Dependabot.Models;
@@ -71,6 +72,15 @@ public class UpdateJob
     /// <summary>Detailed log output.</summary>
     public string? Log { get; set; }
 
+    /// <summary>Error recorded by the job, if any.</summary>
+    public UpdateJobError? Error { get; set; }
+
     [Timestamp]
     public byte[]? Etag { get; set; }
+}
+
+public class UpdateJobError
+{
+    public string? Type { get; set; }
+    public JsonNode? Detail { get; set; }
 }
