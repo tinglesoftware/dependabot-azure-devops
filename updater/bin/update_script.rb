@@ -556,8 +556,8 @@ azure_client = Dependabot::Clients::Azure.for_source(
   credentials: $options[:credentials]
 )
 user_id = azure_client.get_user_id
-default_branch_name = azure_client.fetch_default_branch($source.repo)
-active_pull_requests = azure_client.pull_requests_active(user_id, default_branch_name)
+target_branch_name = $options[:branch] || azure_client.fetch_default_branch($source.repo)
+active_pull_requests = azure_client.pull_requests_active(user_id, target_branch_name)
 
 pull_requests_count = 0
 
@@ -924,7 +924,7 @@ end
 # look for pull requests that are no longer needed to be abandoned
 if $options[:close_unwanted]
   puts "Looking for pull requests that are no longer needed."
-  active_pull_requests = azure_client.pull_requests_active(user_id, default_branch_name)
+  active_pull_requests = azure_client.pull_requests_active(user_id, target_branch_name)
   active_pull_requests.each do |pr|
     pr_id = pr["pullRequestId"]
     title = pr["title"]
