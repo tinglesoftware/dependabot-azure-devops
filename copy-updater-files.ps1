@@ -1,11 +1,15 @@
 # Find the current version for dependabot-omnibus
-$gemfileContent = Get-Content -Path "updater\Gemfile" -Raw
+$gemfileContent = Get-Content -Path "updater/Gemfile" -Raw
 $versionLine = $gemfileContent | Select-String 'gem "dependabot-omnibus", "(.*)"' | Select-Object -ExpandProperty Line
 $version = [regex]::Match($versionLine, '"~>(\d+\.\d+\.\d+)"').Groups[1].Value
 Write-Output "Found dependabot-omnibus version: $version"
 
+# Prepare the list of files to be downloaded
 $files = @(
     ".ruby-version"
+    # ".rubocop.yml"
+    # "Rakefile"
+    "updater/.rubocop.yml"
 
     "updater/bin/fetch_files.rb"
     "updater/bin/update_files.rb"
@@ -107,8 +111,8 @@ $files = @(
     # "updater/spec/spec_helper.rb"
 )
 
+# Download each file listed
 $baseUrl = "https://raw.githubusercontent.com/dependabot/dependabot-core"
-
 foreach ($name in $files) {
     $sourceUrl = "$baseUrl/v$version/$($name)"
     $destinationPath = Join-Path -Path '.' -ChildPath "$name"
