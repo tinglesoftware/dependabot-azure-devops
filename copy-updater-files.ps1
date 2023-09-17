@@ -1,6 +1,8 @@
-Param(
-    [string] $tag = "v0.230.0"
-)
+# Find the current version for dependabot-omnibus
+$gemfileContent = Get-Content -Path "updater\Gemfile" -Raw
+$versionLine = $gemfileContent | Select-String 'gem "dependabot-omnibus", "(.*)"' | Select-Object -ExpandProperty Line
+$version = [regex]::Match($versionLine, '"~>(\d+\.\d+\.\d+)"').Groups[1].Value
+Write-Output "Found dependabot-omnibus version: $version"
 
 $files = @(
     ".ruby-version"
@@ -108,7 +110,7 @@ $files = @(
 $baseUrl = "https://raw.githubusercontent.com/dependabot/dependabot-core"
 
 foreach ($name in $files) {
-    $sourceUrl = "$baseUrl/$tag/$($name)"
+    $sourceUrl = "$baseUrl/v$version/$($name)"
     $destinationPath = Join-Path -Path '.' -ChildPath "$name"
 
     # Write-Host "`Downloading $name ..."
