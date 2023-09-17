@@ -107,19 +107,32 @@ GEM
     faraday-net_http (3.0.2)
     faraday-retry (2.2.0)
       faraday (~> 2.0)
+    ffi (1.15.5)
+    ffi-compiler (1.0.1)
+      ffi (>= 1.0.0)
+      rake
     gitlab (4.19.0)
       httparty (~> 0.20)
       terminal-table (>= 1.5.1)
     hashdiff (1.0.1)
+    http (5.1.1)
+      addressable (~> 2.8)
+      http-cookie (~> 1.0)
+      http-form_data (~> 2.2)
+      llhttp-ffi (~> 0.4.0)
     http-accept (1.7.0)
     http-cookie (1.0.5)
       domain_name (~> 0.5)
+    http-form_data (2.3.0)
     httparty (0.21.0)
       mini_mime (>= 1.0.0)
       multi_xml (>= 0.5.2)
     jmespath (1.6.2)
     json (2.6.3)
     language_server-protocol (3.17.0.3)
+    llhttp-ffi (0.4.0)
+      ffi-compiler (~> 1.0)
+      rake (~> 13.0)
     mime-types (3.5.1)
       mime-types-data (~> 3.2015)
     mime-types-data (3.2023.0808)
@@ -143,6 +156,7 @@ GEM
     public_suffix (5.0.3)
     racc (1.7.1)
     rainbow (3.1.1)
+    rake (13.0.6)
     regexp_parser (2.8.1)
     rest-client (2.1.0)
       http-accept (>= 1.7.0, < 2.0)
@@ -185,6 +199,8 @@ GEM
     sawyer (0.9.2)
       addressable (>= 2.3.5)
       faraday (>= 0.17.3, < 3)
+    sentry-raven (3.1.2)
+      faraday (>= 1.0)
     sorbet-runtime (0.5.11014)
     stringio (3.0.8)
     terminal-table (3.0.2)
@@ -207,9 +223,13 @@ PLATFORMS
 
 DEPENDENCIES
   dependabot-omnibus (~> 0.232.0)
+  http (~> 5.1)
+  octokit (= 6.1.1)
   rspec
   rubocop
   rubocop-performance
+  sentry-raven (~> 3.1)
+  terminal-table (~> 3.0.2)
   vcr
   webmock
 
