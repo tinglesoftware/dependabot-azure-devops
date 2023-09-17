@@ -11,6 +11,11 @@ source "https://rubygems.org"
 # gem "dependabot-omnibus", github: "dependabot/dependabot-core", branch: "main"
 gem "dependabot-omnibus", "~>0.232.0"
 
+gem "http", "~> 5.1"
+gem "octokit", "6.1.1"
+gem "sentry-raven", "~> 3.1"
+gem "terminal-table", "~> 3.0.2"
+
 group :test do
   gem "rspec"
   gem "rubocop"

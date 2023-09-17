@@ -54,6 +54,12 @@ RSpec.configure do |config|
   def fixture(path)
     File.read(File.join("spec", "fixtures", path))
   end
+
+  def job_definition_fixture(path)
+    YAML.load(
+      fixture(File.join("job_definitions", "#{path}.yaml"))
+    )
+  end
 end
 
 VCR.configure do |config|
