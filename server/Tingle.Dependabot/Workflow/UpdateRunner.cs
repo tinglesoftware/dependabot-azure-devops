@@ -1,12 +1,12 @@
 ﻿using Azure.Identity;
 using Azure.Monitor.Query;
 using Azure.ResourceManager;
-using Azure.ResourceManager.ContainerInstance;
-using Azure.ResourceManager.ContainerInstance.Models;
+using Azure.ResourceManager.AppContainers;
+using Azure.ResourceManager.AppContainers.Models;
 using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Options;
-using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using Tingle.Dependabot.Models;
 
@@ -16,9 +16,6 @@ internal partial class UpdateRunner
 {
     [GeneratedRegex("\\${{\\s*([a-zA-Z_]+[a-zA-Z0-9_-]*)\\s*}}", RegexOptions.Compiled)]
     private static partial Regex PlaceholderPattern();
-
-    [GeneratedRegex("^((?:[a-zA-Z0-9-_]+)\\.azurecr\\.io)\\/")]
-    private static partial Regex ContainerRegistryPattern();
 
     private const string UpdaterContainerName = "updater";
 
@@ -45,53 +42,73 @@ internal partial class UpdateRunner
         var resourceName = MakeResourceName(job);
 
         // if we have an existing one, there is nothing more to do
-        var containerGroups = resourceGroup.GetContainerGroups();
+        var containerAppJobs = resourceGroup.GetContainerAppJobs();
         try
         {
-            var response = await containerGroups.GetAsync(resourceName, cancellationToken);
+            var response = await containerAppJobs.GetAsync(resourceName, cancellationToken);
             if (response.Value is not null) return;
         }
         catch (Azure.RequestFailedException rfe) when (rfe.Status is 404) { }
 
         // prepare the container
-        var fileShareName = options.FileShareName;
         var volumeName = "working-dir";
-        var image = options.UpdaterContainerImageTemplate!.Replace("{{ecosystem}}", job.PackageEcosystem);
-        var container = new ContainerInstanceContainer(UpdaterContainerName, image, new(job.Resources!));
-        var env = CreateVariables(repository, update, job);
-        foreach (var (key, value) in env) container.EnvironmentVariables.Add(new ContainerEnvironmentVariable(key) { Value = value, });
-
-        // set the container command/entrypoint (this is what seems to work)
-        container.Command.Add("/bin/bash");
-        container.Command.Add("bin/run.sh");
-        container.Command.Add("update_script");
-
-        // add volume mounts
-        container.VolumeMounts.Add(new ContainerVolumeMount(volumeName, "/mnt/dependabot"));
-
-        // prepare the container group
-        var data = new ContainerGroupData(options.Location!, new[] { container, }, ContainerInstanceOperatingSystemType.Linux)
+        var container = new ContainerAppContainer
         {
-            RestartPolicy = ContainerGroupRestartPolicy.Never, // should run to completion without restarts
-            DiagnosticsLogAnalytics = new ContainerGroupLogAnalytics(options.LogAnalyticsWorkspaceId, options.LogAnalyticsWorkspaceKey),
+            Name = UpdaterContainerName,
+            Image = options.UpdaterContainerImageTemplate!.Replace("{{ecosystem}}", job.PackageEcosystem),
+            Resources = job.Resources!,
+            Args = { "update_script", },
+            VolumeMounts = { new ContainerAppVolumeMount { VolumeName = volumeName, MountPath = "/mnt/dependabot", }, },
+        };
+        var env = CreateVariables(repository, update, job);
+        foreach (var (key, value) in env) container.Env.Add(new ContainerAppEnvironmentVariable { Name = key, Value = value, });
+
+        // prepare the ContainerApp job
+        var data = new ContainerAppJobData(options.Location!)
+        {
+            EnvironmentId = options.AppEnvironmentId,
+            Configuration = new ContainerAppJobConfiguration(ContainerAppJobTriggerType.Manual, 1)
+            {
+                ManualTriggerConfig = new JobConfigurationManualTriggerConfig
+                {
+                    Parallelism = 1,
+                    ReplicaCompletionCount = 1,
+                },
+                ReplicaRetryLimit = 1,
+                ReplicaTimeout = Convert.ToInt32(TimeSpan.FromHours(1).TotalSeconds),
+            },
+            Template = new ContainerAppJobTemplate
+            {
+                Containers = { container, },
+                Volumes =
+                {
+                    new ContainerAppVolume
+                    {
+                        Name = volumeName,
+                        StorageType = ContainerAppStorageType.AzureFile,
+                        StorageName = volumeName,
+                    },
+                },
+            },
+
+            // add tags to the data for tracing purposes
+            Tags =
+            {
+                ["purpose"] = "dependabot",
+                ["ecosystem"] = job.PackageEcosystem,
+                ["repository"] = repository.Slug,
+                ["directory"] = update.Directory,
+                ["machine-name"] = Environment.MachineName,
+            },
         };
 
-        // add volumes
-        data.Volumes.Add(new ContainerVolume(volumeName)
-        {
-            AzureFile = new(fileShareName, options.StorageAccountName) { StorageAccountKey = options.StorageAccountKey, },
-        });
+        // create the ContainerApp Job
+        var operation = await containerAppJobs.CreateOrUpdateAsync(Azure.WaitUntil.Completed, resourceName, data, cancellationToken);
+        logger.LogInformation("Created ContainerApp Job for {UpdateJobId}", job.Id);
 
-        // add tags to the data for tracing purposes
-        data.Tags["purpose"] = "dependabot";
-        data.Tags.AddIfNotDefault("ecosystem", job.PackageEcosystem)
-                 .AddIfNotDefault("repository", repository.Slug)
-                 .AddIfNotDefault("directory", update.Directory)
-                 .AddIfNotDefault("machine-name", Environment.MachineName);
-
-        // create the container group (do not wait completion because it might take too long, do not use the result)
-        _ = await containerGroups.CreateOrUpdateAsync(Azure.WaitUntil.Started, resourceName, data, cancellationToken);
-        logger.LogInformation("Created ContainerGroup for {UpdateJobId}", job.Id);
+        // start the ContainerApp Job
+        _ = await operation.Value.StartAsync(Azure.WaitUntil.Completed, cancellationToken: cancellationToken);
+        logger.LogInformation("Started ContainerApp Job for {UpdateJobId}", job.Id);
         job.Status = UpdateJobStatus.Running;
     }
 
@@ -102,8 +119,8 @@ internal partial class UpdateRunner
         try
         {
             // if it does not exist, there is nothing more to do
-            var containerGroups = resourceGroup.GetContainerGroups();
-            var response = await containerGroups.GetAsync(resourceName, cancellationToken);
+            var containerAppJobs = resourceGroup.GetContainerAppJobs();
+            var response = await containerAppJobs.GetAsync(resourceName, cancellationToken);
             if (response.Value is null) return;
 
             // delete the container group
@@ -119,14 +136,26 @@ internal partial class UpdateRunner
         try
         {
             // if it does not exist, there is nothing more to do
-            var response = await resourceGroup.GetContainerGroups().GetAsync(resourceName, cancellationToken);
+            var response = await resourceGroup.GetContainerAppJobAsync(resourceName, cancellationToken);
             var resource = response.Value;
 
-            var status = resource.Data.InstanceView.State switch
+            // if there is no execution, there is nothing more to do
+            var executions = await resource.GetContainerAppJobExecutions().GetAllAsync(cancellationToken: cancellationToken).ToListAsync(cancellationToken: cancellationToken);
+            var execution = executions.SingleOrDefault();
+            if (execution is null) return null;
+
+            // this is a temporary workaround
+            // TODO: remove this after https://github.com/Azure/azure-sdk-for-net/issues/38385 is fixed
+            var rr = await resource.GetContainerAppJobExecutionAsync(execution.Data.Name, cancellationToken);
+            var properties = JsonNode.Parse(rr.GetRawResponse().Content.ToString())!.AsObject()["properties"]!;
+
+            //var status = execution.Data.Status.ToString() switch
+            var status = properties["status"]!.GetValue<string>() switch
             {
                 "Succeeded" => UpdateJobStatus.Succeeded,
-                "Failed" => UpdateJobStatus.Failed,
-                _ => UpdateJobStatus.Running,
+                "Running" => UpdateJobStatus.Running,
+                "Processing" => UpdateJobStatus.Running,
+                _ => UpdateJobStatus.Failed,
             };
 
             // there is no state for jobs that are running
@@ -140,8 +169,8 @@ internal partial class UpdateRunner
             }
 
             // get the period
-            var currentState = resource.Data.Containers.Single(c => c.Name == UpdaterContainerName).InstanceView?.CurrentState;
-            DateTimeOffset? start = currentState?.StartOn, end = currentState?.FinishOn;
+            //DateTimeOffset? start = execution.Data.StartOn, end = execution.Data.EndOn;
+            DateTimeOffset? start = properties["startTime"]!.GetValue<DateTimeOffset?>(), end = properties["endTime"]!.GetValue<DateTimeOffset?>();
 
             // create and return state
             return new UpdateRunnerState(status, start, end);
@@ -156,22 +185,10 @@ internal partial class UpdateRunner
         var logs = (string?)null;
         var resourceName = MakeResourceName(job);
 
-        // pull logs from ContainerInstances
+        // pull logs from Log Analaytics
         if (string.IsNullOrWhiteSpace(logs))
         {
-            var query = $"ContainerInstanceLog_CL | where ContainerGroup_s == '{resourceName}' | order by TimeGenerated asc | project Message";
-            var response = await logsQueryClient.QueryWorkspaceAsync<string>(workspaceId: options.LogAnalyticsWorkspaceId,
-                                                                             query: query,
-                                                                             timeRange: QueryTimeRange.All,
-                                                                             cancellationToken: cancellationToken);
-
-            logs = string.Join(Environment.NewLine, response.Value);
-        }
-
-        // pull logs from ContainerApps
-        if (string.IsNullOrWhiteSpace(logs))
-        {
-            var query = $"ContainerAppConsoleLogs_CL | where ContainerAppName_s == '{resourceName}' | order by TimeGenerated asc | project Log_s";
+            var query = $"ContainerAppConsoleLogs_CL | where ContainerJobName_s == '{resourceName}' | order by _timestamp_d asc | project Log_s";
             var response = await logsQueryClient.QueryWorkspaceAsync<string>(workspaceId: options.LogAnalyticsWorkspaceId,
                                                                              query: query,
                                                                              timeRange: QueryTimeRange.All,
@@ -183,19 +200,7 @@ internal partial class UpdateRunner
         return logs;
     }
 
-    internal static string MakeResourceName(UpdateJob job) => $"dependabot-job-{job.Id}";
-    internal static bool TryGetAzureContainerRegistry(string input, [NotNullWhen(true)] out string? registry)
-    {
-        registry = null;
-        var match = ContainerRegistryPattern().Match(input);
-        if (match.Success)
-        {
-            registry = match.Groups[1].Value;
-            return true;
-        }
-
-        return false;
-    }
+    internal static string MakeResourceName(UpdateJob job) => $"dependabot-{job.Id}";
 
     internal IDictionary<string, string> CreateVariables(Repository repository, RepositoryUpdate update, UpdateJob job)
     {

@@ -43,14 +43,14 @@ internal class WorkflowConfigureOptions : IPostConfigureOptions<WorkflowOptions>
             return ValidateOptionsResult.Fail($"'{nameof(options.ResourceGroupId)}' cannot be null or whitespace");
         }
 
+        if (string.IsNullOrWhiteSpace(options.AppEnvironmentId))
+        {
+            return ValidateOptionsResult.Fail($"'{nameof(options.AppEnvironmentId)}' cannot be null or whitespace");
+        }
+
         if (string.IsNullOrWhiteSpace(options.LogAnalyticsWorkspaceId))
         {
             return ValidateOptionsResult.Fail($"'{nameof(options.LogAnalyticsWorkspaceId)}' cannot be null or whitespace");
-        }
-
-        if (string.IsNullOrWhiteSpace(options.LogAnalyticsWorkspaceKey))
-        {
-            return ValidateOptionsResult.Fail($"'{nameof(options.LogAnalyticsWorkspaceKey)}' cannot be null or whitespace");
         }
 
         if (string.IsNullOrWhiteSpace(options.UpdaterContainerImageTemplate))
@@ -66,21 +66,6 @@ internal class WorkflowConfigureOptions : IPostConfigureOptions<WorkflowOptions>
         if (string.IsNullOrWhiteSpace(options.Location))
         {
             return ValidateOptionsResult.Fail($"'{nameof(options.Location)}' cannot be null or whitespace");
-        }
-
-        if (string.IsNullOrWhiteSpace(options.StorageAccountName))
-        {
-            return ValidateOptionsResult.Fail($"'{nameof(options.StorageAccountName)}' cannot be null or whitespace");
-        }
-
-        if (string.IsNullOrWhiteSpace(options.StorageAccountKey))
-        {
-            return ValidateOptionsResult.Fail($"'{nameof(options.StorageAccountKey)}' cannot be null or whitespace");
-        }
-
-        if (string.IsNullOrWhiteSpace(options.FileShareName))
-        {
-            return ValidateOptionsResult.Fail($"'{nameof(options.FileShareName)}' cannot be null or whitespace");
         }
 
         return ValidateOptionsResult.Success;

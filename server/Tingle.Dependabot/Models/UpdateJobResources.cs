@@ -1,4 +1,4 @@
-﻿using Azure.ResourceManager.ContainerInstance.Models;
+﻿using Azure.ResourceManager.AppContainers.Models;
 using System.ComponentModel.DataAnnotations;
 
 namespace Tingle.Dependabot.Models;
@@ -31,20 +31,18 @@ public class UpdateJobResources
 
     public static UpdateJobResources FromEcosystem(string ecosystem)
     {
-        // the minimum we can be billed for on Container Instances is 1vCPU and 1GB, we might as well use it
-        // TODO: change to selection per ecosystem when migrate to ContainerApp Jobs
         return ecosystem switch
         {
             //"nuget" => new(cpu: 0.25, memory: 0.2),
             //"gitsubmodule" => new(cpu: 0.1, memory: 0.2),
             //"terraform" => new(cpu: 0.25, memory: 1),
             //"npm" => new(cpu: 0.25, memory: 1),
-            _ => new UpdateJobResources(cpu: 1, memory: 1), // the minimum
+            _ => new UpdateJobResources(cpu: 0.25, memory: 0.5), // the minimum
         };
     }
 
-    public static implicit operator ContainerResourceRequestsContent(UpdateJobResources resources)
+    public static implicit operator AppContainerResources(UpdateJobResources resources)
     {
-        return new(memoryInGB: resources.Memory, cpu: resources.Cpu);
+        return new() { Cpu = resources.Cpu, Memory = $"{resources.Memory}Gi", };
     }
 }
