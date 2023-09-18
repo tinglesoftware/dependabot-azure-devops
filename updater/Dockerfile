@@ -1,6 +1,6 @@
-#TODO: find out how to lock the base image version
 ARG ECOSYSTEM
-FROM ghcr.io/dependabot/dependabot-updater-$ECOSYSTEM
+ARG DEPENDABOT_VERSION=0.232.0
+FROM ghcr.io/dependabot/dependabot-updater-$ECOSYSTEM:$DEPENDABOT_VERSION
 
 # ENV DEPENDABOT_HOME /home/dependabot
 WORKDIR ${DEPENDABOT_HOME}
