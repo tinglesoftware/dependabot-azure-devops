@@ -1,4 +1,5 @@
-#TODO: find out how to lock the base image version
+# The docker images in https://github.com/dependabot/dependabot-core are no longer versioned like the ruby Gems
+#TODO: find out how to lock the base image version without the ruby Gem version
 ARG ECOSYSTEM
 FROM ghcr.io/dependabot/dependabot-updater-$ECOSYSTEM
 

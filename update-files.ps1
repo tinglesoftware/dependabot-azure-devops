@@ -4,6 +4,11 @@ $versionLine = $gemfileContent | Select-String 'gem "dependabot-omnibus", "(.*)"
 $version = [regex]::Match($versionLine, '"~>(\d+\.\d+\.\d+)"').Groups[1].Value
 Write-Output "Found dependabot-omnibus version: $version"
 
+# # Update the version in the Dockerfile
+# $dockerfile = Get-Content -Path "updater/Dockerfile" -Raw
+# $dockerfile = ($dockerfile -replace '(?<=ARG DEPENDABOT_VERSION=)(\d+\.\d+\.\d+)', $version).Trim()
+# $dockerfile | Set-Content -Path "updater/Dockerfile"
+
 # Prepare the list of files to be downloaded
 $files = @(
     ".ruby-version"
