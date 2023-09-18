@@ -266,7 +266,6 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
         }
         { name: 'notifications-password', value: notificationsPassword }
         { name: 'project-token', value: projectToken }
-        { name: 'log-analytics-workspace-key', value: logAnalyticsWorkspace.listKeys().primarySharedKey }
         { name: 'storage-account-key', value: storageAccount.listKeys().keys[0].value }
         { name: 'connection-strings-asb-scaler', value: serviceBusNamespace::authorizationRule.listKeys().primaryConnectionString }
       ]
@@ -299,11 +298,11 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
             }
             { name: 'Workflow__SubscriptionPassword', secretRef: 'notifications-password' }
             { name: 'Workflow__ResourceGroupId', value: resourceGroup().id }
+            { name: 'Workflow__AppEnvironmentId', value: appEnvironment.id }
             {
               name: 'Workflow__LogAnalyticsWorkspaceId'
               value: logAnalyticsWorkspace.properties.customerId
             }
-            { name: 'Workflow__LogAnalyticsWorkspaceKey', secretRef: 'log-analytics-workspace-key' }
             { name: 'Workflow__UpdaterContainerImageTemplate', value: 'ghcr.io/tinglesoftware/dependabot-updater-{{ecosystem}}:${imageTag}' }
             { name: 'Workflow__FailOnException', value: failOnException ? 'true' : 'false' }
             { name: 'Workflow__AutoComplete', value: autoComplete ? 'true' : 'false' }
@@ -312,9 +311,6 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
             { name: 'Workflow__AutoApprove', value: autoApprove ? 'true' : 'false' }
             { name: 'Workflow__GithubToken', value: githubToken }
             { name: 'Workflow__Location', value: location }
-            { name: 'Workflow__StorageAccountName', value: storageAccount.name }
-            { name: 'Workflow__StorageAccountKey', secretRef: 'storage-account-key' }
-            { name: 'Workflow__FileShareName', value: fileShareName }
 
             {
               name: 'Authentication__Schemes__Management__Authority'

@@ -23,13 +23,13 @@ public class WorkflowOptions
     /// <example>/subscriptions/00000000-0000-1111-0001-000000000000/resourceGroups/DEPENDABOT</example>
     public string? ResourceGroupId { get; set; }
 
+    /// <summary>Name of the file share for the working directory</summary>
+    /// <example>/subscriptions/00000000-0000-1111-0001-000000000000/resourceGroups/DEPENDABOT/Microsoft.App/managedEnvironments/dependabot</example>
+    public string? AppEnvironmentId { get; set; }
+
     /// <summary>CustomerId of the LogAnalytics workspace.</summary>
     /// <example>00000000-0000-1111-0001-000000000000</example>
     public string? LogAnalyticsWorkspaceId { get; set; }
-
-    /// <summary>AuthenticationKey of the LogAnalytics workspace.</summary>
-    /// <example>AAAAAAAAAAA=</example>
-    public string? LogAnalyticsWorkspaceKey { get; set; }
 
     /// <summary>
     /// Template representing the docker container image  to use.
@@ -98,17 +98,6 @@ public class WorkflowOptions
 
     /// <summary>Location/region where to create new update jobs.</summary>
     public string? Location { get; set; } // using Azure.Core.Location does not work when binding from IConfiguration
-
-    /// <summary>Name of the storage account.</summary>
-    /// <example>dependabot-1234567890</example>
-    public string? StorageAccountName { get; set; } // only used with ContainerInstances
-
-    /// <summary>Access key for the storage account.</summary>
-    public string? StorageAccountKey { get; set; } // only used with ContainerInstances
-
-    /// <summary>Name of the file share for the working directory</summary>
-    /// <example>working-dir</example>
-    public string? FileShareName { get; set; } // only used with ContainerInstances
 
     /// <summary>
     /// Possible/allowed paths for the configuration files in a repository.

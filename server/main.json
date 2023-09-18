@@ -376,10 +376,6 @@
               "value": "[parameters('projectToken')]"
             },
             {
-              "name": "log-analytics-workspace-key",
-              "value": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces', parameters('name')), '2022-10-01').primarySharedKey]"
-            },
-            {
               "name": "storage-account-key",
               "value": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', format('{0}{1}', parameters('name'), variables('collisionSuffix'))), '2022-09-01').keys[0].value]"
             },
@@ -466,12 +462,12 @@
                   "value": "[resourceGroup().id]"
                 },
                 {
-                  "name": "Workflow__LogAnalyticsWorkspaceId",
-                  "value": "[reference(resourceId('Microsoft.OperationalInsights/workspaces', parameters('name')), '2022-10-01').customerId]"
+                  "name": "Workflow__AppEnvironmentId",
+                  "value": "[resourceId('Microsoft.App/managedEnvironments', parameters('name'))]"
                 },
                 {
-                  "name": "Workflow__LogAnalyticsWorkspaceKey",
-                  "secretRef": "log-analytics-workspace-key"
+                  "name": "Workflow__LogAnalyticsWorkspaceId",
+                  "value": "[reference(resourceId('Microsoft.OperationalInsights/workspaces', parameters('name')), '2022-10-01').customerId]"
                 },
                 {
                   "name": "Workflow__UpdaterContainerImageTemplate",
@@ -504,18 +500,6 @@
                 {
                   "name": "Workflow__Location",
                   "value": "[parameters('location')]"
-                },
-                {
-                  "name": "Workflow__StorageAccountName",
-                  "value": "[format('{0}{1}', parameters('name'), variables('collisionSuffix'))]"
-                },
-                {
-                  "name": "Workflow__StorageAccountKey",
-                  "secretRef": "storage-account-key"
-                },
-                {
-                  "name": "Workflow__FileShareName",
-                  "value": "[variables('fileShareName')]"
                 },
                 {
                   "name": "Authentication__Schemes__Management__Authority",
