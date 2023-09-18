@@ -281,11 +281,11 @@ def ignored_versions_for(dep)
         update_types: ic["update-types"]
       )
     end
-    Dependabot::Config::UpdateConfig.new(ignore_conditions: ignore_conditions).
-      ignored_versions_for(
-        dep,
-        security_updates_only: $options[:security_updates_only]
-      )
+    Dependabot::Config::UpdateConfig.new(ignore_conditions: ignore_conditions)
+                                    .ignored_versions_for(
+                                      dep,
+                                      security_updates_only: $options[:security_updates_only]
+                                    )
   else
     $update_config.ignored_versions_for(
       dep,
@@ -297,8 +297,8 @@ end
 # rubocop:disable Metrics/PerceivedComplexity
 def security_advisories_for(dep)
   relevant_advisories =
-    $options[:security_advisories].
-    select { |adv| adv.fetch("dependency-name").casecmp(dep.name).zero? }
+    $options[:security_advisories]
+    .select { |adv| adv.fetch("dependency-name").casecmp(dep.name).zero? }
 
   # add relevant advisories from the fetcher if present
   relevant_advisories += $vulnerabilities_fetcher&.fetch(dep.name) || []
@@ -363,17 +363,17 @@ def peer_dependency_should_update_instead?(dependency_name, updated_deps, files,
   # peer dependency getting updated
   return false if $options[:security_updates_only]
 
-  updated_deps.
-    reject { |dep| dep.name == dependency_name }.
-    any? do |dep|
+  updated_deps
+    .reject { |dep| dep.name == dependency_name }
+    .any? do |dep|
     original_peer_dep = ::Dependabot::Dependency.new(
       name: dep.name,
       version: dep.previous_version,
       requirements: dep.previous_requirements,
       package_manager: dep.package_manager
     )
-    update_checker_for(original_peer_dep, files, security_advisories).
-      can_update?(requirements_to_unlock: :own)
+    update_checker_for(original_peer_dep, files, security_advisories)
+      .can_update?(requirements_to_unlock: :own)
   end
 end
 
@@ -944,8 +944,8 @@ if $options[:close_unwanted]
         version_class = Dependabot::Utils.version_class_for_package_manager(dep.package_manager) # necessary for npm
         next unless version_class.correct?(dep.version) # git_submodules don't work here
 
-        ignore_reqs = ignored_versions_for(dep).
-                      flat_map { |req| requirement_class.requirements_array(req) }
+        ignore_reqs = ignored_versions_for(dep)
+                      .flat_map { |req| requirement_class.requirements_array(req) }
         if ignore_reqs.any? { |req| req.satisfied_by?(version_class.new(dep.version)) }
           puts "Update for #{dep.name} #{dep.version} is no longer required."
           next
