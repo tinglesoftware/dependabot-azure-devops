@@ -20,5 +20,5 @@ COPY --chown=dependabot:dependabot LICENSE $DEPENDABOT_HOME
 COPY --chown=dependabot:dependabot updater $DEPENDABOT_HOME/dependabot-updater
 
 # ENTRYPOINT IS USED instead of CMD so as to avoid adding
-# 'bin/run.sh' before the file name when running the image bef
+# 'bin/run.sh' before the file name when running the image
 ENTRYPOINT ["bin/run.sh"]
