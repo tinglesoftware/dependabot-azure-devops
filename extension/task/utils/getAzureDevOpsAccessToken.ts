@@ -22,7 +22,7 @@ export default function getAzureDevOpsAccessToken() {
   let serviceConnectionName: string = getInput("azureDevOpsServiceConnection");
   if (serviceConnectionName) {
     debug("TFS connection supplied. A token shall be extracted from it.");
-    return getEndpointAuthorizationParameter(serviceConnectionName, "AccessToken", false);
+    return getEndpointAuthorizationParameter(serviceConnectionName, "apitoken", false);
   }
 
   debug("No custom token provided. The SystemVssConnection's AccessToken shall be used.");
