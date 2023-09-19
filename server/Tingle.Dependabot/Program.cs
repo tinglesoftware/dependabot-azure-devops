@@ -77,7 +77,13 @@ builder.Services.AddMemoryCache();
 builder.Services.AddDistributedMemoryCache();
 
 // Configure other services
-builder.Services.AddWorkflowServices(builder.Configuration.GetSection("Workflow"));
+builder.Services.Configure<WorkflowOptions>(builder.Configuration.GetSection("Workflow"));
+builder.Services.ConfigureOptions<WorkflowConfigureOptions>();
+builder.Services.AddSingleton<UpdateRunner>();
+builder.Services.AddSingleton<UpdateScheduler>();
+builder.Services.AddScoped<AzureDevOpsProvider>();
+builder.Services.AddScoped<Synchronizer>();
+builder.Services.AddHostedService<WorkflowBackgroundService>();
 
 // Add event bus
 var selectedTransport = builder.Configuration.GetValue<EventBusTransportKind?>("EventBus:SelectedTransport");
@@ -116,7 +122,6 @@ app.UseAuthorization();
 app.MapHealthChecks("/health");
 app.MapHealthChecks("/liveness", new HealthCheckOptions { Predicate = _ => false, });
 app.MapControllers();
-app.MapManagementApi();
 
 // setup the application environment
 await AppSetup.SetupAsync(app);
@@ -124,106 +129,3 @@ await AppSetup.SetupAsync(app);
 await app.RunAsync();
 
 internal enum EventBusTransportKind { InMemory, ServiceBus, }
-
-internal static class ApplicationExtensions
-{
-    public static IServiceCollection AddWorkflowServices(this IServiceCollection services, IConfiguration configuration)
-    {
-        services.Configure<WorkflowOptions>(configuration);
-        services.ConfigureOptions<WorkflowConfigureOptions>();
-
-        services.AddSingleton<UpdateRunner>();
-        services.AddSingleton<UpdateScheduler>();
-
-        services.AddScoped<AzureDevOpsProvider>();
-        services.AddScoped<Synchronizer>();
-        services.AddHostedService<WorkflowBackgroundService>();
-
-        return services;
-    }
-
-    public static IEndpointRouteBuilder MapManagementApi(this IEndpointRouteBuilder builder)
-    {
-        var group = builder.MapGroup("");
-        group.RequireAuthorization(AuthConstants.PolicyNameManagement);
-
-        group.MapPost("/sync", async (IEventPublisher publisher, [FromBody] SynchronizationRequest model) =>
-        {
-            // request synchronization of the project
-            var evt = new ProcessSynchronization(model.Trigger);
-            await publisher.PublishAsync(evt);
-
-            return Results.Ok();
-        });
-
-        group.MapPost("/webhooks/register/azure", async (AzureDevOpsProvider adoProvider) =>
-        {
-            await adoProvider.CreateOrUpdateSubscriptionsAsync();
-            return Results.Ok();
-        });
-
-        group.MapGet("repos", async (MainDbContext dbContext) => Results.Ok(await dbContext.Repositories.ToListAsync()));
-        group.MapGet("repos/{id}", async (MainDbContext dbContext, [FromRoute, Required] string id) => Results.Ok(await dbContext.Repositories.SingleOrDefaultAsync(r => r.Id == id)));
-        group.MapPost("repos/{id}/sync", async (IEventPublisher publisher, MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] SynchronizationRequest model) =>
-        {
-            if (!MiniValidator.TryValidate(model, out var errors)) return Results.ValidationProblem(errors);
-
-            // ensure repository exists
-            var repository = await dbContext.Repositories.SingleOrDefaultAsync(r => r.Id == id);
-            if (repository is null)
-            {
-                return Results.Problem(title: "repository_not_found", statusCode: 400);
-            }
-
-            // request synchronization of the repository
-            var evt = new ProcessSynchronization(model.Trigger, repositoryId: repository.Id, null);
-            await publisher.PublishAsync(evt);
-
-            return Results.Ok(repository);
-        });
-        group.MapGet("repos/{id}/jobs/{jobId}", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromRoute, Required] string jobId) =>
-        {
-            // ensure repository exists
-            var repository = await dbContext.Repositories.SingleOrDefaultAsync(r => r.Id == id);
-            if (repository is null)
-            {
-                return Results.Problem(title: "repository_not_found", statusCode: 400);
-            }
-
-            // find the job
-            var job = dbContext.UpdateJobs.Where(j => j.RepositoryId == repository.Id && j.Id == jobId).SingleOrDefaultAsync();
-            return Results.Ok(job);
-        });
-        group.MapPost("repos/{id}/trigger", async (IEventPublisher publisher, MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] TriggerUpdateRequest model) =>
-        {
-            if (!MiniValidator.TryValidate(model, out var errors)) return Results.ValidationProblem(errors);
-
-            // ensure repository exists
-            var repository = await dbContext.Repositories.SingleOrDefaultAsync(r => r.Id == id);
-            if (repository is null)
-            {
-                return Results.Problem(title: "repository_not_found", statusCode: 400);
-            }
-
-            // ensure the repository update exists
-            var update = repository.Updates.ElementAtOrDefault(model.Id!.Value);
-            if (update is null)
-            {
-                return Results.Problem(title: "repository_update_not_found", statusCode: 400);
-            }
-
-            // trigger update for specific update
-            var evt = new TriggerUpdateJobsEvent
-            {
-                RepositoryId = repository.Id,
-                RepositoryUpdateId = model.Id.Value,
-                Trigger = UpdateJobTrigger.Manual,
-            };
-            await publisher.PublishAsync(evt);
-
-            return Results.Ok(repository);
-        });
-
-        return builder;
-    }
-}

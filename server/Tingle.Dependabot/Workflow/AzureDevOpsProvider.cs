@@ -11,7 +11,7 @@ using System.Text;
 
 namespace Tingle.Dependabot.Workflow;
 
-internal class AzureDevOpsProvider
+public class AzureDevOpsProvider
 {
     private static readonly (string, string)[] SubscriptionEventTypes =
     {

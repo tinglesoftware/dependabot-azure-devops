@@ -199,7 +199,7 @@ public class WebhooksControllerIntegrationTests
             .ConfigureServices((context, services) =>
             {
                 services.AddControllers()
-                        .AddApplicationPart(typeof(WebhooksController).Assembly)
+                        .AddApplicationPart(typeof(MainDbContext).Assembly)
                         .AddJsonOptions(options =>
                         {
                             options.JsonSerializerOptions.AllowTrailingCommas = true;
