@@ -282,7 +282,6 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
             { name: 'ConnectionStrings__Sql', secretRef: 'connection-strings-sql' }
 
             { name: 'Workflow__SynchronizeOnStartup', value: synchronizeOnStartup ? 'true' : 'false' }
-            { name: 'Workflow__LoadSchedulesOnStartup', value: 'true' }
             { name: 'Workflow__CreateOrUpdateWebhooksOnStartup', value: createOrUpdateWebhooksOnStartup ? 'true' : 'false' }
             { name: 'Workflow__ProjectUrl', value: projectUrl }
             { name: 'Workflow__ProjectToken', secretRef: 'project-token' }

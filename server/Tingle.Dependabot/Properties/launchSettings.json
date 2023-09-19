@@ -8,7 +8,8 @@
       "applicationUrl": "https://localhost:44390;http://localhost:59269",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "EFCORE_PERFORM_MIGRATIONS": "true"
+        "EFCORE_PERFORM_MIGRATIONS": "true",
+        "SKIP_LOAD_SCHEDULES": "true"
       }
     },
     "Docker": {

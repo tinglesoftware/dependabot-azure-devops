@@ -29,7 +29,8 @@ internal static class AppSetup
             await synchronizer.SynchronizeAsync(false, cancellationToken); /* database sync should not trigger, just in case it's too many */
         }
 
-        if (options.LoadSchedulesOnStartup)
+        // skip loading schedules if told to
+        if (!app.Configuration.GetValue<bool>("SKIP_LOAD_SCHEDULES"))
         {
             var dbContext = provider.GetRequiredService<MainDbContext>();
             var repositories = await dbContext.Repositories.ToListAsync(cancellationToken);

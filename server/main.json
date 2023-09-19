@@ -415,10 +415,6 @@
                   "value": "[if(parameters('synchronizeOnStartup'), 'true', 'false')]"
                 },
                 {
-                  "name": "Workflow__LoadSchedulesOnStartup",
-                  "value": "true"
-                },
-                {
                   "name": "Workflow__CreateOrUpdateWebhooksOnStartup",
                   "value": "[if(parameters('createOrUpdateWebhooksOnStartup'), 'true', 'false')]"
                 },

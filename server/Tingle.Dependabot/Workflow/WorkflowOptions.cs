@@ -7,9 +7,6 @@ public class WorkflowOptions
     /// <summary>Whether to synchronize repositories on startup.</summary>
     public bool SynchronizeOnStartup { get; set; } = true;
 
-    /// <summary>Whether to load schedules on startup.</summary>
-    public bool LoadSchedulesOnStartup { get; set; } = true;
-
     /// <summary>Whether to create/update notifications on startup.</summary>
     public bool CreateOrUpdateWebhooksOnStartup { get; set; } = true;
 
