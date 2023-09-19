@@ -149,7 +149,7 @@ internal partial class UpdateRunner
             var rr = await resource.GetContainerAppJobExecutionAsync(execution.Data.Name, cancellationToken);
             var properties = JsonNode.Parse(rr.GetRawResponse().Content.ToString())!.AsObject()["properties"]!;
 
-            //var status = execution.Data.Status.ToString() switch
+            //var status = execution.Data.Properties.Status.ToString() switch
             var status = properties["status"]!.GetValue<string>() switch
             {
                 "Succeeded" => UpdateJobStatus.Succeeded,
@@ -169,8 +169,8 @@ internal partial class UpdateRunner
             }
 
             // get the period
-            //DateTimeOffset? start = execution.Data.StartOn, end = execution.Data.EndOn;
-            DateTimeOffset? start = properties["startTime"]!.GetValue<DateTimeOffset?>(), end = properties["endTime"]!.GetValue<DateTimeOffset?>();
+            //DateTimeOffset? start = execution.Data.Properties.StartTime, end = execution.Data.Properties.EndTime;
+            DateTimeOffset? start = properties["startTime"]?.GetValue<DateTimeOffset?>(), end = properties["endTime"]?.GetValue<DateTimeOffset?>();
 
             // create and return state
             return new UpdateRunnerState(status, start, end);
