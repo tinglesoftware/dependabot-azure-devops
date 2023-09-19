@@ -1,4 +1,4 @@
-﻿namespace Tingle.Dependabot.Models;
+﻿namespace Tingle.Dependabot.Models.Management;
 
 /// <summary>
 /// Represents a model for processing a synchronization request

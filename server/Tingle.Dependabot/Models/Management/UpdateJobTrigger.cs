@@ -1,7 +1,7 @@
 ﻿using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 
-namespace Tingle.Dependabot.Models;
+namespace Tingle.Dependabot.Models.Management;
 
 [JsonConverter(typeof(JsonStringEnumMemberConverter))]
 public enum UpdateJobTrigger

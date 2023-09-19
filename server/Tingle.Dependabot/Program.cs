@@ -12,6 +12,8 @@ using Tingle.Dependabot;
 using Tingle.Dependabot.Consumers;
 using Tingle.Dependabot.Events;
 using Tingle.Dependabot.Models;
+using Tingle.Dependabot.Models.Dependabot;
+using Tingle.Dependabot.Models.Management;
 using Tingle.Dependabot.Workflow;
 using Tingle.EventBus;
 
@@ -121,18 +123,6 @@ await AppSetup.SetupAsync(app);
 await app.RunAsync();
 
 internal enum EventBusTransportKind { InMemory, ServiceBus, }
-
-internal static class AuthConstants
-{
-    // These values are fixed strings due to configuration sections
-    internal const string SchemeNameManagement = "Management";
-    internal const string SchemeNameServiceHooks = "ServiceHooks";
-    internal const string SchemeNameUpdater = "Updater";
-
-    internal const string PolicyNameManagement = "Management";
-    internal const string PolicyNameServiceHooks = "ServiceHooks";
-    internal const string PolicyNameUpdater = "Updater";
-}
 
 internal static class ApplicationExtensions
 {
@@ -267,26 +257,26 @@ internal static class ApplicationExtensions
         group.RequireAuthorization(AuthConstants.PolicyNameUpdater);
 
         // TODO: implement logic for *pull_request endpoints
-        group.MapPost("/{id}/create_pull_request", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] PayloadWithData<CreatePullRequestModel> model) =>
+        group.MapPost("/{id}/create_pull_request", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] PayloadWithData<DependabotCreatePullRequestModel> model) =>
         {
             var job = await dbContext.UpdateJobs.SingleAsync(p => p.Id == id);
             logger.LogInformation("Received request to create a pull request from job {JobId} but we did nothing.\r\n{ModelJson}", id, JsonSerializer.Serialize(model));
             return Results.Ok();
         });
-        group.MapPost("/{id}/update_pull_request", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] PayloadWithData<UpdatePullRequestModel> model) =>
+        group.MapPost("/{id}/update_pull_request", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] PayloadWithData<DependabotUpdatePullRequestModel> model) =>
         {
             var job = await dbContext.UpdateJobs.SingleAsync(p => p.Id == id);
             logger.LogInformation("Received request to update a pull request from job {JobId} but we did nothing.\r\n{ModelJson}", id, JsonSerializer.Serialize(model));
             return Results.Ok();
         });
-        group.MapPost("/{id}/close_pull_request", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] PayloadWithData<ClosePullRequestModel> model) =>
+        group.MapPost("/{id}/close_pull_request", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] PayloadWithData<DependabotClosePullRequestModel> model) =>
         {
             var job = await dbContext.UpdateJobs.SingleAsync(p => p.Id == id);
             logger.LogInformation("Received request to close a pull request from job {JobId} but we did nothing.\r\n{ModelJson}", id, JsonSerializer.Serialize(model));
             return Results.Ok();
         });
 
-        group.MapPost("/{id}/record_update_job_error", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] PayloadWithData<RecordUpdateJobErrorModel> model) =>
+        group.MapPost("/{id}/record_update_job_error", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] PayloadWithData<DependabotRecordUpdateJobErrorModel> model) =>
         {
             var job = await dbContext.UpdateJobs.SingleAsync(p => p.Id == id);
 
@@ -300,7 +290,7 @@ internal static class ApplicationExtensions
 
             return Results.Ok();
         });
-        group.MapPatch("/{id}/mark_as_processed", async (IEventPublisher publisher, MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] PayloadWithData<MarkAsProcessedModel> model) =>
+        group.MapPatch("/{id}/mark_as_processed", async (IEventPublisher publisher, MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] PayloadWithData<DependabotMarkAsProcessedModel> model) =>
         {
             var job = await dbContext.UpdateJobs.SingleAsync(p => p.Id == id);
 
@@ -310,7 +300,7 @@ internal static class ApplicationExtensions
 
             return Results.Ok();
         });
-        group.MapPost("/{id}/update_dependency_list", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] PayloadWithData<UpdateDependencyListModel> model) =>
+        group.MapPost("/{id}/update_dependency_list", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] PayloadWithData<DependabotUpdateDependencyListModel> model) =>
         {
             var job = await dbContext.UpdateJobs.SingleAsync(p => p.Id == id);
             var repository = await dbContext.Repositories.SingleAsync(r => r.Id == job.RepositoryId);

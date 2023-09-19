@@ -1,4 +1,4 @@
-using Tingle.Dependabot.Models;
+using Tingle.Dependabot.Models.Dependabot;
 using Xunit;
 
 namespace Tingle.Dependabot.Tests.Models;

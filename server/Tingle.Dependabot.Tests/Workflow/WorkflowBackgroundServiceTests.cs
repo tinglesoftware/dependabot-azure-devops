@@ -4,6 +4,8 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Tingle.Dependabot.Events;
 using Tingle.Dependabot.Models;
+using Tingle.Dependabot.Models.Dependabot;
+using Tingle.Dependabot.Models.Management;
 using Tingle.Dependabot.Workflow;
 using Tingle.EventBus;
 using Tingle.EventBus.Transports.InMemory;

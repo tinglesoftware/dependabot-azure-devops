@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
-namespace Tingle.Dependabot.Models;
+namespace Tingle.Dependabot.Models.Dependabot;
 
 public class DependabotConfiguration : IValidatableObject
 {

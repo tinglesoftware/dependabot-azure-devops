@@ -1,4 +1,4 @@
-﻿using Tingle.Dependabot.Models;
+﻿using Tingle.Dependabot.Models.Dependabot;
 using Tingle.Dependabot.Workflow;
 using Xunit;
 using Xunit.Abstractions;
