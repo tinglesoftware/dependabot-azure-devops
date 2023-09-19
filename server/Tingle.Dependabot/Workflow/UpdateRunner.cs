@@ -250,6 +250,7 @@ internal partial class UpdateRunner
             ["DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT"] = update.OpenPullRequestsLimit!.Value.ToString(),
 
             ["DEPENDABOT_EXTRA_CREDENTIALS"] = credentials!,
+            ["DEPENDABOT_FAIL_ON_EXCEPTION"] = "false",
         };
 
         // Add optional values
@@ -268,8 +269,7 @@ internal partial class UpdateRunner
               .AddIfNotDefault("DEPENDABOT_ALLOW_CONDITIONS", ToJson(MakeAllowEntries(update.Allow)))
               .AddIfNotDefault("DEPENDABOT_LABELS", ToJson(update.Labels))
               .AddIfNotDefault("DEPENDABOT_BRANCH_NAME_SEPARATOR", update.PullRequestBranchName?.Separator)
-              .AddIfNotDefault("DEPENDABOT_MILESTONE", update.Milestone?.ToString())
-              .AddIfNotDefault("DEPENDABOT_FAIL_ON_EXCEPTION", options.FailOnException.ToString().ToLowerInvariant());
+              .AddIfNotDefault("DEPENDABOT_MILESTONE", update.Milestone?.ToString());
 
         // Add values for Azure DevOps
         var url = options.ProjectUrl!.Value;

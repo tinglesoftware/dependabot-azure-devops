@@ -58,7 +58,6 @@ The deployment exposes the following parameters that can be tuned to suit the se
 |synchronizeOnStartup|Whether to synchronize repositories on startup. This option is useful for initial deployments since the server synchronizes every 6 hours. Leaving it on has no harm, it actually helps you find out if the token works based on the logs.|No|false|
 |createOrUpdateWebhooksOnStartup|Whether to create or update Azure DevOps subscriptions on startup. This is required if you want configuration files to be picked up automatically and other event driven functionality.<br/>When this is set to `true`, ensure the value provided for `projectToken` has permissions for service hooks and the owner is a Project Administrator. Leaving this on has no harm because the server will only create new subscription if there are no existing ones based on the URL.|No|false|
 |githubToken|Access token for authenticating requests to GitHub. Required for vulnerability checks and to avoid rate limiting on free requests|No|&lt;empty&gt;|
-|failOnException|Whether update jobs should fail when an exception occurs.|No|false|
 |autoComplete|Whether to set auto complete on created pull requests.|No|true|
 |autoCompleteIgnoreConfigs|Identifiers of configs to be ignored in auto complete. E.g 3,4,10|No|&lt;empty&gt;|
 |autoCompleteMergeStrategy|Merge strategy to use when setting auto complete on created pull requests. Allowed values: `NoFastForward`, `Rebase`, `RebaseMerge`, or `Squash`|No|`Squash`|

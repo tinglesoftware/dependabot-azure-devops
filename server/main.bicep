@@ -22,9 +22,6 @@ param debugAllJobs bool = false
 @description('Access token for authenticating requests to GitHub.')
 param githubToken string = ''
 
-@description('Whether update jobs should fail when an exception occurs.')
-param failOnException bool = false
-
 @description('Whether to set auto complete on created pull requests.')
 param autoComplete bool = true
 
@@ -304,7 +301,6 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
               value: logAnalyticsWorkspace.properties.customerId
             }
             { name: 'Workflow__UpdaterContainerImageTemplate', value: 'ghcr.io/tinglesoftware/dependabot-updater-{{ecosystem}}:${imageTag}' }
-            { name: 'Workflow__FailOnException', value: failOnException ? 'true' : 'false' }
             { name: 'Workflow__AutoComplete', value: autoComplete ? 'true' : 'false' }
             { name: 'Workflow__AutoCompleteIgnoreConfigs', value: join(autoCompleteIgnoreConfigs, ';') }
             { name: 'Workflow__AutoCompleteMergeStrategy', value: autoCompleteMergeStrategy }

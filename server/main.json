@@ -56,13 +56,6 @@
         "description": "Access token for authenticating requests to GitHub."
       }
     },
-    "failOnException": {
-      "type": "bool",
-      "defaultValue": false,
-      "metadata": {
-        "description": "Whether update jobs should fail when an exception occurs."
-      }
-    },
     "autoComplete": {
       "type": "bool",
       "defaultValue": true,
@@ -472,10 +465,6 @@
                 {
                   "name": "Workflow__UpdaterContainerImageTemplate",
                   "value": "[format('ghcr.io/tinglesoftware/dependabot-updater-{{{{ecosystem}}}}:{0}', parameters('imageTag'))]"
-                },
-                {
-                  "name": "Workflow__FailOnException",
-                  "value": "[if(parameters('failOnException'), 'true', 'false')]"
                 },
                 {
                   "name": "Workflow__AutoComplete",

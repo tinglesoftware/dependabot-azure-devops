@@ -68,9 +68,6 @@ public class WorkflowOptions
     /// <summary>Whether updates should be created in the same order.</summary>
     public bool? DeterministicUpdates { get; set; }
 
-    /// <summary>Whether update jobs should fail when an exception occurs.</summary>
-    public bool FailOnException { get; set; }
-
     /// <summary>Whether to set automatic completion of pull requests.</summary>
     public bool? AutoComplete { get; set; }
 
