@@ -10,7 +10,7 @@ namespace Tingle.Dependabot.Controllers;
 [ApiController]
 [Route("/webhooks")]
 [Authorize(AuthConstants.PolicyNameServiceHooks)]
-public class WebhooksController : ControllerBase
+public class WebhooksController : ControllerBase // TODO: unit test this
 {
     private readonly IEventPublisher publisher;
     private readonly ILogger logger;

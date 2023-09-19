@@ -117,7 +117,6 @@ app.MapHealthChecks("/health");
 app.MapHealthChecks("/liveness", new HealthCheckOptions { Predicate = _ => false, });
 app.MapControllers();
 app.MapManagementApi();
-app.MapUpdateJobsApi();
 
 // setup the application environment
 await AppSetup.SetupAsync(app);
@@ -226,99 +225,5 @@ internal static class ApplicationExtensions
         });
 
         return builder;
-    }
-
-    public static IEndpointRouteBuilder MapUpdateJobsApi(this IEndpointRouteBuilder builder)
-    {
-        var logger = builder.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("UpdateJobsApi");
-
-        // endpoints accessed by the updater during execution
-
-        var group = builder.MapGroup("update_jobs");
-        group.RequireAuthorization(AuthConstants.PolicyNameUpdater);
-
-        // TODO: implement logic for *pull_request endpoints
-        group.MapPost("/{id}/create_pull_request", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] PayloadWithData<DependabotCreatePullRequestModel> model) =>
-        {
-            var job = await dbContext.UpdateJobs.SingleAsync(p => p.Id == id);
-            logger.LogInformation("Received request to create a pull request from job {JobId} but we did nothing.\r\n{ModelJson}", id, JsonSerializer.Serialize(model));
-            return Results.Ok();
-        });
-        group.MapPost("/{id}/update_pull_request", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] PayloadWithData<DependabotUpdatePullRequestModel> model) =>
-        {
-            var job = await dbContext.UpdateJobs.SingleAsync(p => p.Id == id);
-            logger.LogInformation("Received request to update a pull request from job {JobId} but we did nothing.\r\n{ModelJson}", id, JsonSerializer.Serialize(model));
-            return Results.Ok();
-        });
-        group.MapPost("/{id}/close_pull_request", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] PayloadWithData<DependabotClosePullRequestModel> model) =>
-        {
-            var job = await dbContext.UpdateJobs.SingleAsync(p => p.Id == id);
-            logger.LogInformation("Received request to close a pull request from job {JobId} but we did nothing.\r\n{ModelJson}", id, JsonSerializer.Serialize(model));
-            return Results.Ok();
-        });
-
-        group.MapPost("/{id}/record_update_job_error", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] PayloadWithData<DependabotRecordUpdateJobErrorModel> model) =>
-        {
-            var job = await dbContext.UpdateJobs.SingleAsync(p => p.Id == id);
-
-            job.Error = new UpdateJobError
-            {
-                Type = model.Data!.ErrorType,
-                Detail = model.Data.ErrorDetail,
-            };
-
-            await dbContext.SaveChangesAsync();
-
-            return Results.Ok();
-        });
-        group.MapPatch("/{id}/mark_as_processed", async (IEventPublisher publisher, MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] PayloadWithData<DependabotMarkAsProcessedModel> model) =>
-        {
-            var job = await dbContext.UpdateJobs.SingleAsync(p => p.Id == id);
-
-            // publish event that will run update the job and collect logs
-            var evt = new UpdateJobCheckStateEvent { JobId = id, };
-            await publisher.PublishAsync(evt);
-
-            return Results.Ok();
-        });
-        group.MapPost("/{id}/update_dependency_list", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] PayloadWithData<DependabotUpdateDependencyListModel> model) =>
-        {
-            var job = await dbContext.UpdateJobs.SingleAsync(p => p.Id == id);
-            var repository = await dbContext.Repositories.SingleAsync(r => r.Id == job.RepositoryId);
-
-            // update the database
-            var update = repository.Updates.SingleOrDefault(u => u.PackageEcosystem == job.PackageEcosystem && u.Directory == job.Directory);
-            if (update is not null)
-            {
-                update.Files = model.Data?.DependencyFiles ?? new();
-            }
-            await dbContext.SaveChangesAsync();
-
-            return Results.Ok();
-        });
-
-        group.MapPost("/{id}/record_ecosystem_versions", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] JsonNode model) =>
-        {
-            var job = await dbContext.UpdateJobs.SingleAsync(p => p.Id == id);
-            logger.LogInformation("Received request to record ecosystem version from job {JobId} but we did nothing.\r\n{ModelJson}", id, model.ToJsonString());
-            return Results.Ok();
-        });
-        group.MapPost("/{id}/increment_metric", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] JsonNode model) =>
-        {
-            var job = await dbContext.UpdateJobs.SingleAsync(p => p.Id == id);
-            logger.LogInformation("Received metrics from job {JobId} but we did nothing with them.\r\n{ModelJson}", id, model.ToJsonString());
-            return Results.Ok();
-        });
-
-        return builder;
-    }
-
-    public class PayloadWithData<T> where T : new()
-    {
-        [Required]
-        public T? Data { get; set; }
-
-        [System.Text.Json.Serialization.JsonExtensionData]
-        public Dictionary<string, object>? Extensions { get; set; }
     }
 }
