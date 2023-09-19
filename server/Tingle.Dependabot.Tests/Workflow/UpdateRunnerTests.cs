@@ -29,7 +29,6 @@ public class UpdateRunnerTests
         var configuration = deserializer.Deserialize<DependabotConfiguration?>(reader);
         Assert.NotNull(configuration);
         var registries = UpdateRunner.MakeExtraCredentials(configuration.Registries.Values, new Dictionary<string, string>());
-        Assert.NotNull(registries);
         Assert.Equal(11, registries.Count);
 
         // composer-repository

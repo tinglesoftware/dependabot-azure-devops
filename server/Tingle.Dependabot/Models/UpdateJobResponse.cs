@@ -7,12 +7,8 @@ namespace Tingle.Dependabot.Models;
 public sealed record UpdateJobResponse(UpdateJobData Data);
 public sealed record UpdateJobData(UpdateJobAttributes Attributes);
 
-public sealed record UpdateJobAttributes()
+public sealed class UpdateJobAttributes
 {
-    public UpdateJobAttributes(UpdateJob job) : this()
-    {
-    }
-
     [JsonPropertyName("allowed-updates")]
     public required IEnumerable<object> AllowedUpdates { get; set; }
 
@@ -65,7 +61,7 @@ public sealed record UpdateJobAttributes()
     public bool? Debug { get; set; }
 }
 
-public sealed record UpdateJobAttributesSource
+public sealed class UpdateJobAttributesSource
 {
     [JsonPropertyName("provider")]
     public required string Provider { get; set; }

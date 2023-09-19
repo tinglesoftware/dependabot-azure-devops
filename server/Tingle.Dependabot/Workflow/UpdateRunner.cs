@@ -206,31 +206,36 @@ internal partial class UpdateRunner
     {
         static string? ToJson<T>(T? entries) => entries is null ? null : JsonSerializer.Serialize(entries, serializerOptions); // null ensures we do not add to the values
 
+        // Prepare extra credentials with replaced secrets
+        var secrets = new Dictionary<string, string>(options.Secrets) { ["DEFAULT_TOKEN"] = options.ProjectToken!, };
+        var registries = update.Registries?.Select(r => repository.Registries[r]).ToList();
+        var credentials = ToJson(MakeExtraCredentials(registries, secrets)); // add source credentials when running the in v2
+
         var jobDirectory = Path.Join(options.WorkingDirectory, job.Id);
 
-        // TODO: write the job definition file (find out if it is YAML/JSON)
-
-        //    var attr = new UpdateJobAttributes(job)
+        //var attr = new UpdateJobAttributes
+        //{
+        //    AllowedUpdates = Array.Empty<object>(),
+        //    CredentialsMetadata = Array.Empty<object>(),
+        //    Dependencies = Array.Empty<object>(),
+        //    Directory = job.Directory!,
+        //    ExistingPullRequests = Array.Empty<object>(),
+        //    IgnoreConditions = Array.Empty<object>(),
+        //    PackageManager = job.PackageEcosystem!,
+        //    RepoName = job.RepositorySlug!,
+        //    SecurityAdvisories = Array.Empty<object>(),
+        //    Source = new UpdateJobAttributesSource
         //    {
-        //        AllowedUpdates = Array.Empty<object>(),
-        //        CredentialsMetadata = Array.Empty<object>(),
-        //        Dependencies = Array.Empty<object>(),
         //        Directory = job.Directory!,
-        //        ExistingPullRequests = Array.Empty<object>(),
-        //        IgnoreConditions = Array.Empty<object>(),
-        //        PackageManager = job.PackageEcosystem,
-        //        RepoName = job.RepositorySlug!,
-        //        SecurityAdvisories = Array.Empty<object>(),
-        //        Source = new UpdateJobAttributesSource
-        //        {
-        //            Directory = job.Directory!,
-        //            Provider = "azure",
-        //            Repo = job.RepositorySlug!,
-        //            Branch = job.Branch,
-        //            Hostname = ,
-        //            ApiEndpoint =,
-        //        },
-        //    };
+        //        Provider = "azure",
+        //        Repo = job.RepositorySlug!,
+        //        Branch = update.TargetBranch,
+        //        Hostname = ,
+        //        ApiEndpoint =,
+        //    },
+        //};
+
+        // TODO: write the job definition file (find out if it is YAML/JSON)
 
         // Add compulsory values
         var values = new Dictionary<string, string>
@@ -243,6 +248,8 @@ internal partial class UpdateRunner
             ["DEPENDABOT_PACKAGE_MANAGER"] = job.PackageEcosystem!,
             ["DEPENDABOT_DIRECTORY"] = update.Directory!,
             ["DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT"] = update.OpenPullRequestsLimit!.Value.ToString(),
+
+            ["DEPENDABOT_EXTRA_CREDENTIALS"] = credentials!,
         };
 
         // Add optional values
@@ -264,8 +271,6 @@ internal partial class UpdateRunner
               .AddIfNotDefault("DEPENDABOT_MILESTONE", update.Milestone?.ToString())
               .AddIfNotDefault("DEPENDABOT_FAIL_ON_EXCEPTION", options.FailOnException.ToString().ToLowerInvariant());
 
-        var secrets = new Dictionary<string, string>(options.Secrets) { ["DEFAULT_TOKEN"] = options.ProjectToken!, };
-
         // Add values for Azure DevOps
         var url = options.ProjectUrl!.Value;
         values.AddIfNotDefault("AZURE_HOSTNAME", url.Hostname)
@@ -278,15 +283,13 @@ internal partial class UpdateRunner
               .AddIfNotDefault("AZURE_MERGE_STRATEGY", options.AutoCompleteMergeStrategy?.ToString())
               .AddIfNotDefault("AZURE_AUTO_APPROVE_PR", (options.AutoApprove ?? false).ToString().ToLowerInvariant());
 
-        // Add extra credentials with replaced secrets
-        var registries = update.Registries?.Select(r => repository.Registries[r]).ToList();
-        values.AddIfNotDefault("DEPENDABOT_EXTRA_CREDENTIALS", ToJson(MakeExtraCredentials(registries, secrets)));
-
         return values;
     }
-    internal static IList<IDictionary<string, string>>? MakeExtraCredentials(ICollection<DependabotRegistry>? registries, IDictionary<string, string> secrets)
+    internal static IList<IDictionary<string, string>> MakeExtraCredentials(ICollection<DependabotRegistry>? registries, IDictionary<string, string> secrets)
     {
-        return registries?.Select(v =>
+        if (registries is null) return Array.Empty<IDictionary<string, string>>();
+
+        return registries.Select(v =>
         {
             var type = v.Type?.Replace("-", "_") ?? throw new InvalidOperationException("Type should not be null");
 
