@@ -6,103 +6,29 @@ using Tingle.Dependabot.Events;
 using Tingle.Dependabot.Models;
 using Tingle.Dependabot.Models.Dependabot;
 using Tingle.Dependabot.Models.Management;
-using Tingle.Dependabot.Workflow;
+using Tingle.Dependabot.PeriodicTasks;
 using Tingle.EventBus;
 using Tingle.EventBus.Transports.InMemory;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Tingle.Dependabot.Tests.Workflow;
+namespace Tingle.Dependabot.Tests.PeriodicTasks;
 
-public class WorkflowBackgroundServiceTests
+public class UpdateJobsCleanerTaskTests
 {
     private const string RepositoryId = "repo_1234567890";
-    private const int UpdateId1 = 1;
 
     private readonly ITestOutputHelper outputHelper;
 
-    public WorkflowBackgroundServiceTests(ITestOutputHelper outputHelper)
+    public UpdateJobsCleanerTaskTests(ITestOutputHelper outputHelper)
     {
         this.outputHelper = outputHelper ?? throw new ArgumentNullException(nameof(outputHelper));
     }
 
     [Fact]
-    public async Task SynchronizationInnerAsync_Works()
+    public async Task CleanupAsync_ResolvesJobs()
     {
-        await TestAsync(async (harness, context, service) =>
-        {
-            await service.SynchronizationInnerAsync();
-
-            // Ensure the message was published
-            var evt_context = Assert.IsType<EventContext<ProcessSynchronization>>(Assert.Single(await harness.PublishedAsync()));
-            var inner = evt_context.Event;
-            Assert.NotNull(inner);
-            Assert.Null(inner.RepositoryId);
-            Assert.Null(inner.RepositoryProviderId);
-            Assert.False(inner.Trigger);
-        });
-    }
-
-    [Fact]
-    public async Task CheckMissedTriggerInnerAsync_MissedScheduleIsDetected()
-    {
-        var referencePoint = DateTimeOffset.Parse("2023-01-24T05:00:00+00:00");
-        var lastUpdate0 = DateTimeOffset.Parse("2023-01-24T03:45:00+00:00");
-        var lastUpdate1 = DateTimeOffset.Parse("2023-01-23T03:30:00+00:00");
-        await TestAsync(lastUpdate0, lastUpdate1, async (harness, context, service) =>
-        {
-            await service.CheckMissedTriggerInnerAsync(referencePoint);
-
-            // Ensure the message was published
-            var evt_context = Assert.IsType<EventContext<TriggerUpdateJobsEvent>>(Assert.Single(await harness.PublishedAsync()));
-            var inner = evt_context.Event;
-            Assert.NotNull(inner);
-            Assert.Equal(RepositoryId, inner.RepositoryId);
-            Assert.Equal(UpdateId1, inner.RepositoryUpdateId);
-            Assert.Equal(UpdateJobTrigger.MissedSchedule, inner.Trigger);
-        });
-    }
-
-    [Fact]
-    public async Task CheckMissedTriggerInnerAsync_MissedScheduleIsDetected_NotRun_Before()
-    {
-        var referencePoint = DateTimeOffset.Parse("2023-01-24T05:00:00+00:00");
-        var lastUpdate0 = DateTimeOffset.Parse("2023-01-24T03:45:00+00:00");
-        var lastUpdate1 = (DateTimeOffset?)null;
-        await TestAsync(lastUpdate0, lastUpdate1, async (harness, context, service) =>
-        {
-            await service.CheckMissedTriggerInnerAsync(referencePoint);
-
-            // Ensure the message was published
-            var evt_context = Assert.IsType<EventContext<TriggerUpdateJobsEvent>>(Assert.Single(await harness.PublishedAsync()));
-            var inner = evt_context.Event;
-            Assert.NotNull(inner);
-            Assert.Equal(RepositoryId, inner.RepositoryId);
-            Assert.Equal(UpdateId1, inner.RepositoryUpdateId);
-            Assert.Equal(UpdateJobTrigger.MissedSchedule, inner.Trigger);
-        });
-    }
-
-    [Fact]
-    public async Task CheckMissedTriggerInnerAsync_NoMissedSchedule()
-    {
-        var referencePoint = DateTimeOffset.Parse("2023-01-24T05:00:00+00:00");
-        var lastUpdate0 = DateTimeOffset.Parse("2023-01-24T03:45:00+00:00");
-        var lastUpdate1 = DateTimeOffset.Parse("2023-01-24T03:30:00+00:00");
-        await TestAsync(lastUpdate0, lastUpdate1, async (harness, context, service) =>
-        {
-            await service.CheckMissedTriggerInnerAsync(referencePoint);
-
-            // Ensure nothing was published
-            Assert.Empty(await harness.PublishedAsync());
-        });
-    }
-
-
-    [Fact]
-    public async Task CleanupInnerAsync_ResolvesJobs()
-    {
-        await TestAsync(async (harness, context, job) =>
+        await TestAsync(async (harness, context, pt) =>
         {
             var targetId = Guid.NewGuid().ToString();
             await context.UpdateJobs.AddAsync(new UpdateJob
@@ -143,7 +69,7 @@ public class WorkflowBackgroundServiceTests
             });
             await context.SaveChangesAsync();
 
-            await job.CleanupInnerAsync();
+            await pt.CleanupAsync();
 
             // Ensure the message was published
             var evt_context = Assert.IsType<EventContext<UpdateJobCheckStateEvent>>(Assert.Single(await harness.PublishedAsync()));
@@ -154,9 +80,9 @@ public class WorkflowBackgroundServiceTests
     }
 
     [Fact]
-    public async Task CleanupInnerAsync_DeletesOldJobsAsync()
+    public async Task CleanupAsync_DeletesOldJobsAsync()
     {
-        await TestAsync(async (harness, context, job) =>
+        await TestAsync(async (harness, context, pt) =>
         {
             await context.UpdateJobs.AddAsync(new UpdateJob
             {
@@ -193,14 +119,12 @@ public class WorkflowBackgroundServiceTests
             });
             await context.SaveChangesAsync();
 
-            await job.CleanupInnerAsync();
+            await pt.CleanupAsync();
             Assert.Equal(1, await context.UpdateJobs.CountAsync());
         });
     }
 
-    private Task TestAsync(Func<InMemoryTestHarness, MainDbContext, WorkflowBackgroundService, Task> executeAndVerify) => TestAsync(null, null, executeAndVerify);
-
-    private async Task TestAsync(DateTimeOffset? lastUpdate0, DateTimeOffset? lastUpdate1, Func<InMemoryTestHarness, MainDbContext, WorkflowBackgroundService, Task> executeAndVerify)
+    private async Task TestAsync(Func<InMemoryTestHarness, MainDbContext, UpdateJobsCleanerTask, Task> executeAndVerify)
     {
         var host = Host.CreateDefaultBuilder()
                        .ConfigureLogging(builder => builder.AddXUnit(outputHelper))
@@ -238,7 +162,6 @@ public class WorkflowBackgroundServiceTests
                         Interval = DependabotScheduleInterval.Daily,
                         Time = new(3, 45),
                     },
-                    LatestUpdate = lastUpdate0,
                 },
                 new RepositoryUpdate
                 {
@@ -249,7 +172,6 @@ public class WorkflowBackgroundServiceTests
                         Interval = DependabotScheduleInterval.Daily,
                         Time = new(3, 30),
                     },
-                    LatestUpdate = lastUpdate1,
                 },
             },
         });
@@ -260,9 +182,9 @@ public class WorkflowBackgroundServiceTests
 
         try
         {
-            var service = ActivatorUtilities.GetServiceOrCreateInstance<WorkflowBackgroundService>(provider);
+            var pt = ActivatorUtilities.GetServiceOrCreateInstance<UpdateJobsCleanerTask>(provider);
 
-            await executeAndVerify(harness, context, service);
+            await executeAndVerify(harness, context, pt);
 
             // Ensure there were no publish failures
             Assert.Empty(await harness.FailedAsync());

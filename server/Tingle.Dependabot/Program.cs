@@ -7,6 +7,7 @@ using System.Text.Json;
 using Tingle.Dependabot;
 using Tingle.Dependabot.Consumers;
 using Tingle.Dependabot.Models;
+using Tingle.Dependabot.PeriodicTasks;
 using Tingle.Dependabot.Workflow;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -75,7 +76,6 @@ builder.Services.AddSingleton<UpdateRunner>();
 builder.Services.AddSingleton<UpdateScheduler>();
 builder.Services.AddScoped<AzureDevOpsProvider>();
 builder.Services.AddScoped<Synchronizer>();
-builder.Services.AddHostedService<WorkflowBackgroundService>();
 
 // Add event bus
 var selectedTransport = builder.Configuration.GetValue<EventBusTransportKind?>("EventBus:SelectedTransport");
@@ -98,6 +98,13 @@ builder.Services.AddEventBus(builder =>
     {
         builder.AddInMemoryTransport();
     }
+});
+
+builder.Services.AddPeriodicTasks(builder =>
+{
+    builder.AddTask<MissedTriggerCheckerTask>(schedule: "0 * * * *"); // every hour
+    builder.AddTask<UpdateJobsCleanerTask>(schedule: "*/15 * * * *"); // every 15 minutes
+    builder.AddTask<SynchronizationTask>(schedule: "23 */6 * * *"); // every 6 hours at minute 23
 });
 
 // Add health checks
