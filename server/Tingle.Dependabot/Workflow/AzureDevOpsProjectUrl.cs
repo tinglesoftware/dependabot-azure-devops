@@ -15,6 +15,12 @@ public readonly struct AzureDevOpsProjectUrl : IEquatable<AzureDevOpsProjectUrl>
     {
         this.uri = uri ?? throw new ArgumentNullException(nameof(uri));
         var host = Hostname = uri.Host;
+        Port = uri switch
+        {
+            { Scheme: "http", Port: 80 } => null,
+            { Scheme: "https", Port: 443 } => null,
+            _ => uri.Port,
+        };
 
         var builder = new UriBuilder(uri) { UserName = null, Password = null };
         if (string.Equals(host, "dev.azure.com", StringComparison.OrdinalIgnoreCase))
@@ -29,6 +35,7 @@ public readonly struct AzureDevOpsProjectUrl : IEquatable<AzureDevOpsProjectUrl>
             builder.Path = string.Empty;
             ProjectIdOrName = uri.AbsolutePath.Replace("_apis/projects/", "").Split("/")[1];
         }
+        // TODO: add support for Azure DevOps Server here
         else throw new ArgumentException($"Error parsing: '{uri}' into components");
 
         OrganizationUrl = builder.Uri.ToString();
@@ -52,6 +59,7 @@ public readonly struct AzureDevOpsProjectUrl : IEquatable<AzureDevOpsProjectUrl>
     }
 
     public string Hostname { get; }
+    public int? Port { get; }
     public string OrganizationName { get; }
     public string OrganizationUrl { get; }
     public string ProjectIdOrName { get; }
