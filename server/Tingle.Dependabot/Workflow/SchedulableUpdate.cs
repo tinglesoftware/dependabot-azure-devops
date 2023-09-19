@@ -1,4 +1,4 @@
-﻿using Tingle.Dependabot.Models;
+﻿using Tingle.Dependabot.Models.Dependabot;
 
 namespace Tingle.Dependabot.Workflow;
 

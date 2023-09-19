@@ -1,7 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using Tingle.Dependabot.Models.Dependabot;
 
-namespace Tingle.Dependabot.Models;
+namespace Tingle.Dependabot.Models.Management;
 
 public class Repository
 {

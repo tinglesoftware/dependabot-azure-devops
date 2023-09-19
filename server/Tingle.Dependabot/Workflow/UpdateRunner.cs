@@ -9,7 +9,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
-using Tingle.Dependabot.Models;
+using Tingle.Dependabot.Models.Dependabot;
+using Tingle.Dependabot.Models.Management;
 
 namespace Tingle.Dependabot.Workflow;
 

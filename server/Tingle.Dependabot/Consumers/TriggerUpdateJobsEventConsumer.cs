@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Tingle.Dependabot.Events;
 using Tingle.Dependabot.Models;
+using Tingle.Dependabot.Models.Management;
 using Tingle.Dependabot.Workflow;
 using Tingle.EventBus;
 

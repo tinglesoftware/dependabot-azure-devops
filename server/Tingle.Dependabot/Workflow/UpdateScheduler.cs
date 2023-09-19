@@ -1,6 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using Tingle.Dependabot.Events;
-using Tingle.Dependabot.Models;
+using Tingle.Dependabot.Models.Management;
 using Tingle.EventBus;
 using Tingle.PeriodicTasks;
 

@@ -2,7 +2,7 @@
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 
-namespace Tingle.Dependabot.Models;
+namespace Tingle.Dependabot.Models.Management;
 
 // This class independent of one-to-many relationships for detached and prolonged tracking.
 // The records are cleaned up on a schedule.

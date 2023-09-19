@@ -1,7 +1,7 @@
 ﻿using Azure.ResourceManager.AppContainers.Models;
 using System.ComponentModel.DataAnnotations;
 
-namespace Tingle.Dependabot.Models;
+namespace Tingle.Dependabot.Models.Management;
 
 public class UpdateJobResources
 {

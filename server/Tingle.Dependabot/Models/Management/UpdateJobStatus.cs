@@ -1,4 +1,4 @@
-﻿namespace Tingle.Dependabot.Models;
+﻿namespace Tingle.Dependabot.Models.Management;
 
 public enum UpdateJobStatus
 {

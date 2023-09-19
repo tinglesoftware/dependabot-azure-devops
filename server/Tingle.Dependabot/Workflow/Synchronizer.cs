@@ -3,6 +3,8 @@ using Microsoft.Extensions.Options;
 using System.ComponentModel.DataAnnotations;
 using Tingle.Dependabot.Events;
 using Tingle.Dependabot.Models;
+using Tingle.Dependabot.Models.Dependabot;
+using Tingle.Dependabot.Models.Management;
 using Tingle.EventBus;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;

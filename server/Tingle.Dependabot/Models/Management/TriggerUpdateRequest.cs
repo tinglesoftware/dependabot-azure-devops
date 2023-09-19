@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Tingle.Dependabot.Models;
+namespace Tingle.Dependabot.Models.Management;
 
 /// <summary>
 /// Represents a model for triggering an update job.
