@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 using Tingle.Dependabot.Events;
-using Tingle.Dependabot.Models;
+using Tingle.Dependabot.Models.Azure;
 using Tingle.EventBus;
 
 namespace Tingle.Dependabot.Controllers;
