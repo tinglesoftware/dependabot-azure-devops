@@ -9,7 +9,6 @@ using Microsoft.Extensions.Logging;
 using System.Net;
 using System.Text;
 using System.Text.Json;
-using Tingle.Dependabot.Controllers;
 using Tingle.Dependabot.Events;
 using Tingle.Dependabot.Models;
 using Tingle.EventBus;

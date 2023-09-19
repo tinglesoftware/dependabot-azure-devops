@@ -2,20 +2,12 @@ using AspNetCore.Authentication.ApiKey;
 using AspNetCore.Authentication.Basic;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using MiniValidation;
-using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using Tingle.Dependabot;
 using Tingle.Dependabot.Consumers;
-using Tingle.Dependabot.Events;
 using Tingle.Dependabot.Models;
-using Tingle.Dependabot.Models.Dependabot;
-using Tingle.Dependabot.Models.Management;
 using Tingle.Dependabot.Workflow;
-using Tingle.EventBus;
 
 var builder = WebApplication.CreateBuilder(args);
 
