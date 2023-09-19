@@ -285,9 +285,9 @@ internal partial class UpdateRunner
         var url = options.ProjectUrl!.Value;
         var credentialsMetadata = MakeCredentialsMetadata(credentials);
 
-        var definition = new DependabotUpdateJobDefinition
+        var definition = new JsonObject
         {
-            Job = new JsonObject
+            ["job"] = new JsonObject
             {
                 ["allowed-updates"] = ToJsonNode(update.Allow ?? new()),
                 ["credentials-metadata"] = ToJsonNode(credentialsMetadata).AsArray(),
@@ -320,7 +320,7 @@ internal partial class UpdateRunner
                 ["security-updates-only"] = update.OpenPullRequestsLimit == 0,
                 ["debug"] = false,
             },
-            Credentials = ToJsonNode(credentials).AsArray(),
+            ["credentials"] = ToJsonNode(credentials).AsArray(),
         };
 
         // write the job definition file

@@ -4,15 +4,6 @@ using System.Text.Json.Serialization;
 
 namespace Tingle.Dependabot.Models;
 
-public sealed class DependabotUpdateJobDefinition
-{
-    [JsonPropertyName("job")]
-    public required JsonObject? Job { get; set; }
-
-    [JsonPropertyName("credentials")]
-    public required JsonArray Credentials { get; set; }
-}
-
 public sealed class CreatePullRequestModel
 {
     [Required]
