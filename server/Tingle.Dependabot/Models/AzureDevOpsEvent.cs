@@ -3,7 +3,7 @@ using System.Runtime.Serialization;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 
-namespace Tingle.Dependabot;
+namespace Tingle.Dependabot.Models;
 
 public class AzureDevOpsEvent
 {

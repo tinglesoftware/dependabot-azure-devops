@@ -35,6 +35,14 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 // Add data protection
 builder.Services.AddDataProtection().PersistKeysToDbContext<MainDbContext>();
 
+// Add controllers
+builder.Services.AddControllers()
+                .AddControllersAsServices()
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.AllowTrailingCommas = true;
+                    options.JsonSerializerOptions.ReadCommentHandling = JsonCommentHandling.Skip;
+                });
 
 // Configure any generated URL to be in lower case
 builder.Services.Configure<RouteOptions>(options => options.LowercaseUrls = true);
@@ -69,12 +77,6 @@ builder.Services.AddMemoryCache();
 builder.Services.AddDistributedMemoryCache();
 
 // Configure other services
-builder.Services.ConfigureHttpJsonOptions(options =>
-{
-    options.SerializerOptions.AllowTrailingCommas = true;
-    options.SerializerOptions.ReadCommentHandling = JsonCommentHandling.Skip;
-});
-builder.Services.AddNotificationsHandler();
 builder.Services.AddWorkflowServices(builder.Configuration.GetSection("Workflow"));
 
 // Add event bus
@@ -113,7 +115,7 @@ app.UseAuthorization();
 
 app.MapHealthChecks("/health");
 app.MapHealthChecks("/liveness", new HealthCheckOptions { Predicate = _ => false, });
-app.MapWebhooks();
+app.MapControllers();
 app.MapManagementApi();
 app.MapUpdateJobsApi();
 
@@ -126,12 +128,6 @@ internal enum EventBusTransportKind { InMemory, ServiceBus, }
 
 internal static class ApplicationExtensions
 {
-    public static IServiceCollection AddNotificationsHandler(this IServiceCollection services)
-    {
-        services.AddScoped<AzureDevOpsEventHandler>();
-        return services;
-    }
-
     public static IServiceCollection AddWorkflowServices(this IServiceCollection services, IConfiguration configuration)
     {
         services.Configure<WorkflowOptions>(configuration);
@@ -145,21 +141,6 @@ internal static class ApplicationExtensions
         services.AddHostedService<WorkflowBackgroundService>();
 
         return services;
-    }
-
-    public static IEndpointConventionBuilder MapWebhooks(this IEndpointRouteBuilder builder)
-    {
-        var endpoint = builder.MapPost("/webhooks/azure", async (AzureDevOpsEventHandler handler, [FromBody] AzureDevOpsEvent model) =>
-        {
-            if (!MiniValidator.TryValidate(model, out var errors)) return Results.ValidationProblem(errors);
-
-            await handler.HandleAsync(model);
-            return Results.Ok();
-        });
-
-        endpoint.RequireAuthorization(AuthConstants.PolicyNameServiceHooks);
-
-        return endpoint;
     }
 
     public static IEndpointRouteBuilder MapManagementApi(this IEndpointRouteBuilder builder)

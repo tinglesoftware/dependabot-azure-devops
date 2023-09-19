@@ -8,6 +8,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Net;
 using System.Text;
+using System.Text.Json;
+using Tingle.Dependabot.Controllers;
 using Tingle.Dependabot.Events;
 using Tingle.Dependabot.Models;
 using Tingle.EventBus;
@@ -17,11 +19,11 @@ using Xunit.Abstractions;
 
 namespace Tingle.Dependabot.Tests;
 
-public class AzureDevOpsEventHandlerTests
+public class WebhooksControllerIntegrationTests
 {
     private readonly ITestOutputHelper outputHelper;
 
-    public AzureDevOpsEventHandlerTests(ITestOutputHelper outputHelper)
+    public WebhooksControllerIntegrationTests(ITestOutputHelper outputHelper)
     {
         this.outputHelper = outputHelper ?? throw new ArgumentNullException(nameof(outputHelper));
     }
@@ -29,7 +31,7 @@ public class AzureDevOpsEventHandlerTests
     [Fact]
     public async Task Returns_Unauthorized()
     {
-        await TestAsync(async (harness, client, handler) =>
+        await TestAsync(async (harness, client) =>
         {
             // without Authorization header
             var request = new HttpRequestMessage(HttpMethod.Post, "/webhooks/azure");
@@ -44,7 +46,6 @@ public class AzureDevOpsEventHandlerTests
             response = await client.SendAsync(request);
             Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
             Assert.Empty(await response.Content.ReadAsStringAsync());
-            Assert.Empty(handler.Calls);
             Assert.Empty(await harness.PublishedAsync());
         });
     }
@@ -52,15 +53,18 @@ public class AzureDevOpsEventHandlerTests
     [Fact]
     public async Task Returns_BadRequest_NoBody()
     {
-        await TestAsync(async (harness, client, handler) =>
+        await TestAsync(async (harness, client) =>
         {
             var request = new HttpRequestMessage(HttpMethod.Post, "/webhooks/azure");
             request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes("vsts:burp-bump")));
             request.Content = new StringContent("", Encoding.UTF8, "application/json");
             var response = await client.SendAsync(request);
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-            Assert.Empty(await response.Content.ReadAsStringAsync());
-            Assert.Empty(handler.Calls);
+            var body = await response.Content.ReadAsStringAsync();
+            Assert.Contains("\"type\":\"https://tools.ietf.org/html/rfc7231#section-6.5.1\"", body);
+            Assert.Contains("\"title\":\"One or more validation errors occurred.\"", body);
+            Assert.Contains("\"status\":400", body);
+            Assert.Contains("\"errors\":{\"\":[\"A non-empty request body is required.\"],\"model\":[\"The model field is required.\"]}", body);
             Assert.Empty(await harness.PublishedAsync());
         });
     }
@@ -68,7 +72,7 @@ public class AzureDevOpsEventHandlerTests
     [Fact]
     public async Task Returns_BadRequest_MissingValues()
     {
-        await TestAsync(async (harness, client, handler) =>
+        await TestAsync(async (harness, client) =>
         {
             var request = new HttpRequestMessage(HttpMethod.Post, "/webhooks/azure");
             request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes("vsts:burp-bump")));
@@ -82,7 +86,6 @@ public class AzureDevOpsEventHandlerTests
             Assert.Contains("\"SubscriptionId\":[\"The SubscriptionId field is required.\"]", body);
             Assert.Contains("\"EventType\":[\"The EventType field is required.\"]", body);
             Assert.Contains("\"Resource\":[\"The Resource field is required.\"]", body);
-            Assert.Empty(handler.Calls);
             Assert.Empty(await harness.PublishedAsync());
         });
     }
@@ -90,7 +93,7 @@ public class AzureDevOpsEventHandlerTests
     [Fact]
     public async Task Returns_UnsupportedMediaType()
     {
-        await TestAsync(async (harness, client, handler) =>
+        await TestAsync(async (harness, client) =>
         {
             var stream = TestSamples.GetAzureDevOpsPullRequestUpdated1();
             var request = new HttpRequestMessage(HttpMethod.Post, "/webhooks/azure");
@@ -98,8 +101,10 @@ public class AzureDevOpsEventHandlerTests
             request.Content = new StreamContent(stream);
             var response = await client.SendAsync(request);
             Assert.Equal(HttpStatusCode.UnsupportedMediaType, response.StatusCode);
-            Assert.Empty(await response.Content.ReadAsStringAsync());
-            Assert.Empty(handler.Calls);
+            var body = await response.Content.ReadAsStringAsync();
+            Assert.Contains("\"type\":\"https://tools.ietf.org/html/rfc7231#section-6.5.13\"", body);
+            Assert.Contains("\"title\":\"Unsupported Media Type\"", body);
+            Assert.Contains("\"status\":415", body);
             Assert.Empty(await harness.PublishedAsync());
         });
     }
@@ -107,7 +112,7 @@ public class AzureDevOpsEventHandlerTests
     [Fact]
     public async Task Returns_OK_CodePush()
     {
-        await TestAsync(async (harness, client, handler) =>
+        await TestAsync(async (harness, client) =>
         {
             var stream = TestSamples.GetAzureDevOpsGitPush1();
             var request = new HttpRequestMessage(HttpMethod.Post, "/webhooks/azure");
@@ -117,10 +122,6 @@ public class AzureDevOpsEventHandlerTests
             var response = await client.SendAsync(request);
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             Assert.Empty(await response.Content.ReadAsStringAsync());
-            var call = Assert.Single(handler.Calls);
-            Assert.Equal("435e539d-3ce2-4283-8da9-8f3c0fe2e45e", call.SubscriptionId);
-            Assert.Equal(3, call.NotificationId);
-            Assert.Equal(AzureDevOpsEventType.GitPush, call.EventType);
 
             // Ensure the message was published
             var context = Assert.IsType<EventContext<ProcessSynchronization>>(Assert.Single(await harness.PublishedAsync(TimeSpan.FromSeconds(1f))));
@@ -135,7 +136,7 @@ public class AzureDevOpsEventHandlerTests
     [Fact]
     public async Task Returns_OK_PullRequestUpdated()
     {
-        await TestAsync(async (harness, client, handler) =>
+        await TestAsync(async (harness, client) =>
         {
             var stream = TestSamples.GetAzureDevOpsPullRequestUpdated1();
             var request = new HttpRequestMessage(HttpMethod.Post, "/webhooks/azure");
@@ -145,10 +146,6 @@ public class AzureDevOpsEventHandlerTests
             var response = await client.SendAsync(request);
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             Assert.Empty(await response.Content.ReadAsStringAsync());
-            var call = Assert.Single(handler.Calls);
-            Assert.Equal("435e539d-3ce2-4283-8da9-8f3c0fe2e45e", call.SubscriptionId);
-            Assert.Equal(3, call.NotificationId);
-            Assert.Equal(AzureDevOpsEventType.GitPullRequestUpdated, call.EventType);
             Assert.Empty(await harness.PublishedAsync());
         });
     }
@@ -156,7 +153,7 @@ public class AzureDevOpsEventHandlerTests
     [Fact]
     public async Task Returns_OK_PullRequestMerged()
     {
-        await TestAsync(async (harness, client, handler) =>
+        await TestAsync(async (harness, client) =>
         {
             var stream = TestSamples.GetAzureDevOpsPullRequestMerged1();
             var request = new HttpRequestMessage(HttpMethod.Post, "/webhooks/azure");
@@ -166,10 +163,6 @@ public class AzureDevOpsEventHandlerTests
             var response = await client.SendAsync(request);
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             Assert.Empty(await response.Content.ReadAsStringAsync());
-            var call = Assert.Single(handler.Calls);
-            Assert.Equal("435e539d-3ce2-4283-8da9-8f3c0fe2e45e", call.SubscriptionId);
-            Assert.Equal(3, call.NotificationId);
-            Assert.Equal(AzureDevOpsEventType.GitPullRequestMerged, call.EventType);
             Assert.Empty(await harness.PublishedAsync());
         });
     }
@@ -177,7 +170,7 @@ public class AzureDevOpsEventHandlerTests
     [Fact]
     public async Task Returns_OK_PullRequestCommentEvent()
     {
-        await TestAsync(async (harness, client, handler) =>
+        await TestAsync(async (harness, client) =>
         {
             var stream = TestSamples.GetAzureDevOpsPullRequestCommentEvent1();
             var request = new HttpRequestMessage(HttpMethod.Post, "/webhooks/azure");
@@ -187,15 +180,11 @@ public class AzureDevOpsEventHandlerTests
             var response = await client.SendAsync(request);
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             Assert.Empty(await response.Content.ReadAsStringAsync());
-            var call = Assert.Single(handler.Calls);
-            Assert.Equal("435e539d-3ce2-4283-8da9-8f3c0fe2e45e", call.SubscriptionId);
-            Assert.Equal(3, call.NotificationId);
-            Assert.Equal(AzureDevOpsEventType.GitPullRequestCommentEvent, call.EventType);
             Assert.Empty(await harness.PublishedAsync());
         });
     }
 
-    private async Task TestAsync(Func<InMemoryTestHarness, HttpClient, ModifiedAzureDevOpsEventHandler, Task> executeAndVerify)
+    private async Task TestAsync(Func<InMemoryTestHarness, HttpClient, Task> executeAndVerify)
     {
         // Arrange
         var builder = new WebHostBuilder()
@@ -209,6 +198,14 @@ public class AzureDevOpsEventHandlerTests
             })
             .ConfigureServices((context, services) =>
             {
+                services.AddControllers()
+                        .AddApplicationPart(typeof(WebhooksController).Assembly)
+                        .AddJsonOptions(options =>
+                        {
+                            options.JsonSerializerOptions.AllowTrailingCommas = true;
+                            options.JsonSerializerOptions.ReadCommentHandling = JsonCommentHandling.Skip;
+                        });
+
                 var dbName = Guid.NewGuid().ToString();
                 var configuration = context.Configuration;
                 services.AddDbContext<MainDbContext>(options =>
@@ -217,8 +214,6 @@ public class AzureDevOpsEventHandlerTests
                     options.EnableDetailedErrors();
                 });
                 services.AddRouting();
-                services.AddNotificationsHandler();
-                services.AddSingleton<AzureDevOpsEventHandler, ModifiedAzureDevOpsEventHandler>();
 
                 services.AddAuthentication()
                         .AddBasic<BasicUserValidationService>(AuthConstants.SchemeNameServiceHooks, options => options.Realm = "Dependabot");
@@ -242,7 +237,7 @@ public class AzureDevOpsEventHandlerTests
                 app.UseAuthorization();
                 app.UseEndpoints(endpoints =>
                 {
-                    endpoints.MapWebhooks();
+                    endpoints.MapControllers();
                 });
             });
         using var server = new TestServer(builder);
@@ -253,8 +248,6 @@ public class AzureDevOpsEventHandlerTests
         var context = provider.GetRequiredService<MainDbContext>();
         await context.Database.EnsureCreatedAsync();
 
-        var handler = Assert.IsType<ModifiedAzureDevOpsEventHandler>(provider.GetRequiredService<AzureDevOpsEventHandler>());
-
         var harness = provider.GetRequiredService<InMemoryTestHarness>();
         await harness.StartAsync();
 
@@ -262,7 +255,7 @@ public class AzureDevOpsEventHandlerTests
         {
             var client = server.CreateClient();
 
-            await executeAndVerify(harness, client, handler);
+            await executeAndVerify(harness, client);
 
             // Ensure there were no publish failures
             Assert.Empty(await harness.FailedAsync());
@@ -270,20 +263,6 @@ public class AzureDevOpsEventHandlerTests
         finally
         {
             await harness.StopAsync();
-        }
-    }
-
-    class ModifiedAzureDevOpsEventHandler : AzureDevOpsEventHandler
-    {
-        public ModifiedAzureDevOpsEventHandler(IEventPublisher publisher, ILogger<AzureDevOpsEventHandler> logger)
-            : base(publisher, logger) { }
-
-        public List<AzureDevOpsEvent> Calls { get; } = new();
-
-        public override async Task HandleAsync(AzureDevOpsEvent model, CancellationToken cancellationToken)
-        {
-            Calls.Add(model);
-            await base.HandleAsync(model, cancellationToken);
         }
     }
 }

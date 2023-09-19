@@ -1,4 +1,4 @@
-﻿namespace Tingle.Dependabot.Models.Management;
+﻿namespace Tingle.Dependabot.Models;
 
 public enum MergeStrategy
 {

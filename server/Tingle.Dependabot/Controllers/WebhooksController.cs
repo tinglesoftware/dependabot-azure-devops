@@ -1,22 +1,28 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 using Tingle.Dependabot.Events;
+using Tingle.Dependabot.Models;
 using Tingle.EventBus;
 
-namespace Tingle.Dependabot;
+namespace Tingle.Dependabot.Controllers;
 
-internal class AzureDevOpsEventHandler
+[ApiController]
+[Route("/webhooks")]
+[Authorize(AuthConstants.PolicyNameServiceHooks)]
+public class WebhooksController : ControllerBase
 {
     private readonly IEventPublisher publisher;
     private readonly ILogger logger;
 
-    public AzureDevOpsEventHandler(IEventPublisher publisher, ILogger<AzureDevOpsEventHandler> logger)
+    public WebhooksController(IEventPublisher publisher, ILogger<WebhooksController> logger)
     {
         this.publisher = publisher ?? throw new ArgumentNullException(nameof(publisher));
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public virtual async Task HandleAsync(AzureDevOpsEvent model, CancellationToken cancellationToken = default)
+    [HttpPost("azure")]
+    public async Task<IActionResult> PostAsync([FromBody] AzureDevOpsEvent model)
     {
         var type = model.EventType;
         logger.LogDebug("Received {EventType} notification {NotificationId} on subscription {SubscriptionId}",
@@ -37,7 +43,7 @@ internal class AzureDevOpsEventHandler
             {
                 // request synchronization of the repository
                 var evt = new ProcessSynchronization(true, repositoryProviderId: adoRepositoryId);
-                await publisher.PublishAsync(evt, cancellationToken: cancellationToken);
+                await publisher.PublishAsync(evt);
             }
         }
         else if (type is AzureDevOpsEventType.GitPullRequestUpdated or AzureDevOpsEventType.GitPullRequestMerged)
@@ -93,5 +99,7 @@ internal class AzureDevOpsEventHandler
         {
             logger.LogWarning("'{EventType}' events are not supported!", type);
         }
+
+        return Ok();
     }
 }
