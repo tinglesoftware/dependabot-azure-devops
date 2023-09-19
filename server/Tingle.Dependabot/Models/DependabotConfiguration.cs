@@ -53,15 +53,16 @@ public record DependabotUpdate
     [JsonPropertyName("schedule")]
     public DependabotUpdateSchedule? Schedule { get; set; }
 
-    [Required]
     [JsonPropertyName("open-pull-requests-limit")]
-    public int? OpenPullRequestsLimit { get; set; } = 5;
+    public int OpenPullRequestsLimit { get; set; } = 5;
 
     [JsonPropertyName("registries")]
     public List<string>? Registries { get; set; }
 
     [JsonPropertyName("allow")]
     public List<DependabotAllowDependency>? Allow { get; set; }
+    [JsonPropertyName("ignore")]
+    public List<DependabotIgnoreDependency>? Ignore { get; set; }
     [JsonPropertyName("labels")]
     public List<string>? Labels { get; set; }
     [JsonPropertyName("milestone")]
@@ -116,14 +117,40 @@ public class DependabotUpdateSchedule
     }
 }
 
-public class DependabotAllowDependency
+public class DependabotAllowDependency : IValidatableObject
 {
     [JsonPropertyName("dependency-name")]
     public string? DependencyName { get; set; }
     [JsonPropertyName("dependency-type")]
     public string? DependencyType { get; set; }
 
-    public bool IsValid() => DependencyName is not null || DependencyType is not null;
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (DependencyName is null && DependencyType is null)
+        {
+            yield return new ValidationResult("Each entry under 'allow' must have 'dependency-name', 'dependency-type' or both set");
+        }
+    }
+}
+
+public class DependabotIgnoreDependency : IValidatableObject
+{
+    [JsonPropertyName("dependency-name")]
+    public string? DependencyName { get; set; }
+
+    [JsonPropertyName("versions")]
+    public IList<string>? Versions { get; set; }
+
+    [JsonPropertyName("update-types")]
+    public IList<string>? UpdateTypes { get; set; }
+
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (DependencyName is null && Versions is null && UpdateTypes is null)
+        {
+            yield return new ValidationResult("Each entry under 'ignore' must have one of 'dependency-name', 'versions', or 'update-types' set");
+        }
+    }
 }
 
 public class DependabotPullRequestBranchName

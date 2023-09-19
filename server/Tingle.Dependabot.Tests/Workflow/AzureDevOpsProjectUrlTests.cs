@@ -15,6 +15,7 @@ public class AzureDevOpsProjectUrlTests
     {
         var url = (AzureDevOpsProjectUrl)projectUrl;
         Assert.Equal(hostname, url.Hostname);
+        Assert.Null(url.Port);
         Assert.Equal(organizationName, url.OrganizationName);
         Assert.Equal(organizationUrl, url.OrganizationUrl);
         Assert.Equal(projectIdOrName, url.ProjectIdOrName);

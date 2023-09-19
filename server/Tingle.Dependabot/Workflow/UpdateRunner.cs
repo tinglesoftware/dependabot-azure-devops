@@ -5,6 +5,7 @@ using Azure.ResourceManager.AppContainers;
 using Azure.ResourceManager.AppContainers.Models;
 using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Options;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
@@ -18,6 +19,7 @@ internal partial class UpdateRunner
     private static partial Regex PlaceholderPattern();
 
     private const string UpdaterContainerName = "updater";
+    private const string JobDefinitionFileName = "job.json";
 
     private static readonly JsonSerializerOptions serializerOptions = new(JsonSerializerDefaults.Web);
 
@@ -50,6 +52,12 @@ internal partial class UpdateRunner
         }
         catch (Azure.RequestFailedException rfe) when (rfe.Status is 404) { }
 
+        // prepare credentials with replaced secrets
+        var secrets = new Dictionary<string, string>(options.Secrets) { ["DEFAULT_TOKEN"] = options.ProjectToken!, };
+        var registries = update.Registries?.Select(r => repository.Registries[r]).ToList();
+        var credentials = MakeExtraCredentials(registries, secrets); // add source credentials when running the in v2
+        var directory = Path.Join(options.WorkingDirectory, job.Id);
+
         // prepare the container
         var volumeName = "working-dir";
         var container = new ContainerAppContainer
@@ -58,9 +66,9 @@ internal partial class UpdateRunner
             Image = options.UpdaterContainerImageTemplate!.Replace("{{ecosystem}}", job.PackageEcosystem),
             Resources = job.Resources!,
             Args = { "update_script", },
-            VolumeMounts = { new ContainerAppVolumeMount { VolumeName = volumeName, MountPath = "/mnt/dependabot", }, },
+            VolumeMounts = { new ContainerAppVolumeMount { VolumeName = volumeName, MountPath = options.WorkingDirectory, }, },
         };
-        var env = CreateVariables(repository, update, job);
+        var env = CreateEnvironmentVariables(repository, update, job, directory, credentials);
         foreach (var (key, value) in env) container.Env.Add(new ContainerAppEnvironmentVariable { Name = key, Value = value, });
 
         // prepare the ContainerApp job
@@ -96,11 +104,15 @@ internal partial class UpdateRunner
             {
                 ["purpose"] = "dependabot",
                 ["ecosystem"] = job.PackageEcosystem,
-                ["repository"] = repository.Slug,
-                ["directory"] = update.Directory,
+                ["repository"] = job.RepositorySlug,
+                ["directory"] = job.Directory,
                 ["machine-name"] = Environment.MachineName,
             },
         };
+
+        // write job definition file
+        var jobDefinitionPath = await WriteJobDefinitionAsync(update, job, directory, credentials, cancellationToken);
+        logger.LogInformation("Written job definition file at {JobDefinitionPath}", jobDefinitionPath);
 
         // create the ContainerApp Job
         var operation = await containerAppJobs.CreateOrUpdateAsync(Azure.WaitUntil.Completed, resourceName, data, cancellationToken);
@@ -202,71 +214,46 @@ internal partial class UpdateRunner
 
     internal static string MakeResourceName(UpdateJob job) => $"dependabot-{job.Id}";
 
-    internal IDictionary<string, string> CreateVariables(Repository repository, RepositoryUpdate update, UpdateJob job)
+    internal IDictionary<string, string> CreateEnvironmentVariables(Repository repository,
+                                                                    RepositoryUpdate update,
+                                                                    UpdateJob job,
+                                                                    string directory,
+                                                                    IList<Dictionary<string, string>> credentials) // TODO: unit test this
     {
-        static string? ToJson<T>(T? entries) => entries is null ? null : JsonSerializer.Serialize(entries, serializerOptions); // null ensures we do not add to the values
-
-        // Prepare extra credentials with replaced secrets
-        var secrets = new Dictionary<string, string>(options.Secrets) { ["DEFAULT_TOKEN"] = options.ProjectToken!, };
-        var registries = update.Registries?.Select(r => repository.Registries[r]).ToList();
-        var credentials = ToJson(MakeExtraCredentials(registries, secrets)); // add source credentials when running the in v2
-
-        var jobDirectory = Path.Join(options.WorkingDirectory, job.Id);
-
-        //var attr = new UpdateJobAttributes
-        //{
-        //    AllowedUpdates = Array.Empty<object>(),
-        //    CredentialsMetadata = Array.Empty<object>(),
-        //    Dependencies = Array.Empty<object>(),
-        //    Directory = job.Directory!,
-        //    ExistingPullRequests = Array.Empty<object>(),
-        //    IgnoreConditions = Array.Empty<object>(),
-        //    PackageManager = job.PackageEcosystem!,
-        //    RepoName = job.RepositorySlug!,
-        //    SecurityAdvisories = Array.Empty<object>(),
-        //    Source = new UpdateJobAttributesSource
-        //    {
-        //        Directory = job.Directory!,
-        //        Provider = "azure",
-        //        Repo = job.RepositorySlug!,
-        //        Branch = update.TargetBranch,
-        //        Hostname = ,
-        //        ApiEndpoint =,
-        //    },
-        //};
-
-        // TODO: write the job definition file (find out if it is YAML/JSON)
+        [return: NotNullIfNotNull(nameof(value))]
+        static string? ToJson<T>(T? value) => value is null ? null : JsonSerializer.Serialize(value, serializerOptions); // null ensures we do not add to the values
 
         // Add compulsory values
         var values = new Dictionary<string, string>
         {
+            // env for v2
             ["DEPENDABOT_JOB_ID"] = job.Id!,
             ["DEPENDABOT_JOB_TOKEN"] = job.AuthKey!,
-            ["DEPENDABOT_JOB_PATH"] = Path.Join(jobDirectory, "job.json"),
-            ["DEPENDABOT_OUTPUT_PATH"] = Path.Join(jobDirectory, "output"),
+            ["DEPENDABOT_DEBUG"] = (options.DebugJobs ?? false).ToString().ToLower(),
+            ["DEPENDABOT_API_URL"] = options.JobsApiUrl!,
+            ["DEPENDABOT_JOB_PATH"] = Path.Join(directory, JobDefinitionFileName),
+            ["DEPENDABOT_OUTPUT_PATH"] = Path.Join(directory, "output"),
+            // Setting DEPENDABOT_REPO_CONTENTS_PATH causes some issues, ignore till we can resolve
+            //["DEPENDABOT_REPO_CONTENTS_PATH"] = Path.Join(jobDirectory, "repo"),
+            ["GITHUB_ACTIONS"] = "false",
+            ["UPDATER_DETERMINISTIC"] = (options.DeterministicUpdates ?? false).ToString().ToLower(),
 
+            // env for v1
             ["DEPENDABOT_PACKAGE_MANAGER"] = job.PackageEcosystem!,
-            ["DEPENDABOT_DIRECTORY"] = update.Directory!,
-            ["DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT"] = update.OpenPullRequestsLimit!.Value.ToString(),
-
-            ["DEPENDABOT_EXTRA_CREDENTIALS"] = credentials!,
-            ["DEPENDABOT_FAIL_ON_EXCEPTION"] = "false",
+            ["DEPENDABOT_DIRECTORY"] = job.Directory!,
+            ["DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT"] = update.OpenPullRequestsLimit.ToString(),
+            ["DEPENDABOT_EXTRA_CREDENTIALS"] = ToJson(credentials),
+            ["DEPENDABOT_FAIL_ON_EXCEPTION"] = "false", // we the script to run to completion so that we get notified of job completion
         };
 
         // Add optional values
-        values.AddIfNotDefault("DEPENDABOT_DEBUG", options.DebugJobs?.ToString().ToLower())
-              .AddIfNotDefault("DEPENDABOT_API_URL", options.JobsApiUrl)
-              // Setting DEPENDABOT_REPO_CONTENTS_PATH causes some issues, ignore till we can resolve
-              //.AddIfNotDefault("DEPENDABOT_REPO_CONTENTS_PATH", Path.Join(jobDirectory, "repo"))
-              .AddIfNotDefault("UPDATER_DETERMINISTIC", options.DeterministicUpdates?.ToString().ToLower());
-
         values.AddIfNotDefault("GITHUB_ACCESS_TOKEN", options.GithubToken)
               .AddIfNotDefault("DEPENDABOT_REBASE_STRATEGY", update.RebaseStrategy)
               .AddIfNotDefault("DEPENDABOT_TARGET_BRANCH", update.TargetBranch)
               .AddIfNotDefault("DEPENDABOT_VENDOR", update.Vendor ? "true" : null)
               .AddIfNotDefault("DEPENDABOT_REJECT_EXTERNAL_CODE", string.Equals(update.InsecureExternalCodeExecution, "deny").ToString().ToLowerInvariant())
               .AddIfNotDefault("DEPENDABOT_VERSIONING_STRATEGY", update.VersioningStrategy)
-              .AddIfNotDefault("DEPENDABOT_ALLOW_CONDITIONS", ToJson(MakeAllowEntries(update.Allow)))
+              .AddIfNotDefault("DEPENDABOT_ALLOW_CONDITIONS", ToJson(update.Allow))
               .AddIfNotDefault("DEPENDABOT_LABELS", ToJson(update.Labels))
               .AddIfNotDefault("DEPENDABOT_BRANCH_NAME_SEPARATOR", update.PullRequestBranchName?.Separator)
               .AddIfNotDefault("DEPENDABOT_MILESTONE", update.Milestone?.ToString());
@@ -285,15 +272,99 @@ internal partial class UpdateRunner
 
         return values;
     }
-    internal static IList<IDictionary<string, string>> MakeExtraCredentials(ICollection<DependabotRegistry>? registries, IDictionary<string, string> secrets)
+
+    internal async Task<string> WriteJobDefinitionAsync(RepositoryUpdate update,
+                                                        UpdateJob job,
+                                                        string directory,
+                                                        IList<Dictionary<string, string>> credentials,
+                                                        CancellationToken cancellationToken = default) // TODO: unit test this
     {
-        if (registries is null) return Array.Empty<IDictionary<string, string>>();
+        [return: NotNullIfNotNull(nameof(value))]
+        static JsonNode? ToJsonNode<T>(T? value) => value is null ? null : JsonSerializer.SerializeToNode(value, serializerOptions); // null ensures we do not add to the values
+
+        var url = options.ProjectUrl!.Value;
+        var credentialsMetadata = MakeCredentialsMetadata(credentials);
+
+        var definition = new DependabotUpdateJobDefinition
+        {
+            Job = new JsonObject
+            {
+                ["allowed-updates"] = ToJsonNode(update.Allow ?? new()),
+                ["credentials-metadata"] = ToJsonNode(credentialsMetadata).AsArray(),
+                // ["dependencies"] = null, // object array
+                ["directory"] = job.Directory,
+                // ["existing-pull-requests"] = null, // object array
+                ["ignore-conditions"] = ToJsonNode(update.Ignore ?? new()),
+                // ["security-advisories"] = null, // object array
+                ["package_manager"] = ConvertEcosystemToPackageManager(job.PackageEcosystem!),
+                ["repo-name"] = job.RepositorySlug,
+                ["source"] = new JsonObject
+                {
+                    ["provider"] = "azure",
+                    ["repo"] = job.RepositorySlug,
+                    ["directory"] = job.Directory,
+                    ["branch"] = update.TargetBranch,
+                    ["hostname"] = url.Hostname,
+                    ["api-endpoint"] = new UriBuilder
+                    {
+                        Scheme = Uri.UriSchemeHttps,
+                        Host = url.Hostname,
+                        Port = url.Port ?? -1,
+                    }.ToString(),
+                },
+                ["lockfile-only"] = update.VersioningStrategy == "lockfile-only",
+                ["requirements-update-strategy"] = update.VersioningStrategy?.Replace("-", "_"),
+                // ["update-subdependencies"] = false,
+                // ["updating-a-pull-request"] = false,
+                ["vendor-dependencies"] = update.Vendor,
+                ["security-updates-only"] = update.OpenPullRequestsLimit == 0,
+                ["debug"] = false,
+            },
+            Credentials = ToJsonNode(credentials).AsArray(),
+        };
+
+        // write the job definition file
+        var path = Path.Join(directory, JobDefinitionFileName);
+        if (File.Exists(path)) File.Delete(path);
+        using var stream = File.OpenWrite(path);
+        await JsonSerializer.SerializeAsync(stream, definition, serializerOptions, cancellationToken);
+
+        return path;
+    }
+
+    internal static IList<Dictionary<string, string>> MakeCredentialsMetadata(IList<Dictionary<string, string>> credentials)
+    {
+        return credentials.Select(cred =>
+        {
+            var values = new Dictionary<string, string> { ["type"] = cred["type"], };
+            cred.TryGetValue("host", out var host);
+
+            // pull host from registry if available
+            if (string.IsNullOrWhiteSpace(host))
+            {
+                host = cred.TryGetValue("registry", out var registry) && Uri.TryCreate($"https://{registry}", UriKind.Absolute, out var u) ? u.Host : host;
+            }
+
+            // pull host from registry if url
+            if (string.IsNullOrWhiteSpace(host))
+            {
+                host = cred.TryGetValue("url", out var url) && Uri.TryCreate(url, UriKind.Absolute, out var u) ? u.Host : host;
+            }
+
+            values.AddIfNotDefault("host", host);
+
+            return values;
+        }).ToList();
+    }
+    internal static IList<Dictionary<string, string>> MakeExtraCredentials(ICollection<DependabotRegistry>? registries, IDictionary<string, string> secrets)
+    {
+        if (registries is null) return Array.Empty<Dictionary<string, string>>();
 
         return registries.Select(v =>
         {
             var type = v.Type?.Replace("-", "_") ?? throw new InvalidOperationException("Type should not be null");
 
-            var values = new Dictionary<string, string>().AddIfNotDefault("type", type);
+            var values = new Dictionary<string, string> { ["type"] = type, };
 
             // values for hex-organization
             values.AddIfNotDefault("organization", v.Organization);
@@ -350,13 +421,24 @@ internal partial class UpdateRunner
 
         return result;
     }
-    internal static IList<IDictionary<string, string>>? MakeAllowEntries(List<DependabotAllowDependency>? entries)
+    internal static string? ConvertEcosystemToPackageManager(string ecosystem)
     {
-        return entries?.Where(e => e.IsValid())
-                       .Select(e => new Dictionary<string, string>()
-                       .AddIfNotDefault("dependency-name", e.DependencyName)
-                       .AddIfNotDefault("dependency-type", e.DependencyType))
-                       .ToList();
+        ArgumentException.ThrowIfNullOrEmpty(ecosystem);
+
+        return ecosystem switch
+        {
+            "github-actions" => "github_actions",
+            "gitsubmodule" => "submodules",
+            "gomod" => "go_modules",
+            "mix" => "hex",
+            "npm" => "npm_and_yarn",
+            // Additional ones
+            "yarn" => "npm_and_yarn",
+            "pipenv" => "pip",
+            "pip-compile" => "pip",
+            "poetry" => "pip",
+            _ => ecosystem,
+        };
     }
 }
 
