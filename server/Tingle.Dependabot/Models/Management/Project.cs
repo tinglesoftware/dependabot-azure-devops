@@ -51,6 +51,12 @@ public class Project
     [DataType(DataType.Password)]
     public string? Password { get; set; }
 
+    /// <summary>
+    /// Secrets that can be replaced in the registries section of the dependabot configuration file.
+    /// </summary>
+    [JsonIgnore] // expose this once we know how to protect the values
+    public Dictionary<string, string> Secrets { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+
     [JsonIgnore] // only for internal use
     public List<Repository> Repositories { get; set; } = new();
 

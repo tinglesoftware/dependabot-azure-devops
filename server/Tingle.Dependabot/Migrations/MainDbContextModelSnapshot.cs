@@ -79,6 +79,10 @@ namespace Tingle.Dependabot.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<string>("Secrets")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Token")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -99,7 +103,7 @@ namespace Tingle.Dependabot.Migrations
                         .IsDescending();
 
                     b.HasIndex("Password")
-                        .IsDescending();
+                        .IsUnique();
 
                     b.HasIndex("ProviderId")
                         .IsUnique();

@@ -58,7 +58,7 @@ internal partial class UpdateRunner
         catch (Azure.RequestFailedException rfe) when (rfe.Status is 404) { }
 
         // prepare credentials with replaced secrets
-        var secrets = new Dictionary<string, string>(options.Secrets) { ["DEFAULT_TOKEN"] = project.Token!, };
+        var secrets = new Dictionary<string, string>(project.Secrets) { ["DEFAULT_TOKEN"] = project.Token!, };
         var registries = update.Registries?.Select(r => repository.Registries[r]).ToList();
         var credentials = MakeExtraCredentials(registries, secrets); // add source credentials when running the in v2
         var directory = Path.Join(options.WorkingDirectory, job.Id);

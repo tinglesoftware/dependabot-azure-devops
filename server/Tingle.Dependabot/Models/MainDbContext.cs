@@ -21,10 +21,11 @@ public class MainDbContext : DbContext, IDataProtectionKeyContext
         modelBuilder.Entity<Project>(b =>
         {
             b.Property(p => p.AutoCompleteIgnoreConfigs).HasJsonConversion();
+            b.Property(p => p.Secrets).HasJsonConversion();
 
             b.HasIndex(p => p.Created).IsDescending(); // faster filtering
             b.HasIndex(p => p.ProviderId).IsUnique();
-            b.HasIndex(p => p.Password).IsDescending(); // faster filtering
+            b.HasIndex(p => p.Password).IsUnique(); // password should be unique per project
         });
 
         modelBuilder.Entity<Repository>(b =>

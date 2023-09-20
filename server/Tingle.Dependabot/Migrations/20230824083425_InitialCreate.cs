@@ -41,6 +41,7 @@ public partial class InitialCreate : Migration
                 AutoCompleteMergeStrategy = table.Column<int>(type: "int", nullable: true),
                 AutoApprove = table.Column<bool>(type: "bit", nullable: false),
                 Password = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                Secrets = table.Column<string>(type: "nvarchar(max)", nullable: false),
                 Etag = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: true)
             },
             constraints: table =>
@@ -116,7 +117,7 @@ public partial class InitialCreate : Migration
             name: "IX_Projects_Password",
             table: "Projects",
             column: "Password",
-            descending: new bool[0]);
+            unique: true);
 
         migrationBuilder.CreateIndex(
             name: "IX_Projects_ProviderId",
