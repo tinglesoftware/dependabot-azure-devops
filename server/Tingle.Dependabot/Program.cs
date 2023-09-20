@@ -100,6 +100,7 @@ builder.Services.AddAuthorization(options =>
 // Configure other services
 builder.Services.AddMemoryCache();
 builder.Services.AddDistributedMemoryCache();
+builder.Services.AddStandardFeatureManagement();
 builder.Services.AddDistributedLockProvider(builder.Environment, builder.Configuration);
 builder.Services.AddWorkflowServices(builder.Configuration.GetSection("Workflow"));
 

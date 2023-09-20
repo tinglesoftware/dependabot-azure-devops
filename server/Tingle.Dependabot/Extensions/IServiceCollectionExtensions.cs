@@ -1,5 +1,6 @@
 ﻿using Medallion.Threading;
 using Medallion.Threading.FileSystem;
+using Microsoft.FeatureManagement;
 using Tingle.Dependabot.Workflow;
 
 namespace Microsoft.Extensions.DependencyInjection;
@@ -7,13 +8,6 @@ namespace Microsoft.Extensions.DependencyInjection;
 /// <summary>Extensions on <see cref="IServiceCollection"/>.</summary>
 public static class IServiceCollectionExtensions
 {
-    /// <summary>
-    /// Add <see cref="IDistributedLockProvider"/>, a provider for <see cref="IDistributedLock"/>.
-    /// </summary>
-    /// <param name="services">The <see cref="IServiceCollection"/> to be configured.</param>
-    /// <param name="environment">The <see cref="IHostEnvironment"/> to use.</param>
-    /// <param name="configuration">The root configuration instance from which to pull settings.</param>
-    /// <returns></returns>
     public static IServiceCollection AddDistributedLockProvider(this IServiceCollection services, IHostEnvironment environment, IConfiguration configuration)
     {
         var configKey = ConfigurationPath.Combine("DistributedLocking", "FilePath");
@@ -32,6 +26,24 @@ public static class IServiceCollectionExtensions
         }
 
         services.AddSingleton<IDistributedLockProvider>(new FileDistributedSynchronizationProvider(new(path)));
+
+        return services;
+    }
+
+    public static IServiceCollection AddStandardFeatureManagement(this IServiceCollection services)
+    {
+        var builder = services.AddFeatureManagement();
+
+        builder.AddFeatureFilter<FeatureManagement.FeatureFilters.PercentageFilter>();
+        builder.AddFeatureFilter<FeatureManagement.FeatureFilters.TimeWindowFilter>();
+
+        // In some scenarios (such as AspNetCore, the TargetingFilter together with an ITargetingContextAccessor
+        // should be used in place of ContextualTargetingFilter.
+        builder.AddFeatureFilter<FeatureManagement.FeatureFilters.ContextualTargetingFilter>();
+        builder.AddFeatureFilter<FeatureManagement.FeatureFilters.TargetingFilter>(); // requires ITargetingContextAccessor
+        builder.Services.Configure<FeatureManagement.FeatureFilters.TargetingEvaluationOptions>(o => o.IgnoreCase = true);
+
+        builder.UseDisabledFeaturesHandler(new Tingle.Dependabot.CustomDisabledFeaturesHandler());
 
         return services;
     }

@@ -11,3 +11,8 @@ internal static class AuthConstants
     internal const string PolicyNameServiceHooks = "ServiceHooks";
     internal const string PolicyNameUpdater = "Updater";
 }
+
+internal static class ErrorCodes
+{
+    internal const string FeaturesDisabled = "features_disabled";
+}
