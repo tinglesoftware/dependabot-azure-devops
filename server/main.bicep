@@ -285,7 +285,6 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
 
             { name: 'Authentication__Schemes__Management__Authority', value: '${environment().authentication.loginEndpoint}${subscription().tenantId}/v2.0' }
             { name: 'Authentication__Schemes__Management__ValidAudiences__0', value: 'https://${name}.${appEnvironment.properties.defaultDomain}' }
-            { name: 'Authentication__Schemes__ServiceHooks__Credentials__vsts', secretRef: 'notifications-password' }
 
             { name: 'EventBus__SelectedTransport', value: 'ServiceBus' }
             { name: 'EventBus__Transports__azure-service-bus__FullyQualifiedNamespace', value: split(split(serviceBusNamespace.properties.serviceBusEndpoint, '/')[2], ':')[0] } // manipulating https://{your-namespace}.servicebus.windows.net:443/

@@ -198,7 +198,7 @@ public class AzureDevOpsProvider
             ["detailedMessagesToSend"] = "none",
             ["messagesToSend"] = "none",
             ["url"] = webhookUrl.ToString(),
-            ["basicAuthUsername"] = "vsts",
+            ["basicAuthUsername"] = project.Id!,
             ["basicAuthPassword"] = project.Password!,
         };
     }

@@ -468,10 +468,6 @@
                   "value": "[format('https://{0}.{1}', parameters('name'), reference(resourceId('Microsoft.App/managedEnvironments', parameters('name')), '2023-05-01').defaultDomain)]"
                 },
                 {
-                  "name": "Authentication__Schemes__ServiceHooks__Credentials__vsts",
-                  "secretRef": "notifications-password"
-                },
-                {
                   "name": "EventBus__SelectedTransport",
                   "value": "ServiceBus"
                 },
