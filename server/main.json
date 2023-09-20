@@ -16,20 +16,6 @@
         "description": "Name of the resources"
       }
     },
-    "synchronizeOnStartup": {
-      "type": "bool",
-      "defaultValue": false,
-      "metadata": {
-        "description": "Whether to synchronize repositories on startup."
-      }
-    },
-    "createOrUpdateWebhooksOnStartup": {
-      "type": "bool",
-      "defaultValue": false,
-      "metadata": {
-        "description": "Whether to create or update subscriptions on startup."
-      }
-    },
     "projectSetups": {
       "type": "string",
       "defaultValue": "[[]",
@@ -429,14 +415,6 @@
                 {
                   "name": "Logging__Seq__ApiKey",
                   "value": ""
-                },
-                {
-                  "name": "Workflow__SynchronizeOnStartup",
-                  "value": "[if(parameters('synchronizeOnStartup'), 'true', 'false')]"
-                },
-                {
-                  "name": "Workflow__CreateOrUpdateWebhooksOnStartup",
-                  "value": "[if(parameters('createOrUpdateWebhooksOnStartup'), 'true', 'false')]"
                 },
                 {
                   "name": "Workflow__JobsApiUrl",

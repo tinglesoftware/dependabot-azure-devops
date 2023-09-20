@@ -2,12 +2,6 @@
 
 public class WorkflowOptions
 {
-    /// <summary>Whether to synchronize repositories on startup.</summary>
-    public bool SynchronizeOnStartup { get; set; } = true;
-
-    /// <summary>Whether to create/update notifications on startup.</summary>
-    public bool CreateOrUpdateWebhooksOnStartup { get; set; } = true;
-
     /// <summary>URL where subscription notifications shall be sent.</summary>
     public Uri? WebhookEndpoint { get; set; }
 

@@ -4,12 +4,6 @@ param location string = resourceGroup().location
 @description('Name of the resources')
 param name string = 'dependabot'
 
-@description('Whether to synchronize repositories on startup.')
-param synchronizeOnStartup bool = false
-
-@description('Whether to create or update subscriptions on startup.')
-param createOrUpdateWebhooksOnStartup bool = false
-
 @description('JSON array string fo projects to setup. E.g. [{"url":"https://dev.azure.com/tingle/dependabot","token":"dummy","AutoComplete":true}]')
 param projectSetups string = '[]'
 
@@ -277,8 +271,6 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
             { name: 'Logging__Seq__ServerUrl', value: '' } // set via AppConfig
             { name: 'Logging__Seq__ApiKey', value: '' } // set via AppConfig
 
-            { name: 'Workflow__SynchronizeOnStartup', value: synchronizeOnStartup ? 'true' : 'false' }
-            { name: 'Workflow__CreateOrUpdateWebhooksOnStartup', value: createOrUpdateWebhooksOnStartup ? 'true' : 'false' }
             { name: 'Workflow__JobsApiUrl', value: 'https://${name}.${appEnvironment.properties.defaultDomain}' }
             { name: 'Workflow__WorkingDirectory', value: '/mnt/dependabot' }
             { name: 'Workflow__WebhookEndpoint', value: 'https://${name}.${appEnvironment.properties.defaultDomain}/webhooks/azure' }

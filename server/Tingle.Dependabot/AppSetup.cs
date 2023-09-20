@@ -37,66 +37,64 @@ internal static class AppSetup
             }
         }
 
-        // add project if there are projects to be added
+        // parse projects to be setup
+        var setupsJson = app.Configuration.GetValue<string?>("PROJECT_SETUPS");
+        var setups = new List<ProjectSetupInfo>();
+        if (!string.IsNullOrWhiteSpace(setupsJson))
+        {
+            setups = JsonSerializer.Deserialize<List<ProjectSetupInfo>>(setupsJson, serializerOptions)!;
+        }
+
+        // add projects if there are projects to be added
         var adoProvider = provider.GetRequiredService<AzureDevOpsProvider>();
         var context = provider.GetRequiredService<MainDbContext>();
         var projects = await context.Projects.ToListAsync(cancellationToken);
-        var setupsJson = app.Configuration.GetValue<string?>("PROJECT_SETUPS");
-        if (!string.IsNullOrWhiteSpace(setupsJson))
+        foreach (var setup in setups)
         {
-            var setups = JsonSerializer.Deserialize<List<ProjectSetupInfo>>(setupsJson, serializerOptions)!;
-            foreach (var setup in setups)
+            var url = (AzureDevOpsProjectUrl)setup.Url;
+            var project = projects.SingleOrDefault(p => new Uri(p.Url!) == setup.Url);
+            if (project is null)
             {
-                var url = (AzureDevOpsProjectUrl)setup.Url;
-                var project = projects.SingleOrDefault(p => new Uri(p.Url!) == setup.Url);
-                if (project is null)
+                project = new Models.Management.Project
                 {
-                    project = new Models.Management.Project
-                    {
-                        Id = Guid.NewGuid().ToString("n"),
-                        Created = DateTimeOffset.UtcNow,
-                        Password = GeneratePassword(32),
-                        Url = setup.Url.ToString(),
-                        Type = Models.Management.ProjectType.Azure,
-                    };
-                    await context.Projects.AddAsync(project, cancellationToken);
-                }
-
-                project.Token = setup.Token;
-                project.AutoComplete.Enabled = setup.AutoComplete;
-                project.AutoComplete.IgnoreConfigs = setup.AutoCompleteIgnoreConfigs;
-                project.AutoComplete.MergeStrategy = setup.AutoCompleteMergeStrategy;
-                project.AutoApprove.Enabled = setup.AutoApprove;
-                project.Secrets = setup.Secrets;
-                var tp = await adoProvider.GetProjectAsync(project, cancellationToken);
-                project.Name = tp.Name;
-                project.ProviderId = tp.Id.ToString();
-                if (context.ChangeTracker.HasChanges())
-                {
-                    project.Updated = DateTimeOffset.UtcNow;
-                }
+                    Id = Guid.NewGuid().ToString("n"),
+                    Created = DateTimeOffset.UtcNow,
+                    Password = GeneratePassword(32),
+                    Url = setup.Url.ToString(),
+                    Type = Models.Management.ProjectType.Azure,
+                };
+                await context.Projects.AddAsync(project, cancellationToken);
             }
 
-            // update databases
-            var updated = await context.SaveChangesAsync(cancellationToken);
-
-            // update projects if we updated the db
-            projects = updated > 0 ? await context.Projects.ToListAsync(cancellationToken) : projects;
+            project.Token = setup.Token;
+            project.AutoComplete.Enabled = setup.AutoComplete;
+            project.AutoComplete.IgnoreConfigs = setup.AutoCompleteIgnoreConfigs;
+            project.AutoComplete.MergeStrategy = setup.AutoCompleteMergeStrategy;
+            project.AutoApprove.Enabled = setup.AutoApprove;
+            project.Secrets = setup.Secrets;
+            var tp = await adoProvider.GetProjectAsync(project, cancellationToken);
+            project.Name = tp.Name;
+            project.ProviderId = tp.Id.ToString();
+            if (context.ChangeTracker.HasChanges())
+            {
+                project.Updated = DateTimeOffset.UtcNow;
+            }
         }
 
-        var options = provider.GetRequiredService<IOptions<WorkflowOptions>>().Value;
-        var synchronizer = provider.GetRequiredService<Synchronizer>();
-        foreach (var project in projects)
-        {
-            // synchronize project
-            if (options.SynchronizeOnStartup)
-            {
-                await synchronizer.SynchronizeAsync(project, false, cancellationToken); /* database sync should not trigger, just in case it's too many */
-            }
+        // update database and list of projects
+        var updated = await context.SaveChangesAsync(cancellationToken);
+        projects = updated > 0 ? await context.Projects.ToListAsync(cancellationToken) : projects;
 
-            // create or update webhooks/subscriptions
-            if (options.CreateOrUpdateWebhooksOnStartup)
+        // synchronize and create/update subscriptions if we have setups
+        var synchronizer = provider.GetRequiredService<Synchronizer>();
+        if (setups.Count > 0)
+        {
+            foreach (var project in projects)
             {
+                // synchronize project
+                await synchronizer.SynchronizeAsync(project, false, cancellationToken); /* database sync should not trigger, just in case it's too many */
+
+                // create or update webhooks/subscriptions
                 await adoProvider.CreateOrUpdateSubscriptionsAsync(project, cancellationToken);
             }
         }
