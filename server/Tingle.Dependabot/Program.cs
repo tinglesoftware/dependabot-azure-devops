@@ -32,7 +32,8 @@ builder.Services.AddSerilog(builder =>
     });
 });
 
-builder.Services.AddApplicationInsightsTelemetry(builder.Configuration);
+// Add Application Insights
+builder.Services.AddStandardApplicationInsights(builder.Configuration);
 
 // Add DbContext
 builder.Services.AddDbContext<MainDbContext>(options =>

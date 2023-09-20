@@ -1,6 +1,9 @@
 ﻿using Medallion.Threading;
 using Medallion.Threading.FileSystem;
+using Microsoft.ApplicationInsights.DependencyCollector;
+using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.FeatureManagement;
+using Tingle.Dependabot.ApplicationInsights;
 using Tingle.Dependabot.FeatureManagement;
 using Tingle.Dependabot.Workflow;
 
@@ -9,6 +12,34 @@ namespace Microsoft.Extensions.DependencyInjection;
 /// <summary>Extensions on <see cref="IServiceCollection"/>.</summary>
 public static class IServiceCollectionExtensions
 {
+    /// <summary>Add standard Application Insights services.</summary>
+    /// <param name="services">The <see cref="IServiceCollection"/> instance to add to.</param>
+    /// <param name="configuration">The root configuration instance from which to pull settings.</param>
+    public static IServiceCollection AddStandardApplicationInsights(this IServiceCollection services, IConfiguration configuration)
+    {
+        // Add the core services
+        services.AddApplicationInsightsTelemetry(configuration);
+
+        // Add background service to flush telemetry on shutdown
+        services.AddHostedService<InsightsShutdownFlushService>();
+
+        // Add processors
+        services.AddApplicationInsightsTelemetryProcessor<InsightsFilteringProcessor>();
+
+        // Enrich the telemetry with various sources of information
+        services.AddHttpContextAccessor(); // Required to resolve the request from the HttpContext
+                                           // according to docs link below, this registration should be singleton
+                                           // https://docs.microsoft.com/en-us/azure/azure-monitor/app/asp-net-core#adding-telemetryinitializers
+        services.AddSingleton<ITelemetryInitializer, DependabotTelemetryInitializer>();
+        services.AddApplicationInsightsTelemetryExtras(); // Add other extras
+
+        services.AddActivitySourceDependencyCollector(new[] {
+            "Tingle.EventBus",
+        });
+
+        return services;
+    }
+
     public static IServiceCollection AddDistributedLockProvider(this IServiceCollection services, IHostEnvironment environment, IConfiguration configuration)
     {
         var configKey = ConfigurationPath.Combine("DistributedLocking", "FilePath");
