@@ -15,6 +15,7 @@ public class Project
     public ProjectType Type { get; set; }
 
     /// <summary>Name of the project as per provider.</summary>
+    [Required]
     public string? Name { get; set; }
 
     /// <summary>Identifier of the repository as per provider.</summary>

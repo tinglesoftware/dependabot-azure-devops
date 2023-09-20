@@ -30,6 +30,13 @@
         "description": "Whether to create or update subscriptions on startup."
       }
     },
+    "projectSetups": {
+      "type": "string",
+      "defaultValue": "[[]",
+      "metadata": {
+        "description": "JSON array string fo projects to setup. E.g. [{\"url\":\"https://dev.azure.com/tingle/dependabot\",\"token\":\"dummy\",\"AutoComplete\":true}]"
+      }
+    },
     "githubToken": {
       "type": "string",
       "defaultValue": "",
@@ -342,6 +349,10 @@
               "value": "[reference(resourceId('Microsoft.Insights/components', parameters('name')), '2020-02-02').ConnectionString]"
             },
             {
+              "name": "project-setups",
+              "value": "[parameters('projectSetups')]"
+            },
+            {
               "name": "connection-strings-sql",
               "value": "[join(createArray(format('Server=tcp:{0},1433', reference(resourceId('Microsoft.Sql/servers', format('{0}-{1}', parameters('name'), variables('collisionSuffix'))), '2022-05-01-preview').fullyQualifiedDomainName), format('Initial Catalog={0}', parameters('name')), format('User ID={0}', variables('sqlServerAdministratorLogin')), format('Password={0}', variables('sqlServerAdministratorLoginPassword')), 'Persist Security Info=False', 'MultipleActiveResultSets=False', 'Encrypt=True', 'TrustServerCertificate=False', 'Connection Timeout=30'), ';')]"
             },
@@ -378,6 +389,10 @@
                 {
                   "name": "EFCORE_PERFORM_MIGRATIONS",
                   "value": "true"
+                },
+                {
+                  "name": "PROJECT_SETUPS",
+                  "secretRef": "project-setups"
                 },
                 {
                   "name": "AzureAppConfig__Endpoint",

@@ -6,13 +6,15 @@ using Microsoft.VisualStudio.Services.Common;
 using Microsoft.VisualStudio.Services.FormInput;
 using Microsoft.VisualStudio.Services.ServiceHooks.WebApi;
 using Microsoft.VisualStudio.Services.WebApi;
+using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json.Serialization;
 using Tingle.Dependabot.Models.Management;
 
 namespace Tingle.Dependabot.Workflow;
 
-public class AzureDevOpsProvider
+public class AzureDevOpsProvider // TODO: replace the Microsoft.(TeamFoundation|VisualStudio) libraries with direct usage of HttpClient
 {
     // Possible/allowed paths for the configuration files in a repository.
     private static readonly IReadOnlyList<string> ConfigurationFilePaths = new[] {
@@ -33,6 +35,7 @@ public class AzureDevOpsProvider
     };
 
     private readonly IMemoryCache cache;
+    private readonly HttpClient httpClient = new(); // TODO: consider injecting this for logging and tracing purposes
     private readonly WorkflowOptions options;
 
     public AzureDevOpsProvider(IMemoryCache cache, IOptions<WorkflowOptions> optionsAccessor)
@@ -124,6 +127,28 @@ public class AzureDevOpsProvider
         }
 
         return ids;
+    }
+
+    public async Task<AzdoProject> GetProjectAsync(Project project, CancellationToken cancellationToken)
+    {
+        //// get a connection to Azure DevOps
+        //var url = (AzureDevOpsProjectUrl)project.Url!;
+        //var connection = CreateVssConnection(url, project.Token!);
+
+        //// get the project
+        //var client = await connection.GetClientAsync<ProjectHttpClient>(cancellationToken);
+        //return await client.GetProject(id: url.ProjectIdOrName);
+
+        var url = (AzureDevOpsProjectUrl)project.Url!;
+        var uri = new UriBuilder
+        {
+            Scheme = url.Scheme,
+            Host = url.Hostname,
+            Port = url.Port ?? -1,
+            Path = $"{url.OrganizationName}/_apis/projects/{url.ProjectIdOrName}",
+        }.Uri;
+        var request = new HttpRequestMessage(HttpMethod.Get, uri);
+        return (await SendAsync<AzdoProject>(project.Token!, request, cancellationToken))!;
     }
 
     public async Task<List<GitRepository>> GetRepositoriesAsync(Project project, CancellationToken cancellationToken)
@@ -234,4 +259,38 @@ public class AzureDevOpsProvider
 
         return cache.Set(cacheKey, cached, TimeSpan.FromHours(1));
     }
+
+    private async Task<T?> SendAsync<T>(string token, HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        request.Headers.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($":{token}")));
+
+        var response = await httpClient.SendAsync(request, cancellationToken);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<T>(cancellationToken: cancellationToken);
+    }
+}
+
+public class AzdoProject
+{
+    [JsonPropertyName("id")]
+    public required string Id { get; set; }
+
+    [JsonPropertyName("name")]
+    public required string Name { get; set; }
+
+    [JsonPropertyName("visibility")]
+    public required AzdoProjectVisibility Visibility { get; set; }
+
+    [JsonPropertyName("lastUpdateTime")]
+    public required DateTimeOffset LastUpdatedTime { get; set; }
+}
+
+[JsonConverter(typeof(JsonStringEnumMemberConverter))]
+public enum AzdoProjectVisibility
+{
+    Private,
+    Organization,
+    Public,
+    SystemPrivate,
 }

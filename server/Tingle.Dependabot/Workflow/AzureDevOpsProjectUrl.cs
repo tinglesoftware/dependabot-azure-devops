@@ -14,6 +14,7 @@ public readonly struct AzureDevOpsProjectUrl : IEquatable<AzureDevOpsProjectUrl>
     public AzureDevOpsProjectUrl(Uri uri)
     {
         this.uri = uri ?? throw new ArgumentNullException(nameof(uri));
+        Scheme = uri.Scheme;
         var host = Hostname = uri.Host;
         Port = uri switch
         {
@@ -58,6 +59,7 @@ public readonly struct AzureDevOpsProjectUrl : IEquatable<AzureDevOpsProjectUrl>
         return new(builder.Uri);
     }
 
+    public string Scheme { get; }
     public string Hostname { get; }
     public int? Port { get; }
     public string OrganizationName { get; }

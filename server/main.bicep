@@ -10,6 +10,9 @@ param synchronizeOnStartup bool = false
 @description('Whether to create or update subscriptions on startup.')
 param createOrUpdateWebhooksOnStartup bool = false
 
+@description('JSON array string fo projects to setup. E.g. [{"url":"https://dev.azure.com/tingle/dependabot","token":"dummy","AutoComplete":true}]')
+param projectSetups string = '[]'
+
 @description('Access token for authenticating requests to GitHub.')
 param githubToken string = ''
 
@@ -227,6 +230,7 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
       ingress: { external: true, targetPort: 80, traffic: [ { latestRevision: true, weight: 100 } ] }
       secrets: [
         { name: 'connection-strings-application-insights', value: appInsights.properties.ConnectionString }
+        { name: 'project-setups', value: projectSetups }
         {
           name: 'connection-strings-sql'
           value: join([
@@ -257,6 +261,8 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
             { name: 'AZURE_CLIENT_ID', value: managedIdentity.properties.clientId } // Specifies the User-Assigned Managed Identity to use. Without this, the app attempt to use the system assigned one.
             { name: 'ASPNETCORE_FORWARDEDHEADERS_ENABLED', value: 'true' } // Application is behind proxy
             { name: 'EFCORE_PERFORM_MIGRATIONS', value: 'true' } // Perform migrations on startup
+
+            { name: 'PROJECT_SETUPS', secretRef: 'project-setups' }
 
             { name: 'AzureAppConfig__Endpoint', value: appConfiguration.properties.endpoint }
             { name: 'AzureAppConfig__Label', value: 'Production' }
