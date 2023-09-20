@@ -52,5 +52,6 @@ public class WorkflowOptions
     public string? GithubToken { get; set; }
 
     /// <summary>Location/region where to create new update jobs.</summary>
+    /// <example>westeurope</example>
     public string? Location { get; set; } // using Azure.Core.Location does not work when binding from IConfiguration
 }

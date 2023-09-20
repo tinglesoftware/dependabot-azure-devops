@@ -32,7 +32,7 @@ public partial class InitialCreate : Migration
                 Created = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
                 Updated = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
                 Type = table.Column<int>(type: "int", nullable: false),
-                Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                 ProviderId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                 Url = table.Column<string>(type: "nvarchar(max)", nullable: false),
                 Token = table.Column<string>(type: "nvarchar(max)", nullable: false),
@@ -42,6 +42,8 @@ public partial class InitialCreate : Migration
                 AutoApprove_Enabled = table.Column<bool>(type: "bit", nullable: false),
                 Password = table.Column<string>(type: "nvarchar(450)", nullable: false),
                 Secrets = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                GithubToken = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                Location = table.Column<string>(type: "nvarchar(max)", nullable: true),
                 Etag = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: true)
             },
             constraints: table =>

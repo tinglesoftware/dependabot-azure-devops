@@ -55,6 +55,21 @@ public class Project
     [JsonIgnore] // expose this once we know how to protect the values
     public Dictionary<string, string> Secrets { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
+    /// <summary>
+    /// Token for accessing GitHub APIs.
+    /// If no value is provided, the a default token is used.
+    /// Providing a value avoids being rate limited in case when there
+    /// are many calls at the same time from the same IP.
+    /// When provided, it must have <c>read</c> access to public repositories.
+    /// </summary>
+    /// <example>ghp_1234567890</example>
+    [JsonIgnore] // expose this once we know how to protect the values
+    public string? GithubToken { get; set; }
+
+    /// <summary>Location/region where to create update jobs.</summary>
+    /// <example>westeurope</example>
+    public string? Location { get; set; }
+
     [JsonIgnore] // only for internal use
     public List<Repository> Repositories { get; set; } = new();
 

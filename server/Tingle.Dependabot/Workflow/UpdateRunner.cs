@@ -78,7 +78,7 @@ internal partial class UpdateRunner
         foreach (var (key, value) in env) container.Env.Add(new ContainerAppEnvironmentVariable { Name = key, Value = value, });
 
         // prepare the ContainerApp job
-        var data = new ContainerAppJobData(options.Location!)
+        var data = new ContainerAppJobData((project.Location ?? options.Location)!)
         {
             EnvironmentId = options.AppEnvironmentId,
             Configuration = new ContainerAppJobConfiguration(ContainerAppJobTriggerType.Manual, 1)
@@ -260,7 +260,7 @@ internal partial class UpdateRunner
         };
 
         // Add optional values
-        values.AddIfNotDefault("GITHUB_ACCESS_TOKEN", options.GithubToken)
+        values.AddIfNotDefault("GITHUB_ACCESS_TOKEN", project.GithubToken ?? options.GithubToken)
               .AddIfNotDefault("DEPENDABOT_REBASE_STRATEGY", update.RebaseStrategy)
               .AddIfNotDefault("DEPENDABOT_TARGET_BRANCH", update.TargetBranch)
               .AddIfNotDefault("DEPENDABOT_VENDOR", update.Vendor ? "true" : null)
