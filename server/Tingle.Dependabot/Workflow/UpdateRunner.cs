@@ -243,7 +243,7 @@ internal partial class UpdateRunner
             ["DEPENDABOT_JOB_ID"] = job.Id!,
             ["DEPENDABOT_JOB_TOKEN"] = job.AuthKey!,
             ["DEPENDABOT_DEBUG"] = debugAllJobs.ToString().ToLower(),
-            ["DEPENDABOT_API_URL"] = options.JobsApiUrl!,
+            ["DEPENDABOT_API_URL"] = options.JobsApiUrl!.ToString(),
             ["DEPENDABOT_JOB_PATH"] = Path.Join(directory, JobDefinitionFileName),
             ["DEPENDABOT_OUTPUT_PATH"] = Path.Join(directory, "output"),
             // Setting DEPENDABOT_REPO_CONTENTS_PATH causes some issues, ignore till we can resolve
