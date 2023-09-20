@@ -12,6 +12,17 @@ using Tingle.Dependabot.Workflow;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add Serilog
+builder.Services.AddSerilog(builder =>
+{
+    builder.ConfigureSensitiveDataMasking(options =>
+    {
+        options.ExcludeProperties.AddRange(new[] {
+            "ExecutionId",
+        });
+    });
+});
+
 builder.Services.Configure<HostOptions>(options =>
 {
     /*

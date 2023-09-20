@@ -393,10 +393,6 @@
               "value": "[parameters('projectToken')]"
             },
             {
-              "name": "storage-account-key",
-              "value": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', format('{0}{1}', parameters('name'), variables('collisionSuffix'))), '2022-09-01').keys[0].value]"
-            },
-            {
               "name": "connection-strings-asb-scaler",
               "value": "[listKeys(resourceId('Microsoft.ServiceBus/namespaces/AuthorizationRules', format('{0}-{1}', parameters('name'), variables('collisionSuffix')), 'RootManageSharedAccessKey'), '2021-11-01').primaryConnectionString]"
             }
@@ -441,6 +437,10 @@
                 {
                   "name": "DistributedLocking__FilePath",
                   "value": "/mnt/distributed-locks"
+                },
+                {
+                  "name": "Logging__ApplicationInsights__LogLevel__Default",
+                  "value": "None"
                 },
                 {
                   "name": "Workflow__SynchronizeOnStartup",
@@ -596,8 +596,7 @@
         "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name'))]",
         "[resourceId('Microsoft.ServiceBus/namespaces', format('{0}-{1}', parameters('name'), variables('collisionSuffix')))]",
         "[resourceId('Microsoft.Sql/servers', format('{0}-{1}', parameters('name'), variables('collisionSuffix')))]",
-        "[resourceId('Microsoft.Sql/servers/databases', format('{0}-{1}', parameters('name'), variables('collisionSuffix')), parameters('name'))]",
-        "[resourceId('Microsoft.Storage/storageAccounts', format('{0}{1}', parameters('name'), variables('collisionSuffix')))]"
+        "[resourceId('Microsoft.Sql/servers/databases', format('{0}-{1}', parameters('name'), variables('collisionSuffix')), parameters('name'))]"
       ]
     },
     {

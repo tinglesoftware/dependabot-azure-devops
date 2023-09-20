@@ -260,7 +260,6 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
         }
         { name: 'notifications-password', value: notificationsPassword }
         { name: 'project-token', value: projectToken }
-        { name: 'storage-account-key', value: storageAccount.listKeys().keys[0].value }
         { name: 'connection-strings-asb-scaler', value: serviceBusNamespace::authorizationRule.listKeys().primaryConnectionString }
       ]
     }
@@ -283,6 +282,8 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
 
             { name: 'DistributedLocking__FilePath', value: '/mnt/distributed-locks' }
 
+            { name: 'Logging__ApplicationInsights__LogLevel__Default', value: 'None' } // do not send logs to application insights (duplicates LogAnalytics)
+
             { name: 'Workflow__SynchronizeOnStartup', value: synchronizeOnStartup ? 'true' : 'false' }
             { name: 'Workflow__CreateOrUpdateWebhooksOnStartup', value: createOrUpdateWebhooksOnStartup ? 'true' : 'false' }
             { name: 'Workflow__ProjectUrl', value: projectUrl }
@@ -290,17 +291,11 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
             { name: 'Workflow__DebugJobs', value: '${debugAllJobs}' }
             { name: 'Workflow__JobsApiUrl', value: 'https://${name}.${appEnvironment.properties.defaultDomain}' }
             { name: 'Workflow__WorkingDirectory', value: '/mnt/dependabot' }
-            {
-              name: 'Workflow__WebhookEndpoint'
-              value: 'https://${name}.${appEnvironment.properties.defaultDomain}/webhooks/azure'
-            }
+            { name: 'Workflow__WebhookEndpoint', value: 'https://${name}.${appEnvironment.properties.defaultDomain}/webhooks/azure' }
             { name: 'Workflow__SubscriptionPassword', secretRef: 'notifications-password' }
             { name: 'Workflow__ResourceGroupId', value: resourceGroup().id }
             { name: 'Workflow__AppEnvironmentId', value: appEnvironment.id }
-            {
-              name: 'Workflow__LogAnalyticsWorkspaceId'
-              value: logAnalyticsWorkspace.properties.customerId
-            }
+            { name: 'Workflow__LogAnalyticsWorkspaceId', value: logAnalyticsWorkspace.properties.customerId }
             { name: 'Workflow__UpdaterContainerImageTemplate', value: 'ghcr.io/tinglesoftware/dependabot-updater-{{ecosystem}}:${imageTag}' }
             { name: 'Workflow__AutoComplete', value: autoComplete ? 'true' : 'false' }
             { name: 'Workflow__AutoCompleteIgnoreConfigs', value: join(autoCompleteIgnoreConfigs, ';') }
@@ -309,23 +304,12 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
             { name: 'Workflow__GithubToken', value: githubToken }
             { name: 'Workflow__Location', value: location }
 
-            {
-              name: 'Authentication__Schemes__Management__Authority'
-              // Format: https://login.microsoftonline.com/{tenant-id}/v2.0
-              value: '${environment().authentication.loginEndpoint}${subscription().tenantId}/v2.0'
-            }
-            {
-              name: 'Authentication__Schemes__Management__ValidAudiences__0'
-              value: 'https://${name}.${appEnvironment.properties.defaultDomain}'
-            }
+            { name: 'Authentication__Schemes__Management__Authority', value: '${environment().authentication.loginEndpoint}${subscription().tenantId}/v2.0' }
+            { name: 'Authentication__Schemes__Management__ValidAudiences__0', value: 'https://${name}.${appEnvironment.properties.defaultDomain}' }
             { name: 'Authentication__Schemes__ServiceHooks__Credentials__vsts', secretRef: 'notifications-password' }
 
             { name: 'EventBus__SelectedTransport', value: 'ServiceBus' }
-            {
-              name: 'EventBus__Transports__azure-service-bus__FullyQualifiedNamespace'
-              // manipulating https://{your-namespace}.servicebus.windows.net:443/
-              value: split(split(serviceBusNamespace.properties.serviceBusEndpoint, '/')[2], ':')[0]
-            }
+            { name: 'EventBus__Transports__azure-service-bus__FullyQualifiedNamespace', value: split(split(serviceBusNamespace.properties.serviceBusEndpoint, '/')[2], ':')[0] } // manipulating https://{your-namespace}.servicebus.windows.net:443/
           ]
           resources: {// these are the least resources we can provision
             cpu: json('0.25')
