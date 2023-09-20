@@ -20,16 +20,9 @@ internal class ProjectTargetingContextAccessor : ITargetingContextAccessor
     {
         var httpContext = contextAccessor.HttpContext!;
 
-        // Prepare the groups
-        var groups = new List<string>(); // where can we get the workspace groups?
-
-        // Build targeting context based off workspace info
-        var workspaceId = httpContext.GetProjectId();
-        var targetingContext = new TargetingContext
-        {
-            UserId = workspaceId,
-            Groups = groups
-        };
+        // Build targeting context based off project info
+        var projectId = httpContext.GetProjectId();
+        var targetingContext = new TargetingContext { UserId = projectId, };
 
         return new ValueTask<TargetingContext>(targetingContext);
     }

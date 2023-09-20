@@ -57,6 +57,10 @@ internal partial class UpdateRunner
         }
         catch (Azure.RequestFailedException rfe) when (rfe.Status is 404) { }
 
+        // check if V2 updater is enabled for the project via Feature Management
+        var fmc = MakeTargetingContext(project, job);
+        var useV2 = await featureManager.IsEnabledAsync(FeatureNames.UpdaterV2, fmc);
+
         // prepare credentials with replaced secrets
         var secrets = new Dictionary<string, string>(project.Secrets) { ["DEFAULT_TOKEN"] = project.Token!, };
         var registries = update.Registries?.Select(r => repository.Registries[r]).ToList();
@@ -71,7 +75,7 @@ internal partial class UpdateRunner
             Name = UpdaterContainerName,
             Image = options.UpdaterContainerImageTemplate!.Replace("{{ecosystem}}", job.PackageEcosystem),
             Resources = job.Resources!,
-            Args = { "update_script", },
+            Args = { useV2 ? "update_files" : "update_script", },
             VolumeMounts = { new ContainerAppVolumeMount { VolumeName = volumeName, MountPath = options.WorkingDirectory, }, },
         };
         var env = await CreateEnvironmentVariables(project, repository, update, job, directory, credentials, cancellationToken);
@@ -231,8 +235,8 @@ internal partial class UpdateRunner
         [return: NotNullIfNotNull(nameof(value))]
         static string? ToJson<T>(T? value) => value is null ? null : JsonSerializer.Serialize(value, serializerOptions); // null ensures we do not add to the values
 
-        // check if debug is enabled for the project via Feature Management
-        var fmc = new TargetingContext { Groups = new[] { $"provider:{project.Type.ToString().ToLower()}", $"project:{project.Id}", $"ecosystem:{job.PackageEcosystem}", }, };
+        // check if debug and determinism is enabled for the project via Feature Management
+        var fmc = MakeTargetingContext(project, job);
         var debugAllJobs = await featureManager.IsEnabledAsync(FeatureNames.DebugAllJobs, fmc);
         var deterministic = await featureManager.IsEnabledAsync(FeatureNames.DeterministicUpdates, fmc);
 
@@ -300,7 +304,7 @@ internal partial class UpdateRunner
         var credentialsMetadata = MakeCredentialsMetadata(credentials);
 
         // check if debug is enabled for the project via Feature Management
-        var fmc = new TargetingContext { Groups = new[] { $"provider:{project.Type.ToString().ToLower()}", $"project:{project.Id}", $"ecosystem:{job.PackageEcosystem}", }, };
+        var fmc = MakeTargetingContext(project, job);
         var debug = await featureManager.IsEnabledAsync(FeatureNames.DebugJobs, fmc);
 
         var definition = new JsonObject
@@ -350,6 +354,18 @@ internal partial class UpdateRunner
         return path;
     }
 
+    internal static TargetingContext MakeTargetingContext(Project project, UpdateJob job)
+    {
+        return new TargetingContext
+        {
+            Groups = new[]
+            {
+                $"provider:{project.Type.ToString().ToLower()}",
+                $"project:{project.Id}",
+                $"ecosystem:{job.PackageEcosystem}",
+            },
+        };
+    }
     internal static IList<Dictionary<string, string>> MakeCredentialsMetadata(IList<Dictionary<string, string>> credentials)
     {
         return credentials.Select(cred =>
