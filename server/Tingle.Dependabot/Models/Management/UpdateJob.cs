@@ -19,6 +19,11 @@ public class UpdateJob
     /// <summary>Trigger for the update job.</summary>
     public UpdateJobTrigger Trigger { get; set; }
 
+    /// <summary>Identifier of the project.</summary>
+    [Required]
+    [JsonIgnore] // only for internal use
+    public string? ProjectId { get; set; }
+
     /// <summary>Identifier of the repository.</summary>
     [Required]
     [JsonIgnore] // only for internal use

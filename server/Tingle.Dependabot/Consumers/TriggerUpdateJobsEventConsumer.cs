@@ -89,6 +89,7 @@ internal class TriggerUpdateJobsEventConsumer : IEventConsumer<TriggerUpdateJobs
                     Status = UpdateJobStatus.Scheduled,
                     Trigger = evt.Trigger,
 
+                    ProjectId = project.Id,
                     RepositoryId = repository.Id,
                     RepositorySlug = repository.Slug,
                     EventBusId = eventBusId,
@@ -103,6 +104,7 @@ internal class TriggerUpdateJobsEventConsumer : IEventConsumer<TriggerUpdateJobs
                     End = null,
                     Duration = null,
                     Log = null,
+                    Error = null,
                 };
                 await dbContext.UpdateJobs.AddAsync(job, cancellationToken);
 

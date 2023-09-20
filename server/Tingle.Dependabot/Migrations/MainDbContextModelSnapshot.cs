@@ -210,6 +210,10 @@ namespace Tingle.Dependabot.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<string>("ProjectId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<string>("RepositoryId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
@@ -234,6 +238,8 @@ namespace Tingle.Dependabot.Migrations
 
                     b.HasIndex("Created")
                         .IsDescending();
+
+                    b.HasIndex("ProjectId");
 
                     b.HasIndex("RepositoryId");
 

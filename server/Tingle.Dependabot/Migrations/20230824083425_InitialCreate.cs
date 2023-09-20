@@ -59,6 +59,7 @@ public partial class InitialCreate : Migration
                 Created = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
                 Status = table.Column<int>(type: "int", nullable: false),
                 Trigger = table.Column<int>(type: "int", nullable: false),
+                ProjectId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                 RepositoryId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                 RepositorySlug = table.Column<string>(type: "nvarchar(max)", nullable: false),
                 EventBusId = table.Column<string>(type: "nvarchar(450)", nullable: true),
@@ -173,6 +174,11 @@ public partial class InitialCreate : Migration
             columns: new[] { "PackageEcosystem", "Directory", "EventBusId" },
             unique: true,
             filter: "[EventBusId] IS NOT NULL");
+
+        migrationBuilder.CreateIndex(
+            name: "IX_UpdateJobs_ProjectId",
+            table: "UpdateJobs",
+            column: "ProjectId");
 
         migrationBuilder.CreateIndex(
             name: "IX_UpdateJobs_RepositoryId",
