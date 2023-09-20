@@ -16,18 +16,6 @@
         "description": "Name of the resources"
       }
     },
-    "projectUrl": {
-      "type": "string",
-      "metadata": {
-        "description": "URL of the project. For example \"https://dev.azure.com/fabrikam/DefaultCollection\""
-      }
-    },
-    "projectToken": {
-      "type": "string",
-      "metadata": {
-        "description": "Token for accessing the project."
-      }
-    },
     "synchronizeOnStartup": {
       "type": "bool",
       "defaultValue": false,
@@ -42,59 +30,11 @@
         "description": "Whether to create or update subscriptions on startup."
       }
     },
-    "debugAllJobs": {
-      "type": "bool",
-      "defaultValue": false,
-      "metadata": {
-        "description": "Whether to debug all jobs."
-      }
-    },
     "githubToken": {
       "type": "string",
       "defaultValue": "",
       "metadata": {
         "description": "Access token for authenticating requests to GitHub."
-      }
-    },
-    "autoComplete": {
-      "type": "bool",
-      "defaultValue": true,
-      "metadata": {
-        "description": "Whether to set auto complete on created pull requests."
-      }
-    },
-    "autoCompleteIgnoreConfigs": {
-      "type": "array",
-      "defaultValue": [],
-      "metadata": {
-        "description": "Identifiers of configs to be ignored in auto complete. E.g 3,4,10"
-      }
-    },
-    "autoCompleteMergeStrategy": {
-      "type": "string",
-      "defaultValue": "Squash",
-      "allowedValues": [
-        "NoFastForward",
-        "Rebase",
-        "RebaseMerge",
-        "Squash"
-      ],
-      "metadata": {
-        "description": "Merge strategy to use when setting auto complete on created pull requests."
-      }
-    },
-    "autoApprove": {
-      "type": "bool",
-      "defaultValue": false,
-      "metadata": {
-        "description": "Whether to automatically approve created pull requests."
-      }
-    },
-    "notificationsPassword": {
-      "type": "string",
-      "defaultValue": "[uniqueString('service-hooks', resourceGroup().id)]",
-      "metadata": {
-        "description": "Password for Webhooks, ServiceHooks, and Notifications from Azure DevOps."
       }
     },
     "imageTag": {
@@ -406,14 +346,6 @@
               "value": "[join(createArray(format('Server=tcp:{0},1433', reference(resourceId('Microsoft.Sql/servers', format('{0}-{1}', parameters('name'), variables('collisionSuffix'))), '2022-05-01-preview').fullyQualifiedDomainName), format('Initial Catalog={0}', parameters('name')), format('User ID={0}', variables('sqlServerAdministratorLogin')), format('Password={0}', variables('sqlServerAdministratorLoginPassword')), 'Persist Security Info=False', 'MultipleActiveResultSets=False', 'Encrypt=True', 'TrustServerCertificate=False', 'Connection Timeout=30'), ';')]"
             },
             {
-              "name": "notifications-password",
-              "value": "[parameters('notificationsPassword')]"
-            },
-            {
-              "name": "project-token",
-              "value": "[parameters('projectToken')]"
-            },
-            {
               "name": "connection-strings-asb-scaler",
               "value": "[listKeys(resourceId('Microsoft.ServiceBus/namespaces/AuthorizationRules', format('{0}-{1}', parameters('name'), variables('collisionSuffix')), 'RootManageSharedAccessKey'), '2021-11-01').primaryConnectionString]"
             }
@@ -492,18 +424,6 @@
                   "value": "[if(parameters('createOrUpdateWebhooksOnStartup'), 'true', 'false')]"
                 },
                 {
-                  "name": "Workflow__ProjectUrl",
-                  "value": "[parameters('projectUrl')]"
-                },
-                {
-                  "name": "Workflow__ProjectToken",
-                  "secretRef": "project-token"
-                },
-                {
-                  "name": "Workflow__DebugJobs",
-                  "value": "[format('{0}', parameters('debugAllJobs'))]"
-                },
-                {
                   "name": "Workflow__JobsApiUrl",
                   "value": "[format('https://{0}.{1}', parameters('name'), reference(resourceId('Microsoft.App/managedEnvironments', parameters('name')), '2023-05-01').defaultDomain)]"
                 },
@@ -514,10 +434,6 @@
                 {
                   "name": "Workflow__WebhookEndpoint",
                   "value": "[format('https://{0}.{1}/webhooks/azure', parameters('name'), reference(resourceId('Microsoft.App/managedEnvironments', parameters('name')), '2023-05-01').defaultDomain)]"
-                },
-                {
-                  "name": "Workflow__SubscriptionPassword",
-                  "secretRef": "notifications-password"
                 },
                 {
                   "name": "Workflow__ResourceGroupId",
@@ -534,22 +450,6 @@
                 {
                   "name": "Workflow__UpdaterContainerImageTemplate",
                   "value": "[format('ghcr.io/tinglesoftware/dependabot-updater-{{{{ecosystem}}}}:{0}', parameters('imageTag'))]"
-                },
-                {
-                  "name": "Workflow__AutoComplete",
-                  "value": "[if(parameters('autoComplete'), 'true', 'false')]"
-                },
-                {
-                  "name": "Workflow__AutoCompleteIgnoreConfigs",
-                  "value": "[join(parameters('autoCompleteIgnoreConfigs'), ';')]"
-                },
-                {
-                  "name": "Workflow__AutoCompleteMergeStrategy",
-                  "value": "[parameters('autoCompleteMergeStrategy')]"
-                },
-                {
-                  "name": "Workflow__AutoApprove",
-                  "value": "[if(parameters('autoApprove'), 'true', 'false')]"
                 },
                 {
                   "name": "Workflow__GithubToken",
@@ -715,10 +615,6 @@
     "webhookEndpoint": {
       "type": "string",
       "value": "[format('https://{0}/webhooks/azure', reference(resourceId('Microsoft.App/containerApps', parameters('name')), '2023-05-01').configuration.ingress.fqdn)]"
-    },
-    "notificationsPassword": {
-      "type": "string",
-      "value": "[parameters('notificationsPassword')]"
     }
   }
 }

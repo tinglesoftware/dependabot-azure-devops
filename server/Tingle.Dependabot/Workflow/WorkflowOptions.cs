@@ -1,6 +1,4 @@
-﻿using Tingle.Dependabot.Models;
-
-namespace Tingle.Dependabot.Workflow;
+﻿namespace Tingle.Dependabot.Workflow;
 
 public class WorkflowOptions
 {
@@ -12,6 +10,9 @@ public class WorkflowOptions
 
     /// <summary>URL where subscription notifications shall be sent.</summary>
     public Uri? WebhookEndpoint { get; set; }
+
+    /// <summary>URL on which to access the API from the jobs.</summary>
+    public string? JobsApiUrl { get; set; }
 
     /// <summary>Password used for creation of subscription and authenticating incoming notifications.</summary>
     public string? SubscriptionPassword { get; set; }
@@ -38,16 +39,6 @@ public class WorkflowOptions
     /// <example>ghcr.io/tinglesoftware/dependabot-updater-{{ecosystem}}:1.20</example>
     public string? UpdaterContainerImageTemplate { get; set; }
 
-    /// <summary>URL for the project.</summary>
-    public AzureDevOpsProjectUrl? ProjectUrl { get; set; }
-
-    /// <summary>Authentication token for accessing the project.</summary>
-    public string? ProjectToken { get; set; }
-
-    /// <summary>URL on which to access the API from the jobs.</summary>
-    /// <example>https://dependabot.dummy-123.westeurope.azurecontainerapps.io</example>
-    public string? JobsApiUrl { get; set; }
-
     /// <summary>
     /// Root working directory where file are written during job scheduling and execution.
     /// This directory is the root for all jobs.
@@ -61,16 +52,6 @@ public class WorkflowOptions
 
     /// <summary>Whether updates should be created in the same order.</summary>
     public bool? DeterministicUpdates { get; set; }
-
-    /// <summary>Whether to set automatic completion of pull requests.</summary>
-    public bool? AutoComplete { get; set; }
-
-    public string? AutoCompleteIgnoreConfigs { get; set; }
-
-    public MergeStrategy? AutoCompleteMergeStrategy { get; set; }
-
-    /// <summary>Whether to automatically approve pull requests.</summary>
-    public bool? AutoApprove { get; set; }
 
     /// <summary>
     /// Token for accessing GitHub APIs.

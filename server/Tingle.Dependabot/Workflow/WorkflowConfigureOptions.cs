@@ -2,20 +2,8 @@
 
 namespace Tingle.Dependabot.Workflow;
 
-internal class WorkflowConfigureOptions : IPostConfigureOptions<WorkflowOptions>, IValidateOptions<WorkflowOptions>
+internal class WorkflowConfigureOptions : IValidateOptions<WorkflowOptions>
 {
-    private readonly IConfiguration configuration;
-
-    public WorkflowConfigureOptions(IConfiguration configuration)
-    {
-        this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-    }
-
-    public void PostConfigure(string? name, WorkflowOptions options)
-    {
-        options.SubscriptionPassword ??= configuration.GetValue<string?>("Authentication:Schemes:ServiceHooks:Credentials:vsts");
-    }
-
     public ValidateOptionsResult Validate(string? name, WorkflowOptions options)
     {
         if (options.WebhookEndpoint is null)
@@ -23,19 +11,9 @@ internal class WorkflowConfigureOptions : IPostConfigureOptions<WorkflowOptions>
             return ValidateOptionsResult.Fail($"'{nameof(options.WebhookEndpoint)}' is required");
         }
 
-        if (options.ProjectUrl is null)
+        if (options.JobsApiUrl is null)
         {
-            return ValidateOptionsResult.Fail($"'{nameof(options.ProjectUrl)}' is required");
-        }
-
-        if (string.IsNullOrWhiteSpace(options.ProjectToken))
-        {
-            return ValidateOptionsResult.Fail($"'{nameof(options.ProjectToken)}' cannot be null or whitespace");
-        }
-
-        if (string.IsNullOrWhiteSpace(options.SubscriptionPassword))
-        {
-            return ValidateOptionsResult.Fail($"'{nameof(options.SubscriptionPassword)}' cannot be null or whitespace");
+            return ValidateOptionsResult.Fail($"'{nameof(options.JobsApiUrl)}' is required");
         }
 
         if (string.IsNullOrWhiteSpace(options.ResourceGroupId))
