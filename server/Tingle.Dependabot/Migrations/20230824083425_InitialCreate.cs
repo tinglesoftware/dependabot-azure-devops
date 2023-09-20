@@ -25,25 +25,26 @@ public partial class InitialCreate : Migration
             });
 
         migrationBuilder.CreateTable(
-            name: "Repositories",
+            name: "Projects",
             columns: table => new
             {
                 Id = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                 Created = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
                 Updated = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
                 Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                Slug = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                ProviderId = table.Column<string>(type: "nvarchar(450)", nullable: true),
-                LatestCommit = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
-                ConfigFileContents = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                SyncException = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                Updates = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                Registries = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                Type = table.Column<int>(type: "int", nullable: false),
+                Url = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                Token = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                AutoComplete = table.Column<bool>(type: "bit", nullable: false),
+                AutoCompleteIgnoreConfigs = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                AutoCompleteMergeStrategy = table.Column<int>(type: "int", nullable: false),
+                AutoApprove = table.Column<bool>(type: "bit", nullable: false),
+                NotificationsPassword = table.Column<string>(type: "nvarchar(450)", nullable: false),
                 Etag = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: true)
             },
             constraints: table =>
             {
-                table.PrimaryKey("PK_Repositories", x => x.Id);
+                table.PrimaryKey("PK_Projects", x => x.Id);
             });
 
         migrationBuilder.CreateTable(
@@ -75,11 +76,57 @@ public partial class InitialCreate : Migration
                 table.PrimaryKey("PK_UpdateJobs", x => x.Id);
             });
 
+        migrationBuilder.CreateTable(
+            name: "Repositories",
+            columns: table => new
+            {
+                Id = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                Created = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                Updated = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                ProjectId = table.Column<string>(type: "nvarchar(50)", nullable: false),
+                Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                Slug = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                ProviderId = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                LatestCommit = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                ConfigFileContents = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                SyncException = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                Updates = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                Registries = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                Etag = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: true)
+            },
+            constraints: table =>
+            {
+                table.PrimaryKey("PK_Repositories", x => x.Id);
+                table.ForeignKey(
+                    name: "FK_Repositories_Projects_ProjectId",
+                    column: x => x.ProjectId,
+                    principalTable: "Projects",
+                    principalColumn: "Id",
+                    onDelete: ReferentialAction.Cascade);
+            });
+
+        migrationBuilder.CreateIndex(
+            name: "IX_Projects_Created",
+            table: "Projects",
+            column: "Created",
+            descending: new bool[0]);
+
+        migrationBuilder.CreateIndex(
+            name: "IX_Projects_NotificationsPassword",
+            table: "Projects",
+            column: "NotificationsPassword",
+            descending: new bool[0]);
+
         migrationBuilder.CreateIndex(
             name: "IX_Repositories_Created",
             table: "Repositories",
             column: "Created",
             descending: new bool[0]);
+
+        migrationBuilder.CreateIndex(
+            name: "IX_Repositories_ProjectId",
+            table: "Repositories",
+            column: "ProjectId");
 
         migrationBuilder.CreateIndex(
             name: "IX_Repositories_ProviderId",
@@ -129,5 +176,8 @@ public partial class InitialCreate : Migration
 
         migrationBuilder.DropTable(
             name: "UpdateJobs");
+
+        migrationBuilder.DropTable(
+            name: "Projects");
     }
 }

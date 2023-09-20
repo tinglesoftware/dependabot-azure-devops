@@ -13,6 +13,11 @@ public class Repository
 
     public DateTimeOffset Updated { get; set; }
 
+    /// <summary>Identifier of the project.</summary>
+    [Required]
+    [JsonIgnore] // only for internal use
+    public string? ProjectId { get; set; }
+
     /// <summary>Name of the repository as per provider.</summary>
     public string? Name { get; set; }
     public string? Slug { get; set; }

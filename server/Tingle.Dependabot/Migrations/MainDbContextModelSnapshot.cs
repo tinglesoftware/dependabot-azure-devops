@@ -41,7 +41,66 @@ namespace Tingle.Dependabot.Migrations
                     b.ToTable("DataProtectionKeys");
                 });
 
-            modelBuilder.Entity("Tingle.Dependabot.Models.Repository", b =>
+            modelBuilder.Entity("Tingle.Dependabot.Models.Management.Project", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("AutoApprove")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("AutoComplete")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("AutoCompleteIgnoreConfigs")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("AutoCompleteMergeStrategy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("Created")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<byte[]>("Etag")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NotificationsPassword")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("Updated")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Created")
+                        .IsDescending();
+
+                    b.HasIndex("NotificationsPassword")
+                        .IsDescending();
+
+                    b.ToTable("Projects");
+                });
+
+            modelBuilder.Entity("Tingle.Dependabot.Models.Management.Repository", b =>
                 {
                     b.Property<string>("Id")
                         .HasMaxLength(50)
@@ -65,6 +124,10 @@ namespace Tingle.Dependabot.Migrations
 
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ProjectId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("ProviderId")
                         .HasColumnType("nvarchar(450)");
@@ -91,6 +154,8 @@ namespace Tingle.Dependabot.Migrations
                     b.HasIndex("Created")
                         .IsDescending();
 
+                    b.HasIndex("ProjectId");
+
                     b.HasIndex("ProviderId")
                         .IsUnique()
                         .HasFilter("[ProviderId] IS NOT NULL");
@@ -98,7 +163,7 @@ namespace Tingle.Dependabot.Migrations
                     b.ToTable("Repositories");
                 });
 
-            modelBuilder.Entity("Tingle.Dependabot.Models.UpdateJob", b =>
+            modelBuilder.Entity("Tingle.Dependabot.Models.Management.UpdateJob", b =>
                 {
                     b.Property<string>("Id")
                         .HasMaxLength(50)
@@ -179,9 +244,18 @@ namespace Tingle.Dependabot.Migrations
                     b.ToTable("UpdateJobs");
                 });
 
-            modelBuilder.Entity("Tingle.Dependabot.Models.UpdateJob", b =>
+            modelBuilder.Entity("Tingle.Dependabot.Models.Management.Repository", b =>
                 {
-                    b.OwnsOne("Tingle.Dependabot.Models.UpdateJobResources", "Resources", b1 =>
+                    b.HasOne("Tingle.Dependabot.Models.Management.Project", null)
+                        .WithMany("Repositories")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Tingle.Dependabot.Models.Management.UpdateJob", b =>
+                {
+                    b.OwnsOne("Tingle.Dependabot.Models.Management.UpdateJobResources", "Resources", b1 =>
                         {
                             b1.Property<string>("UpdateJobId")
                                 .HasColumnType("nvarchar(50)");
@@ -202,6 +276,11 @@ namespace Tingle.Dependabot.Migrations
 
                     b.Navigation("Resources")
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Tingle.Dependabot.Models.Management.Project", b =>
+                {
+                    b.Navigation("Repositories");
                 });
 #pragma warning restore 612, 618
         }
