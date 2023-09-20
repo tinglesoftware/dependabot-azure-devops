@@ -66,16 +66,11 @@ builder.Services.AddAuthorization(options =>
     });
 });
 
+// Configure other services
 builder.Services.AddMemoryCache();
 builder.Services.AddDistributedMemoryCache();
-
-// Configure other services
-builder.Services.Configure<WorkflowOptions>(builder.Configuration.GetSection("Workflow"));
-builder.Services.ConfigureOptions<WorkflowConfigureOptions>();
-builder.Services.AddSingleton<UpdateRunner>();
-builder.Services.AddSingleton<UpdateScheduler>();
-builder.Services.AddScoped<AzureDevOpsProvider>();
-builder.Services.AddScoped<Synchronizer>();
+builder.Services.AddDistributedLockProvider(builder.Environment, builder.Configuration);
+builder.Services.AddWorkflowServices(builder.Configuration.GetSection("Workflow"));
 
 // Add event bus
 var selectedTransport = builder.Configuration.GetValue<EventBusTransportKind?>("EventBus:SelectedTransport");

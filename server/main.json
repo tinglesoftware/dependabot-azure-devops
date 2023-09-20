@@ -147,10 +147,22 @@
         }
       }
     ],
+    "fileShares": [
+      {
+        "name": "certs"
+      },
+      {
+        "name": "distributed-locks",
+        "writeable": true
+      },
+      {
+        "name": "working-dir",
+        "writeable": true
+      }
+    ],
     "sqlServerAdministratorLogin": "[uniqueString(resourceGroup().id)]",
     "sqlServerAdministratorLoginPassword": "[format('{0}%{1}', skip(uniqueString(resourceGroup().id), 5), uniqueString('sql-password', resourceGroup().id))]",
     "collisionSuffix": "[uniqueString(resourceGroup().id)]",
-    "fileShareName": "working-dir",
     "queueNames": [
       "process-synchronization",
       "repository-created",
@@ -163,23 +175,35 @@
   },
   "resources": [
     {
+      "copy": {
+        "name": "shares",
+        "count": "[length(variables('fileShares'))]"
+      },
       "type": "Microsoft.Storage/storageAccounts/fileServices/shares",
       "apiVersion": "2022-09-01",
-      "name": "[format('{0}/{1}/{2}', format('{0}{1}', parameters('name'), variables('collisionSuffix')), 'default', variables('fileShareName'))]",
+      "name": "[format('{0}/{1}/{2}', format('{0}{1}', parameters('name'), variables('collisionSuffix')), 'default', variables('fileShares')[copyIndex()].name)]",
+      "properties": {
+        "accessTier": "[if(contains(variables('fileShares')[copyIndex()], 'accessTier'), variables('fileShares')[copyIndex()].accessTier, 'TransactionOptimized')]",
+        "shareQuota": "[if(contains(variables('fileShares')[copyIndex()], 'shareQuota'), variables('fileShares')[copyIndex()].shareQuota, 1)]"
+      },
       "dependsOn": [
         "[resourceId('Microsoft.Storage/storageAccounts', format('{0}{1}', parameters('name'), variables('collisionSuffix')))]"
       ]
     },
     {
+      "copy": {
+        "name": "storages",
+        "count": "[length(variables('fileShares'))]"
+      },
       "type": "Microsoft.App/managedEnvironments/storages",
       "apiVersion": "2023-05-01",
-      "name": "[format('{0}/{1}', parameters('name'), variables('fileShareName'))]",
+      "name": "[format('{0}/{1}', parameters('name'), variables('fileShares')[copyIndex()].name)]",
       "properties": {
         "azureFile": {
-          "accessMode": "ReadWrite",
-          "shareName": "[variables('fileShareName')]",
           "accountName": "[format('{0}{1}', parameters('name'), variables('collisionSuffix'))]",
-          "accountKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', format('{0}{1}', parameters('name'), variables('collisionSuffix'))), '2022-09-01').keys[0].value]"
+          "accountKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', format('{0}{1}', parameters('name'), variables('collisionSuffix'))), '2022-09-01').keys[0].value]",
+          "shareName": "[variables('fileShares')[copyIndex()].name]",
+          "accessMode": "[if(and(contains(variables('fileShares')[copyIndex()], 'writeable'), bool(variables('fileShares')[copyIndex()].writeable)), 'ReadWrite', 'ReadOnly')]"
         }
       },
       "dependsOn": [
@@ -386,7 +410,11 @@
               "volumeMounts": [
                 {
                   "mountPath": "/mnt/dependabot",
-                  "volumeName": "[variables('fileShareName')]"
+                  "volumeName": "working-dir"
+                },
+                {
+                  "mountPath": "/mnt/distributed-locks",
+                  "volumeName": "distributed-locks"
                 }
               ],
               "env": [
@@ -409,6 +437,10 @@
                 {
                   "name": "ConnectionStrings__Sql",
                   "secretRef": "connection-strings-sql"
+                },
+                {
+                  "name": "DistributedLocking__FilePath",
+                  "value": "/mnt/distributed-locks"
                 },
                 {
                   "name": "Workflow__SynchronizeOnStartup",
@@ -534,8 +566,13 @@
           ],
           "volumes": [
             {
-              "name": "[variables('fileShareName')]",
-              "storageName": "[variables('fileShareName')]",
+              "name": "working-dir",
+              "storageName": "working-dir",
+              "storageType": "AzureFile"
+            },
+            {
+              "name": "distributed-locks",
+              "storageName": "distributed-locks",
               "storageType": "AzureFile"
             }
           ],
