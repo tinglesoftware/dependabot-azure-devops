@@ -32,6 +32,7 @@ public class Project
     /// Token for accessing the project with permissions for repositories, pull requests, and service hooks.
     /// </summary>
     [Required]
+    [JsonIgnore] // expose this once we know how to protect the values
     public string? Token { get; set; }
 
     /// <summary>Whether to set auto complete on created pull requests.</summary>
