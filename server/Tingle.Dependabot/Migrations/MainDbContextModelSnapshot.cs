@@ -77,6 +77,9 @@ namespace Tingle.Dependabot.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTimeOffset?>("Synchronized")
+                        .HasColumnType("datetimeoffset");
+
                     b.Property<string>("Token")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");

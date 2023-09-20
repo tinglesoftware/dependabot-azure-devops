@@ -73,6 +73,9 @@ public class Project
     [JsonIgnore] // only for internal use
     public List<Repository> Repositories { get; set; } = new();
 
+    /// <summary>Time at which the synchronization was last done for the project.</summary>
+    public DateTimeOffset? Synchronized { get; set; }
+
     [Timestamp]
     public byte[]? Etag { get; set; }
 }

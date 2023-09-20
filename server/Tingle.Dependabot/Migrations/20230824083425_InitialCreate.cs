@@ -44,6 +44,7 @@ public partial class InitialCreate : Migration
                 Secrets = table.Column<string>(type: "nvarchar(max)", nullable: false),
                 GithubToken = table.Column<string>(type: "nvarchar(max)", nullable: true),
                 Location = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                Synchronized = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
                 Etag = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: true)
             },
             constraints: table =>

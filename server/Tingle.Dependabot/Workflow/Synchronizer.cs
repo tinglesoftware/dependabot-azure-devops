@@ -33,7 +33,20 @@ internal class Synchronizer
 
     public async Task SynchronizeAsync(Project project, bool trigger, CancellationToken cancellationToken = default)
     {
-        // TODO: skip if the project last synchronization is less than 1 hour ago
+        // skip if the project last synchronization is less than 1 hour ago
+        if ((DateTimeOffset.UtcNow - project.Synchronized) <= TimeSpan.FromHours(1))
+        {
+            logger.LogInformation("Skipping synchronization for {ProjectUrl} since it last happened recently at {Synchronized}.", project.Url, project.Synchronized);
+            return;
+        }
+
+        // update the project (it may have changed name or visibility)
+        var tp = await adoProvider.GetProjectAsync(project, cancellationToken);
+        if (!string.Equals(project.Name, tp.Name, StringComparison.Ordinal))
+        {
+            project.Name = tp.Name;
+            project.Updated = DateTimeOffset.UtcNow;
+        }
 
         // track the synchronization pairs
         var syncPairs = new List<(SynchronizerConfigurationItem, Repository?)>();
@@ -83,6 +96,9 @@ internal class Synchronizer
         {
             await SynchronizeAsync(project, repository, pi, trigger, cancellationToken);
         }
+
+        // set the last synchronization time on the project
+        project.Synchronized = DateTimeOffset.UtcNow;
     }
 
     public async Task SynchronizeAsync(Project project, Repository repository, bool trigger, CancellationToken cancellationToken = default)
