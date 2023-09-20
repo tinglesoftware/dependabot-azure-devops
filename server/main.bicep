@@ -57,11 +57,16 @@ param minReplicas int = 1 // necessary for in-memory scheduling
 @description('The maximum number of replicas')
 param maxReplicas int = 1
 
+var fileShares = [
+  { name: 'certs' }
+  { name: 'distributed-locks', writeable: true }
+  { name: 'working-dir', writeable: true }
+]
+
 var sqlServerAdministratorLogin = uniqueString(resourceGroup().id) // e.g. zecnx476et7xm (13 characters)
 var sqlServerAdministratorLoginPassword = '${skip(uniqueString(resourceGroup().id), 5)}%${uniqueString('sql-password', resourceGroup().id)}' // e.g. abcde%zecnx476et7xm (19 characters)
 // avoid conflicts across multiple deployments for resources that generate FQDN based on the name
 var collisionSuffix = uniqueString(resourceGroup().id) // e.g. zecnx476et7xm (13 characters)
-var fileShareName = 'working-dir'
 var queueNames = [
   'process-synchronization'
   'repository-created'
@@ -94,10 +99,7 @@ resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-
 resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2021-11-01' = {
   name: '${name}-${collisionSuffix}'
   location: location
-  properties: {
-    disableLocalAuth: false
-    zoneRedundant: false
-  }
+  properties: { disableLocalAuth: false, zoneRedundant: false }
   sku: { name: 'Basic' }
 
   resource authorizationRule 'AuthorizationRules' existing = { name: 'RootManageSharedAccessKey' }
@@ -122,7 +124,16 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = {
   resource fileServices 'fileServices' existing = {
     name: 'default'
 
-    resource workingDir 'shares' = { name: fileShareName }
+    resource shares 'shares' = [for fs in fileShares: {
+      name: fs.name
+      properties: {
+        accessTier: contains(fs, 'accessTier') ? fs.accessTier : 'TransactionOptimized'
+        // container apps does not support NFS
+        // https://github.com/microsoft/azure-container-apps/issues/717
+        // enabledProtocols: contains(fs, 'enabledProtocols') ? fs.enabledProtocols : 'SMB'
+        shareQuota: contains(fs, 'shareQuota') ? fs.shareQuota : 1
+      }
+    }]
   }
 }
 
@@ -147,18 +158,13 @@ resource sqlServer 'Microsoft.Sql/servers@2022-05-01-preview' = {
 resource sqlServerFirewallRuleForAzure 'Microsoft.Sql/servers/firewallRules@2022-08-01-preview' = {
   parent: sqlServer
   name: 'AllowAllWindowsAzureIps'
-  properties: {
-    endIpAddress: '0.0.0.0'
-    startIpAddress: '0.0.0.0'
-  }
+  properties: { endIpAddress: '0.0.0.0', startIpAddress: '0.0.0.0' }
 }
 resource sqlServerDatabase 'Microsoft.Sql/servers/databases@2022-05-01-preview' = {
   parent: sqlServer
   name: name
   location: location
-  sku: {
-    name: 'Basic'
-  }
+  sku: { name: 'Basic' }
   properties: {
     collation: 'SQL_Latin1_General_CP1_CI_AS'
     maxSizeBytes: 2147483648
@@ -204,17 +210,17 @@ resource appEnvironment 'Microsoft.App/managedEnvironments@2023-05-01' = {
     }
   }
 
-  resource workingDir 'storages' = {
-    name: fileShareName
+  resource storages 'storages' = [for fs in fileShares: {
+    name: fs.name
     properties: {
       azureFile: {
-        accessMode: 'ReadWrite'
-        shareName: fileShareName
         accountName: storageAccount.name
         accountKey: storageAccount.listKeys().keys[0].value
+        shareName: fs.name
+        accessMode: contains(fs, 'writeable') && bool(fs.writeable) ? 'ReadWrite' : 'ReadOnly'
       }
     }
-  }
+  }]
 }
 
 /* Application Insights */
@@ -235,16 +241,7 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
   properties: {
     managedEnvironmentId: appEnvironment.id
     configuration: {
-      ingress: {
-        external: true
-        targetPort: 80
-        traffic: [
-          {
-            latestRevision: true
-            weight: 100
-          }
-        ]
-      }
+      ingress: { external: true, targetPort: 80, traffic: [ { latestRevision: true, weight: 100 } ] }
       secrets: [
         { name: 'connection-strings-application-insights', value: appInsights.properties.ConnectionString }
         {
@@ -272,7 +269,10 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
         {
           image: 'ghcr.io/tinglesoftware/dependabot-server:${imageTag}'
           name: 'dependabot'
-          volumeMounts: [ { mountPath: '/mnt/dependabot', volumeName: fileShareName } ]
+          volumeMounts: [
+            { mountPath: '/mnt/dependabot', volumeName: 'working-dir' }
+            { mountPath: '/mnt/distributed-locks', volumeName: 'distributed-locks' }
+          ]
           env: [
             { name: 'AZURE_CLIENT_ID', value: managedIdentity.properties.clientId } // Specifies the User-Assigned Managed Identity to use. Without this, the app attempt to use the system assigned one.
             { name: 'ASPNETCORE_FORWARDEDHEADERS_ENABLED', value: 'true' } // Application is behind proxy
@@ -280,6 +280,8 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
 
             { name: 'ApplicationInsights__ConnectionString', secretRef: 'connection-strings-application-insights' }
             { name: 'ConnectionStrings__Sql', secretRef: 'connection-strings-sql' }
+
+            { name: 'DistributedLocking__FilePath', value: '/mnt/distributed-locks' }
 
             { name: 'Workflow__SynchronizeOnStartup', value: synchronizeOnStartup ? 'true' : 'false' }
             { name: 'Workflow__CreateOrUpdateWebhooksOnStartup', value: createOrUpdateWebhooksOnStartup ? 'true' : 'false' }
@@ -341,7 +343,10 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
           ]
         }
       ]
-      volumes: [ { name: fileShareName, storageName: fileShareName, storageType: 'AzureFile' } ]
+      volumes: [
+        { name: 'working-dir', storageName: 'working-dir', storageType: 'AzureFile' }
+        { name: 'distributed-locks', storageName: 'distributed-locks', storageType: 'AzureFile' }
+      ]
       scale: {
         minReplicas: minReplicas
         maxReplicas: maxReplicas
