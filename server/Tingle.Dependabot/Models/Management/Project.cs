@@ -35,17 +35,13 @@ public class Project
     [JsonIgnore] // expose this once we know how to protect the values
     public string? Token { get; set; }
 
-    /// <summary>Whether to set auto complete on created pull requests.</summary>
-    public bool AutoComplete { get; set; }
+    /// <summary>Auto complete settings.</summary>
+    [Required]
+    public ProjectAutoComplete AutoComplete { get; set; } = new();
 
-    /// <summary>Identifiers of configs to be ignored in auto complete.</summary>
-    public List<int> AutoCompleteIgnoreConfigs { get; set; } = new();
-
-    /// <summary>Merge strategy to use when setting auto complete on created pull requests.</summary>
-    public MergeStrategy? AutoCompleteMergeStrategy { get; set; }
-
-    /// <summary>Whether to automatically approve created pull requests.</summary>
-    public bool AutoApprove { get; set; }
+    /// <summary>Auto approve settings.</summary>
+    [Required]
+    public ProjectAutoApprove AutoApprove { get; set; } = new();
 
     /// <summary>Password for Webhooks, ServiceHooks, and Notifications from the provider.</summary>
     [Required]
@@ -63,6 +59,24 @@ public class Project
 
     [Timestamp]
     public byte[]? Etag { get; set; }
+}
+
+public class ProjectAutoComplete
+{
+    /// <summary>Whether to set auto complete on created pull requests.</summary>
+    public bool Enabled { get; set; }
+
+    /// <summary>Identifiers of configs to be ignored in auto complete.</summary>
+    public List<int>? IgnoreConfigs { get; set; }
+
+    /// <summary>Merge strategy to use when setting auto complete on created pull requests.</summary>
+    public MergeStrategy? MergeStrategy { get; set; }
+}
+
+public class ProjectAutoApprove
+{
+    /// <summary>Whether to automatically approve created pull requests.</summary>
+    public bool Enabled { get; set; }
 }
 
 public enum ProjectType

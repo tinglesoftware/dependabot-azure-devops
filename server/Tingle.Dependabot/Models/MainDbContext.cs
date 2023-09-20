@@ -18,37 +18,41 @@ public class MainDbContext : DbContext, IDataProtectionKeyContext
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<Project>(b =>
+        modelBuilder.Entity<Project>(builder =>
         {
-            b.Property(p => p.AutoCompleteIgnoreConfigs).HasJsonConversion();
-            b.Property(p => p.Secrets).HasJsonConversion();
+            builder.OwnsOne(p => p.AutoApprove);
+            builder.OwnsOne(p => p.AutoComplete, ownedBuilder =>
+            {
+                ownedBuilder.Property(p => p.IgnoreConfigs).HasJsonConversion();
+            });
+            builder.Property(p => p.Secrets).HasJsonConversion();
 
-            b.HasIndex(p => p.Created).IsDescending(); // faster filtering
-            b.HasIndex(p => p.ProviderId).IsUnique();
-            b.HasIndex(p => p.Password).IsUnique(); // password should be unique per project
+            builder.HasIndex(p => p.Created).IsDescending(); // faster filtering
+            builder.HasIndex(p => p.ProviderId).IsUnique();
+            builder.HasIndex(p => p.Password).IsUnique(); // password should be unique per project
         });
 
-        modelBuilder.Entity<Repository>(b =>
+        modelBuilder.Entity<Repository>(builder =>
         {
-            b.Property(r => r.Updates).HasJsonConversion();
-            b.Property(r => r.Registries).HasJsonConversion();
+            builder.Property(r => r.Updates).HasJsonConversion();
+            builder.Property(r => r.Registries).HasJsonConversion();
 
-            b.HasIndex(r => r.Created).IsDescending(); // faster filtering
-            b.HasIndex(r => r.ProviderId).IsUnique();
+            builder.HasIndex(r => r.Created).IsDescending(); // faster filtering
+            builder.HasIndex(r => r.ProviderId).IsUnique();
         });
 
-        modelBuilder.Entity<UpdateJob>(b =>
+        modelBuilder.Entity<UpdateJob>(builder =>
         {
-            b.Property(j => j.PackageEcosystem).IsRequired();
-            b.Property(j => j.Error).HasJsonConversion();
+            builder.Property(j => j.PackageEcosystem).IsRequired();
+            builder.Property(j => j.Error).HasJsonConversion();
 
-            b.HasIndex(j => j.Created).IsDescending(); // faster filtering
-            b.HasIndex(j => j.RepositoryId);
-            b.HasIndex(j => new { j.PackageEcosystem, j.Directory, }); // faster filtering
-            b.HasIndex(j => new { j.PackageEcosystem, j.Directory, j.EventBusId, }).IsUnique();
-            b.HasIndex(j => j.AuthKey).IsUnique();
+            builder.HasIndex(j => j.Created).IsDescending(); // faster filtering
+            builder.HasIndex(j => j.RepositoryId);
+            builder.HasIndex(j => new { j.PackageEcosystem, j.Directory, }); // faster filtering
+            builder.HasIndex(j => new { j.PackageEcosystem, j.Directory, j.EventBusId, }).IsUnique();
+            builder.HasIndex(j => j.AuthKey).IsUnique();
 
-            b.OwnsOne(j => j.Resources);
+            builder.OwnsOne(j => j.Resources);
         });
     }
 }

@@ -50,19 +50,6 @@ namespace Tingle.Dependabot.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<bool>("AutoApprove")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("AutoComplete")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("AutoCompleteIgnoreConfigs")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("AutoCompleteMergeStrategy")
-                        .HasColumnType("int");
-
                     b.Property<DateTimeOffset>("Created")
                         .HasColumnType("datetimeoffset");
 
@@ -256,6 +243,53 @@ namespace Tingle.Dependabot.Migrations
                         .HasFilter("[EventBusId] IS NOT NULL");
 
                     b.ToTable("UpdateJobs");
+                });
+
+            modelBuilder.Entity("Tingle.Dependabot.Models.Management.Project", b =>
+                {
+                    b.OwnsOne("Tingle.Dependabot.Models.Management.ProjectAutoApprove", "AutoApprove", b1 =>
+                        {
+                            b1.Property<string>("ProjectId")
+                                .HasColumnType("nvarchar(50)");
+
+                            b1.Property<bool>("Enabled")
+                                .HasColumnType("bit");
+
+                            b1.HasKey("ProjectId");
+
+                            b1.ToTable("Projects");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ProjectId");
+                        });
+
+                    b.OwnsOne("Tingle.Dependabot.Models.Management.ProjectAutoComplete", "AutoComplete", b1 =>
+                        {
+                            b1.Property<string>("ProjectId")
+                                .HasColumnType("nvarchar(50)");
+
+                            b1.Property<bool>("Enabled")
+                                .HasColumnType("bit");
+
+                            b1.Property<string>("IgnoreConfigs")
+                                .HasColumnType("nvarchar(max)");
+
+                            b1.Property<int?>("MergeStrategy")
+                                .HasColumnType("int");
+
+                            b1.HasKey("ProjectId");
+
+                            b1.ToTable("Projects");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ProjectId");
+                        });
+
+                    b.Navigation("AutoApprove")
+                        .IsRequired();
+
+                    b.Navigation("AutoComplete")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Tingle.Dependabot.Models.Management.Repository", b =>

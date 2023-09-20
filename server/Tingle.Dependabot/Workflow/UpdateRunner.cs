@@ -278,10 +278,10 @@ internal partial class UpdateRunner
               .AddIfNotDefault("AZURE_PROJECT", url.ProjectName)
               .AddIfNotDefault("AZURE_REPOSITORY", Uri.EscapeDataString(repository.Name!))
               .AddIfNotDefault("AZURE_ACCESS_TOKEN", project.Token)
-              .AddIfNotDefault("AZURE_SET_AUTO_COMPLETE", project.AutoComplete.ToString().ToLowerInvariant())
-              .AddIfNotDefault("AZURE_AUTO_COMPLETE_IGNORE_CONFIG_IDS", ToJson(project.AutoCompleteIgnoreConfigs ?? new()))
-              .AddIfNotDefault("AZURE_MERGE_STRATEGY", project.AutoCompleteMergeStrategy?.ToString())
-              .AddIfNotDefault("AZURE_AUTO_APPROVE_PR", project.AutoApprove.ToString().ToLowerInvariant());
+              .AddIfNotDefault("AZURE_SET_AUTO_COMPLETE", project.AutoComplete.Enabled.ToString().ToLowerInvariant())
+              .AddIfNotDefault("AZURE_AUTO_COMPLETE_IGNORE_CONFIG_IDS", ToJson(project.AutoComplete.IgnoreConfigs ?? new()))
+              .AddIfNotDefault("AZURE_MERGE_STRATEGY", project.AutoComplete.MergeStrategy?.ToString())
+              .AddIfNotDefault("AZURE_AUTO_APPROVE_PR", project.AutoApprove.Enabled.ToString().ToLowerInvariant());
 
         return values;
     }
