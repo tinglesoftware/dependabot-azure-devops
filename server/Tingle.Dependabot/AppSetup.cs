@@ -22,12 +22,13 @@ internal static class AppSetup
             }
         }
 
+        var context = provider.GetRequiredService<MainDbContext>();
+        var projects = await context.Projects.ToListAsync(cancellationToken);
+
         var options = provider.GetRequiredService<IOptions<WorkflowOptions>>().Value;
         if (options.SynchronizeOnStartup)
         {
             var synchronizer = provider.GetRequiredService<Synchronizer>();
-            var context = provider.GetRequiredService<MainDbContext>();
-            var projects = await context.Projects.ToListAsync(cancellationToken);
             foreach (var project in projects)
             {
                 await synchronizer.SynchronizeAsync(project, false, cancellationToken); /* database sync should not trigger, just in case it's too many */
@@ -37,8 +38,7 @@ internal static class AppSetup
         // skip loading schedules if told to
         if (!app.Configuration.GetValue<bool>("SKIP_LOAD_SCHEDULES"))
         {
-            var dbContext = provider.GetRequiredService<MainDbContext>();
-            var repositories = await dbContext.Repositories.ToListAsync(cancellationToken);
+            var repositories = await context.Repositories.ToListAsync(cancellationToken);
             var scheduler = provider.GetRequiredService<UpdateScheduler>();
             foreach (var repository in repositories)
             {
@@ -50,7 +50,10 @@ internal static class AppSetup
         if (options.CreateOrUpdateWebhooksOnStartup)
         {
             var adoProvider = provider.GetRequiredService<AzureDevOpsProvider>();
-            await adoProvider.CreateOrUpdateSubscriptionsAsync(cancellationToken);
+            foreach (var project in projects)
+            {
+                await adoProvider.CreateOrUpdateSubscriptionsAsync(project, cancellationToken);
+            }
         }
     }
 }

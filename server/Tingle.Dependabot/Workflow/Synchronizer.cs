@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using System.ComponentModel.DataAnnotations;
 using Tingle.Dependabot.Events;
 using Tingle.Dependabot.Models;
@@ -16,21 +15,15 @@ internal class Synchronizer
     private readonly MainDbContext dbContext;
     private readonly AzureDevOpsProvider adoProvider;
     private readonly IEventPublisher publisher;
-    private readonly WorkflowOptions options;
     private readonly ILogger logger;
 
     private readonly IDeserializer yamlDeserializer;
 
-    public Synchronizer(MainDbContext dbContext,
-                        AzureDevOpsProvider adoProvider,
-                        IEventPublisher publisher,
-                        IOptions<WorkflowOptions> optionsAccessor,
-                        ILogger<Synchronizer> logger)
+    public Synchronizer(MainDbContext dbContext, AzureDevOpsProvider adoProvider, IEventPublisher publisher, ILogger<Synchronizer> logger)
     {
         this.dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         this.adoProvider = adoProvider ?? throw new ArgumentNullException(nameof(adoProvider));
         this.publisher = publisher ?? throw new ArgumentNullException(nameof(publisher));
-        options = optionsAccessor?.Value ?? throw new ArgumentNullException(nameof(optionsAccessor));
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         yamlDeserializer = new DeserializerBuilder().WithNamingConvention(HyphenatedNamingConvention.Instance)
@@ -47,7 +40,7 @@ internal class Synchronizer
 
         // get the repositories from Azure
         logger.LogDebug("Listing repositories ...");
-        var adoRepos = await adoProvider.GetRepositoriesAsync(cancellationToken);
+        var adoRepos = await adoProvider.GetRepositoriesAsync(project, cancellationToken);
         logger.LogDebug("Found {RepositoriesCount} repositories", adoRepos.Count);
         var adoReposMap = adoRepos.ToDictionary(r => r.Id.ToString(), r => r);
 
@@ -68,7 +61,8 @@ internal class Synchronizer
                                     where r.ProviderId == adoRepositoryId
                                     select r).SingleOrDefaultAsync(cancellationToken);
 
-            var item = await adoProvider.GetConfigurationFileAsync(repositoryIdOrName: adoRepositoryId,
+            var item = await adoProvider.GetConfigurationFileAsync(project: project,
+                                                                   repositoryIdOrName: adoRepositoryId,
                                                                    cancellationToken: cancellationToken);
 
             // Track for further synchronization
@@ -94,7 +88,8 @@ internal class Synchronizer
     public async Task SynchronizeAsync(Project project, Repository repository, bool trigger, CancellationToken cancellationToken = default)
     {
         // get repository
-        var adoRepo = await adoProvider.GetRepositoryAsync(repositoryIdOrName: repository.ProviderId!,
+        var adoRepo = await adoProvider.GetRepositoryAsync(project: project,
+                                                           repositoryIdOrName: repository.ProviderId!,
                                                            cancellationToken: cancellationToken);
 
         // skip disabled or fork repository
@@ -105,7 +100,8 @@ internal class Synchronizer
         }
 
         // get the configuration file
-        var item = await adoProvider.GetConfigurationFileAsync(repositoryIdOrName: repository.ProviderId!,
+        var item = await adoProvider.GetConfigurationFileAsync(project: project,
+                                                               repositoryIdOrName: repository.ProviderId!,
                                                                cancellationToken: cancellationToken);
 
         // perform synchronization
@@ -116,7 +112,8 @@ internal class Synchronizer
     public async Task SynchronizeAsync(Project project, string? repositoryProviderId, bool trigger, CancellationToken cancellationToken = default)
     {
         // get repository
-        var adoRepo = await adoProvider.GetRepositoryAsync(repositoryIdOrName: repositoryProviderId!,
+        var adoRepo = await adoProvider.GetRepositoryAsync(project: project,
+                                                           repositoryIdOrName: repositoryProviderId!,
                                                            cancellationToken: cancellationToken);
 
         // skip disabled or fork repository
@@ -127,7 +124,8 @@ internal class Synchronizer
         }
 
         // get the configuration file
-        var item = await adoProvider.GetConfigurationFileAsync(repositoryIdOrName: repositoryProviderId!,
+        var item = await adoProvider.GetConfigurationFileAsync(project: project,
+                                                               repositoryIdOrName: repositoryProviderId!,
                                                                cancellationToken: cancellationToken);
 
         var repository = await (from r in dbContext.Repositories

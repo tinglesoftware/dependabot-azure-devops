@@ -40,7 +40,7 @@ public partial class InitialCreate : Migration
                 AutoCompleteIgnoreConfigs = table.Column<string>(type: "nvarchar(max)", nullable: false),
                 AutoCompleteMergeStrategy = table.Column<int>(type: "int", nullable: true),
                 AutoApprove = table.Column<bool>(type: "bit", nullable: false),
-                NotificationsPassword = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                Password = table.Column<string>(type: "nvarchar(450)", nullable: false),
                 Etag = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: true)
             },
             constraints: table =>
@@ -113,9 +113,9 @@ public partial class InitialCreate : Migration
             descending: new bool[0]);
 
         migrationBuilder.CreateIndex(
-            name: "IX_Projects_NotificationsPassword",
+            name: "IX_Projects_Password",
             table: "Projects",
-            column: "NotificationsPassword",
+            column: "Password",
             descending: new bool[0]);
 
         migrationBuilder.CreateIndex(

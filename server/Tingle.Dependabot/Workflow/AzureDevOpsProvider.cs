@@ -8,6 +8,7 @@ using Microsoft.VisualStudio.Services.ServiceHooks.WebApi;
 using Microsoft.VisualStudio.Services.WebApi;
 using System.Security.Cryptography;
 using System.Text;
+using Tingle.Dependabot.Models.Management;
 
 namespace Tingle.Dependabot.Workflow;
 
@@ -30,11 +31,11 @@ public class AzureDevOpsProvider
         options = optionsAccessor?.Value ?? throw new ArgumentNullException(nameof(optionsAccessor));
     }
 
-    public async Task<List<string>> CreateOrUpdateSubscriptionsAsync(CancellationToken cancellationToken = default)
+    public async Task<List<string>> CreateOrUpdateSubscriptionsAsync(Project project, CancellationToken cancellationToken = default)
     {
         // get a connection to Azure DevOps
-        var url = options.ProjectUrl!.Value;
-        var connection = CreateVssConnection(url, options.ProjectToken!);
+        var url = (AzureDevOpsProjectUrl)project.Url!;
+        var connection = CreateVssConnection(url, project.Token!);
 
         // get the projectId
         var projectId = (await (await connection.GetClientAsync<ProjectHttpClient>(cancellationToken)).GetProject(url.ProjectIdOrName)).Id.ToString();
@@ -64,7 +65,7 @@ public class AzureDevOpsProvider
             ConsumerActionId = "httpRequest",
         })).Results;
 
-        var webhookUrl = options.WebhookEndpoint;
+        var webhookUrl = options.WebhookEndpoint!;
         var ids = new List<string>();
         foreach (var (eventType, resourceVersion) in SubscriptionEventTypes)
         {
@@ -89,7 +90,7 @@ public class AzureDevOpsProvider
                 existing.EventType = eventType;
                 existing.ResourceVersion = resourceVersion;
                 existing.PublisherInputs = MakeTfsPublisherInputs(eventType, projectId);
-                existing.ConsumerInputs = MakeWebHooksConsumerInputs();
+                existing.ConsumerInputs = MakeWebHooksConsumerInputs(project, webhookUrl);
                 existing = await client.UpdateSubscriptionAsync(existing);
             }
             else
@@ -103,7 +104,7 @@ public class AzureDevOpsProvider
                     PublisherInputs = MakeTfsPublisherInputs(eventType, projectId),
                     ConsumerId = "webHooks",
                     ConsumerActionId = "httpRequest",
-                    ConsumerInputs = MakeWebHooksConsumerInputs(),
+                    ConsumerInputs = MakeWebHooksConsumerInputs(project, webhookUrl),
                 };
                 existing = await client.CreateSubscriptionAsync(existing);
             }
@@ -115,11 +116,11 @@ public class AzureDevOpsProvider
         return ids;
     }
 
-    public async Task<List<GitRepository>> GetRepositoriesAsync(CancellationToken cancellationToken)
+    public async Task<List<GitRepository>> GetRepositoriesAsync(Project project, CancellationToken cancellationToken)
     {
         // get a connection to Azure DevOps
-        var url = options.ProjectUrl!.Value;
-        var connection = CreateVssConnection(url, options.ProjectToken!);
+        var url = (AzureDevOpsProjectUrl)project.Url!;
+        var connection = CreateVssConnection(url, project.Token!);
 
         // fetch the repositories
         var client = await connection.GetClientAsync<GitHttpClient>(cancellationToken);
@@ -127,22 +128,22 @@ public class AzureDevOpsProvider
         return repos.OrderBy(r => r.Name).ToList();
     }
 
-    public async Task<GitRepository> GetRepositoryAsync(string repositoryIdOrName, CancellationToken cancellationToken)
+    public async Task<GitRepository> GetRepositoryAsync(Project project, string repositoryIdOrName, CancellationToken cancellationToken)
     {
         // get a connection to Azure DevOps
-        var url = options.ProjectUrl!.Value;
-        var connection = CreateVssConnection(url, options.ProjectToken!);
+        var url = (AzureDevOpsProjectUrl)project.Url!;
+        var connection = CreateVssConnection(url, project.Token!);
 
         // get the repository
         var client = await connection.GetClientAsync<GitHttpClient>(cancellationToken);
         return await client.GetRepositoryAsync(project: url.ProjectIdOrName, repositoryId: repositoryIdOrName, cancellationToken: cancellationToken);
     }
 
-    public async Task<GitItem?> GetConfigurationFileAsync(string repositoryIdOrName, CancellationToken cancellationToken = default)
+    public async Task<GitItem?> GetConfigurationFileAsync(Project project, string repositoryIdOrName, CancellationToken cancellationToken = default)
     {
         // get a connection to Azure DevOps
-        var url = options.ProjectUrl!.Value;
-        var connection = CreateVssConnection(url, options.ProjectToken!);
+        var url = (AzureDevOpsProjectUrl)project.Url!;
+        var connection = CreateVssConnection(url, project.Token!);
 
         // Try all known paths
         var paths = options.ConfigurationFilePaths;
@@ -187,7 +188,7 @@ public class AzureDevOpsProvider
         return result;
     }
 
-    private Dictionary<string, string> MakeWebHooksConsumerInputs()
+    private static Dictionary<string, string> MakeWebHooksConsumerInputs(Project project, Uri webhookUrl)
     {
         return new Dictionary<string, string>
         {
@@ -196,9 +197,9 @@ public class AzureDevOpsProvider
 
             ["detailedMessagesToSend"] = "none",
             ["messagesToSend"] = "none",
-            ["url"] = options.WebhookEndpoint!.ToString(),
+            ["url"] = webhookUrl.ToString(),
             ["basicAuthUsername"] = "vsts",
-            ["basicAuthPassword"] = options.SubscriptionPassword!,
+            ["basicAuthPassword"] = project.Password!,
         };
     }
 

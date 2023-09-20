@@ -49,7 +49,7 @@ public class ManagementController : ControllerBase // TODO: unit test this
         var project = await dbContext.Projects.SingleOrDefaultAsync(p => p.Id == projectId);
         if (project is null) return Problem(title: ErrorCodes.ProjectNotFound, statusCode: 400);
 
-        await adoProvider.CreateOrUpdateSubscriptionsAsync();
+        await adoProvider.CreateOrUpdateSubscriptionsAsync(project);
         return Ok();
     }
 

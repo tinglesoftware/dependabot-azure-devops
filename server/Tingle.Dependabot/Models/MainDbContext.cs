@@ -24,7 +24,7 @@ public class MainDbContext : DbContext, IDataProtectionKeyContext
 
             b.HasIndex(p => p.Created).IsDescending(); // faster filtering
             b.HasIndex(p => p.ProviderId).IsUnique();
-            b.HasIndex(p => p.NotificationsPassword).IsDescending(); // faster filtering
+            b.HasIndex(p => p.Password).IsDescending(); // faster filtering
         });
 
         modelBuilder.Entity<Repository>(b =>

@@ -48,7 +48,8 @@ public class Project
 
     /// <summary>Password for Webhooks, ServiceHooks, and Notifications from the provider.</summary>
     [Required]
-    public string? NotificationsPassword { get; set; }
+    [DataType(DataType.Password)]
+    public string? Password { get; set; }
 
     [JsonIgnore] // only for internal use
     public List<Repository> Repositories { get; set; } = new();
