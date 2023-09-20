@@ -14,9 +14,6 @@ public class WorkflowOptions
     /// <summary>URL on which to access the API from the jobs.</summary>
     public string? JobsApiUrl { get; set; }
 
-    /// <summary>Password used for creation of subscription and authenticating incoming notifications.</summary>
-    public string? SubscriptionPassword { get; set; }
-
     /// <summary>Resource identifier for the resource group to create jobs in.</summary>
     /// <example>/subscriptions/00000000-0000-1111-0001-000000000000/resourceGroups/DEPENDABOT</example>
     public string? ResourceGroupId { get; set; }
@@ -49,9 +46,6 @@ public class WorkflowOptions
     /// </summary>
     /// <example>/mnt/dependabot</example>
     public string? WorkingDirectory { get; set; }
-
-    /// <summary>Whether updates should be created in the same order.</summary>
-    public bool? DeterministicUpdates { get; set; }
 
     /// <summary>
     /// Token for accessing GitHub APIs.

@@ -234,6 +234,7 @@ internal partial class UpdateRunner
         // check if debug is enabled for the project via Feature Management
         var fmc = new TargetingContext { Groups = new[] { $"provider:{project.Type.ToString().ToLower()}", $"project:{project.Id}", $"ecosystem:{job.PackageEcosystem}", }, };
         var debugAllJobs = await featureManager.IsEnabledAsync(FeatureNames.DebugAllJobs, fmc);
+        var deterministic = await featureManager.IsEnabledAsync(FeatureNames.DeterministicUpdates, fmc);
 
         // Add compulsory values
         var values = new Dictionary<string, string>
@@ -248,7 +249,7 @@ internal partial class UpdateRunner
             // Setting DEPENDABOT_REPO_CONTENTS_PATH causes some issues, ignore till we can resolve
             //["DEPENDABOT_REPO_CONTENTS_PATH"] = Path.Join(jobDirectory, "repo"),
             ["GITHUB_ACTIONS"] = "false",
-            ["UPDATER_DETERMINISTIC"] = (options.DeterministicUpdates ?? false).ToString().ToLower(),
+            ["UPDATER_DETERMINISTIC"] = deterministic.ToString().ToLower(),
 
             // env for v1
             ["DEPENDABOT_PACKAGE_MANAGER"] = job.PackageEcosystem!,
