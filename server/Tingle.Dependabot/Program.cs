@@ -131,7 +131,7 @@ builder.Services.AddEventBus(builder =>
 
 builder.Services.AddPeriodicTasks(builder =>
 {
-    builder.AddTask<MissedTriggerCheckerTask>(schedule: "0 * * * *"); // every hour
+    builder.AddTask<MissedTriggerCheckerTask>(schedule: "8 * * * *"); // every hour at minute 8
     builder.AddTask<UpdateJobsCleanerTask>(schedule: "*/15 * * * *"); // every 15 minutes
     builder.AddTask<SynchronizationTask>(schedule: "23 */6 * * *"); // every 6 hours at minute 23
 });
