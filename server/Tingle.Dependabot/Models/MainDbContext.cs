@@ -1,9 +1,5 @@
 ﻿using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using System.Text.Json;
 using Tingle.Dependabot.Models.Management;
 
 namespace Tingle.Dependabot.Models;
@@ -27,6 +23,7 @@ public class MainDbContext : DbContext, IDataProtectionKeyContext
             b.Property(p => p.AutoCompleteIgnoreConfigs).HasJsonConversion();
 
             b.HasIndex(p => p.Created).IsDescending(); // faster filtering
+            b.HasIndex(p => p.ProviderId).IsUnique();
             b.HasIndex(p => p.NotificationsPassword).IsDescending(); // faster filtering
         });
 

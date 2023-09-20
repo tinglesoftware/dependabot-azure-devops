@@ -31,13 +31,14 @@ public partial class InitialCreate : Migration
                 Id = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                 Created = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
                 Updated = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
-                Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
                 Type = table.Column<int>(type: "int", nullable: false),
+                Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                ProviderId = table.Column<string>(type: "nvarchar(450)", nullable: true),
                 Url = table.Column<string>(type: "nvarchar(max)", nullable: false),
                 Token = table.Column<string>(type: "nvarchar(max)", nullable: false),
                 AutoComplete = table.Column<bool>(type: "bit", nullable: false),
                 AutoCompleteIgnoreConfigs = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                AutoCompleteMergeStrategy = table.Column<int>(type: "int", nullable: false),
+                AutoCompleteMergeStrategy = table.Column<int>(type: "int", nullable: true),
                 AutoApprove = table.Column<bool>(type: "bit", nullable: false),
                 NotificationsPassword = table.Column<string>(type: "nvarchar(450)", nullable: false),
                 Etag = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: true)
@@ -116,6 +117,13 @@ public partial class InitialCreate : Migration
             table: "Projects",
             column: "NotificationsPassword",
             descending: new bool[0]);
+
+        migrationBuilder.CreateIndex(
+            name: "IX_Projects_ProviderId",
+            table: "Projects",
+            column: "ProviderId",
+            unique: true,
+            filter: "[ProviderId] IS NOT NULL");
 
         migrationBuilder.CreateIndex(
             name: "IX_Repositories_Created",

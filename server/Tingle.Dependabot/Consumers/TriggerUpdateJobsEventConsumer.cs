@@ -24,6 +24,15 @@ internal class TriggerUpdateJobsEventConsumer : IEventConsumer<TriggerUpdateJobs
     {
         var evt = context.Event;
 
+        // ensure project exists
+        var projectId = evt.ProjectId ?? throw new InvalidOperationException($"'{nameof(evt.ProjectId)}' cannot be null");
+        var project = await dbContext.Projects.SingleOrDefaultAsync(r => r.Id == projectId, cancellationToken);
+        if (project is null)
+        {
+            logger.LogWarning("Skipping trigger for update because project '{Project}' does not exist.", projectId);
+            return;
+        }
+
         // ensure repository exists
         var repositoryId = evt.RepositoryId ?? throw new InvalidOperationException($"'{nameof(evt.RepositoryId)}' cannot be null");
         var repository = await dbContext.Repositories.SingleOrDefaultAsync(r => r.Id == repositoryId, cancellationToken);
@@ -107,7 +116,7 @@ internal class TriggerUpdateJobsEventConsumer : IEventConsumer<TriggerUpdateJobs
             }
 
             // call the update runner to run the update
-            await updateRunner.CreateAsync(repository, update, job, cancellationToken);
+            await updateRunner.CreateAsync(project, repository, update, job, cancellationToken);
 
             // save changes that may have been made by the updateRunner
             update.LatestJobStatus = job.Status;

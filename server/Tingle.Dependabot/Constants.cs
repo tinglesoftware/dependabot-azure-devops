@@ -15,6 +15,9 @@ internal static class AuthConstants
 internal static class ErrorCodes
 {
     internal const string FeaturesDisabled = "features_disabled";
+    internal const string ProjectNotFound = "project_not_found";
+    internal const string RepositoryNotFound = "repository_not_found";
+    internal const string RepositoryUpdateNotFound = "repository_update_not_found";
 }
 
 internal static class FeatureNames

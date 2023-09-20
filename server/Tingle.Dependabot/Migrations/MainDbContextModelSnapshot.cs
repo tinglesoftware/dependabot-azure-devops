@@ -57,7 +57,7 @@ namespace Tingle.Dependabot.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("AutoCompleteMergeStrategy")
+                    b.Property<int?>("AutoCompleteMergeStrategy")
                         .HasColumnType("int");
 
                     b.Property<DateTimeOffset>("Created")
@@ -73,6 +73,9 @@ namespace Tingle.Dependabot.Migrations
 
                     b.Property<string>("NotificationsPassword")
                         .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ProviderId")
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Token")
@@ -96,6 +99,10 @@ namespace Tingle.Dependabot.Migrations
 
                     b.HasIndex("NotificationsPassword")
                         .IsDescending();
+
+                    b.HasIndex("ProviderId")
+                        .IsUnique()
+                        .HasFilter("[ProviderId] IS NOT NULL");
 
                     b.ToTable("Projects");
                 });

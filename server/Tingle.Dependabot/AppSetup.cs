@@ -26,7 +26,12 @@ internal static class AppSetup
         if (options.SynchronizeOnStartup)
         {
             var synchronizer = provider.GetRequiredService<Synchronizer>();
-            await synchronizer.SynchronizeAsync(false, cancellationToken); /* database sync should not trigger, just in case it's too many */
+            var context = provider.GetRequiredService<MainDbContext>();
+            var projects = await context.Projects.ToListAsync(cancellationToken);
+            foreach (var project in projects)
+            {
+                await synchronizer.SynchronizeAsync(project, false, cancellationToken); /* database sync should not trigger, just in case it's too many */
+            }
         }
 
         // skip loading schedules if told to

@@ -12,10 +12,14 @@ public class Project
 
     public DateTimeOffset Updated { get; set; }
 
+    public ProjectType Type { get; set; }
+
     /// <summary>Name of the project as per provider.</summary>
     public string? Name { get; set; }
 
-    public ProjectType Type { get; set; }
+    /// <summary>Identifier of the repository as per provider.</summary>
+    [JsonIgnore] // only for internal use
+    public string? ProviderId { get; set; }
 
     /// <summary>URL for the project.</summary>
     /// <example>https://dev.azure.com/tingle/dependabot</example>
@@ -36,7 +40,7 @@ public class Project
     public List<int> AutoCompleteIgnoreConfigs { get; set; } = new();
 
     /// <summary>Merge strategy to use when setting auto complete on created pull requests.</summary>
-    public MergeStrategy AutoCompleteMergeStrategy { get; set; } = MergeStrategy.Squash;
+    public MergeStrategy? AutoCompleteMergeStrategy { get; set; }
 
     /// <summary>Whether to automatically approve created pull requests.</summary>
     public bool AutoApprove { get; set; }

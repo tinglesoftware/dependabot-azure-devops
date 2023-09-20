@@ -38,8 +38,10 @@ internal class Synchronizer
                                                     .Build();
     }
 
-    public async Task SynchronizeAsync(bool trigger, CancellationToken cancellationToken = default)
+    public async Task SynchronizeAsync(Project project, bool trigger, CancellationToken cancellationToken = default)
     {
+        // TODO: skip if the project last synchronization is less than 1 hour ago
+
         // track the synchronization pairs
         var syncPairs = new List<(SynchronizerConfigurationItem, Repository?)>();
 
@@ -62,6 +64,7 @@ internal class Synchronizer
             // get the repository from the database
             var adoRepositoryName = adoRepo.Name;
             var repository = await (from r in dbContext.Repositories
+                                    where r.ProjectId == project.Id
                                     where r.ProviderId == adoRepositoryId
                                     select r).SingleOrDefaultAsync(cancellationToken);
 
@@ -69,7 +72,7 @@ internal class Synchronizer
                                                                    cancellationToken: cancellationToken);
 
             // Track for further synchronization
-            var sci = new SynchronizerConfigurationItem(options.ProjectUrl!.Value.MakeRepositorySlug(adoRepo.Name), adoRepo, item);
+            var sci = new SynchronizerConfigurationItem(((AzureDevOpsProjectUrl)project.Url!).MakeRepositorySlug(adoRepo.Name), adoRepo, item);
             syncPairs.Add((sci, repository));
         }
 
@@ -84,11 +87,11 @@ internal class Synchronizer
         // synchronize each repository
         foreach (var (pi, repository) in syncPairs)
         {
-            await SynchronizeAsync(repository, pi, trigger, cancellationToken);
+            await SynchronizeAsync(project, repository, pi, trigger, cancellationToken);
         }
     }
 
-    public async Task SynchronizeAsync(Repository repository, bool trigger, CancellationToken cancellationToken = default)
+    public async Task SynchronizeAsync(Project project, Repository repository, bool trigger, CancellationToken cancellationToken = default)
     {
         // get repository
         var adoRepo = await adoProvider.GetRepositoryAsync(repositoryIdOrName: repository.ProviderId!,
@@ -106,11 +109,11 @@ internal class Synchronizer
                                                                cancellationToken: cancellationToken);
 
         // perform synchronization
-        var sci = new SynchronizerConfigurationItem(options.ProjectUrl!.Value.MakeRepositorySlug(adoRepo.Name), adoRepo, item);
-        await SynchronizeAsync(repository, sci, trigger, cancellationToken);
+        var sci = new SynchronizerConfigurationItem(((AzureDevOpsProjectUrl)project.Url!).MakeRepositorySlug(adoRepo.Name), adoRepo, item);
+        await SynchronizeAsync(project, repository, sci, trigger, cancellationToken);
     }
 
-    public async Task SynchronizeAsync(string? repositoryProviderId, bool trigger, CancellationToken cancellationToken = default)
+    public async Task SynchronizeAsync(Project project, string? repositoryProviderId, bool trigger, CancellationToken cancellationToken = default)
     {
         // get repository
         var adoRepo = await adoProvider.GetRepositoryAsync(repositoryIdOrName: repositoryProviderId!,
@@ -132,11 +135,12 @@ internal class Synchronizer
                                 select r).SingleOrDefaultAsync(cancellationToken);
 
         // perform synchronization
-        var sci = new SynchronizerConfigurationItem(options.ProjectUrl!.Value.MakeRepositorySlug(adoRepo.Name), adoRepo, item);
-        await SynchronizeAsync(repository, sci, trigger, cancellationToken);
+        var sci = new SynchronizerConfigurationItem(((AzureDevOpsProjectUrl)project.Url!).MakeRepositorySlug(adoRepo.Name), adoRepo, item);
+        await SynchronizeAsync(project, repository, sci, trigger, cancellationToken);
     }
 
-    internal async Task SynchronizeAsync(Repository? repository,
+    internal async Task SynchronizeAsync(Project project,
+                                         Repository? repository,
                                          SynchronizerConfigurationItem providerInfo,
                                          bool trigger,
                                          CancellationToken cancellationToken = default)
@@ -152,7 +156,7 @@ internal class Synchronizer
                 await dbContext.SaveChangesAsync(cancellationToken);
 
                 // publish RepositoryDeletedEvent event
-                var evt = new RepositoryDeletedEvent { RepositoryId = repository.Id, };
+                var evt = new RepositoryDeletedEvent { ProjectId = project.Id, RepositoryId = repository.Id, };
                 await publisher.PublishAsync(evt, cancellationToken: cancellationToken);
             }
 
@@ -175,10 +179,11 @@ internal class Synchronizer
             {
                 Id = Guid.NewGuid().ToString("n"),
                 Created = DateTimeOffset.UtcNow,
+                ProjectId = project.Id,
                 ProviderId = providerInfo.Id,
             };
             await dbContext.Repositories.AddAsync(repository, cancellationToken);
-            rce = new RepositoryCreatedEvent { RepositoryId = repository.Id, };
+            rce = new RepositoryCreatedEvent { ProjectId = project.Id, RepositoryId = repository.Id, };
         }
 
         // if the name of the repository has changed then we assume the commit changed so that we update stuff
@@ -235,7 +240,7 @@ internal class Synchronizer
             }
             else
             {
-                var evt = new RepositoryUpdatedEvent { RepositoryId = repository.Id, };
+                var evt = new RepositoryUpdatedEvent { ProjectId = project.Id, RepositoryId = repository.Id, };
                 await publisher.PublishAsync(evt, cancellationToken: cancellationToken);
             }
 
@@ -244,6 +249,7 @@ internal class Synchronizer
                 // trigger update jobs for the whole repository
                 var evt = new TriggerUpdateJobsEvent
                 {
+                    ProjectId = project.Id,
                     RepositoryId = repository.Id,
                     RepositoryUpdateId = null, // run all
                     Trigger = UpdateJobTrigger.Synchronization,

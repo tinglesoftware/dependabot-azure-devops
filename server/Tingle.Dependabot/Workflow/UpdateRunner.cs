@@ -58,7 +58,7 @@ internal partial class UpdateRunner
         catch (Azure.RequestFailedException rfe) when (rfe.Status is 404) { }
 
         // prepare credentials with replaced secrets
-        var secrets = new Dictionary<string, string>(options.Secrets) { ["DEFAULT_TOKEN"] = options.ProjectToken!, };
+        var secrets = new Dictionary<string, string>(options.Secrets) { ["DEFAULT_TOKEN"] = project.Token!, };
         var registries = update.Registries?.Select(r => repository.Registries[r]).ToList();
         var credentials = MakeExtraCredentials(registries, secrets); // add source credentials when running the in v2
         var directory = Path.Join(options.WorkingDirectory, job.Id);
@@ -271,16 +271,16 @@ internal partial class UpdateRunner
               .AddIfNotDefault("DEPENDABOT_MILESTONE", update.Milestone?.ToString());
 
         // Add values for Azure DevOps
-        var url = options.ProjectUrl!.Value;
+        var url = (AzureDevOpsProjectUrl)project.Url!;
         values.AddIfNotDefault("AZURE_HOSTNAME", url.Hostname)
               .AddIfNotDefault("AZURE_ORGANIZATION", url.OrganizationName)
               .AddIfNotDefault("AZURE_PROJECT", url.ProjectName)
               .AddIfNotDefault("AZURE_REPOSITORY", Uri.EscapeDataString(repository.Name!))
-              .AddIfNotDefault("AZURE_ACCESS_TOKEN", options.ProjectToken)
-              .AddIfNotDefault("AZURE_SET_AUTO_COMPLETE", (options.AutoComplete ?? false).ToString().ToLowerInvariant())
-              .AddIfNotDefault("AZURE_AUTO_COMPLETE_IGNORE_CONFIG_IDS", ToJson(options.AutoCompleteIgnoreConfigs?.Split(';')))
-              .AddIfNotDefault("AZURE_MERGE_STRATEGY", options.AutoCompleteMergeStrategy?.ToString())
-              .AddIfNotDefault("AZURE_AUTO_APPROVE_PR", (options.AutoApprove ?? false).ToString().ToLowerInvariant());
+              .AddIfNotDefault("AZURE_ACCESS_TOKEN", project.Token)
+              .AddIfNotDefault("AZURE_SET_AUTO_COMPLETE", project.AutoComplete.ToString().ToLowerInvariant())
+              .AddIfNotDefault("AZURE_AUTO_COMPLETE_IGNORE_CONFIG_IDS", ToJson(project.AutoCompleteIgnoreConfigs ?? new()))
+              .AddIfNotDefault("AZURE_MERGE_STRATEGY", project.AutoCompleteMergeStrategy?.ToString())
+              .AddIfNotDefault("AZURE_AUTO_APPROVE_PR", project.AutoApprove.ToString().ToLowerInvariant());
 
         return values;
     }
@@ -295,7 +295,7 @@ internal partial class UpdateRunner
         [return: NotNullIfNotNull(nameof(value))]
         static JsonNode? ToJsonNode<T>(T? value) => value is null ? null : JsonSerializer.SerializeToNode(value, serializerOptions); // null ensures we do not add to the values
 
-        var url = options.ProjectUrl!.Value;
+        var url = (AzureDevOpsProjectUrl)project.Url!;
         var credentialsMetadata = MakeCredentialsMetadata(credentials);
 
         // check if debug is enabled for the project via Feature Management
