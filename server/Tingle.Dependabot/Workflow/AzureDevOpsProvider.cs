@@ -14,6 +14,16 @@ namespace Tingle.Dependabot.Workflow;
 
 public class AzureDevOpsProvider
 {
+    // Possible/allowed paths for the configuration files in a repository.
+    private static readonly IReadOnlyList<string> ConfigurationFilePaths = new[] {
+        // TODO: restore checks in .azuredevops folder once either the code can check that folder or we are passing ignore conditions via update_jobs API
+        //".azuredevops/dependabot.yml",
+        //".azuredevops/dependabot.yaml",
+
+        ".github/dependabot.yml",
+        ".github/dependabot.yaml",
+    };
+
     private static readonly (string, string)[] SubscriptionEventTypes =
     {
         ("git.push", "1.0"),
@@ -146,9 +156,8 @@ public class AzureDevOpsProvider
         var connection = CreateVssConnection(url, project.Token!);
 
         // Try all known paths
-        var paths = options.ConfigurationFilePaths;
         var client = await connection.GetClientAsync<GitHttpClient>(cancellationToken);
-        foreach (var path in paths)
+        foreach (var path in ConfigurationFilePaths)
         {
             try
             {

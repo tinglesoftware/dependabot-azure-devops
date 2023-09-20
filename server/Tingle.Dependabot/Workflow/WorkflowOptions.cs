@@ -59,16 +59,4 @@ public class WorkflowOptions
 
     /// <summary>Location/region where to create new update jobs.</summary>
     public string? Location { get; set; } // using Azure.Core.Location does not work when binding from IConfiguration
-
-    /// <summary>
-    /// Possible/allowed paths for the configuration files in a repository.
-    /// </summary>
-    public IReadOnlyList<string> ConfigurationFilePaths { get; set; } = new[] {
-        // TODO: restore checks in .azuredevops folder once either the code can check that folder or we are passing ignore conditions via update_jobs API
-        //".azuredevops/dependabot.yml",
-        //".azuredevops/dependabot.yaml",
-
-        ".github/dependabot.yml",
-        ".github/dependabot.yaml",
-    };
 }
