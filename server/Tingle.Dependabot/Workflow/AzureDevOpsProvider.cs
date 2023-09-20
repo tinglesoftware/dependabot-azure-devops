@@ -9,7 +9,6 @@ using Microsoft.VisualStudio.Services.WebApi;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.Json.Serialization;
 using Tingle.Dependabot.Models.Azure;
 using Tingle.Dependabot.Models.Management;
 

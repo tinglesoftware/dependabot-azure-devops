@@ -16,6 +16,7 @@ namespace Tingle.Dependabot.Tests.PeriodicTasks;
 
 public class MissedTriggerCheckerTaskTests
 {
+    private const string ProjectId = "prj_1234567890";
     private const string RepositoryId = "repo_1234567890";
     private const int UpdateId1 = 1;
 
@@ -103,9 +104,20 @@ public class MissedTriggerCheckerTaskTests
         var context = provider.GetRequiredService<MainDbContext>();
         await context.Database.EnsureCreatedAsync();
 
+        await context.Projects.AddAsync(new Project
+        {
+            Id = ProjectId,
+            Url = "https://dev.azure.com/dependabot/dependabot",
+            Token = "token",
+            Name = "dependabot",
+            ProviderId = "6ce954b1-ce1f-45d1-b94d-e6bf2464ba2c",
+            Password = "burp-bump",
+        });
         await context.Repositories.AddAsync(new Repository
         {
             Id = RepositoryId,
+            ProjectId = ProjectId,
+            ProviderId = Guid.NewGuid().ToString(),
             Name = "test-repo",
             ConfigFileContents = "",
             Updates = new List<RepositoryUpdate>
