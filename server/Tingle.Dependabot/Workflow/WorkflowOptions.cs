@@ -44,9 +44,6 @@ public class WorkflowOptions
     /// <summary>Authentication token for accessing the project.</summary>
     public string? ProjectToken { get; set; }
 
-    /// <summary>Whether to debug all jobs.</summary>
-    public bool? DebugJobs { get; set; }
-
     /// <summary>URL on which to access the API from the jobs.</summary>
     /// <example>https://dependabot.dummy-123.westeurope.azurecontainerapps.io</example>
     public string? JobsApiUrl { get; set; }

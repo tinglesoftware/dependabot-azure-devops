@@ -5,6 +5,8 @@ using Azure.ResourceManager.AppContainers;
 using Azure.ResourceManager.AppContainers.Models;
 using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Options;
+using Microsoft.FeatureManagement;
+using Microsoft.FeatureManagement.FeatureFilters;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -24,6 +26,7 @@ internal partial class UpdateRunner
 
     private static readonly JsonSerializerOptions serializerOptions = new(JsonSerializerDefaults.Web);
 
+    private readonly IFeatureManagerSnapshot featureManager;
     private readonly WorkflowOptions options;
     private readonly ILogger logger;
 
@@ -31,8 +34,9 @@ internal partial class UpdateRunner
     private readonly ResourceGroupResource resourceGroup;
     private readonly LogsQueryClient logsQueryClient;
 
-    public UpdateRunner(IOptions<WorkflowOptions> optionsAccessor, ILogger<UpdateRunner> logger)
+    public UpdateRunner(IFeatureManagerSnapshot featureManager, IOptions<WorkflowOptions> optionsAccessor, ILogger<UpdateRunner> logger)
     {
+        this.featureManager = featureManager ?? throw new ArgumentNullException(nameof(featureManager));
         options = optionsAccessor?.Value ?? throw new ArgumentNullException(nameof(optionsAccessor));
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
         armClient = new ArmClient(new DefaultAzureCredential());
@@ -40,7 +44,7 @@ internal partial class UpdateRunner
         logsQueryClient = new LogsQueryClient(new DefaultAzureCredential());
     }
 
-    public async Task CreateAsync(Repository repository, RepositoryUpdate update, UpdateJob job, CancellationToken cancellationToken = default)
+    public async Task CreateAsync(Project project, Repository repository, RepositoryUpdate update, UpdateJob job, CancellationToken cancellationToken = default)
     {
         var resourceName = MakeResourceName(job);
 
@@ -70,7 +74,7 @@ internal partial class UpdateRunner
             Args = { "update_script", },
             VolumeMounts = { new ContainerAppVolumeMount { VolumeName = volumeName, MountPath = options.WorkingDirectory, }, },
         };
-        var env = CreateEnvironmentVariables(repository, update, job, directory, credentials);
+        var env = await CreateEnvironmentVariables(project, repository, update, job, directory, credentials, cancellationToken);
         foreach (var (key, value) in env) container.Env.Add(new ContainerAppEnvironmentVariable { Name = key, Value = value, });
 
         // prepare the ContainerApp job
@@ -113,7 +117,7 @@ internal partial class UpdateRunner
         };
 
         // write job definition file
-        var jobDefinitionPath = await WriteJobDefinitionAsync(update, job, directory, credentials, cancellationToken);
+        var jobDefinitionPath = await WriteJobDefinitionAsync(project, update, job, directory, credentials, cancellationToken);
         logger.LogInformation("Written job definition file at {JobDefinitionPath}", jobDefinitionPath);
 
         // create the ContainerApp Job
@@ -216,14 +220,20 @@ internal partial class UpdateRunner
 
     internal static string MakeResourceName(UpdateJob job) => $"dependabot-{job.Id}";
 
-    internal IDictionary<string, string> CreateEnvironmentVariables(Repository repository,
-                                                                    RepositoryUpdate update,
-                                                                    UpdateJob job,
-                                                                    string directory,
-                                                                    IList<Dictionary<string, string>> credentials) // TODO: unit test this
+    internal async Task<IDictionary<string, string>> CreateEnvironmentVariables(Project project,
+                                                                                Repository repository,
+                                                                                RepositoryUpdate update,
+                                                                                UpdateJob job,
+                                                                                string directory,
+                                                                                IList<Dictionary<string, string>> credentials,
+                                                                                CancellationToken cancellationToken = default) // TODO: unit test this
     {
         [return: NotNullIfNotNull(nameof(value))]
         static string? ToJson<T>(T? value) => value is null ? null : JsonSerializer.Serialize(value, serializerOptions); // null ensures we do not add to the values
+
+        // check if debug is enabled for the project via Feature Management
+        var fmc = new TargetingContext { Groups = new[] { $"provider:{project.Type.ToString().ToLower()}", $"project:{project.Id}", $"ecosystem:{job.PackageEcosystem}", }, };
+        var debugAllJobs = await featureManager.IsEnabledAsync(FeatureNames.DebugAllJobs, fmc);
 
         // Add compulsory values
         var values = new Dictionary<string, string>
@@ -231,7 +241,7 @@ internal partial class UpdateRunner
             // env for v2
             ["DEPENDABOT_JOB_ID"] = job.Id!,
             ["DEPENDABOT_JOB_TOKEN"] = job.AuthKey!,
-            ["DEPENDABOT_DEBUG"] = (options.DebugJobs ?? false).ToString().ToLower(),
+            ["DEPENDABOT_DEBUG"] = debugAllJobs.ToString().ToLower(),
             ["DEPENDABOT_API_URL"] = options.JobsApiUrl!,
             ["DEPENDABOT_JOB_PATH"] = Path.Join(directory, JobDefinitionFileName),
             ["DEPENDABOT_OUTPUT_PATH"] = Path.Join(directory, "output"),
@@ -275,7 +285,8 @@ internal partial class UpdateRunner
         return values;
     }
 
-    internal async Task<string> WriteJobDefinitionAsync(RepositoryUpdate update,
+    internal async Task<string> WriteJobDefinitionAsync(Project project,
+                                                        RepositoryUpdate update,
                                                         UpdateJob job,
                                                         string directory,
                                                         IList<Dictionary<string, string>> credentials,
@@ -286,6 +297,10 @@ internal partial class UpdateRunner
 
         var url = options.ProjectUrl!.Value;
         var credentialsMetadata = MakeCredentialsMetadata(credentials);
+
+        // check if debug is enabled for the project via Feature Management
+        var fmc = new TargetingContext { Groups = new[] { $"provider:{project.Type.ToString().ToLower()}", $"project:{project.Id}", $"ecosystem:{job.PackageEcosystem}", }, };
+        var debug = await featureManager.IsEnabledAsync(FeatureNames.DebugJobs, fmc);
 
         var definition = new JsonObject
         {
@@ -320,7 +335,7 @@ internal partial class UpdateRunner
                 // ["updating-a-pull-request"] = false,
                 ["vendor-dependencies"] = update.Vendor,
                 ["security-updates-only"] = update.OpenPullRequestsLimit == 0,
-                ["debug"] = false,
+                ["debug"] = debug,
             },
             ["credentials"] = ToJsonNode(credentials).AsArray(),
         };

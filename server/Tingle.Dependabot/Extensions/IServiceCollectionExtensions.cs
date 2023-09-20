@@ -1,6 +1,7 @@
 ﻿using Medallion.Threading;
 using Medallion.Threading.FileSystem;
 using Microsoft.FeatureManagement;
+using Tingle.Dependabot.FeatureManagement;
 using Tingle.Dependabot.Workflow;
 
 namespace Microsoft.Extensions.DependencyInjection;
@@ -36,10 +37,9 @@ public static class IServiceCollectionExtensions
 
         builder.AddFeatureFilter<FeatureManagement.FeatureFilters.PercentageFilter>();
         builder.AddFeatureFilter<FeatureManagement.FeatureFilters.TimeWindowFilter>();
-
-        // In some scenarios (such as AspNetCore, the TargetingFilter together with an ITargetingContextAccessor
-        // should be used in place of ContextualTargetingFilter.
         builder.AddFeatureFilter<FeatureManagement.FeatureFilters.ContextualTargetingFilter>();
+
+        builder.Services.AddSingleton<FeatureManagement.FeatureFilters.ITargetingContextAccessor, ProjectTargetingContextAccessor>();
         builder.AddFeatureFilter<FeatureManagement.FeatureFilters.TargetingFilter>(); // requires ITargetingContextAccessor
         builder.Services.Configure<FeatureManagement.FeatureFilters.TargetingEvaluationOptions>(o => o.IgnoreCase = true);
 
@@ -53,7 +53,7 @@ public static class IServiceCollectionExtensions
         services.Configure<WorkflowOptions>(configuration);
         services.ConfigureOptions<WorkflowConfigureOptions>();
 
-        services.AddSingleton<UpdateRunner>();
+        services.AddScoped<UpdateRunner>();
         services.AddSingleton<UpdateScheduler>();
 
         services.AddScoped<AzureDevOpsProvider>();

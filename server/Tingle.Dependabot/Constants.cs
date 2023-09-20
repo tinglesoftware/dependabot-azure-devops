@@ -16,3 +16,9 @@ internal static class ErrorCodes
 {
     internal const string FeaturesDisabled = "features_disabled";
 }
+
+internal static class FeatureNames
+{
+    internal const string DebugAllJobs = "DebugAllJobs";
+    internal const string DebugJobs = "DebugJobs";
+}
