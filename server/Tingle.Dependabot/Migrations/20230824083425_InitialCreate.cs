@@ -33,7 +33,7 @@ public partial class InitialCreate : Migration
                 Updated = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
                 Type = table.Column<int>(type: "int", nullable: false),
                 Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                ProviderId = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                ProviderId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                 Url = table.Column<string>(type: "nvarchar(max)", nullable: false),
                 Token = table.Column<string>(type: "nvarchar(max)", nullable: false),
                 AutoComplete = table.Column<bool>(type: "bit", nullable: false),
@@ -87,7 +87,7 @@ public partial class InitialCreate : Migration
                 ProjectId = table.Column<string>(type: "nvarchar(50)", nullable: false),
                 Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
                 Slug = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                ProviderId = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                ProviderId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                 LatestCommit = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
                 ConfigFileContents = table.Column<string>(type: "nvarchar(max)", nullable: false),
                 SyncException = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -122,8 +122,7 @@ public partial class InitialCreate : Migration
             name: "IX_Projects_ProviderId",
             table: "Projects",
             column: "ProviderId",
-            unique: true,
-            filter: "[ProviderId] IS NOT NULL");
+            unique: true);
 
         migrationBuilder.CreateIndex(
             name: "IX_Repositories_Created",
@@ -140,8 +139,7 @@ public partial class InitialCreate : Migration
             name: "IX_Repositories_ProviderId",
             table: "Repositories",
             column: "ProviderId",
-            unique: true,
-            filter: "[ProviderId] IS NOT NULL");
+            unique: true);
 
         migrationBuilder.CreateIndex(
             name: "IX_UpdateJobs_AuthKey",

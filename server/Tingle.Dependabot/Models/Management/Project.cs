@@ -18,6 +18,7 @@ public class Project
     public string? Name { get; set; }
 
     /// <summary>Identifier of the repository as per provider.</summary>
+    [Required]
     [JsonIgnore] // only for internal use
     public string? ProviderId { get; set; }
 

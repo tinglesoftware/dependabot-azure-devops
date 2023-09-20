@@ -79,6 +79,7 @@ namespace Tingle.Dependabot.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("ProviderId")
+                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Token")
@@ -104,8 +105,7 @@ namespace Tingle.Dependabot.Migrations
                         .IsDescending();
 
                     b.HasIndex("ProviderId")
-                        .IsUnique()
-                        .HasFilter("[ProviderId] IS NOT NULL");
+                        .IsUnique();
 
                     b.ToTable("Projects");
                 });
@@ -140,6 +140,7 @@ namespace Tingle.Dependabot.Migrations
                         .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("ProviderId")
+                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Registries")
@@ -167,8 +168,7 @@ namespace Tingle.Dependabot.Migrations
                     b.HasIndex("ProjectId");
 
                     b.HasIndex("ProviderId")
-                        .IsUnique()
-                        .HasFilter("[ProviderId] IS NOT NULL");
+                        .IsUnique();
 
                     b.ToTable("Repositories");
                 });

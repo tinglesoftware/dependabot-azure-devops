@@ -23,6 +23,7 @@ public class Repository
     public string? Slug { get; set; }
 
     /// <summary>Identifier of the repository as per provider.</summary>
+    [Required]
     [JsonIgnore] // only for internal use
     public string? ProviderId { get; set; }
 
