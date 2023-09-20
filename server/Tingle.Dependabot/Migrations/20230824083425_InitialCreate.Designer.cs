@@ -72,6 +72,9 @@ namespace Tingle.Dependabot.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<bool>("Private")
+                        .HasColumnType("bit");
+
                     b.Property<string>("ProviderId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");

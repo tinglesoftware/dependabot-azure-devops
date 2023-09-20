@@ -36,6 +36,7 @@ public partial class InitialCreate : Migration
                 ProviderId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                 Url = table.Column<string>(type: "nvarchar(max)", nullable: false),
                 Token = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                Private = table.Column<bool>(type: "bit", nullable: false),
                 AutoComplete_Enabled = table.Column<bool>(type: "bit", nullable: false),
                 AutoComplete_IgnoreConfigs = table.Column<string>(type: "nvarchar(max)", nullable: true),
                 AutoComplete_MergeStrategy = table.Column<int>(type: "int", nullable: true),

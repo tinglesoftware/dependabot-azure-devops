@@ -36,6 +36,9 @@ public class Project
     [JsonIgnore] // expose this once we know how to protect the values
     public string? Token { get; set; }
 
+    /// <summary>Whether the project is private.</summary>
+    public bool Private { get; set; }
+
     /// <summary>Auto complete settings.</summary>
     [Required]
     public ProjectAutoComplete AutoComplete { get; set; } = new();

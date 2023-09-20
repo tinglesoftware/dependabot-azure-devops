@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using System.Security.Cryptography;
 using System.Text.Json;
 using Tingle.Dependabot.Models;
@@ -66,15 +65,21 @@ internal static class AppSetup
                 await context.Projects.AddAsync(project, cancellationToken);
             }
 
+            // update project using values from the setup
             project.Token = setup.Token;
             project.AutoComplete.Enabled = setup.AutoComplete;
             project.AutoComplete.IgnoreConfigs = setup.AutoCompleteIgnoreConfigs;
             project.AutoComplete.MergeStrategy = setup.AutoCompleteMergeStrategy;
             project.AutoApprove.Enabled = setup.AutoApprove;
             project.Secrets = setup.Secrets;
+
+            // update values from the project
             var tp = await adoProvider.GetProjectAsync(project, cancellationToken);
-            project.Name = tp.Name;
             project.ProviderId = tp.Id.ToString();
+            project.Name = tp.Name;
+            project.Private = tp.Visibility is not Models.Azure.AzdoProjectVisibility.Public;
+
+            // if there are changes, set the Updated field
             if (context.ChangeTracker.HasChanges())
             {
                 project.Updated = DateTimeOffset.UtcNow;

@@ -10,6 +10,7 @@ using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json.Serialization;
+using Tingle.Dependabot.Models.Azure;
 using Tingle.Dependabot.Models.Management;
 
 namespace Tingle.Dependabot.Workflow;
@@ -269,28 +270,4 @@ public class AzureDevOpsProvider // TODO: replace the Microsoft.(TeamFoundation|
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<T>(cancellationToken: cancellationToken);
     }
-}
-
-public class AzdoProject
-{
-    [JsonPropertyName("id")]
-    public required string Id { get; set; }
-
-    [JsonPropertyName("name")]
-    public required string Name { get; set; }
-
-    [JsonPropertyName("visibility")]
-    public required AzdoProjectVisibility Visibility { get; set; }
-
-    [JsonPropertyName("lastUpdateTime")]
-    public required DateTimeOffset LastUpdatedTime { get; set; }
-}
-
-[JsonConverter(typeof(JsonStringEnumMemberConverter))]
-public enum AzdoProjectVisibility
-{
-    Private,
-    Organization,
-    Public,
-    SystemPrivate,
 }
