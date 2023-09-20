@@ -58,6 +58,7 @@ internal partial class UpdateRunner
         var registries = update.Registries?.Select(r => repository.Registries[r]).ToList();
         var credentials = MakeExtraCredentials(registries, secrets); // add source credentials when running the in v2
         var directory = Path.Join(options.WorkingDirectory, job.Id);
+        if (!Directory.Exists(directory)) Directory.CreateDirectory(directory);
 
         // prepare the container
         var volumeName = "working-dir";
