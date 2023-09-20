@@ -191,9 +191,6 @@ namespace Tingle.Dependabot.Migrations
                     b.Property<DateTimeOffset?>("End")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<string>("Error")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<byte[]>("Etag")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
@@ -303,6 +300,28 @@ namespace Tingle.Dependabot.Migrations
 
             modelBuilder.Entity("Tingle.Dependabot.Models.Management.UpdateJob", b =>
                 {
+                    b.OwnsOne("Tingle.Dependabot.Models.Management.UpdateJobError", "Error", b1 =>
+                        {
+                            b1.Property<string>("UpdateJobId")
+                                .HasColumnType("nvarchar(50)");
+
+                            b1.Property<string>("Detail")
+                                .HasColumnType("nvarchar(max)");
+
+                            b1.Property<string>("Type")
+                                .IsRequired()
+                                .HasColumnType("nvarchar(450)");
+
+                            b1.HasKey("UpdateJobId");
+
+                            b1.HasIndex("Type");
+
+                            b1.ToTable("UpdateJobs");
+
+                            b1.WithOwner()
+                                .HasForeignKey("UpdateJobId");
+                        });
+
                     b.OwnsOne("Tingle.Dependabot.Models.Management.UpdateJobResources", "Resources", b1 =>
                         {
                             b1.Property<string>("UpdateJobId")
@@ -321,6 +340,8 @@ namespace Tingle.Dependabot.Migrations
                             b1.WithOwner()
                                 .HasForeignKey("UpdateJobId");
                         });
+
+                    b.Navigation("Error");
 
                     b.Navigation("Resources")
                         .IsRequired();

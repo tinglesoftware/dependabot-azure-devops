@@ -23,7 +23,7 @@ public class MainDbContext : DbContext, IDataProtectionKeyContext
             builder.OwnsOne(p => p.AutoApprove);
             builder.OwnsOne(p => p.AutoComplete, ownedBuilder =>
             {
-                ownedBuilder.Property(p => p.IgnoreConfigs).HasJsonConversion();
+                ownedBuilder.Property(ac => ac.IgnoreConfigs).HasJsonConversion();
             });
             builder.Property(p => p.Secrets).HasJsonConversion();
 
@@ -44,7 +44,11 @@ public class MainDbContext : DbContext, IDataProtectionKeyContext
         modelBuilder.Entity<UpdateJob>(builder =>
         {
             builder.Property(j => j.PackageEcosystem).IsRequired();
-            builder.Property(j => j.Error).HasJsonConversion();
+            builder.OwnsOne(j => j.Error, ownedBuilder =>
+            {
+                ownedBuilder.Property(e => e.Detail).HasJsonConversion();
+                ownedBuilder.HasIndex(e => e.Type); // faster filtering
+            });
 
             builder.HasIndex(j => j.Created).IsDescending(); // faster filtering
             builder.HasIndex(j => j.RepositoryId);

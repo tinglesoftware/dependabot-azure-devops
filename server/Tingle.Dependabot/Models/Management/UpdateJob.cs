@@ -81,6 +81,7 @@ public class UpdateJob
 
 public class UpdateJobError
 {
+    [Required]
     public string? Type { get; set; }
     public JsonNode? Detail { get; set; }
 }

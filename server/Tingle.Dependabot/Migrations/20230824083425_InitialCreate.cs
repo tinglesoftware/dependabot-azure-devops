@@ -70,7 +70,8 @@ public partial class InitialCreate : Migration
                 End = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
                 Duration = table.Column<long>(type: "bigint", nullable: true),
                 Log = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                Error = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                Error_Type = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                Error_Detail = table.Column<string>(type: "nvarchar(max)", nullable: true),
                 Etag = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: true)
             },
             constraints: table =>
@@ -153,6 +154,11 @@ public partial class InitialCreate : Migration
             table: "UpdateJobs",
             column: "Created",
             descending: new bool[0]);
+
+        migrationBuilder.CreateIndex(
+            name: "IX_UpdateJobs_Error_Type",
+            table: "UpdateJobs",
+            column: "Error_Type");
 
         migrationBuilder.CreateIndex(
             name: "IX_UpdateJobs_PackageEcosystem_Directory",
