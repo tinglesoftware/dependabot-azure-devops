@@ -231,6 +231,27 @@
       }
     },
     {
+      "type": "Microsoft.AppConfiguration/configurationStores",
+      "apiVersion": "2023-03-01",
+      "name": "[format('{0}-{1}', parameters('name'), variables('collisionSuffix'))]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "softDeleteRetentionInDays": 0
+      },
+      "sku": {
+        "name": "free"
+      },
+      "identity": {
+        "type": "UserAssigned",
+        "userAssignedIdentities": {
+          "[format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')))]": {}
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name'))]"
+      ]
+    },
+    {
       "type": "Microsoft.Storage/storageAccounts",
       "apiVersion": "2022-09-01",
       "name": "[format('{0}{1}', parameters('name'), variables('collisionSuffix'))]",
@@ -427,6 +448,14 @@
                   "value": "true"
                 },
                 {
+                  "name": "AzureAppConfig__Endpoint",
+                  "value": "[reference(resourceId('Microsoft.AppConfiguration/configurationStores', format('{0}-{1}', parameters('name'), variables('collisionSuffix'))), '2023-03-01').endpoint]"
+                },
+                {
+                  "name": "AzureAppConfig__Label",
+                  "value": "Production"
+                },
+                {
                   "name": "ApplicationInsights__ConnectionString",
                   "secretRef": "connection-strings-application-insights"
                 },
@@ -441,6 +470,18 @@
                 {
                   "name": "Logging__ApplicationInsights__LogLevel__Default",
                   "value": "None"
+                },
+                {
+                  "name": "Logging__Seq__LogLevel__Default",
+                  "value": "Warning"
+                },
+                {
+                  "name": "Logging__Seq__ServerUrl",
+                  "value": ""
+                },
+                {
+                  "name": "Logging__Seq__ApiKey",
+                  "value": ""
                 },
                 {
                   "name": "Workflow__SynchronizeOnStartup",
@@ -590,6 +631,7 @@
         }
       },
       "dependsOn": [
+        "[resourceId('Microsoft.AppConfiguration/configurationStores', format('{0}-{1}', parameters('name'), variables('collisionSuffix')))]",
         "[resourceId('Microsoft.App/managedEnvironments', parameters('name'))]",
         "[resourceId('Microsoft.Insights/components', parameters('name'))]",
         "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('name'))]",
@@ -618,6 +660,19 @@
       "name": "[guid(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')), 'AzureServiceBusDataOwner')]",
       "properties": {
         "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '090c5cfd-751d-490a-894a-3ce6f1109419')]",
+        "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')), '2023-01-31').principalId]",
+        "principalType": "ServicePrincipal"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "name": "[guid(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')), 'AppConfigurationDataReader')]",
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '516239f1-63e1-4d78-a4de-a74fb236a071')]",
         "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')), '2023-01-31').principalId]",
         "principalType": "ServicePrincipal"
       },

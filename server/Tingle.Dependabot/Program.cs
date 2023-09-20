@@ -12,6 +12,11 @@ using Tingle.Dependabot.Workflow;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add Azure AppConfiguration
+builder.Configuration.AddStandardAzureAppConfiguration(builder.Environment);
+builder.Services.AddAzureAppConfiguration();
+builder.Services.AddSingleton<IStartupFilter, AzureAppConfigurationStartupFilter>(); // Use IStartupFilter to setup AppConfiguration middleware correctly
+
 // Add Serilog
 builder.Services.AddSerilog(builder =>
 {

@@ -105,6 +105,20 @@ resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2021-11-01' = {
   resource authorizationRule 'AuthorizationRules' existing = { name: 'RootManageSharedAccessKey' }
 }
 
+/* AppConfiguration */
+resource appConfiguration 'Microsoft.AppConfiguration/configurationStores@2023-03-01' = {
+  name: '${name}-${collisionSuffix}'
+  location: location
+  properties: { softDeleteRetentionInDays: 0 /* Free does not support this */ }
+  sku: { name: 'free' }
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${managedIdentity.id}': {/*ttk bug*/ }
+    }
+  }
+}
+
 /* Storage Account */
 resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = {
   name: '${name}${collisionSuffix}' // hyphens not allowed
@@ -277,12 +291,18 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
             { name: 'ASPNETCORE_FORWARDEDHEADERS_ENABLED', value: 'true' } // Application is behind proxy
             { name: 'EFCORE_PERFORM_MIGRATIONS', value: 'true' } // Perform migrations on startup
 
+            { name: 'AzureAppConfig__Endpoint', value: appConfiguration.properties.endpoint }
+            { name: 'AzureAppConfig__Label', value: 'Production' }
+
             { name: 'ApplicationInsights__ConnectionString', secretRef: 'connection-strings-application-insights' }
             { name: 'ConnectionStrings__Sql', secretRef: 'connection-strings-sql' }
 
             { name: 'DistributedLocking__FilePath', value: '/mnt/distributed-locks' }
 
             { name: 'Logging__ApplicationInsights__LogLevel__Default', value: 'None' } // do not send logs to application insights (duplicates LogAnalytics)
+            { name: 'Logging__Seq__LogLevel__Default', value: 'Warning' }
+            { name: 'Logging__Seq__ServerUrl', value: '' } // set via AppConfig
+            { name: 'Logging__Seq__ApiKey', value: '' } // set via AppConfig
 
             { name: 'Workflow__SynchronizeOnStartup', value: synchronizeOnStartup ? 'true' : 'false' }
             { name: 'Workflow__CreateOrUpdateWebhooksOnStartup', value: createOrUpdateWebhooksOnStartup ? 'true' : 'false' }
@@ -363,6 +383,15 @@ resource serviceBusDataOwnerRoleAssignment 'Microsoft.Authorization/roleAssignme
   scope: resourceGroup()
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '090c5cfd-751d-490a-894a-3ce6f1109419')
+    principalId: managedIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+resource appConfigurationDataReaderRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(managedIdentity.id, 'AppConfigurationDataReader')
+  scope: resourceGroup()
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '516239f1-63e1-4d78-a4de-a74fb236a071')
     principalId: managedIdentity.properties.principalId
     principalType: 'ServicePrincipal'
   }
