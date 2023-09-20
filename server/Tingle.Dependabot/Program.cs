@@ -24,6 +24,8 @@ builder.Services.AddSerilog(builder =>
     {
         options.ExcludeProperties.AddRange(new[] {
             "ExecutionId",
+            "JobDefinitionPath",
+            "UpdateJobId",
         });
     });
 });
