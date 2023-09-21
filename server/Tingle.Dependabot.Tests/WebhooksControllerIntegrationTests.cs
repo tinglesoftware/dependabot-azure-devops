@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Net;
@@ -20,6 +19,8 @@ namespace Tingle.Dependabot.Tests;
 
 public class WebhooksControllerIntegrationTests
 {
+    private const string ProjectId = "prj_1234567890";
+
     private readonly ITestOutputHelper outputHelper;
 
     public WebhooksControllerIntegrationTests(ITestOutputHelper outputHelper)
@@ -41,7 +42,7 @@ public class WebhooksControllerIntegrationTests
 
             // password does not match what is on record
             request = new HttpRequestMessage(HttpMethod.Post, "/webhooks/azure");
-            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes("vsts:burp-bump5")));
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"{ProjectId}:burp-bump5")));
             response = await client.SendAsync(request);
             Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
             Assert.Empty(await response.Content.ReadAsStringAsync());
@@ -55,7 +56,7 @@ public class WebhooksControllerIntegrationTests
         await TestAsync(async (harness, client) =>
         {
             var request = new HttpRequestMessage(HttpMethod.Post, "/webhooks/azure");
-            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes("vsts:burp-bump")));
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"{ProjectId}:burp-bump")));
             request.Content = new StringContent("", Encoding.UTF8, "application/json");
             var response = await client.SendAsync(request);
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -74,7 +75,7 @@ public class WebhooksControllerIntegrationTests
         await TestAsync(async (harness, client) =>
         {
             var request = new HttpRequestMessage(HttpMethod.Post, "/webhooks/azure");
-            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes("vsts:burp-bump")));
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"{ProjectId}:burp-bump")));
             request.Content = new StringContent("{}", Encoding.UTF8, "application/json");
             var response = await client.SendAsync(request);
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -96,7 +97,7 @@ public class WebhooksControllerIntegrationTests
         {
             var stream = TestSamples.GetAzureDevOpsPullRequestUpdated1();
             var request = new HttpRequestMessage(HttpMethod.Post, "/webhooks/azure");
-            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes("vsts:burp-bump")));
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"{ProjectId}:burp-bump")));
             request.Content = new StreamContent(stream);
             var response = await client.SendAsync(request);
             Assert.Equal(HttpStatusCode.UnsupportedMediaType, response.StatusCode);
@@ -115,7 +116,7 @@ public class WebhooksControllerIntegrationTests
         {
             var stream = TestSamples.GetAzureDevOpsGitPush1();
             var request = new HttpRequestMessage(HttpMethod.Post, "/webhooks/azure");
-            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes("vsts:burp-bump")));
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"{ProjectId}:burp-bump")));
             request.Content = new StreamContent(stream);
             request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json", "utf-8");
             var response = await client.SendAsync(request);
@@ -139,7 +140,7 @@ public class WebhooksControllerIntegrationTests
         {
             var stream = TestSamples.GetAzureDevOpsPullRequestUpdated1();
             var request = new HttpRequestMessage(HttpMethod.Post, "/webhooks/azure");
-            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes("vsts:burp-bump")));
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"{ProjectId}:burp-bump")));
             request.Content = new StreamContent(stream);
             request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json", "utf-8");
             var response = await client.SendAsync(request);
@@ -156,7 +157,7 @@ public class WebhooksControllerIntegrationTests
         {
             var stream = TestSamples.GetAzureDevOpsPullRequestMerged1();
             var request = new HttpRequestMessage(HttpMethod.Post, "/webhooks/azure");
-            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes("vsts:burp-bump")));
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"{ProjectId}:burp-bump")));
             request.Content = new StreamContent(stream);
             request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json", "utf-8");
             var response = await client.SendAsync(request);
@@ -173,7 +174,7 @@ public class WebhooksControllerIntegrationTests
         {
             var stream = TestSamples.GetAzureDevOpsPullRequestCommentEvent1();
             var request = new HttpRequestMessage(HttpMethod.Post, "/webhooks/azure");
-            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes("vsts:burp-bump")));
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"{ProjectId}:burp-bump")));
             request.Content = new StreamContent(stream);
             request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json", "utf-8");
             var response = await client.SendAsync(request);
@@ -188,13 +189,6 @@ public class WebhooksControllerIntegrationTests
         // Arrange
         var builder = new WebHostBuilder()
             .ConfigureLogging(builder => builder.AddXUnit(outputHelper))
-            .ConfigureAppConfiguration(builder =>
-            {
-                builder.AddInMemoryCollection(new Dictionary<string, string?>
-                {
-                    ["Authentication:Schemes:ServiceHooks:Credentials:vsts"] = "burp-bump",
-                });
-            })
             .ConfigureServices((context, services) =>
             {
                 services.AddControllers()
@@ -246,6 +240,17 @@ public class WebhooksControllerIntegrationTests
 
         var context = provider.GetRequiredService<MainDbContext>();
         await context.Database.EnsureCreatedAsync();
+
+        await context.Projects.AddAsync(new Dependabot.Models.Management.Project
+        {
+            Id = ProjectId,
+            Url = "https://dev.azure.com/dependabot/dependabot",
+            Token = "token",
+            Name = "dependabot",
+            ProviderId = "6ce954b1-ce1f-45d1-b94d-e6bf2464ba2c",
+            Password = "burp-bump",
+        });
+        await context.SaveChangesAsync();
 
         var harness = provider.GetRequiredService<InMemoryTestHarness>();
         await harness.StartAsync();

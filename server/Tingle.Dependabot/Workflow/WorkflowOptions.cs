@@ -1,20 +1,12 @@
-﻿using Tingle.Dependabot.Models;
-
-namespace Tingle.Dependabot.Workflow;
+﻿namespace Tingle.Dependabot.Workflow;
 
 public class WorkflowOptions
 {
-    /// <summary>Whether to synchronize repositories on startup.</summary>
-    public bool SynchronizeOnStartup { get; set; } = true;
-
-    /// <summary>Whether to create/update notifications on startup.</summary>
-    public bool CreateOrUpdateWebhooksOnStartup { get; set; } = true;
-
     /// <summary>URL where subscription notifications shall be sent.</summary>
     public Uri? WebhookEndpoint { get; set; }
 
-    /// <summary>Password used for creation of subscription and authenticating incoming notifications.</summary>
-    public string? SubscriptionPassword { get; set; }
+    /// <summary>URL on which to access the API from the jobs.</summary>
+    public Uri? JobsApiUrl { get; set; }
 
     /// <summary>Resource identifier for the resource group to create jobs in.</summary>
     /// <example>/subscriptions/00000000-0000-1111-0001-000000000000/resourceGroups/DEPENDABOT</example>
@@ -38,19 +30,6 @@ public class WorkflowOptions
     /// <example>ghcr.io/tinglesoftware/dependabot-updater-{{ecosystem}}:1.20</example>
     public string? UpdaterContainerImageTemplate { get; set; }
 
-    /// <summary>URL for the project.</summary>
-    public AzureDevOpsProjectUrl? ProjectUrl { get; set; }
-
-    /// <summary>Authentication token for accessing the project.</summary>
-    public string? ProjectToken { get; set; }
-
-    /// <summary>Whether to debug all jobs.</summary>
-    public bool? DebugJobs { get; set; }
-
-    /// <summary>URL on which to access the API from the jobs.</summary>
-    /// <example>https://dependabot.dummy-123.westeurope.azurecontainerapps.io</example>
-    public string? JobsApiUrl { get; set; }
-
     /// <summary>
     /// Root working directory where file are written during job scheduling and execution.
     /// This directory is the root for all jobs.
@@ -62,19 +41,6 @@ public class WorkflowOptions
     /// <example>/mnt/dependabot</example>
     public string? WorkingDirectory { get; set; }
 
-    /// <summary>Whether updates should be created in the same order.</summary>
-    public bool? DeterministicUpdates { get; set; }
-
-    /// <summary>Whether to set automatic completion of pull requests.</summary>
-    public bool? AutoComplete { get; set; }
-
-    public string? AutoCompleteIgnoreConfigs { get; set; }
-
-    public MergeStrategy? AutoCompleteMergeStrategy { get; set; }
-
-    /// <summary>Whether to automatically approve pull requests.</summary>
-    public bool? AutoApprove { get; set; }
-
     /// <summary>
     /// Token for accessing GitHub APIs.
     /// If no value is provided, calls to GitHub are not authenticated.
@@ -85,23 +51,7 @@ public class WorkflowOptions
     /// <example>ghp_1234567890</example>
     public string? GithubToken { get; set; }
 
-    /// <summary>
-    /// Secrets that can be replaced in the registries section of the configuration file.
-    /// </summary>
-    public Dictionary<string, string> Secrets { get; set; } = new(StringComparer.OrdinalIgnoreCase);
-
     /// <summary>Location/region where to create new update jobs.</summary>
+    /// <example>westeurope</example>
     public string? Location { get; set; } // using Azure.Core.Location does not work when binding from IConfiguration
-
-    /// <summary>
-    /// Possible/allowed paths for the configuration files in a repository.
-    /// </summary>
-    public IReadOnlyList<string> ConfigurationFilePaths { get; set; } = new[] {
-        // TODO: restore checks in .azuredevops folder once either the code can check that folder or we are passing ignore conditions via update_jobs API
-        //".azuredevops/dependabot.yml",
-        //".azuredevops/dependabot.yaml",
-
-        ".github/dependabot.yml",
-        ".github/dependabot.yaml",
-    };
 }

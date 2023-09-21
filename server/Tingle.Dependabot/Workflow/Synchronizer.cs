@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using System.ComponentModel.DataAnnotations;
 using Tingle.Dependabot.Events;
 using Tingle.Dependabot.Models;
@@ -16,21 +15,15 @@ internal class Synchronizer
     private readonly MainDbContext dbContext;
     private readonly AzureDevOpsProvider adoProvider;
     private readonly IEventPublisher publisher;
-    private readonly WorkflowOptions options;
     private readonly ILogger logger;
 
     private readonly IDeserializer yamlDeserializer;
 
-    public Synchronizer(MainDbContext dbContext,
-                        AzureDevOpsProvider adoProvider,
-                        IEventPublisher publisher,
-                        IOptions<WorkflowOptions> optionsAccessor,
-                        ILogger<Synchronizer> logger)
+    public Synchronizer(MainDbContext dbContext, AzureDevOpsProvider adoProvider, IEventPublisher publisher, ILogger<Synchronizer> logger)
     {
         this.dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         this.adoProvider = adoProvider ?? throw new ArgumentNullException(nameof(adoProvider));
         this.publisher = publisher ?? throw new ArgumentNullException(nameof(publisher));
-        options = optionsAccessor?.Value ?? throw new ArgumentNullException(nameof(optionsAccessor));
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         yamlDeserializer = new DeserializerBuilder().WithNamingConvention(HyphenatedNamingConvention.Instance)
@@ -38,14 +31,31 @@ internal class Synchronizer
                                                     .Build();
     }
 
-    public async Task SynchronizeAsync(bool trigger, CancellationToken cancellationToken = default)
+    public async Task SynchronizeAsync(Project project, bool trigger, CancellationToken cancellationToken = default)
     {
+        // skip if the project last synchronization is less than 1 hour ago
+        if ((DateTimeOffset.UtcNow - project.Synchronized) <= TimeSpan.FromHours(1))
+        {
+            logger.LogInformation("Skipping synchronization for {ProjectUrl} since it last happened recently at {Synchronized}.", project.Url, project.Synchronized);
+            return;
+        }
+
+        // update the project (it may have changed name or visibility)
+        var tp = await adoProvider.GetProjectAsync(project, cancellationToken);
+        var @private = tp.Visibility is not Models.Azure.AzdoProjectVisibility.Public;
+        if (!string.Equals(project.Name, tp.Name, StringComparison.Ordinal) || @private != project.Private)
+        {
+            project.Name = tp.Name;
+            project.Private = @private;
+            project.Updated = DateTimeOffset.UtcNow;
+        }
+
         // track the synchronization pairs
         var syncPairs = new List<(SynchronizerConfigurationItem, Repository?)>();
 
         // get the repositories from Azure
         logger.LogDebug("Listing repositories ...");
-        var adoRepos = await adoProvider.GetRepositoriesAsync(cancellationToken);
+        var adoRepos = await adoProvider.GetRepositoriesAsync(project, cancellationToken);
         logger.LogDebug("Found {RepositoriesCount} repositories", adoRepos.Count);
         var adoReposMap = adoRepos.ToDictionary(r => r.Id.ToString(), r => r);
 
@@ -62,14 +72,16 @@ internal class Synchronizer
             // get the repository from the database
             var adoRepositoryName = adoRepo.Name;
             var repository = await (from r in dbContext.Repositories
+                                    where r.ProjectId == project.Id
                                     where r.ProviderId == adoRepositoryId
                                     select r).SingleOrDefaultAsync(cancellationToken);
 
-            var item = await adoProvider.GetConfigurationFileAsync(repositoryIdOrName: adoRepositoryId,
+            var item = await adoProvider.GetConfigurationFileAsync(project: project,
+                                                                   repositoryIdOrName: adoRepositoryId,
                                                                    cancellationToken: cancellationToken);
 
             // Track for further synchronization
-            var sci = new SynchronizerConfigurationItem(options.ProjectUrl!.Value.MakeRepositorySlug(adoRepo.Name), adoRepo, item);
+            var sci = new SynchronizerConfigurationItem(((AzureDevOpsProjectUrl)project.Url!).MakeRepositorySlug(adoRepo.Name), adoRepo, item);
             syncPairs.Add((sci, repository));
         }
 
@@ -84,14 +96,18 @@ internal class Synchronizer
         // synchronize each repository
         foreach (var (pi, repository) in syncPairs)
         {
-            await SynchronizeAsync(repository, pi, trigger, cancellationToken);
+            await SynchronizeAsync(project, repository, pi, trigger, cancellationToken);
         }
+
+        // set the last synchronization time on the project
+        project.Synchronized = DateTimeOffset.UtcNow;
     }
 
-    public async Task SynchronizeAsync(Repository repository, bool trigger, CancellationToken cancellationToken = default)
+    public async Task SynchronizeAsync(Project project, Repository repository, bool trigger, CancellationToken cancellationToken = default)
     {
         // get repository
-        var adoRepo = await adoProvider.GetRepositoryAsync(repositoryIdOrName: repository.ProviderId!,
+        var adoRepo = await adoProvider.GetRepositoryAsync(project: project,
+                                                           repositoryIdOrName: repository.ProviderId!,
                                                            cancellationToken: cancellationToken);
 
         // skip disabled or fork repository
@@ -102,18 +118,20 @@ internal class Synchronizer
         }
 
         // get the configuration file
-        var item = await adoProvider.GetConfigurationFileAsync(repositoryIdOrName: repository.ProviderId!,
+        var item = await adoProvider.GetConfigurationFileAsync(project: project,
+                                                               repositoryIdOrName: repository.ProviderId!,
                                                                cancellationToken: cancellationToken);
 
         // perform synchronization
-        var sci = new SynchronizerConfigurationItem(options.ProjectUrl!.Value.MakeRepositorySlug(adoRepo.Name), adoRepo, item);
-        await SynchronizeAsync(repository, sci, trigger, cancellationToken);
+        var sci = new SynchronizerConfigurationItem(((AzureDevOpsProjectUrl)project.Url!).MakeRepositorySlug(adoRepo.Name), adoRepo, item);
+        await SynchronizeAsync(project, repository, sci, trigger, cancellationToken);
     }
 
-    public async Task SynchronizeAsync(string? repositoryProviderId, bool trigger, CancellationToken cancellationToken = default)
+    public async Task SynchronizeAsync(Project project, string? repositoryProviderId, bool trigger, CancellationToken cancellationToken = default)
     {
         // get repository
-        var adoRepo = await adoProvider.GetRepositoryAsync(repositoryIdOrName: repositoryProviderId!,
+        var adoRepo = await adoProvider.GetRepositoryAsync(project: project,
+                                                           repositoryIdOrName: repositoryProviderId!,
                                                            cancellationToken: cancellationToken);
 
         // skip disabled or fork repository
@@ -124,7 +142,8 @@ internal class Synchronizer
         }
 
         // get the configuration file
-        var item = await adoProvider.GetConfigurationFileAsync(repositoryIdOrName: repositoryProviderId!,
+        var item = await adoProvider.GetConfigurationFileAsync(project: project,
+                                                               repositoryIdOrName: repositoryProviderId!,
                                                                cancellationToken: cancellationToken);
 
         var repository = await (from r in dbContext.Repositories
@@ -132,11 +151,12 @@ internal class Synchronizer
                                 select r).SingleOrDefaultAsync(cancellationToken);
 
         // perform synchronization
-        var sci = new SynchronizerConfigurationItem(options.ProjectUrl!.Value.MakeRepositorySlug(adoRepo.Name), adoRepo, item);
-        await SynchronizeAsync(repository, sci, trigger, cancellationToken);
+        var sci = new SynchronizerConfigurationItem(((AzureDevOpsProjectUrl)project.Url!).MakeRepositorySlug(adoRepo.Name), adoRepo, item);
+        await SynchronizeAsync(project, repository, sci, trigger, cancellationToken);
     }
 
-    internal async Task SynchronizeAsync(Repository? repository,
+    internal async Task SynchronizeAsync(Project project,
+                                         Repository? repository,
                                          SynchronizerConfigurationItem providerInfo,
                                          bool trigger,
                                          CancellationToken cancellationToken = default)
@@ -152,7 +172,7 @@ internal class Synchronizer
                 await dbContext.SaveChangesAsync(cancellationToken);
 
                 // publish RepositoryDeletedEvent event
-                var evt = new RepositoryDeletedEvent { RepositoryId = repository.Id, };
+                var evt = new RepositoryDeletedEvent { ProjectId = project.Id, RepositoryId = repository.Id, };
                 await publisher.PublishAsync(evt, cancellationToken: cancellationToken);
             }
 
@@ -175,10 +195,11 @@ internal class Synchronizer
             {
                 Id = Guid.NewGuid().ToString("n"),
                 Created = DateTimeOffset.UtcNow,
+                ProjectId = project.Id,
                 ProviderId = providerInfo.Id,
             };
             await dbContext.Repositories.AddAsync(repository, cancellationToken);
-            rce = new RepositoryCreatedEvent { RepositoryId = repository.Id, };
+            rce = new RepositoryCreatedEvent { ProjectId = project.Id, RepositoryId = repository.Id, };
         }
 
         // if the name of the repository has changed then we assume the commit changed so that we update stuff
@@ -235,7 +256,7 @@ internal class Synchronizer
             }
             else
             {
-                var evt = new RepositoryUpdatedEvent { RepositoryId = repository.Id, };
+                var evt = new RepositoryUpdatedEvent { ProjectId = project.Id, RepositoryId = repository.Id, };
                 await publisher.PublishAsync(evt, cancellationToken: cancellationToken);
             }
 
@@ -244,6 +265,7 @@ internal class Synchronizer
                 // trigger update jobs for the whole repository
                 var evt = new TriggerUpdateJobsEvent
                 {
+                    ProjectId = project.Id,
                     RepositoryId = repository.Id,
                     RepositoryUpdateId = null, // run all
                     Trigger = UpdateJobTrigger.Synchronization,

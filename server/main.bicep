@@ -4,45 +4,11 @@ param location string = resourceGroup().location
 @description('Name of the resources')
 param name string = 'dependabot'
 
-@description('URL of the project. For example "https://dev.azure.com/fabrikam/DefaultCollection"')
-param projectUrl string
-
-@description('Token for accessing the project.')
-param projectToken string
-
-@description('Whether to synchronize repositories on startup.')
-param synchronizeOnStartup bool = false
-
-@description('Whether to create or update subscriptions on startup.')
-param createOrUpdateWebhooksOnStartup bool = false
-
-@description('Whether to debug all jobs.')
-param debugAllJobs bool = false
+@description('JSON array string fo projects to setup. E.g. [{"url":"https://dev.azure.com/tingle/dependabot","token":"dummy","AutoComplete":true}]')
+param projectSetups string = '[]'
 
 @description('Access token for authenticating requests to GitHub.')
 param githubToken string = ''
-
-@description('Whether to set auto complete on created pull requests.')
-param autoComplete bool = true
-
-@description('Identifiers of configs to be ignored in auto complete. E.g 3,4,10')
-param autoCompleteIgnoreConfigs array = []
-
-@allowed([
-  'NoFastForward'
-  'Rebase'
-  'RebaseMerge'
-  'Squash'
-])
-@description('Merge strategy to use when setting auto complete on created pull requests.')
-param autoCompleteMergeStrategy string = 'Squash'
-
-@description('Whether to automatically approve created pull requests.')
-param autoApprove bool = false
-
-@description('Password for Webhooks, ServiceHooks, and Notifications from Azure DevOps.')
-#disable-next-line secure-secrets-in-params // need sensible defaults
-param notificationsPassword string = uniqueString('service-hooks', resourceGroup().id) // e.g. zecnx476et7xm (13 characters)
 
 @description('Tag of the docker images.')
 param imageTag string = '#{GITVERSION_NUGETVERSIONV2}#'
@@ -258,6 +224,7 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
       ingress: { external: true, targetPort: 80, traffic: [ { latestRevision: true, weight: 100 } ] }
       secrets: [
         { name: 'connection-strings-application-insights', value: appInsights.properties.ConnectionString }
+        { name: 'project-setups', value: projectSetups }
         {
           name: 'connection-strings-sql'
           value: join([
@@ -272,8 +239,6 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
               'Connection Timeout=30'
             ], ';')
         }
-        { name: 'notifications-password', value: notificationsPassword }
-        { name: 'project-token', value: projectToken }
         { name: 'connection-strings-asb-scaler', value: serviceBusNamespace::authorizationRule.listKeys().primaryConnectionString }
       ]
     }
@@ -291,6 +256,8 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
             { name: 'ASPNETCORE_FORWARDEDHEADERS_ENABLED', value: 'true' } // Application is behind proxy
             { name: 'EFCORE_PERFORM_MIGRATIONS', value: 'true' } // Perform migrations on startup
 
+            { name: 'PROJECT_SETUPS', secretRef: 'project-setups' }
+
             { name: 'AzureAppConfig__Endpoint', value: appConfiguration.properties.endpoint }
             { name: 'AzureAppConfig__Label', value: 'Production' }
 
@@ -304,29 +271,18 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
             { name: 'Logging__Seq__ServerUrl', value: '' } // set via AppConfig
             { name: 'Logging__Seq__ApiKey', value: '' } // set via AppConfig
 
-            { name: 'Workflow__SynchronizeOnStartup', value: synchronizeOnStartup ? 'true' : 'false' }
-            { name: 'Workflow__CreateOrUpdateWebhooksOnStartup', value: createOrUpdateWebhooksOnStartup ? 'true' : 'false' }
-            { name: 'Workflow__ProjectUrl', value: projectUrl }
-            { name: 'Workflow__ProjectToken', secretRef: 'project-token' }
-            { name: 'Workflow__DebugJobs', value: '${debugAllJobs}' }
             { name: 'Workflow__JobsApiUrl', value: 'https://${name}.${appEnvironment.properties.defaultDomain}' }
             { name: 'Workflow__WorkingDirectory', value: '/mnt/dependabot' }
             { name: 'Workflow__WebhookEndpoint', value: 'https://${name}.${appEnvironment.properties.defaultDomain}/webhooks/azure' }
-            { name: 'Workflow__SubscriptionPassword', secretRef: 'notifications-password' }
             { name: 'Workflow__ResourceGroupId', value: resourceGroup().id }
             { name: 'Workflow__AppEnvironmentId', value: appEnvironment.id }
             { name: 'Workflow__LogAnalyticsWorkspaceId', value: logAnalyticsWorkspace.properties.customerId }
             { name: 'Workflow__UpdaterContainerImageTemplate', value: 'ghcr.io/tinglesoftware/dependabot-updater-{{ecosystem}}:${imageTag}' }
-            { name: 'Workflow__AutoComplete', value: autoComplete ? 'true' : 'false' }
-            { name: 'Workflow__AutoCompleteIgnoreConfigs', value: join(autoCompleteIgnoreConfigs, ';') }
-            { name: 'Workflow__AutoCompleteMergeStrategy', value: autoCompleteMergeStrategy }
-            { name: 'Workflow__AutoApprove', value: autoApprove ? 'true' : 'false' }
             { name: 'Workflow__GithubToken', value: githubToken }
             { name: 'Workflow__Location', value: location }
 
             { name: 'Authentication__Schemes__Management__Authority', value: '${environment().authentication.loginEndpoint}${subscription().tenantId}/v2.0' }
             { name: 'Authentication__Schemes__Management__ValidAudiences__0', value: 'https://${name}.${appEnvironment.properties.defaultDomain}' }
-            { name: 'Authentication__Schemes__ServiceHooks__Credentials__vsts', secretRef: 'notifications-password' }
 
             { name: 'EventBus__SelectedTransport', value: 'ServiceBus' }
             { name: 'EventBus__Transports__azure-service-bus__FullyQualifiedNamespace', value: split(split(serviceBusNamespace.properties.serviceBusEndpoint, '/')[2], ':')[0] } // manipulating https://{your-namespace}.servicebus.windows.net:443/
@@ -418,5 +374,3 @@ resource logAnalyticsReaderRoleAssignment 'Microsoft.Authorization/roleAssignmen
 #disable-next-line outputs-should-not-contain-secrets
 output sqlServerAdministratorLoginPassword string = sqlServerAdministratorLoginPassword
 output webhookEndpoint string = 'https://${app.properties.configuration.ingress.fqdn}/webhooks/azure'
-#disable-next-line outputs-should-not-contain-secrets
-output notificationsPassword string = notificationsPassword

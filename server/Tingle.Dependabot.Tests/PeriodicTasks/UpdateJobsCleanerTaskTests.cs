@@ -16,6 +16,7 @@ namespace Tingle.Dependabot.Tests.PeriodicTasks;
 
 public class UpdateJobsCleanerTaskTests
 {
+    private const string ProjectId = "prj_1234567890";
     private const string RepositoryId = "repo_1234567890";
 
     private readonly ITestOutputHelper outputHelper;
@@ -34,6 +35,7 @@ public class UpdateJobsCleanerTaskTests
             await context.UpdateJobs.AddAsync(new UpdateJob
             {
                 Id = Guid.NewGuid().ToString(),
+                ProjectId = ProjectId,
                 RepositoryId = RepositoryId,
                 RepositorySlug = "test-repo",
                 Created = DateTimeOffset.UtcNow.AddMinutes(-19),
@@ -46,6 +48,7 @@ public class UpdateJobsCleanerTaskTests
             await context.UpdateJobs.AddAsync(new UpdateJob
             {
                 Id = Guid.NewGuid().ToString(),
+                ProjectId = ProjectId,
                 RepositoryId = RepositoryId,
                 RepositorySlug = "test-repo",
                 Created = DateTimeOffset.UtcNow.AddHours(-100),
@@ -58,6 +61,7 @@ public class UpdateJobsCleanerTaskTests
             await context.UpdateJobs.AddAsync(new UpdateJob
             {
                 Id = targetId,
+                ProjectId = ProjectId,
                 RepositoryId = RepositoryId,
                 RepositorySlug = "test-repo",
                 Created = DateTimeOffset.UtcNow.AddMinutes(-30),
@@ -87,6 +91,7 @@ public class UpdateJobsCleanerTaskTests
             await context.UpdateJobs.AddAsync(new UpdateJob
             {
                 Id = Guid.NewGuid().ToString(),
+                ProjectId = ProjectId,
                 RepositoryId = RepositoryId,
                 RepositorySlug = "test-repo",
                 Created = DateTimeOffset.UtcNow.AddDays(-80),
@@ -98,6 +103,7 @@ public class UpdateJobsCleanerTaskTests
             await context.UpdateJobs.AddAsync(new UpdateJob
             {
                 Id = Guid.NewGuid().ToString(),
+                ProjectId = ProjectId,
                 RepositoryId = RepositoryId,
                 RepositorySlug = "test-repo",
                 Created = DateTimeOffset.UtcNow.AddDays(-100),
@@ -109,6 +115,7 @@ public class UpdateJobsCleanerTaskTests
             await context.UpdateJobs.AddAsync(new UpdateJob
             {
                 Id = Guid.NewGuid().ToString(),
+                ProjectId = ProjectId,
                 RepositoryId = RepositoryId,
                 RepositorySlug = "test-repo",
                 Created = DateTimeOffset.UtcNow.AddDays(-120),
@@ -146,9 +153,20 @@ public class UpdateJobsCleanerTaskTests
         var context = provider.GetRequiredService<MainDbContext>();
         await context.Database.EnsureCreatedAsync();
 
+        await context.Projects.AddAsync(new Project
+        {
+            Id = ProjectId,
+            Url = "https://dev.azure.com/dependabot/dependabot",
+            Token = "token",
+            Name = "dependabot",
+            ProviderId = "6ce954b1-ce1f-45d1-b94d-e6bf2464ba2c",
+            Password = "burp-bump",
+        });
         await context.Repositories.AddAsync(new Repository
         {
             Id = RepositoryId,
+            ProjectId = ProjectId,
+            ProviderId = Guid.NewGuid().ToString(),
             Name = "test-repo",
             ConfigFileContents = "",
             Updates = new List<RepositoryUpdate>

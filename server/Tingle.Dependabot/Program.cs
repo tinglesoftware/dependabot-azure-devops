@@ -12,6 +12,8 @@ using Tingle.Dependabot.Workflow;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.Configure<HostOptions>(options => options.ShutdownTimeout = TimeSpan.FromSeconds(30)); /* default is 5 seconds */
+
 // Add Azure AppConfiguration
 builder.Configuration.AddStandardAzureAppConfiguration(builder.Environment);
 builder.Services.AddAzureAppConfiguration();
@@ -30,22 +32,8 @@ builder.Services.AddSerilog(builder =>
     });
 });
 
-builder.Services.Configure<HostOptions>(options =>
-{
-    /*
-     * The shutdown timer is extended to background tasks (mostly IHostedService) time to close down gracefully
-     * Andrew Lock explains it in 2 of his posts
-     * 
-     * https://andrewlock.net/extending-the-shutdown-timeout-setting-to-ensure-graceful-ihostedservice-shutdown/
-     * https://andrewlock.net/deploying-asp-net-core-applications-to-kubernetes-part-11-avoiding-downtime-in-rolling-deployments-by-blocking-sigterm/
-     * 
-     * The default is 5 seconds but in our case 30 seconds is sufficient and matches the Kubernetes default.
-     * This should be enough for the services running like the EventBus or incoming HTTP requests to complete processing.
-     */
-    options.ShutdownTimeout = TimeSpan.FromSeconds(30);
-});
-
-builder.Services.AddApplicationInsightsTelemetry(builder.Configuration);
+// Add Application Insights
+builder.Services.AddStandardApplicationInsights(builder.Configuration);
 
 // Add DbContext
 builder.Services.AddDbContext<MainDbContext>(options =>

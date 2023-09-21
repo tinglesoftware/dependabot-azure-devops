@@ -1,9 +1,5 @@
 ﻿using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using System.Text.Json;
 using Tingle.Dependabot.Models.Management;
 
 namespace Tingle.Dependabot.Models;
@@ -12,6 +8,7 @@ public class MainDbContext : DbContext, IDataProtectionKeyContext
 {
     public MainDbContext(DbContextOptions<MainDbContext> options) : base(options) { }
 
+    public DbSet<Project> Projects => Set<Project>();
     public DbSet<Repository> Repositories => Set<Repository>();
     public DbSet<UpdateJob> UpdateJobs => Set<UpdateJob>();
 
@@ -21,52 +18,46 @@ public class MainDbContext : DbContext, IDataProtectionKeyContext
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<Repository>(b =>
+        modelBuilder.Entity<Project>(builder =>
         {
-            b.Property(r => r.Updates).HasJsonConversion();
-            HasJsonConversion(b.Property(r => r.Registries));
+            builder.OwnsOne(p => p.AutoApprove);
+            builder.OwnsOne(p => p.AutoComplete, ownedBuilder =>
+            {
+                ownedBuilder.Property(ac => ac.IgnoreConfigs).HasJsonConversion();
+            });
+            builder.Property(p => p.Secrets).HasJsonConversion();
 
-            b.HasIndex(r => r.Created).IsDescending(); // faster filtering
-            b.HasIndex(r => r.ProviderId).IsUnique();
+            builder.HasIndex(p => p.Created).IsDescending(); // faster filtering
+            builder.HasIndex(p => p.ProviderId).IsUnique();
+            builder.HasIndex(p => p.Password).IsUnique(); // password should be unique per project
         });
 
-        modelBuilder.Entity<UpdateJob>(b =>
+        modelBuilder.Entity<Repository>(builder =>
         {
-            b.Property(j => j.PackageEcosystem).IsRequired();
-            HasJsonConversion(b.Property(j => j.Error));
+            builder.Property(r => r.Updates).HasJsonConversion();
+            builder.Property(r => r.Registries).HasJsonConversion();
 
-            b.HasIndex(j => j.Created).IsDescending(); // faster filtering
-            b.HasIndex(j => j.RepositoryId);
-            b.HasIndex(j => new { j.PackageEcosystem, j.Directory, }); // faster filtering
-            b.HasIndex(j => new { j.PackageEcosystem, j.Directory, j.EventBusId, }).IsUnique();
-            b.HasIndex(j => j.AuthKey).IsUnique();
+            builder.HasIndex(r => r.Created).IsDescending(); // faster filtering
+            builder.HasIndex(r => r.ProviderId).IsUnique();
+        });
 
-            b.OwnsOne(j => j.Resources);
+        modelBuilder.Entity<UpdateJob>(builder =>
+        {
+            builder.Property(j => j.PackageEcosystem).IsRequired();
+            builder.OwnsOne(j => j.Error, ownedBuilder =>
+            {
+                ownedBuilder.Property(e => e.Detail).HasJsonConversion();
+                ownedBuilder.HasIndex(e => e.Type); // faster filtering
+            });
+
+            builder.HasIndex(j => j.Created).IsDescending(); // faster filtering
+            builder.HasIndex(j => j.ProjectId);
+            builder.HasIndex(j => j.RepositoryId);
+            builder.HasIndex(j => new { j.PackageEcosystem, j.Directory, }); // faster filtering
+            builder.HasIndex(j => new { j.PackageEcosystem, j.Directory, j.EventBusId, }).IsUnique();
+            builder.HasIndex(j => j.AuthKey).IsUnique();
+
+            builder.OwnsOne(j => j.Resources);
         });
     }
-
-    static PropertyBuilder<T> HasJsonConversion<T>(PropertyBuilder<T> propertyBuilder, JsonSerializerOptions? serializerOptions = null)
-    {
-        ArgumentNullException.ThrowIfNull(propertyBuilder);
-
-#pragma warning disable CS8603 // Possible null reference return.
-        var converter = new ValueConverter<T, string?>(
-            convertToProviderExpression: v => ConvertToJson(v, serializerOptions),
-            convertFromProviderExpression: v => ConvertFromJson<T>(v, serializerOptions));
-
-        var comparer = new ValueComparer<T>(
-            equalsExpression: (l, r) => ConvertToJson(l, serializerOptions) == ConvertToJson(r, serializerOptions),
-            hashCodeExpression: v => v == null ? 0 : ConvertToJson(v, serializerOptions).GetHashCode(),
-            snapshotExpression: v => ConvertFromJson<T>(ConvertToJson(v, serializerOptions), serializerOptions));
-#pragma warning restore CS8603 // Possible null reference return.
-
-        propertyBuilder.HasConversion(converter);
-        propertyBuilder.Metadata.SetValueConverter(converter);
-        propertyBuilder.Metadata.SetValueComparer(comparer);
-
-        return propertyBuilder;
-    }
-
-    private static string ConvertToJson<T>(T value, JsonSerializerOptions? serializerOptions) => JsonSerializer.Serialize(value, serializerOptions);
-    private static T? ConvertFromJson<T>(string? value, JsonSerializerOptions? serializerOptions) => value is null ? default : JsonSerializer.Deserialize<T>(value, serializerOptions);
 }

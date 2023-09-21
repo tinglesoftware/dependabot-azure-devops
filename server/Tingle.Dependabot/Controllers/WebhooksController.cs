@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 using Tingle.Dependabot.Events;
+using Tingle.Dependabot.Models;
 using Tingle.Dependabot.Models.Azure;
 using Tingle.EventBus;
 
@@ -12,11 +14,13 @@ namespace Tingle.Dependabot.Controllers;
 [Authorize(AuthConstants.PolicyNameServiceHooks)]
 public class WebhooksController : ControllerBase // TODO: unit test this
 {
+    private readonly MainDbContext dbContext;
     private readonly IEventPublisher publisher;
     private readonly ILogger logger;
 
-    public WebhooksController(IEventPublisher publisher, ILogger<WebhooksController> logger)
+    public WebhooksController(MainDbContext dbContext, IEventPublisher publisher, ILogger<WebhooksController> logger)
     {
+        this.dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         this.publisher = publisher ?? throw new ArgumentNullException(nameof(publisher));
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
@@ -37,12 +41,17 @@ public class WebhooksController : ControllerBase // TODO: unit test this
             var adoRepositoryId = adoRepository.Id;
             var defaultBranch = adoRepository.DefaultBranch;
 
+            // ensure project exists
+            var adoProjectId = adoRepository.Project!.Id;
+            var project = await dbContext.Projects.SingleOrDefaultAsync(p => p.ProviderId == adoProjectId);
+            if (project is null) return Problem(title: ErrorCodes.ProjectNotFound, statusCode: 400);
+
             // if the updates are not the default branch, then we ignore them
             var updatedReferences = resource.RefUpdates!.Select(ru => ru.Name).ToList();
             if (updatedReferences.Contains(defaultBranch, StringComparer.OrdinalIgnoreCase))
             {
                 // request synchronization of the repository
-                var evt = new ProcessSynchronization(true, repositoryProviderId: adoRepositoryId);
+                var evt = new ProcessSynchronization(project.Id!, trigger: true, repositoryProviderId: adoRepositoryId);
                 await publisher.PublishAsync(evt);
             }
         }
@@ -52,6 +61,11 @@ public class WebhooksController : ControllerBase // TODO: unit test this
             var adoRepository = resource.Repository!;
             var prId = resource.PullRequestId;
             var status = resource.Status;
+
+            // ensure project exists
+            var adoProjectId = adoRepository.Project!.Id;
+            var project = await dbContext.Projects.SingleOrDefaultAsync(p => p.ProviderId == adoProjectId);
+            if (project is null) return Problem(title: ErrorCodes.ProjectNotFound, statusCode: 400);
 
             if (type is AzureDevOpsEventType.GitPullRequestUpdated)
             {
@@ -82,6 +96,11 @@ public class WebhooksController : ControllerBase // TODO: unit test this
             var adoRepository = pr.Repository!;
             var prId = pr.PullRequestId;
             var status = pr.Status;
+
+            // ensure project exists
+            var adoProjectId = adoRepository.Project!.Id;
+            var project = await dbContext.Projects.SingleOrDefaultAsync(p => p.ProviderId == adoProjectId);
+            if (project is null) return Problem(title: ErrorCodes.ProjectNotFound, statusCode: 400);
 
             // ensure the comment starts with @dependabot
             var content = comment.Content?.Trim();

@@ -37,12 +37,13 @@ internal class UpdateScheduler
             updates.Add(new(repository.Updates.IndexOf(update), update.Schedule!));
         }
 
+        var projectId = repository.ProjectId!;
         var repositoryId = repository.Id!;
         var timers = new List<CronScheduleTimer>();
         foreach (var (index, supplied) in updates)
         {
             var schedule = supplied.GenerateCron();
-            var payload = new TimerPayload(repositoryId, index);
+            var payload = new TimerPayload(projectId, repositoryId, index);
             var timer = new CronScheduleTimer(schedule, supplied.Timezone, CustomTimerCallback, payload);
             timers.Add(timer);
         }
@@ -79,6 +80,7 @@ internal class UpdateScheduler
         // publish event for the job to be run
         var evt = new TriggerUpdateJobsEvent
         {
+            ProjectId = payload.ProjectId,
             RepositoryId = payload.RepositoryId,
             RepositoryUpdateId = payload.RepositoryUpdateId,
             Trigger = UpdateJobTrigger.Scheduled,
@@ -87,5 +89,5 @@ internal class UpdateScheduler
         await publisher.PublishAsync(evt, cancellationToken: cancellationToken);
     }
 
-    private readonly record struct TimerPayload(string RepositoryId, int RepositoryUpdateId);
+    private readonly record struct TimerPayload(string ProjectId, string RepositoryId, int RepositoryUpdateId);
 }

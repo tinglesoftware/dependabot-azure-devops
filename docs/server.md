@@ -51,18 +51,10 @@ The deployment exposes the following parameters that can be tuned to suit the se
 
 |Parameter Name|Remarks|Required|Default|
 |--|--|--|--|
-|projectUrl|The URL of the Azure DevOps project or collection. For example `https://dev.azure.com/fabrikam/DefaultCollection`. This URL must be accessible from the network that the deployment is done in. You can modify the deployment to be done in an private network but you are on your own there.|Yes|**none**|
-|projectToken|Personal Access Token (PAT) for accessing the Azure DevOps project. The required permissions are: <br/>-&nbsp;Code (Full)<br/>-&nbsp;Pull Requests Threads (Read & Write).<br/>-&nbsp;Notifications (Read, Write & Manage).<br/>See the [documentation](https://docs.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate?view=azure-devops&tabs=preview-page#create-a-pat) to know more about creating a Personal Access Token|Yes|**none**|
 |location|Location to deploy the resources.|No|&lt;resource-group-location&gt;|
 |name|The name of all resources.|No|`dependabot`|
-|synchronizeOnStartup|Whether to synchronize repositories on startup. This option is useful for initial deployments since the server synchronizes every 6 hours. Leaving it on has no harm, it actually helps you find out if the token works based on the logs.|No|false|
-|createOrUpdateWebhooksOnStartup|Whether to create or update Azure DevOps subscriptions on startup. This is required if you want configuration files to be picked up automatically and other event driven functionality.<br/>When this is set to `true`, ensure the value provided for `projectToken` has permissions for service hooks and the owner is a Project Administrator. Leaving this on has no harm because the server will only create new subscription if there are no existing ones based on the URL.|No|false|
+|projectSetups|A JSON array string representing the projects to be setup on startup. This is useful when running your own setup. Example: `[{\"url\":\"https://dev.azure.com/tingle/dependabot\",\"token\":\"dummy\",\"AutoComplete\":true}]`|
 |githubToken|Access token for authenticating requests to GitHub. Required for vulnerability checks and to avoid rate limiting on free requests|No|&lt;empty&gt;|
-|autoComplete|Whether to set auto complete on created pull requests.|No|true|
-|autoCompleteIgnoreConfigs|Identifiers of configs to be ignored in auto complete. E.g 3,4,10|No|&lt;empty&gt;|
-|autoCompleteMergeStrategy|Merge strategy to use when setting auto complete on created pull requests. Allowed values: `NoFastForward`, `Rebase`, `RebaseMerge`, or `Squash`|No|`Squash`|
-|autoApprove|Whether to automatically approve created pull requests.|No|false|
-|notificationsPassword|The password used to authenticate incoming requests from Azure DevOps|No|&lt;auto-generated&gt;|
 |imageTag|The image tag to use when pulling the docker containers. A tag also defines the version. You should avoid using `latest`. Example: `1.1.0`|No|&lt;version-downloaded&gt;|
 |minReplicas|The minimum number of replicas to required for the deployment. Given that scheduling runs in process, this value cannot be less than `1`. This may change in the future.|No|1|
 |maxReplicas|The maximum number of replicas when automatic scaling engages. In most cases, you do not need more than 1.|No|1|
@@ -78,8 +70,6 @@ For a one time deployment, it is similar to how you deploy other resources on Az
 ```bash
 az deployment group create --resource-group DEPENDABOT \
                            --template-file main.bicep \
-                           --parameters projectUrl=<your-project-url> \
-                           --parameters projectToken=<your-pat> \
                            --parameters githubToken=<your-github-classic-pat> \
                            --confirm-with-what-if
 ```
@@ -104,15 +94,6 @@ The parameters file (`dependabot.parameters.json`):
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "projectUrl": {
-      "value": "#{System_TeamFoundationCollectionUri}##{System_TeamProject}#"
-    },
-    "projectToken": {
-      "value": "#{DependabotProjectToken}#"
-    },
-    "autoComplete": {
-      "value": true
-    },
     "githubToken": {
       "value": "#{DependabotGithubToken}#"
     },

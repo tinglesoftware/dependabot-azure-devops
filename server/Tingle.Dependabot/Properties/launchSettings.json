@@ -9,7 +9,8 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "EFCORE_PERFORM_MIGRATIONS": "true",
-        "SKIP_LOAD_SCHEDULES": "true"
+        "SKIP_LOAD_SCHEDULES": "true",
+        "PROJECT_SETUPS_": "[{\"url\":\"https://dev.azure.com/tingle/dependabot\",\"token\":\"dummy\",\"AutoComplete\":true}]"
       }
     },
     "Docker": {

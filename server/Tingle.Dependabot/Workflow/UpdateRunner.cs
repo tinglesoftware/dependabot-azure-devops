@@ -5,6 +5,8 @@ using Azure.ResourceManager.AppContainers;
 using Azure.ResourceManager.AppContainers.Models;
 using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Options;
+using Microsoft.FeatureManagement;
+using Microsoft.FeatureManagement.FeatureFilters;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -24,6 +26,7 @@ internal partial class UpdateRunner
 
     private static readonly JsonSerializerOptions serializerOptions = new(JsonSerializerDefaults.Web);
 
+    private readonly IFeatureManagerSnapshot featureManager;
     private readonly WorkflowOptions options;
     private readonly ILogger logger;
 
@@ -31,8 +34,9 @@ internal partial class UpdateRunner
     private readonly ResourceGroupResource resourceGroup;
     private readonly LogsQueryClient logsQueryClient;
 
-    public UpdateRunner(IOptions<WorkflowOptions> optionsAccessor, ILogger<UpdateRunner> logger)
+    public UpdateRunner(IFeatureManagerSnapshot featureManager, IOptions<WorkflowOptions> optionsAccessor, ILogger<UpdateRunner> logger)
     {
+        this.featureManager = featureManager ?? throw new ArgumentNullException(nameof(featureManager));
         options = optionsAccessor?.Value ?? throw new ArgumentNullException(nameof(optionsAccessor));
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
         armClient = new ArmClient(new DefaultAzureCredential());
@@ -40,7 +44,7 @@ internal partial class UpdateRunner
         logsQueryClient = new LogsQueryClient(new DefaultAzureCredential());
     }
 
-    public async Task CreateAsync(Repository repository, RepositoryUpdate update, UpdateJob job, CancellationToken cancellationToken = default)
+    public async Task CreateAsync(Project project, Repository repository, RepositoryUpdate update, UpdateJob job, CancellationToken cancellationToken = default)
     {
         var resourceName = MakeResourceName(job);
 
@@ -53,8 +57,12 @@ internal partial class UpdateRunner
         }
         catch (Azure.RequestFailedException rfe) when (rfe.Status is 404) { }
 
+        // check if V2 updater is enabled for the project via Feature Management
+        var fmc = MakeTargetingContext(project, job);
+        var useV2 = await featureManager.IsEnabledAsync(FeatureNames.UpdaterV2, fmc);
+
         // prepare credentials with replaced secrets
-        var secrets = new Dictionary<string, string>(options.Secrets) { ["DEFAULT_TOKEN"] = options.ProjectToken!, };
+        var secrets = new Dictionary<string, string>(project.Secrets) { ["DEFAULT_TOKEN"] = project.Token!, };
         var registries = update.Registries?.Select(r => repository.Registries[r]).ToList();
         var credentials = MakeExtraCredentials(registries, secrets); // add source credentials when running the in v2
         var directory = Path.Join(options.WorkingDirectory, job.Id);
@@ -67,14 +75,14 @@ internal partial class UpdateRunner
             Name = UpdaterContainerName,
             Image = options.UpdaterContainerImageTemplate!.Replace("{{ecosystem}}", job.PackageEcosystem),
             Resources = job.Resources!,
-            Args = { "update_script", },
+            Args = { useV2 ? "update_files" : "update_script", },
             VolumeMounts = { new ContainerAppVolumeMount { VolumeName = volumeName, MountPath = options.WorkingDirectory, }, },
         };
-        var env = CreateEnvironmentVariables(repository, update, job, directory, credentials);
+        var env = await CreateEnvironmentVariables(project, repository, update, job, directory, credentials, cancellationToken);
         foreach (var (key, value) in env) container.Env.Add(new ContainerAppEnvironmentVariable { Name = key, Value = value, });
 
         // prepare the ContainerApp job
-        var data = new ContainerAppJobData(options.Location!)
+        var data = new ContainerAppJobData((project.Location ?? options.Location)!)
         {
             EnvironmentId = options.AppEnvironmentId,
             Configuration = new ContainerAppJobConfiguration(ContainerAppJobTriggerType.Manual, 1)
@@ -113,7 +121,7 @@ internal partial class UpdateRunner
         };
 
         // write job definition file
-        var jobDefinitionPath = await WriteJobDefinitionAsync(update, job, directory, credentials, cancellationToken);
+        var jobDefinitionPath = await WriteJobDefinitionAsync(project, update, job, directory, credentials, cancellationToken);
         logger.LogInformation("Written job definition file at {JobDefinitionPath}", jobDefinitionPath);
 
         // create the ContainerApp Job
@@ -216,14 +224,21 @@ internal partial class UpdateRunner
 
     internal static string MakeResourceName(UpdateJob job) => $"dependabot-{job.Id}";
 
-    internal IDictionary<string, string> CreateEnvironmentVariables(Repository repository,
-                                                                    RepositoryUpdate update,
-                                                                    UpdateJob job,
-                                                                    string directory,
-                                                                    IList<Dictionary<string, string>> credentials) // TODO: unit test this
+    internal async Task<IDictionary<string, string>> CreateEnvironmentVariables(Project project,
+                                                                                Repository repository,
+                                                                                RepositoryUpdate update,
+                                                                                UpdateJob job,
+                                                                                string directory,
+                                                                                IList<Dictionary<string, string>> credentials,
+                                                                                CancellationToken cancellationToken = default) // TODO: unit test this
     {
         [return: NotNullIfNotNull(nameof(value))]
         static string? ToJson<T>(T? value) => value is null ? null : JsonSerializer.Serialize(value, serializerOptions); // null ensures we do not add to the values
+
+        // check if debug and determinism is enabled for the project via Feature Management
+        var fmc = MakeTargetingContext(project, job);
+        var debugAllJobs = await featureManager.IsEnabledAsync(FeatureNames.DebugAllJobs, fmc);
+        var deterministic = await featureManager.IsEnabledAsync(FeatureNames.DeterministicUpdates, fmc);
 
         // Add compulsory values
         var values = new Dictionary<string, string>
@@ -231,14 +246,14 @@ internal partial class UpdateRunner
             // env for v2
             ["DEPENDABOT_JOB_ID"] = job.Id!,
             ["DEPENDABOT_JOB_TOKEN"] = job.AuthKey!,
-            ["DEPENDABOT_DEBUG"] = (options.DebugJobs ?? false).ToString().ToLower(),
-            ["DEPENDABOT_API_URL"] = options.JobsApiUrl!,
+            ["DEPENDABOT_DEBUG"] = debugAllJobs.ToString().ToLower(),
+            ["DEPENDABOT_API_URL"] = options.JobsApiUrl!.ToString(),
             ["DEPENDABOT_JOB_PATH"] = Path.Join(directory, JobDefinitionFileName),
             ["DEPENDABOT_OUTPUT_PATH"] = Path.Join(directory, "output"),
             // Setting DEPENDABOT_REPO_CONTENTS_PATH causes some issues, ignore till we can resolve
             //["DEPENDABOT_REPO_CONTENTS_PATH"] = Path.Join(jobDirectory, "repo"),
             ["GITHUB_ACTIONS"] = "false",
-            ["UPDATER_DETERMINISTIC"] = (options.DeterministicUpdates ?? false).ToString().ToLower(),
+            ["UPDATER_DETERMINISTIC"] = deterministic.ToString().ToLower(),
 
             // env for v1
             ["DEPENDABOT_PACKAGE_MANAGER"] = job.PackageEcosystem!,
@@ -249,7 +264,7 @@ internal partial class UpdateRunner
         };
 
         // Add optional values
-        values.AddIfNotDefault("GITHUB_ACCESS_TOKEN", options.GithubToken)
+        values.AddIfNotDefault("GITHUB_ACCESS_TOKEN", project.GithubToken ?? options.GithubToken)
               .AddIfNotDefault("DEPENDABOT_REBASE_STRATEGY", update.RebaseStrategy)
               .AddIfNotDefault("DEPENDABOT_TARGET_BRANCH", update.TargetBranch)
               .AddIfNotDefault("DEPENDABOT_VENDOR", update.Vendor ? "true" : null)
@@ -261,21 +276,22 @@ internal partial class UpdateRunner
               .AddIfNotDefault("DEPENDABOT_MILESTONE", update.Milestone?.ToString());
 
         // Add values for Azure DevOps
-        var url = options.ProjectUrl!.Value;
+        var url = (AzureDevOpsProjectUrl)project.Url!;
         values.AddIfNotDefault("AZURE_HOSTNAME", url.Hostname)
               .AddIfNotDefault("AZURE_ORGANIZATION", url.OrganizationName)
               .AddIfNotDefault("AZURE_PROJECT", url.ProjectName)
               .AddIfNotDefault("AZURE_REPOSITORY", Uri.EscapeDataString(repository.Name!))
-              .AddIfNotDefault("AZURE_ACCESS_TOKEN", options.ProjectToken)
-              .AddIfNotDefault("AZURE_SET_AUTO_COMPLETE", (options.AutoComplete ?? false).ToString().ToLowerInvariant())
-              .AddIfNotDefault("AZURE_AUTO_COMPLETE_IGNORE_CONFIG_IDS", ToJson(options.AutoCompleteIgnoreConfigs?.Split(';')))
-              .AddIfNotDefault("AZURE_MERGE_STRATEGY", options.AutoCompleteMergeStrategy?.ToString())
-              .AddIfNotDefault("AZURE_AUTO_APPROVE_PR", (options.AutoApprove ?? false).ToString().ToLowerInvariant());
+              .AddIfNotDefault("AZURE_ACCESS_TOKEN", project.Token)
+              .AddIfNotDefault("AZURE_SET_AUTO_COMPLETE", project.AutoComplete.Enabled.ToString().ToLowerInvariant())
+              .AddIfNotDefault("AZURE_AUTO_COMPLETE_IGNORE_CONFIG_IDS", ToJson(project.AutoComplete.IgnoreConfigs ?? new()))
+              .AddIfNotDefault("AZURE_MERGE_STRATEGY", project.AutoComplete.MergeStrategy?.ToString())
+              .AddIfNotDefault("AZURE_AUTO_APPROVE_PR", project.AutoApprove.Enabled.ToString().ToLowerInvariant());
 
         return values;
     }
 
-    internal async Task<string> WriteJobDefinitionAsync(RepositoryUpdate update,
+    internal async Task<string> WriteJobDefinitionAsync(Project project,
+                                                        RepositoryUpdate update,
                                                         UpdateJob job,
                                                         string directory,
                                                         IList<Dictionary<string, string>> credentials,
@@ -284,8 +300,12 @@ internal partial class UpdateRunner
         [return: NotNullIfNotNull(nameof(value))]
         static JsonNode? ToJsonNode<T>(T? value) => value is null ? null : JsonSerializer.SerializeToNode(value, serializerOptions); // null ensures we do not add to the values
 
-        var url = options.ProjectUrl!.Value;
+        var url = (AzureDevOpsProjectUrl)project.Url!;
         var credentialsMetadata = MakeCredentialsMetadata(credentials);
+
+        // check if debug is enabled for the project via Feature Management
+        var fmc = MakeTargetingContext(project, job);
+        var debug = await featureManager.IsEnabledAsync(FeatureNames.DebugJobs, fmc);
 
         var definition = new JsonObject
         {
@@ -320,7 +340,7 @@ internal partial class UpdateRunner
                 // ["updating-a-pull-request"] = false,
                 ["vendor-dependencies"] = update.Vendor,
                 ["security-updates-only"] = update.OpenPullRequestsLimit == 0,
-                ["debug"] = false,
+                ["debug"] = debug,
             },
             ["credentials"] = ToJsonNode(credentials).AsArray(),
         };
@@ -334,6 +354,18 @@ internal partial class UpdateRunner
         return path;
     }
 
+    internal static TargetingContext MakeTargetingContext(Project project, UpdateJob job)
+    {
+        return new TargetingContext
+        {
+            Groups = new[]
+            {
+                $"provider:{project.Type.ToString().ToLower()}",
+                $"project:{project.Id}",
+                $"ecosystem:{job.PackageEcosystem}",
+            },
+        };
+    }
     internal static IList<Dictionary<string, string>> MakeCredentialsMetadata(IList<Dictionary<string, string>> credentials)
     {
         return credentials.Select(cred =>
