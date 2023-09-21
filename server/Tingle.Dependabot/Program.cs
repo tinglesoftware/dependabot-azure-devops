@@ -28,6 +28,7 @@ builder.Services.AddSerilog(builder =>
             "ExecutionId",
             "JobDefinitionPath",
             "UpdateJobId",
+            "RepositoryUrl",
         });
     });
 });
