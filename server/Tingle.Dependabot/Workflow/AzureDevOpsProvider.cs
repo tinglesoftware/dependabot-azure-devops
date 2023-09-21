@@ -141,7 +141,7 @@ public class AzureDevOpsProvider // TODO: replace the Microsoft.(TeamFoundation|
             Query = "?api-version=7.0",
         }.Uri;
         var request = new HttpRequestMessage(HttpMethod.Get, uri);
-        return (await SendAsync<AzdoProject>(project.Token!, request, cancellationToken))!;
+        return await SendAsync<AzdoProject>(project.Token!, request, cancellationToken);
     }
 
     public async Task<List<GitRepository>> GetRepositoriesAsync(Project project, CancellationToken cancellationToken)
@@ -156,15 +156,19 @@ public class AzureDevOpsProvider // TODO: replace the Microsoft.(TeamFoundation|
         return repos.OrderBy(r => r.Name).ToList();
     }
 
-    public async Task<GitRepository> GetRepositoryAsync(Project project, string repositoryIdOrName, CancellationToken cancellationToken)
+    public async Task<AzdoGitRepository> GetRepositoryAsync(Project project, string repositoryIdOrName, CancellationToken cancellationToken)
     {
-        // get a connection to Azure DevOps
         var url = (AzureDevOpsProjectUrl)project.Url!;
-        var connection = CreateVssConnection(url, project.Token!);
-
-        // get the repository
-        var client = await connection.GetClientAsync<GitHttpClient>(cancellationToken);
-        return await client.GetRepositoryAsync(project: url.ProjectIdOrName, repositoryId: repositoryIdOrName, cancellationToken: cancellationToken);
+        var uri = new UriBuilder
+        {
+            Scheme = url.Scheme,
+            Host = url.Hostname,
+            Port = url.Port ?? -1,
+            Path = $"{url.OrganizationName}/{url.ProjectIdOrName}/_apis/git/repositories/{repositoryIdOrName}",
+            Query = "?api-version=7.0",
+        }.Uri;
+        var request = new HttpRequestMessage(HttpMethod.Get, uri);
+        return await SendAsync<AzdoGitRepository>(project.Token!, request, cancellationToken);
     }
 
     public async Task<GitItem?> GetConfigurationFileAsync(Project project, string repositoryIdOrName, CancellationToken cancellationToken = default)
@@ -194,42 +198,6 @@ public class AzureDevOpsProvider // TODO: replace the Microsoft.(TeamFoundation|
         return null;
     }
 
-    private static Dictionary<string, string> MakeTfsPublisherInputs(string type, string projectId)
-    {
-        // possible inputs are available via an authenticated request to
-        // https://dev.azure.com/{organization}/_apis/hooks/publishers/tfs
-
-        // always include the project identifier, to restrict events from that project
-        var result = new Dictionary<string, string> { ["projectId"] = projectId, };
-
-        if (type is "git.pullrequest.updated")
-        {
-            result["notificationType"] = "StatusUpdateNotification";
-        }
-
-        if (type is "git.pullrequest.merged")
-        {
-            result["mergeResult"] = "Conflicts";
-        }
-
-        return result;
-    }
-
-    private static Dictionary<string, string> MakeWebHooksConsumerInputs(Project project, Uri webhookUrl)
-    {
-        return new Dictionary<string, string>
-        {
-            // possible inputs are available via an authenticated request to
-            // https://dev.azure.com/{organization}/_apis/hooks/consumers/webHooks
-
-            ["detailedMessagesToSend"] = "none",
-            ["messagesToSend"] = "none",
-            ["url"] = webhookUrl.ToString(),
-            ["basicAuthUsername"] = project.Id!,
-            ["basicAuthPassword"] = project.Password!,
-        };
-    }
-
     private VssConnection CreateVssConnection(AzureDevOpsProjectUrl url, string token)
     {
         static string hash(string v)
@@ -253,13 +221,48 @@ public class AzureDevOpsProvider // TODO: replace the Microsoft.(TeamFoundation|
         return cache.Set(cacheKey, cached, TimeSpan.FromHours(1));
     }
 
-    private async Task<T?> SendAsync<T>(string token, HttpRequestMessage request, CancellationToken cancellationToken)
+    private async Task<T> SendAsync<T>(string token, HttpRequestMessage request, CancellationToken cancellationToken)
     {
         request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         request.Headers.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($":{token}")));
 
         var response = await httpClient.SendAsync(request, cancellationToken);
         response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<T>(cancellationToken: cancellationToken);
+        return (await response.Content.ReadFromJsonAsync<T>(cancellationToken: cancellationToken))!;
+    }
+
+    internal static Dictionary<string, string> MakeTfsPublisherInputs(string type, string projectId)
+    {
+        // possible inputs are available via an authenticated request to
+        // https://dev.azure.com/{organization}/_apis/hooks/publishers/tfs
+
+        // always include the project identifier, to restrict events from that project
+        var result = new Dictionary<string, string> { ["projectId"] = projectId, };
+
+        if (type is "git.pullrequest.updated")
+        {
+            result["notificationType"] = "StatusUpdateNotification";
+        }
+
+        if (type is "git.pullrequest.merged")
+        {
+            result["mergeResult"] = "Conflicts";
+        }
+
+        return result;
+    }
+    internal static Dictionary<string, string> MakeWebHooksConsumerInputs(Project project, Uri webhookUrl)
+    {
+        return new Dictionary<string, string>
+        {
+            // possible inputs are available via an authenticated request to
+            // https://dev.azure.com/{organization}/_apis/hooks/consumers/webHooks
+
+            ["detailedMessagesToSend"] = "none",
+            ["messagesToSend"] = "none",
+            ["url"] = webhookUrl.ToString(),
+            ["basicAuthUsername"] = project.Id!,
+            ["basicAuthPassword"] = project.Password!,
+        };
     }
 }
