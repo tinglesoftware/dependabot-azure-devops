@@ -28,7 +28,6 @@ export interface IDependabotUpdate {
    * Location of package manifests.
    * */
   directory: string;
-  schedule?: IDependabotUpdateSchedule;
   /**
    * Customize which updates are allowed.
    */
@@ -77,25 +76,6 @@ export interface IDependabotUpdate {
    * How to update manifest version requirements.
    */
   versioningStrategy?: string;
-}
-
-export interface IDependabotUpdateSchedule {
-  /**
-   * Time of day to check for updates (hh:mm)
-   */
-  time?: string;
-  /**
-   * Day of week to check for updates
-   */
-  day?: string;
-  /**
-   * Timezone for time of day (zone identifier)
-   */
-  timezone?: string;
-  /**
-   * 	How often to check for updates
-   */
-  interval: string;
 }
 
 export interface IDependabotRegistry {
