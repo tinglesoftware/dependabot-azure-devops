@@ -183,28 +183,28 @@ public class AzureDevOpsProvider // TODO: replace the Microsoft.(TeamFoundation|
         return await SendAsync<AzdoRepository>(project.Token!, request, cancellationToken);
     }
 
-    public async Task<GitItem?> GetConfigurationFileAsync(Project project, string repositoryIdOrName, CancellationToken cancellationToken = default)
+    public async Task<AzdoRepositoryItem?> GetConfigurationFileAsync(Project project, string repositoryIdOrName, CancellationToken cancellationToken = default)
     {
-        // get a connection to Azure DevOps
         var url = (AzureDevOpsProjectUrl)project.Url!;
-        var connection = CreateVssConnection(url, project.Token!);
 
         // Try all known paths
-        var client = await connection.GetClientAsync<GitHttpClient>(cancellationToken);
         foreach (var path in ConfigurationFilePaths)
         {
             try
             {
-                var item = await client.GetItemAsync(project: url.ProjectIdOrName,
-                                                     repositoryId: repositoryIdOrName,
-                                                     path: path,
-                                                     latestProcessedChange: true,
-                                                     includeContent: true,
-                                                     cancellationToken: cancellationToken);
-
+                var uri = new UriBuilder
+                {
+                    Scheme = url.Scheme,
+                    Host = url.Hostname,
+                    Port = url.Port ?? -1,
+                    Path = $"{url.OrganizationName}/{url.ProjectIdOrName}/_apis/git/repositories/{repositoryIdOrName}",
+                    Query = $"?path={path}&includeContent=true&latestProcessedChange=true&api-version=7.0"
+                }.Uri;
+                var request = new HttpRequestMessage(HttpMethod.Get, uri);
+                var item = await SendAsync<AzdoRepositoryItem>(project.Token!, request, cancellationToken);
                 if (item is not null) return item;
             }
-            catch (VssServiceException) { }
+            catch (HttpRequestException hre) when(hre.StatusCode is System.Net.HttpStatusCode.NotFound) { }
         }
 
         return null;

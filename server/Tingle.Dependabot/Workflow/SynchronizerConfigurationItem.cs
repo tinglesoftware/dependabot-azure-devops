@@ -7,7 +7,7 @@ public readonly record struct SynchronizerConfigurationItem(string Id, string Na
 {
     public SynchronizerConfigurationItem(string slug,
                                          AzdoRepository repo,
-                                         Microsoft.TeamFoundation.SourceControl.WebApi.GitItem? item)
+                                         AzdoRepositoryItem? item)
         : this(Id: repo.Id,
                Name: repo.Name,
                Slug: slug,
