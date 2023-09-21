@@ -1,10 +1,5 @@
-﻿using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Options;
-using Microsoft.TeamFoundation.SourceControl.WebApi;
-using Microsoft.VisualStudio.Services.Common;
-using Microsoft.VisualStudio.Services.WebApi;
+﻿using Microsoft.Extensions.Options;
 using System.Net.Http.Headers;
-using System.Security.Cryptography;
 using System.Text;
 using Tingle.Dependabot.Models.Azure;
 using Tingle.Dependabot.Models.Management;
@@ -31,13 +26,11 @@ public class AzureDevOpsProvider // TODO: replace the Microsoft.(TeamFoundation|
         ("ms.vss-code.git-pullrequest-comment-event", "2.0"),
     };
 
-    private readonly IMemoryCache cache;
     private readonly HttpClient httpClient = new(); // TODO: consider injecting this for logging and tracing purposes
     private readonly WorkflowOptions options;
 
-    public AzureDevOpsProvider(IMemoryCache cache, IOptions<WorkflowOptions> optionsAccessor)
+    public AzureDevOpsProvider(IOptions<WorkflowOptions> optionsAccessor)
     {
-        this.cache = cache ?? throw new ArgumentNullException(nameof(cache));
         options = optionsAccessor?.Value ?? throw new ArgumentNullException(nameof(optionsAccessor));
     }
 
@@ -204,33 +197,10 @@ public class AzureDevOpsProvider // TODO: replace the Microsoft.(TeamFoundation|
                 var item = await SendAsync<AzdoRepositoryItem>(project.Token!, request, cancellationToken);
                 if (item is not null) return item;
             }
-            catch (HttpRequestException hre) when(hre.StatusCode is System.Net.HttpStatusCode.NotFound) { }
+            catch (HttpRequestException hre) when (hre.StatusCode is System.Net.HttpStatusCode.NotFound) { }
         }
 
         return null;
-    }
-
-    private VssConnection CreateVssConnection(AzureDevOpsProjectUrl url, string token)
-    {
-        static string hash(string v)
-        {
-            var bytes = Encoding.UTF8.GetBytes(v);
-            var hash = SHA256.HashData(bytes);
-            return BitConverter.ToString(hash).Replace("-", "");
-        }
-
-        // The cache key uses the project URL in case the token is different per project.
-        // It also, uses the token to ensure a new connection if the token is updated.
-        // The token is hashed to avoid exposing it just in case it is exposed.
-        var cacheKey = $"vss_connections:{hash($"{url}{token}")}";
-        var cached = cache.Get<VssConnection>(cacheKey);
-        if (cached is not null) return cached;
-
-        var uri = new Uri(url.OrganizationUrl);
-        var creds = new VssBasicCredential(string.Empty, token);
-        cached = new VssConnection(uri, creds);
-
-        return cache.Set(cacheKey, cached, TimeSpan.FromHours(1));
     }
 
     private async Task<T> SendAsync<T>(string token, HttpRequestMessage request, CancellationToken cancellationToken)
