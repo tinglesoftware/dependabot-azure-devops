@@ -6,7 +6,7 @@ namespace Tingle.Dependabot.Workflow;
 public readonly record struct SynchronizerConfigurationItem(string Id, string Name, string Slug, string? CommitId, string? Content)
 {
     public SynchronizerConfigurationItem(string slug,
-                                         AzdoGitRepository repo,
+                                         AzdoRepository repo,
                                          Microsoft.TeamFoundation.SourceControl.WebApi.GitItem? item)
         : this(Id: repo.Id,
                Name: repo.Name,
