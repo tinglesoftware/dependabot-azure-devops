@@ -6,7 +6,7 @@ using Tingle.Dependabot.Models.Management;
 
 namespace Tingle.Dependabot.Workflow;
 
-public class AzureDevOpsProvider // TODO: replace the Microsoft.(TeamFoundation|VisualStudio) libraries with direct usage of HttpClient
+public class AzureDevOpsProvider
 {
     // Possible/allowed paths for the configuration files in a repository.
     private static readonly IReadOnlyList<string> ConfigurationFilePaths = new[] {
@@ -26,11 +26,12 @@ public class AzureDevOpsProvider // TODO: replace the Microsoft.(TeamFoundation|
         ("ms.vss-code.git-pullrequest-comment-event", "2.0"),
     };
 
-    private readonly HttpClient httpClient = new(); // TODO: consider injecting this for logging and tracing purposes
+    private readonly HttpClient httpClient;
     private readonly WorkflowOptions options;
 
-    public AzureDevOpsProvider(IOptions<WorkflowOptions> optionsAccessor)
+    public AzureDevOpsProvider(HttpClient httpClient, IOptions<WorkflowOptions> optionsAccessor)
     {
+        this.httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         options = optionsAccessor?.Value ?? throw new ArgumentNullException(nameof(optionsAccessor));
     }
 
