@@ -86,7 +86,7 @@ public static class IServiceCollectionExtensions
         services.AddScoped<UpdateRunner>();
         services.AddSingleton<UpdateScheduler>();
 
-        services.AddScoped<AzureDevOpsProvider>();
+        services.AddHttpClient<AzureDevOpsProvider>();
         services.AddScoped<Synchronizer>();
 
         return services;

@@ -1,20 +1,12 @@
-﻿using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Options;
-using Microsoft.TeamFoundation.Core.WebApi;
-using Microsoft.TeamFoundation.SourceControl.WebApi;
-using Microsoft.VisualStudio.Services.Common;
-using Microsoft.VisualStudio.Services.FormInput;
-using Microsoft.VisualStudio.Services.ServiceHooks.WebApi;
-using Microsoft.VisualStudio.Services.WebApi;
+﻿using Microsoft.Extensions.Options;
 using System.Net.Http.Headers;
-using System.Security.Cryptography;
 using System.Text;
 using Tingle.Dependabot.Models.Azure;
 using Tingle.Dependabot.Models.Management;
 
 namespace Tingle.Dependabot.Workflow;
 
-public class AzureDevOpsProvider // TODO: replace the Microsoft.(TeamFoundation|VisualStudio) libraries with direct usage of HttpClient
+public class AzureDevOpsProvider
 {
     // Possible/allowed paths for the configuration files in a repository.
     private static readonly IReadOnlyList<string> ConfigurationFilePaths = new[] {
@@ -34,40 +26,32 @@ public class AzureDevOpsProvider // TODO: replace the Microsoft.(TeamFoundation|
         ("ms.vss-code.git-pullrequest-comment-event", "2.0"),
     };
 
-    private readonly IMemoryCache cache;
-    private readonly HttpClient httpClient = new(); // TODO: consider injecting this for logging and tracing purposes
+    private readonly HttpClient httpClient;
     private readonly WorkflowOptions options;
 
-    public AzureDevOpsProvider(IMemoryCache cache, IOptions<WorkflowOptions> optionsAccessor)
+    public AzureDevOpsProvider(HttpClient httpClient, IOptions<WorkflowOptions> optionsAccessor)
     {
-        this.cache = cache ?? throw new ArgumentNullException(nameof(cache));
+        this.httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         options = optionsAccessor?.Value ?? throw new ArgumentNullException(nameof(optionsAccessor));
     }
 
     public async Task<List<string>> CreateOrUpdateSubscriptionsAsync(Project project, CancellationToken cancellationToken = default)
     {
-        // get a connection to Azure DevOps
-        var url = (AzureDevOpsProjectUrl)project.Url!;
-        var connection = CreateVssConnection(url, project.Token!);
-
-        // get the projectId
-        var projectId = (await (await connection.GetClientAsync<ProjectHttpClient>(cancellationToken)).GetProject(url.ProjectIdOrName)).Id.ToString();
-
-        // fetch the subscriptions
-        var client = await connection.GetClientAsync<ServiceHooksPublisherHttpClient>(cancellationToken);
-        var subscriptions = (await client.QuerySubscriptionsAsync(new SubscriptionsQuery
+        // prepare the query
+        var projectId = project.ProviderId ?? throw new InvalidOperationException("ProviderId for the project cannot be null");
+        var query = new AzdoSubscriptionsQuery
         {
             PublisherId = "tfs",
-            PublisherInputFilters = new List<InputFilter>
+            PublisherInputFilters = new List<AzdoSubscriptionsQueryInputFilter>
             {
-                new InputFilter
+                new AzdoSubscriptionsQueryInputFilter
                 {
-                    Conditions = new List<InputFilterCondition>
+                    Conditions = new List<AzdoSubscriptionsQueryInputFilterCondition>
                     {
-                        new InputFilterCondition
+                        new AzdoSubscriptionsQueryInputFilterCondition
                         {
                             InputId = "projectId",
-                            Operator = InputFilterOperator.Equals,
+                            Operator = AzdoSubscriptionsQueryInputFilterOperator.Equals,
                             InputValue = projectId,
                         },
                     },
@@ -76,14 +60,28 @@ public class AzureDevOpsProvider // TODO: replace the Microsoft.(TeamFoundation|
 
             ConsumerId = "webHooks",
             ConsumerActionId = "httpRequest",
-        })).Results;
+        };
 
+        // fetch the subscriptions
+        var url = (AzureDevOpsProjectUrl)project.Url!;
+        var uri = new UriBuilder
+        {
+            Scheme = url.Scheme,
+            Host = url.Hostname,
+            Port = url.Port ?? -1,
+            Path = $"{url.OrganizationName}/_apis/hooks/subscriptionsquery",
+            Query = "?api-version=7.0",
+        }.Uri;
+        var request = new HttpRequestMessage(HttpMethod.Post, uri) { Content = JsonContent.Create(query), };
+        var subscriptions = (await SendAsync<AzdoSubscriptionsQueryResponse>(project.Token!, request, cancellationToken)).Results;
+
+        // iterate each subscription checking if creation or update is required
         var webhookUrl = options.WebhookEndpoint!;
         var ids = new List<string>();
         foreach (var (eventType, resourceVersion) in SubscriptionEventTypes)
         {
             // find an existing one
-            Subscription? existing = null;
+            AzdoSubscription? existing = null;
             foreach (var sub in subscriptions)
             {
                 if (sub.EventType == eventType
@@ -104,11 +102,13 @@ public class AzureDevOpsProvider // TODO: replace the Microsoft.(TeamFoundation|
                 existing.ResourceVersion = resourceVersion;
                 existing.PublisherInputs = MakeTfsPublisherInputs(eventType, projectId);
                 existing.ConsumerInputs = MakeWebHooksConsumerInputs(project, webhookUrl);
-                existing = await client.UpdateSubscriptionAsync(existing);
+                uri = new UriBuilder(uri) { Path = $"{url.OrganizationName}/_apis/hooks/subscriptions/{existing.Id}", }.Uri;
+                request = new HttpRequestMessage(HttpMethod.Put, uri) { Content = JsonContent.Create(existing), };
+                existing = await SendAsync<AzdoSubscription>(project.Token!, request, cancellationToken);
             }
             else
             {
-                existing = new Subscription
+                existing = new AzdoSubscription
                 {
                     EventType = eventType,
                     ResourceVersion = resourceVersion,
@@ -119,11 +119,13 @@ public class AzureDevOpsProvider // TODO: replace the Microsoft.(TeamFoundation|
                     ConsumerActionId = "httpRequest",
                     ConsumerInputs = MakeWebHooksConsumerInputs(project, webhookUrl),
                 };
-                existing = await client.CreateSubscriptionAsync(existing);
+                uri = new UriBuilder(uri) { Path = $"{url.OrganizationName}/_apis/hooks/subscriptions", }.Uri;
+                request = new HttpRequestMessage(HttpMethod.Post, uri) { Content = JsonContent.Create(existing), };
+                existing = await SendAsync<AzdoSubscription>(project.Token!, request, cancellationToken);
             }
 
             // track the identifier of the subscription
-            ids.Add(existing.Id.ToString());
+            ids.Add(existing.Id!);
         }
 
         return ids;
@@ -141,60 +143,78 @@ public class AzureDevOpsProvider // TODO: replace the Microsoft.(TeamFoundation|
             Query = "?api-version=7.0",
         }.Uri;
         var request = new HttpRequestMessage(HttpMethod.Get, uri);
-        return (await SendAsync<AzdoProject>(project.Token!, request, cancellationToken))!;
+        return await SendAsync<AzdoProject>(project.Token!, request, cancellationToken);
     }
 
-    public async Task<List<GitRepository>> GetRepositoriesAsync(Project project, CancellationToken cancellationToken)
+    public async Task<List<AzdoRepository>> GetRepositoriesAsync(Project project, CancellationToken cancellationToken)
     {
-        // get a connection to Azure DevOps
         var url = (AzureDevOpsProjectUrl)project.Url!;
-        var connection = CreateVssConnection(url, project.Token!);
-
-        // fetch the repositories
-        var client = await connection.GetClientAsync<GitHttpClient>(cancellationToken);
-        var repos = await client.GetRepositoriesAsync(project: url.ProjectIdOrName, cancellationToken: cancellationToken);
-        return repos.OrderBy(r => r.Name).ToList();
+        var uri = new UriBuilder
+        {
+            Scheme = url.Scheme,
+            Host = url.Hostname,
+            Port = url.Port ?? -1,
+            Path = $"{url.OrganizationName}/{url.ProjectIdOrName}/_apis/git/repositories",
+            Query = "?api-version=7.0",
+        }.Uri;
+        var request = new HttpRequestMessage(HttpMethod.Get, uri);
+        var data = await SendAsync<AzdoListResponse<AzdoRepository>>(project.Token!, request, cancellationToken);
+        return data.Value;
     }
 
-    public async Task<GitRepository> GetRepositoryAsync(Project project, string repositoryIdOrName, CancellationToken cancellationToken)
+    public async Task<AzdoRepository> GetRepositoryAsync(Project project, string repositoryIdOrName, CancellationToken cancellationToken)
     {
-        // get a connection to Azure DevOps
         var url = (AzureDevOpsProjectUrl)project.Url!;
-        var connection = CreateVssConnection(url, project.Token!);
-
-        // get the repository
-        var client = await connection.GetClientAsync<GitHttpClient>(cancellationToken);
-        return await client.GetRepositoryAsync(project: url.ProjectIdOrName, repositoryId: repositoryIdOrName, cancellationToken: cancellationToken);
+        var uri = new UriBuilder
+        {
+            Scheme = url.Scheme,
+            Host = url.Hostname,
+            Port = url.Port ?? -1,
+            Path = $"{url.OrganizationName}/{url.ProjectIdOrName}/_apis/git/repositories/{repositoryIdOrName}",
+            Query = "?api-version=7.0",
+        }.Uri;
+        var request = new HttpRequestMessage(HttpMethod.Get, uri);
+        return await SendAsync<AzdoRepository>(project.Token!, request, cancellationToken);
     }
 
-    public async Task<GitItem?> GetConfigurationFileAsync(Project project, string repositoryIdOrName, CancellationToken cancellationToken = default)
+    public async Task<AzdoRepositoryItem?> GetConfigurationFileAsync(Project project, string repositoryIdOrName, CancellationToken cancellationToken = default)
     {
-        // get a connection to Azure DevOps
         var url = (AzureDevOpsProjectUrl)project.Url!;
-        var connection = CreateVssConnection(url, project.Token!);
 
         // Try all known paths
-        var client = await connection.GetClientAsync<GitHttpClient>(cancellationToken);
         foreach (var path in ConfigurationFilePaths)
         {
             try
             {
-                var item = await client.GetItemAsync(project: url.ProjectIdOrName,
-                                                     repositoryId: repositoryIdOrName,
-                                                     path: path,
-                                                     latestProcessedChange: true,
-                                                     includeContent: true,
-                                                     cancellationToken: cancellationToken);
-
+                var uri = new UriBuilder
+                {
+                    Scheme = url.Scheme,
+                    Host = url.Hostname,
+                    Port = url.Port ?? -1,
+                    Path = $"{url.OrganizationName}/{url.ProjectIdOrName}/_apis/git/repositories/{repositoryIdOrName}/items",
+                    Query = $"?path={path}&includeContent=true&latestProcessedChange=true&api-version=7.0"
+                }.Uri;
+                var request = new HttpRequestMessage(HttpMethod.Get, uri);
+                var item = await SendAsync<AzdoRepositoryItem>(project.Token!, request, cancellationToken);
                 if (item is not null) return item;
             }
-            catch (VssServiceException) { }
+            catch (HttpRequestException hre) when (hre.StatusCode is System.Net.HttpStatusCode.NotFound) { }
         }
 
         return null;
     }
 
-    private static Dictionary<string, string> MakeTfsPublisherInputs(string type, string projectId)
+    private async Task<T> SendAsync<T>(string token, HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        request.Headers.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($":{token}")));
+
+        var response = await httpClient.SendAsync(request, cancellationToken);
+        response.EnsureSuccessStatusCode();
+        return (await response.Content.ReadFromJsonAsync<T>(cancellationToken: cancellationToken))!;
+    }
+
+    internal static Dictionary<string, string> MakeTfsPublisherInputs(string type, string projectId)
     {
         // possible inputs are available via an authenticated request to
         // https://dev.azure.com/{organization}/_apis/hooks/publishers/tfs
@@ -214,8 +234,7 @@ public class AzureDevOpsProvider // TODO: replace the Microsoft.(TeamFoundation|
 
         return result;
     }
-
-    private static Dictionary<string, string> MakeWebHooksConsumerInputs(Project project, Uri webhookUrl)
+    internal static Dictionary<string, string> MakeWebHooksConsumerInputs(Project project, Uri webhookUrl)
     {
         return new Dictionary<string, string>
         {
@@ -228,38 +247,5 @@ public class AzureDevOpsProvider // TODO: replace the Microsoft.(TeamFoundation|
             ["basicAuthUsername"] = project.Id!,
             ["basicAuthPassword"] = project.Password!,
         };
-    }
-
-    private VssConnection CreateVssConnection(AzureDevOpsProjectUrl url, string token)
-    {
-        static string hash(string v)
-        {
-            var bytes = Encoding.UTF8.GetBytes(v);
-            var hash = SHA256.HashData(bytes);
-            return BitConverter.ToString(hash).Replace("-", "");
-        }
-
-        // The cache key uses the project URL in case the token is different per project.
-        // It also, uses the token to ensure a new connection if the token is updated.
-        // The token is hashed to avoid exposing it just in case it is exposed.
-        var cacheKey = $"vss_connections:{hash($"{url}{token}")}";
-        var cached = cache.Get<VssConnection>(cacheKey);
-        if (cached is not null) return cached;
-
-        var uri = new Uri(url.OrganizationUrl);
-        var creds = new VssBasicCredential(string.Empty, token);
-        cached = new VssConnection(uri, creds);
-
-        return cache.Set(cacheKey, cached, TimeSpan.FromHours(1));
-    }
-
-    private async Task<T?> SendAsync<T>(string token, HttpRequestMessage request, CancellationToken cancellationToken)
-    {
-        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-        request.Headers.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($":{token}")));
-
-        var response = await httpClient.SendAsync(request, cancellationToken);
-        response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<T>(cancellationToken: cancellationToken);
     }
 }

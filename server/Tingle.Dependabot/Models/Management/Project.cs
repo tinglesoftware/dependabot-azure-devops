@@ -27,7 +27,7 @@ public class Project
     /// <example>https://dev.azure.com/tingle/dependabot</example>
     [Url]
     [Required]
-    public string? Url { get; set; }
+    public string? Url { get; set; } // TODO: change this to AzureDevOpsProjectUrl when we have converters for JSON and EfCore hence reduce the conversions all over the code
 
     /// <summary>
     /// Token for accessing the project with permissions for repositories, pull requests, and service hooks.
