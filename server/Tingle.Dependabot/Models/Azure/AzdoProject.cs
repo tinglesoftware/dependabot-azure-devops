@@ -34,3 +34,12 @@ public class AzdoGitRepository
     [JsonPropertyName("isFork")]
     public required bool IsFork { get; set; }
 }
+
+internal class AzdoListResponse<T> where T : class
+{
+    [JsonPropertyName("value")]
+    public required List<T> Value { get; set; }
+
+    [JsonPropertyName("count")]
+    public required int Count { get; set; }
+}

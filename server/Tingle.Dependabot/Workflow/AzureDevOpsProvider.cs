@@ -144,16 +144,20 @@ public class AzureDevOpsProvider // TODO: replace the Microsoft.(TeamFoundation|
         return await SendAsync<AzdoProject>(project.Token!, request, cancellationToken);
     }
 
-    public async Task<List<GitRepository>> GetRepositoriesAsync(Project project, CancellationToken cancellationToken)
+    public async Task<List<AzdoGitRepository>> GetRepositoriesAsync(Project project, CancellationToken cancellationToken)
     {
-        // get a connection to Azure DevOps
         var url = (AzureDevOpsProjectUrl)project.Url!;
-        var connection = CreateVssConnection(url, project.Token!);
-
-        // fetch the repositories
-        var client = await connection.GetClientAsync<GitHttpClient>(cancellationToken);
-        var repos = await client.GetRepositoriesAsync(project: url.ProjectIdOrName, cancellationToken: cancellationToken);
-        return repos.OrderBy(r => r.Name).ToList();
+        var uri = new UriBuilder
+        {
+            Scheme = url.Scheme,
+            Host = url.Hostname,
+            Port = url.Port ?? -1,
+            Path = $"{url.OrganizationName}/{url.ProjectIdOrName}/_apis/git/repositories",
+            Query = "?api-version=7.0",
+        }.Uri;
+        var request = new HttpRequestMessage(HttpMethod.Get, uri);
+        var data = await SendAsync<AzdoListResponse<AzdoGitRepository>>(project.Token!, request, cancellationToken);
+        return data.Value;
     }
 
     public async Task<AzdoGitRepository> GetRepositoryAsync(Project project, string repositoryIdOrName, CancellationToken cancellationToken)
