@@ -29,7 +29,7 @@ internal class ProcessSynchronizationConsumer : IEventConsumer<ProcessSynchroniz
         var project = await dbContext.Projects.SingleOrDefaultAsync(r => r.Id == projectId, cancellationToken);
         if (project is null)
         {
-            logger.LogWarning("Skipping trigger for update because project '{Project}' does not exist.", projectId);
+            logger.SkippingSyncProjectNotFound(projectId);
             return;
         }
 
@@ -40,7 +40,7 @@ internal class ProcessSynchronizationConsumer : IEventConsumer<ProcessSynchroniz
             var repository = await dbContext.Repositories.SingleOrDefaultAsync(r => r.ProjectId == project.Id && r.Id == repositoryId, cancellationToken);
             if (repository is null)
             {
-                logger.LogWarning("Skipping synchronization because repository '{Repository}' does not exist.", repositoryId);
+                logger.SkippingSyncRepositoryNotFound(repositoryId);
                 return;
             }
 

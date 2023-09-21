@@ -122,15 +122,15 @@ internal partial class UpdateRunner
 
         // write job definition file
         var jobDefinitionPath = await WriteJobDefinitionAsync(project, update, job, directory, credentials, cancellationToken);
-        logger.LogInformation("Written job definition file at {JobDefinitionPath}", jobDefinitionPath);
+        logger.WrittenJobDefinitionFile(job.Id, jobDefinitionPath);
 
         // create the ContainerApp Job
         var operation = await containerAppJobs.CreateOrUpdateAsync(Azure.WaitUntil.Completed, resourceName, data, cancellationToken);
-        logger.LogInformation("Created ContainerApp Job for {UpdateJobId}", job.Id);
+        logger.CreatedContainerAppJob(job.Id);
 
         // start the ContainerApp Job
         _ = await operation.Value.StartAsync(Azure.WaitUntil.Completed, cancellationToken: cancellationToken);
-        logger.LogInformation("Started ContainerApp Job for {UpdateJobId}", job.Id);
+        logger.StartedContainerAppJob(job.Id);
         job.Status = UpdateJobStatus.Running;
     }
 

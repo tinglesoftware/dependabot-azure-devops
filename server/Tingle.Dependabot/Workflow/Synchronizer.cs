@@ -36,7 +36,7 @@ internal class Synchronizer
         // skip if the project last synchronization is less than 1 hour ago
         if ((DateTimeOffset.UtcNow - project.Synchronized) <= TimeSpan.FromHours(1))
         {
-            logger.LogInformation("Skipping synchronization for {ProjectUrl} since it last happened recently at {Synchronized}.", project.Url, project.Synchronized);
+            logger.SkippingSyncProjectTooSoon(project.Id, project.Synchronized);
             return;
         }
 
@@ -54,9 +54,9 @@ internal class Synchronizer
         var syncPairs = new List<(SynchronizerConfigurationItem, Repository?)>();
 
         // get the repositories from Azure
-        logger.LogDebug("Listing repositories ...");
+        logger.SyncListingRepositories(project.Id);
         var adoRepos = await adoProvider.GetRepositoriesAsync(project, cancellationToken);
-        logger.LogDebug("Found {RepositoriesCount} repositories", adoRepos.Count);
+        logger.SyncListingRepositories(adoRepos.Count, project.Id);
         var adoReposMap = adoRepos.ToDictionary(r => r.Id.ToString(), r => r);
 
         // synchronize each project
@@ -65,7 +65,7 @@ internal class Synchronizer
             // skip disabled or fork repositories
             if (adoRepo.IsDisabled is true || adoRepo.IsFork)
             {
-                logger.LogInformation("Skipping sync for {RepositoryName} because it is disabled or is a fork", adoRepo.Name);
+                logger.SkippingSyncRepositoryDisabledOrFork(adoRepo.Name, project.Id);
                 continue;
             }
 
@@ -90,7 +90,7 @@ internal class Synchronizer
         var deleted = await dbContext.Repositories.Where(r => !providerIdsToKeep.Contains(r.ProviderId!)).ExecuteDeleteAsync(cancellationToken);
         if (deleted > 0)
         {
-            logger.LogInformation("Deleted {Count} repositories that are no longer present in the project.", deleted);
+            logger.SyncDeletedRepositories(deleted, project.Id);
         }
 
         // synchronize each repository
@@ -113,7 +113,7 @@ internal class Synchronizer
         // skip disabled or fork repository
         if (adoRepo.IsDisabled is true || adoRepo.IsFork)
         {
-            logger.LogInformation("Skipping sync for {RepositoryName} because it is disabled or is a fork", adoRepo.Name);
+            logger.SkippingSyncRepositoryDisabledOrFork(adoRepo.Name, project.Id);
             return;
         }
 
@@ -137,7 +137,7 @@ internal class Synchronizer
         // skip disabled or fork repository
         if (adoRepo.IsDisabled is true || adoRepo.IsFork)
         {
-            logger.LogInformation("Skipping sync for {RepositoryName} because it is disabled or is a fork", adoRepo.Name);
+            logger.SkippingSyncRepositoryDisabledOrFork(adoRepo.Name, project.Id);
             return;
         }
 
@@ -167,7 +167,7 @@ internal class Synchronizer
             // delete repository
             if (repository is not null)
             {
-                logger.LogInformation("Deleting '{RepositorySlug}' as it no longer has a configuration file.", repository.Slug);
+                logger.SyncDeletingRepository(repositorySlug: repository.Slug, projectId: project.Id);
                 dbContext.Repositories.Remove(repository);
                 await dbContext.SaveChangesAsync(cancellationToken);
 
@@ -207,7 +207,7 @@ internal class Synchronizer
 
         if (commitChanged)
         {
-            logger.LogDebug("Configuration file for '{RepositorySlug}' is new or has been updated.", repository.Slug);
+            logger.SyncConfigFileChanged(repositorySlug: repository.Slug, projectId: project.Id);
 
             // set/update existing values
             repository.Updated = DateTimeOffset.UtcNow;
@@ -237,12 +237,12 @@ internal class Synchronizer
             }
             catch (YamlDotNet.Core.YamlException ye)
             {
-                logger.LogWarning(ye, "Skipping '{RepositorySlug}'. The YAML file is invalid.", repository.Slug);
+                logger.SyncConfigFileInvalidStructure(ye, repositorySlug: repository.Slug, projectId: project.Id);
                 repository.SyncException = ye.Message;
             }
             catch (ValidationException ve)
             {
-                logger.LogWarning(ve, "Configuration file for '{RepositorySlug}' is invalid.", repository.Slug);
+                logger.SyncConfigFileInvalidData(ve, repositorySlug: repository.Slug, projectId: project.Id);
                 repository.SyncException = ve.Message;
             }
 

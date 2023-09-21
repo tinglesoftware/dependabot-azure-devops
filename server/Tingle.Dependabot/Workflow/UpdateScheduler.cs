@@ -30,7 +30,7 @@ internal class UpdateScheduler
 
     public async Task CreateOrUpdateAsync(Repository repository, CancellationToken cancellationToken = default)
     {
-        logger.LogDebug("Creating/Updating schedules for repository '{RepositoryId}'.", repository.Id);
+        logger.SchedulesUpdating(repositoryId: repository.Id, projectId: repository.ProjectId);
         var updates = new List<SchedulableUpdate>();
         foreach (var update in repository.Updates)
         {
@@ -73,7 +73,7 @@ internal class UpdateScheduler
     {
         if (arg2 is not TimerPayload payload)
         {
-            logger.LogError("Timer call back does not have correct argument");
+            logger.SchedulesTimerInvalidCallbackArgument(typeof(TimerPayload).FullName, arg2?.GetType().FullName);
             return;
         }
 

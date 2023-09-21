@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Tingle.Dependabot.Events;
 using Tingle.Dependabot.Models;
 using Tingle.Dependabot.Models.Management;
@@ -29,14 +30,14 @@ internal class UpdateJobEventsConsumer : IEventConsumer<UpdateJobCheckStateEvent
         var job = await dbContext.UpdateJobs.SingleOrDefaultAsync(j => j.Id == jobId, cancellationToken);
         if (job is null)
         {
-            logger.LogWarning("Cannot update state for job '{UpdateJobId}' as it does not exist.", jobId);
+            logger.UpdateJobCannotUpdateStateNotFound(jobId);
             return;
         }
 
         // skip jobs in a terminal state (useful when reprocessed events)
         if (job.Status is UpdateJobStatus.Succeeded or UpdateJobStatus.Failed)
         {
-            logger.LogWarning("Cannot update state for job '{UpdateJobId}' as it is already in a terminal state.", jobId);
+            logger.UpdateJobCannotUpdateStateTerminalState(job.Id);
             return;
         }
 
@@ -44,13 +45,13 @@ internal class UpdateJobEventsConsumer : IEventConsumer<UpdateJobCheckStateEvent
         var state = await updateRunner.GetStateAsync(job, cancellationToken);
         if (state is null)
         {
-            logger.LogInformation("The runner did not provide a state for job '{UpdateJobId}'.", jobId);
+            logger.UpdateJobRunnerNoState(job.Id);
 
             // delete the job if we have been waiting for over 180 minutes and still do not have state
             var diff = DateTimeOffset.UtcNow - job.Created;
             if (diff > TimeSpan.FromMinutes(180))
             {
-                logger.LogWarning("Deleting job '{UpdateJobId}' as it has been pending for more than 90 minutes.", jobId);
+                logger.UpdateJobPendingTooLong(job.Id);
 
                 // delete the run
                 await updateRunner.DeleteAsync(job, cancellationToken);
@@ -108,14 +109,14 @@ internal class UpdateJobEventsConsumer : IEventConsumer<UpdateJobCheckStateEvent
         var job = await dbContext.UpdateJobs.SingleOrDefaultAsync(j => j.Id == jobId, cancellationToken);
         if (job is null)
         {
-            logger.LogWarning("Cannot collect logs for job '{UpdateJobId}' as it does not exist.", jobId);
+            logger.UpdateJobCannotCollectLogsNotFound(jobId);
             return;
         }
 
         // ensure the job succeeded or failed
         if (job.Status is not UpdateJobStatus.Succeeded and not UpdateJobStatus.Failed)
         {
-            logger.LogWarning("Cannot collect logs for job '{UpdateJobId}' with status '{UpdateJobStatus}'.", job.Id, job.Status);
+            logger.UpdateJobCannotCollectLogsInvalidStatus(job.Id, job.Status);
             return;
         }
 

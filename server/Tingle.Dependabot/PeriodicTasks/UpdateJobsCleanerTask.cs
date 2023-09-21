@@ -39,7 +39,7 @@ internal class UpdateJobsCleanerTask : IPeriodicTask
 
         if (jobs.Count > 0)
         {
-            logger.LogInformation("Found {Count} jobs that are still pending for more than 10 min. Requesting manual resolution ...", jobs.Count);
+            logger.UpdateJobRequestingManualResolution(jobs.Count);
 
             var events = jobs.Select(j => new UpdateJobCheckStateEvent { JobId = j.Id, }).ToList();
             await publisher.PublishAsync<UpdateJobCheckStateEvent>(events, cancellationToken: cancellationToken);
@@ -55,7 +55,7 @@ internal class UpdateJobsCleanerTask : IPeriodicTask
         {
             dbContext.UpdateJobs.RemoveRange(jobs);
             await dbContext.SaveChangesAsync(cancellationToken);
-            logger.LogInformation("Removed {Count} jobs that older than {Cutoff}", jobs.Count, cutoff);
+            logger.UpdateJobRemovedOldJobs(jobs.Count, cutoff);
         }
     }
 }

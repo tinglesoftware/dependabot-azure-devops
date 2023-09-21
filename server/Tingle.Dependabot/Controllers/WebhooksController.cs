@@ -29,10 +29,7 @@ public class WebhooksController : ControllerBase // TODO: unit test this
     public async Task<IActionResult> PostAsync([FromBody] AzureDevOpsEvent model)
     {
         var type = model.EventType;
-        logger.LogDebug("Received {EventType} notification {NotificationId} on subscription {SubscriptionId}",
-                        type,
-                        model.NotificationId,
-                        model.SubscriptionId);
+        logger.WebhooksReceivedEvent(type, model.NotificationId, model.SubscriptionId);
 
         if (type is AzureDevOpsEventType.GitPush)
         {
@@ -69,20 +66,14 @@ public class WebhooksController : ControllerBase // TODO: unit test this
 
             if (type is AzureDevOpsEventType.GitPullRequestUpdated)
             {
-                logger.LogInformation("PR {PullRequestId} in {RepositoryUrl} status updated to {PullRequestStatus}",
-                                      prId,
-                                      adoRepository.RemoteUrl,
-                                      status);
+                logger.WebhooksPullRequestStatusUpdated(prId, adoRepository.RemoteUrl, status);
 
                 // TODO: handle the logic for merge conflicts here using events
 
             }
             else if (type is AzureDevOpsEventType.GitPullRequestMerged)
             {
-                logger.LogInformation("Merge status {MergeStatus} for PR {PullRequestId} in {RepositoryUrl}",
-                                      resource.MergeStatus,
-                                      prId,
-                                      adoRepository.RemoteUrl);
+                logger.WebhooksPullRequestMergedStatusUpdated(prId, adoRepository.RemoteUrl, resource.MergeStatus);
 
                 // TODO: handle the logic for updating other PRs to find merge conflicts (restart merge or attempt merge)
 
@@ -106,17 +97,14 @@ public class WebhooksController : ControllerBase // TODO: unit test this
             var content = comment.Content?.Trim();
             if (content is not null && content.StartsWith("@dependabot"))
             {
-                logger.LogInformation("PR {PullRequestId} in {RepositoryUrl} was commented on: {Content}",
-                                      prId,
-                                      adoRepository.RemoteUrl,
-                                      content);
+                logger.WebhooksPullRequestCommentedOn(prId, adoRepository.RemoteUrl, content);
 
                 // TODO: handle the logic for comments here using events
             }
         }
         else
         {
-            logger.LogWarning("'{EventType}' events are not supported!", type);
+            logger.WebhooksReceivedEventUnsupported(type);
         }
 
         return Ok();

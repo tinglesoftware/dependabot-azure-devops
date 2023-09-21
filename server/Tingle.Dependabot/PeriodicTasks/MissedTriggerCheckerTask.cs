@@ -63,7 +63,7 @@ internal class MissedTriggerCheckerTask : IPeriodicTask
                     // if we missed an execution, trigger one
                     if (missed)
                     {
-                        logger.LogWarning("Schedule was missed for {RepositoryId}({UpdateId}). Triggering now", repository.Id, repository.Updates.IndexOf(update));
+                        logger.ScheduleTriggerMissed(repositoryId: repository.Id, updateId: repository.Updates.IndexOf(update), projectId: project.Id);
 
                         // publish event for the job to be run
                         var evt = new TriggerUpdateJobsEvent
