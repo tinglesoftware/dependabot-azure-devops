@@ -1,9 +1,12 @@
 ﻿using System.ComponentModel;
 using System.Globalization;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Tingle.Dependabot.Workflow;
 
 /// <summary>Easier manager and parser for URLs of projects on Azure DevOps.</summary>
+[JsonConverter(typeof(AzureDevOpsProjectUrlJsonConverter))]
 [TypeConverter(typeof(AzureDevOpsProjectUrlTypeConverter))]
 public readonly struct AzureDevOpsProjectUrl : IEquatable<AzureDevOpsProjectUrl>
 {
@@ -110,6 +113,26 @@ public readonly struct AzureDevOpsProjectUrl : IEquatable<AzureDevOpsProjectUrl>
                 else if (destinationType == typeof(string)) return u.ToString();
             }
             return base.ConvertTo(context, culture, value, destinationType);
+        }
+    }
+
+    private class AzureDevOpsProjectUrlJsonConverter : JsonConverter<AzureDevOpsProjectUrl>
+    {
+        public override AzureDevOpsProjectUrl Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            if (reader.TokenType == JsonTokenType.Null) return default;
+            if (reader.TokenType != JsonTokenType.String)
+            {
+                throw new InvalidOperationException("Only strings are supported");
+            }
+
+            var str = reader.GetString();
+            return new AzureDevOpsProjectUrl(str!);
+        }
+
+        public override void Write(Utf8JsonWriter writer, AzureDevOpsProjectUrl value, JsonSerializerOptions options)
+        {
+            writer.WriteStringValue(value.ToString());
         }
     }
 }

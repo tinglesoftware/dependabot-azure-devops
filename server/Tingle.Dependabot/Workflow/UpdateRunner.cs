@@ -276,7 +276,7 @@ internal partial class UpdateRunner
               .AddIfNotDefault("DEPENDABOT_MILESTONE", update.Milestone?.ToString());
 
         // Add values for Azure DevOps
-        var url = (AzureDevOpsProjectUrl)project.Url!;
+        var url = project.Url;
         values.AddIfNotDefault("AZURE_HOSTNAME", url.Hostname)
               .AddIfNotDefault("AZURE_ORGANIZATION", url.OrganizationName)
               .AddIfNotDefault("AZURE_PROJECT", url.ProjectName)
@@ -300,7 +300,7 @@ internal partial class UpdateRunner
         [return: NotNullIfNotNull(nameof(value))]
         static JsonNode? ToJsonNode<T>(T? value) => value is null ? null : JsonSerializer.SerializeToNode(value, serializerOptions); // null ensures we do not add to the values
 
-        var url = (AzureDevOpsProjectUrl)project.Url!;
+        var url = project.Url;
         var credentialsMetadata = MakeCredentialsMetadata(credentials);
 
         // check if debug is enabled for the project via Feature Management

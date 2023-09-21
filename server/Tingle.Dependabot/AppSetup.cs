@@ -10,7 +10,7 @@ internal static class AppSetup
 {
     private class ProjectSetupInfo
     {
-        public required Uri Url { get; set; }
+        public required AzureDevOpsProjectUrl Url { get; set; }
         public required string Token { get; set; }
         public bool AutoComplete { get; set; }
         public List<int>? AutoCompleteIgnoreConfigs { get; set; }
@@ -50,8 +50,8 @@ internal static class AppSetup
         var projects = await context.Projects.ToListAsync(cancellationToken);
         foreach (var setup in setups)
         {
-            var url = (AzureDevOpsProjectUrl)setup.Url;
-            var project = projects.SingleOrDefault(p => new Uri(p.Url!) == setup.Url);
+            var url = setup.Url;
+            var project = projects.SingleOrDefault(p => p.Url == setup.Url);
             if (project is null)
             {
                 project = new Models.Management.Project

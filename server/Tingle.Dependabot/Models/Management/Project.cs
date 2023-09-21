@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using Tingle.Dependabot.Workflow;
 
 namespace Tingle.Dependabot.Models.Management;
 
@@ -29,8 +30,7 @@ public class Project
     /// <summary>URL for the project.</summary>
     /// <example>https://dev.azure.com/tingle/dependabot</example>
     [Url]
-    [Required]
-    public string? Url { get; set; } // TODO: change this to AzureDevOpsProjectUrl when we have converters for JSON and EfCore hence reduce the conversions all over the code
+    public AzureDevOpsProjectUrl Url { get; set; }
 
     /// <summary>
     /// Token for accessing the project with permissions for repositories, pull requests, and service hooks.

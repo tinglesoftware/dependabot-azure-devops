@@ -63,7 +63,7 @@ public class AzureDevOpsProvider
         };
 
         // fetch the subscriptions
-        var url = (AzureDevOpsProjectUrl)project.Url!;
+        var url = project.Url;
         var uri = new UriBuilder
         {
             Scheme = url.Scheme,
@@ -133,7 +133,7 @@ public class AzureDevOpsProvider
 
     public async Task<AzdoProject> GetProjectAsync(Project project, CancellationToken cancellationToken)
     {
-        var url = (AzureDevOpsProjectUrl)project.Url!;
+        var url = project.Url;
         var uri = new UriBuilder
         {
             Scheme = url.Scheme,
@@ -148,7 +148,7 @@ public class AzureDevOpsProvider
 
     public async Task<List<AzdoRepository>> GetRepositoriesAsync(Project project, CancellationToken cancellationToken)
     {
-        var url = (AzureDevOpsProjectUrl)project.Url!;
+        var url = project.Url;
         var uri = new UriBuilder
         {
             Scheme = url.Scheme,
@@ -164,7 +164,7 @@ public class AzureDevOpsProvider
 
     public async Task<AzdoRepository> GetRepositoryAsync(Project project, string repositoryIdOrName, CancellationToken cancellationToken)
     {
-        var url = (AzureDevOpsProjectUrl)project.Url!;
+        var url = project.Url;
         var uri = new UriBuilder
         {
             Scheme = url.Scheme,
@@ -179,7 +179,7 @@ public class AzureDevOpsProvider
 
     public async Task<AzdoRepositoryItem?> GetConfigurationFileAsync(Project project, string repositoryIdOrName, CancellationToken cancellationToken = default)
     {
-        var url = (AzureDevOpsProjectUrl)project.Url!;
+        var url = project.Url;
 
         // Try all known paths
         foreach (var path in ConfigurationFilePaths)

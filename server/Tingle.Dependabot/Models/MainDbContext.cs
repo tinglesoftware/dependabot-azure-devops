@@ -1,6 +1,9 @@
 ﻿using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Tingle.Dependabot.Models.Management;
+using Tingle.Dependabot.Workflow;
 
 namespace Tingle.Dependabot.Models;
 
@@ -13,6 +16,13 @@ public class MainDbContext : DbContext, IDataProtectionKeyContext
     public DbSet<UpdateJob> UpdateJobs => Set<UpdateJob>();
 
     public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
+
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        base.ConfigureConventions(configurationBuilder);
+
+        configurationBuilder.Properties<AzureDevOpsProjectUrl>().HaveConversion<AzureDevOpsProjectUrlConverter, AzureDevOpsProjectUrlComparer>();
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -59,5 +69,19 @@ public class MainDbContext : DbContext, IDataProtectionKeyContext
 
             builder.OwnsOne(j => j.Resources);
         });
+    }
+
+    private class AzureDevOpsProjectUrlConverter : ValueConverter<AzureDevOpsProjectUrl, string>
+    {
+        public AzureDevOpsProjectUrlConverter() : base(convertToProviderExpression: v => v.ToString(),
+                                                       convertFromProviderExpression: v => v == null ? default : new AzureDevOpsProjectUrl(v))
+        { }
+    }
+    private class AzureDevOpsProjectUrlComparer : ValueComparer<AzureDevOpsProjectUrl>
+    {
+        public AzureDevOpsProjectUrlComparer() : base(equalsExpression: (l, r) => l == r,
+                                                      hashCodeExpression: v => v.GetHashCode(),
+                                                      snapshotExpression: v => new AzureDevOpsProjectUrl(v.ToString()))
+        { }
     }
 }

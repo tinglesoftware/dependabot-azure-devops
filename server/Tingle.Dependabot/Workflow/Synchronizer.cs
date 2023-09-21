@@ -84,7 +84,7 @@ internal class Synchronizer
                                                                    cancellationToken: cancellationToken);
 
             // Track for further synchronization
-            var sci = new SynchronizerConfigurationItem(((AzureDevOpsProjectUrl)project.Url!).MakeRepositorySlug(adoRepo.Name), adoRepo, item);
+            var sci = new SynchronizerConfigurationItem(project.Url.MakeRepositorySlug(adoRepo.Name), adoRepo, item);
             syncPairs.Add((sci, repository));
         }
 
@@ -126,7 +126,7 @@ internal class Synchronizer
                                                                cancellationToken: cancellationToken);
 
         // perform synchronization
-        var sci = new SynchronizerConfigurationItem(((AzureDevOpsProjectUrl)project.Url!).MakeRepositorySlug(adoRepo.Name), adoRepo, item);
+        var sci = new SynchronizerConfigurationItem(project.Url.MakeRepositorySlug(adoRepo.Name), adoRepo, item);
         await SynchronizeAsync(project, repository, sci, trigger, cancellationToken);
     }
 
@@ -154,7 +154,7 @@ internal class Synchronizer
                                 select r).SingleOrDefaultAsync(cancellationToken);
 
         // perform synchronization
-        var sci = new SynchronizerConfigurationItem(((AzureDevOpsProjectUrl)project.Url!).MakeRepositorySlug(adoRepo.Name), adoRepo, item);
+        var sci = new SynchronizerConfigurationItem(project.Url.MakeRepositorySlug(adoRepo.Name), adoRepo, item);
         await SynchronizeAsync(project, repository, sci, trigger, cancellationToken);
     }
 
