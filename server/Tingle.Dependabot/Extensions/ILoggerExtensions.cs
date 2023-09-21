@@ -5,9 +5,6 @@ namespace Microsoft.Extensions.Logging;
 
 internal static partial class ILoggerExtensions
 {
-    //[LoggerMessage(100, LogLevel.Warning, "Retrying periodic task execution {CurrentTry} of {MaxRetries}")]
-    //public static partial void RetryingExecutionOfPeriodicTask(this ILogger logger, Exception exception, int currentTry, int maxRetries);
-
     #region Webhooks (2xx)
 
     [LoggerMessage(200, LogLevel.Debug, "Received {EventType} notification {NotificationId} on subscription {SubscriptionId}")]

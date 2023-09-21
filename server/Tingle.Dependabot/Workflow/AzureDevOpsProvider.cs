@@ -131,14 +131,6 @@ public class AzureDevOpsProvider // TODO: replace the Microsoft.(TeamFoundation|
 
     public async Task<AzdoProject> GetProjectAsync(Project project, CancellationToken cancellationToken)
     {
-        //// get a connection to Azure DevOps
-        //var url = (AzureDevOpsProjectUrl)project.Url!;
-        //var connection = CreateVssConnection(url, project.Token!);
-
-        //// get the project
-        //var client = await connection.GetClientAsync<ProjectHttpClient>(cancellationToken);
-        //return await client.GetProject(id: url.ProjectIdOrName);
-
         var url = (AzureDevOpsProjectUrl)project.Url!;
         var uri = new UriBuilder
         {
@@ -146,6 +138,7 @@ public class AzureDevOpsProvider // TODO: replace the Microsoft.(TeamFoundation|
             Host = url.Hostname,
             Port = url.Port ?? -1,
             Path = $"{url.OrganizationName}/_apis/projects/{url.ProjectIdOrName}",
+            Query = "?api-version=7.0",
         }.Uri;
         var request = new HttpRequestMessage(HttpMethod.Get, uri);
         return (await SendAsync<AzdoProject>(project.Token!, request, cancellationToken))!;
