@@ -22,6 +22,10 @@ public class Project
     /// <summary>Description of the project as per provider.</summary>
     public string? Description { get; set; }
 
+    /// <summary>Slug for easy project reference.</summary>
+    /// <example>tingle/dependabot</example>
+    public string? Slug { get; set; }
+
     /// <summary>Identifier of the repository as per provider.</summary>
     [Required]
     [JsonIgnore] // only for internal use

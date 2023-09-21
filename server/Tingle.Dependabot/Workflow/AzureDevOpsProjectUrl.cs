@@ -73,6 +73,7 @@ public readonly struct AzureDevOpsProjectUrl : IEquatable<AzureDevOpsProjectUrl>
     public string? ProjectId => UsesProjectId ? ProjectIdOrName : null;
     public string? ProjectName => UsesProjectId ? null : ProjectIdOrName;
 
+    public string Slug => $"{OrganizationName}/{ProjectName}";
     public string MakeRepositorySlug(string name) => $"{OrganizationName}/{ProjectName}/_git/{name}";
 
     public override string ToString() => uri.ToString();

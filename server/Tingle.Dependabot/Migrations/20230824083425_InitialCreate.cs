@@ -34,6 +34,7 @@ public partial class InitialCreate : Migration
                 Type = table.Column<int>(type: "int", nullable: false),
                 Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                 Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                Slug = table.Column<string>(type: "nvarchar(max)", nullable: true),
                 ProviderId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                 Url = table.Column<string>(type: "nvarchar(max)", nullable: false),
                 Token = table.Column<string>(type: "nvarchar(max)", nullable: false),

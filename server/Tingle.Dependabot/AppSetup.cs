@@ -78,6 +78,7 @@ internal static class AppSetup
             project.ProviderId = tp.Id.ToString();
             project.Name = tp.Name;
             project.Description = tp.Description;
+            project.Slug = url.Slug;
             project.Private = tp.Visibility is not Models.Azure.AzdoProjectVisibility.Public;
 
             // if there are changes, set the Updated field
