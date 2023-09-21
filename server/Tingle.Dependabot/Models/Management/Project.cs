@@ -18,6 +18,9 @@ public class Project
     [Required]
     public string? Name { get; set; }
 
+    /// <summary>Description of the project as per provider.</summary>
+    public string? Description { get; set; }
+
     /// <summary>Identifier of the repository as per provider.</summary>
     [Required]
     [JsonIgnore] // only for internal use

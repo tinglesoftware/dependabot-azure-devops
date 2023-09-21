@@ -20,6 +20,9 @@ public class Repository
 
     /// <summary>Name of the repository as per provider.</summary>
     public string? Name { get; set; }
+
+    /// <summary>Slug for easy repository reference.</summary>
+    /// <example>tingle/dependabot/_git/repro-747</example>
     public string? Slug { get; set; }
 
     /// <summary>Identifier of the repository as per provider.</summary>

@@ -50,6 +50,9 @@ namespace Tingle.Dependabot.Migrations
                     b.Property<DateTimeOffset>("Created")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<byte[]>("Etag")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()

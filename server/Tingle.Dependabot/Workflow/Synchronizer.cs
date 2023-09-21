@@ -43,9 +43,12 @@ internal class Synchronizer
         // update the project (it may have changed name or visibility)
         var tp = await adoProvider.GetProjectAsync(project, cancellationToken);
         var @private = tp.Visibility is not Models.Azure.AzdoProjectVisibility.Public;
-        if (!string.Equals(project.Name, tp.Name, StringComparison.Ordinal) || @private != project.Private)
+        if (!string.Equals(project.Name, tp.Name, StringComparison.Ordinal)
+            || !string.Equals(project.Description, tp.Description, StringComparison.Ordinal)
+            || @private != project.Private)
         {
             project.Name = tp.Name;
+            project.Description = tp.Description;
             project.Private = @private;
             project.Updated = DateTimeOffset.UtcNow;
         }

@@ -77,6 +77,7 @@ internal static class AppSetup
             var tp = await adoProvider.GetProjectAsync(project, cancellationToken);
             project.ProviderId = tp.Id.ToString();
             project.Name = tp.Name;
+            project.Description = tp.Description;
             project.Private = tp.Visibility is not Models.Azure.AzdoProjectVisibility.Public;
 
             // if there are changes, set the Updated field

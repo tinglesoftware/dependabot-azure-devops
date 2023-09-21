@@ -33,6 +33,7 @@ public partial class InitialCreate : Migration
                 Updated = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
                 Type = table.Column<int>(type: "int", nullable: false),
                 Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
                 ProviderId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                 Url = table.Column<string>(type: "nvarchar(max)", nullable: false),
                 Token = table.Column<string>(type: "nvarchar(max)", nullable: false),
