@@ -13,7 +13,7 @@
       "type": "string",
       "defaultValue": "dependabot",
       "metadata": {
-        "description": "Name of the resources"
+        "description": "Name of the resources. Make sure it is unique e.g. dependabotcontoso to avoid conflicts or failures"
       }
     },
     "projectSetups": {
@@ -66,7 +66,7 @@
           "custom": {
             "type": "azure-servicebus",
             "metadata": {
-              "namespace": "[format('{0}-{1}', parameters('name'), variables('collisionSuffix'))]",
+              "namespace": "[parameters('name')]",
               "queueName": "[variables('queueNames')[copyIndex('queueScaleRules')]]",
               "messageCount": "100"
             },
@@ -95,7 +95,6 @@
     ],
     "sqlServerAdministratorLogin": "[uniqueString(resourceGroup().id)]",
     "sqlServerAdministratorLoginPassword": "[format('{0}%{1}', skip(uniqueString(resourceGroup().id), 5), uniqueString('sql-password', resourceGroup().id))]",
-    "collisionSuffix": "[uniqueString(resourceGroup().id)]",
     "queueNames": [
       "process-synchronization",
       "repository-created",
@@ -114,13 +113,13 @@
       },
       "type": "Microsoft.Storage/storageAccounts/fileServices/shares",
       "apiVersion": "2022-09-01",
-      "name": "[format('{0}/{1}/{2}', format('{0}{1}', parameters('name'), variables('collisionSuffix')), 'default', variables('fileShares')[copyIndex()].name)]",
+      "name": "[format('{0}/{1}/{2}', parameters('name'), 'default', variables('fileShares')[copyIndex()].name)]",
       "properties": {
         "accessTier": "[if(contains(variables('fileShares')[copyIndex()], 'accessTier'), variables('fileShares')[copyIndex()].accessTier, 'TransactionOptimized')]",
         "shareQuota": "[if(contains(variables('fileShares')[copyIndex()], 'shareQuota'), variables('fileShares')[copyIndex()].shareQuota, 1)]"
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Storage/storageAccounts', format('{0}{1}', parameters('name'), variables('collisionSuffix')))]"
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('name'))]"
       ]
     },
     {
@@ -133,15 +132,15 @@
       "name": "[format('{0}/{1}', parameters('name'), variables('fileShares')[copyIndex()].name)]",
       "properties": {
         "azureFile": {
-          "accountName": "[format('{0}{1}', parameters('name'), variables('collisionSuffix'))]",
-          "accountKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', format('{0}{1}', parameters('name'), variables('collisionSuffix'))), '2022-09-01').keys[0].value]",
+          "accountName": "[parameters('name')]",
+          "accountKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('name')), '2022-09-01').keys[0].value]",
           "shareName": "[variables('fileShares')[copyIndex()].name]",
           "accessMode": "[if(and(contains(variables('fileShares')[copyIndex()], 'writeable'), bool(variables('fileShares')[copyIndex()].writeable)), 'ReadWrite', 'ReadOnly')]"
         }
       },
       "dependsOn": [
         "[resourceId('Microsoft.App/managedEnvironments', parameters('name'))]",
-        "[resourceId('Microsoft.Storage/storageAccounts', format('{0}{1}', parameters('name'), variables('collisionSuffix')))]"
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('name'))]"
       ]
     },
     {
@@ -153,7 +152,7 @@
     {
       "type": "Microsoft.ServiceBus/namespaces",
       "apiVersion": "2021-11-01",
-      "name": "[format('{0}-{1}', parameters('name'), variables('collisionSuffix'))]",
+      "name": "[parameters('name')]",
       "location": "[parameters('location')]",
       "properties": {
         "disableLocalAuth": false,
@@ -166,7 +165,7 @@
     {
       "type": "Microsoft.AppConfiguration/configurationStores",
       "apiVersion": "2023-03-01",
-      "name": "[format('{0}-{1}', parameters('name'), variables('collisionSuffix'))]",
+      "name": "[parameters('name')]",
       "location": "[parameters('location')]",
       "properties": {
         "softDeleteRetentionInDays": 0
@@ -187,7 +186,7 @@
     {
       "type": "Microsoft.Storage/storageAccounts",
       "apiVersion": "2022-09-01",
-      "name": "[format('{0}{1}', parameters('name'), variables('collisionSuffix'))]",
+      "name": "[parameters('name')]",
       "location": "[parameters('location')]",
       "kind": "StorageV2",
       "sku": {
@@ -206,7 +205,7 @@
     {
       "type": "Microsoft.Sql/servers",
       "apiVersion": "2022-05-01-preview",
-      "name": "[format('{0}-{1}', parameters('name'), variables('collisionSuffix'))]",
+      "name": "[parameters('name')]",
       "location": "[parameters('location')]",
       "properties": {
         "publicNetworkAccess": "Enabled",
@@ -228,19 +227,19 @@
     {
       "type": "Microsoft.Sql/servers/firewallRules",
       "apiVersion": "2022-08-01-preview",
-      "name": "[format('{0}/{1}', format('{0}-{1}', parameters('name'), variables('collisionSuffix')), 'AllowAllWindowsAzureIps')]",
+      "name": "[format('{0}/{1}', parameters('name'), 'AllowAllWindowsAzureIps')]",
       "properties": {
         "endIpAddress": "0.0.0.0",
         "startIpAddress": "0.0.0.0"
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Sql/servers', format('{0}-{1}', parameters('name'), variables('collisionSuffix')))]"
+        "[resourceId('Microsoft.Sql/servers', parameters('name'))]"
       ]
     },
     {
       "type": "Microsoft.Sql/servers/databases",
       "apiVersion": "2022-05-01-preview",
-      "name": "[format('{0}/{1}', format('{0}-{1}', parameters('name'), variables('collisionSuffix')), parameters('name'))]",
+      "name": "[format('{0}/{1}', parameters('name'), parameters('name'))]",
       "location": "[parameters('location')]",
       "sku": {
         "name": "Basic"
@@ -262,7 +261,7 @@
       },
       "dependsOn": [
         "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name'))]",
-        "[resourceId('Microsoft.Sql/servers', format('{0}-{1}', parameters('name'), variables('collisionSuffix')))]"
+        "[resourceId('Microsoft.Sql/servers', parameters('name'))]"
       ]
     },
     {
@@ -340,11 +339,11 @@
             },
             {
               "name": "connection-strings-sql",
-              "value": "[join(createArray(format('Server=tcp:{0},1433', reference(resourceId('Microsoft.Sql/servers', format('{0}-{1}', parameters('name'), variables('collisionSuffix'))), '2022-05-01-preview').fullyQualifiedDomainName), format('Initial Catalog={0}', parameters('name')), format('User ID={0}', variables('sqlServerAdministratorLogin')), format('Password={0}', variables('sqlServerAdministratorLoginPassword')), 'Persist Security Info=False', 'MultipleActiveResultSets=False', 'Encrypt=True', 'TrustServerCertificate=False', 'Connection Timeout=30'), ';')]"
+              "value": "[join(createArray(format('Server=tcp:{0},1433', reference(resourceId('Microsoft.Sql/servers', parameters('name')), '2022-05-01-preview').fullyQualifiedDomainName), format('Initial Catalog={0}', parameters('name')), format('User ID={0}', variables('sqlServerAdministratorLogin')), format('Password={0}', variables('sqlServerAdministratorLoginPassword')), 'Persist Security Info=False', 'MultipleActiveResultSets=False', 'Encrypt=True', 'TrustServerCertificate=False', 'Connection Timeout=30'), ';')]"
             },
             {
               "name": "connection-strings-asb-scaler",
-              "value": "[listKeys(resourceId('Microsoft.ServiceBus/namespaces/AuthorizationRules', format('{0}-{1}', parameters('name'), variables('collisionSuffix')), 'RootManageSharedAccessKey'), '2021-11-01').primaryConnectionString]"
+              "value": "[listKeys(resourceId('Microsoft.ServiceBus/namespaces/AuthorizationRules', parameters('name'), 'RootManageSharedAccessKey'), '2021-11-01').primaryConnectionString]"
             }
           ]
         },
@@ -382,7 +381,7 @@
                 },
                 {
                   "name": "AzureAppConfig__Endpoint",
-                  "value": "[reference(resourceId('Microsoft.AppConfiguration/configurationStores', format('{0}-{1}', parameters('name'), variables('collisionSuffix'))), '2023-03-01').endpoint]"
+                  "value": "[reference(resourceId('Microsoft.AppConfiguration/configurationStores', parameters('name')), '2023-03-01').endpoint]"
                 },
                 {
                   "name": "AzureAppConfig__Label",
@@ -466,7 +465,7 @@
                 },
                 {
                   "name": "EventBus__Transports__azure-service-bus__FullyQualifiedNamespace",
-                  "value": "[split(split(reference(resourceId('Microsoft.ServiceBus/namespaces', format('{0}-{1}', parameters('name'), variables('collisionSuffix'))), '2021-11-01').serviceBusEndpoint, '/')[2], ':')[0]]"
+                  "value": "[split(split(reference(resourceId('Microsoft.ServiceBus/namespaces', parameters('name')), '2021-11-01').serviceBusEndpoint, '/')[2], ':')[0]]"
                 }
               ],
               "resources": {
@@ -520,14 +519,14 @@
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.AppConfiguration/configurationStores', format('{0}-{1}', parameters('name'), variables('collisionSuffix')))]",
+        "[resourceId('Microsoft.AppConfiguration/configurationStores', parameters('name'))]",
         "[resourceId('Microsoft.App/managedEnvironments', parameters('name'))]",
         "[resourceId('Microsoft.Insights/components', parameters('name'))]",
         "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('name'))]",
         "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name'))]",
-        "[resourceId('Microsoft.ServiceBus/namespaces', format('{0}-{1}', parameters('name'), variables('collisionSuffix')))]",
-        "[resourceId('Microsoft.Sql/servers', format('{0}-{1}', parameters('name'), variables('collisionSuffix')))]",
-        "[resourceId('Microsoft.Sql/servers/databases', format('{0}-{1}', parameters('name'), variables('collisionSuffix')), parameters('name'))]"
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('name'))]",
+        "[resourceId('Microsoft.Sql/servers', parameters('name'))]",
+        "[resourceId('Microsoft.Sql/servers/databases', parameters('name'), parameters('name'))]"
       ]
     },
     {
