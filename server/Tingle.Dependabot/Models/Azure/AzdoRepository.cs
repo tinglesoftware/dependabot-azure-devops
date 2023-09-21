@@ -14,10 +14,10 @@ public class AzdoRepository
     public required AzdoProject Project { get; set; }
 
     [JsonPropertyName("isDisabled")]
-    public required bool IsDisabled { get; set; }
+    public bool IsDisabled { get; set; }
 
     [JsonPropertyName("isFork")]
-    public required bool IsFork { get; set; }
+    public bool IsFork { get; set; }
 }
 
 public class AzdoListResponse<T> where T : class
