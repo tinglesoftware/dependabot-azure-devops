@@ -196,7 +196,7 @@ internal class Synchronizer
         {
             repository = new Repository
             {
-                Id = Guid.NewGuid().ToString("n"),
+                Id = $"repo_{Guid.NewGuid():n}",
                 Created = DateTimeOffset.UtcNow,
                 ProjectId = project.Id,
                 ProviderId = providerInfo.Id,

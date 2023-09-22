@@ -56,7 +56,7 @@ internal static class AppSetup
             {
                 project = new Models.Management.Project
                 {
-                    Id = Guid.NewGuid().ToString("n"),
+                    Id = $"prj_{Guid.NewGuid():n}",
                     Created = DateTimeOffset.UtcNow,
                     Password = GeneratePassword(32),
                     Url = setup.Url.ToString(),
