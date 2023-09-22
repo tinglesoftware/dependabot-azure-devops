@@ -66,14 +66,6 @@ Security-only updates ia a mechanism to only create pull requests for dependenci
 
 A GitHub access token with `public_repo` access is required to perform the GitHub GraphQL for `securityVulnerabilities`.
 
-### Notes
-
-1. History for successful and failed jobs is restricted to 1 (change to suit you).
-2. Jobs are removed after 2 days (`ttlSecondsAfterFinished: 172800`). No need keep it for too long.
-3. Jobs run duration is capped at 1 hour (`activeDeadlineSeconds: 3600`). This should be enough time.
-4. Labels can be used to find cronjobs created.
-5. Annotations can be used to store extra data for comparison but not searching/finding e.g. package ecosystem.
-
 ### Acknowledgements
 
 The work in this repository is based on inspired and occasionally guided by some predecessors in the same area:
