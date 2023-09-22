@@ -1,7 +1,7 @@
 @description('Location for all resources.')
 param location string = resourceGroup().location
 
-@description('Name of the resources')
+@description('Name of the resources. Make sure it is unique e.g. dependabotcontoso to avoid conflicts or failures')
 param name string = 'dependabot'
 
 @description('JSON array string fo projects to setup. E.g. [{"url":"https://dev.azure.com/tingle/dependabot","token":"dummy","AutoComplete":true}]')
@@ -31,8 +31,6 @@ var fileShares = [
 
 var sqlServerAdministratorLogin = uniqueString(resourceGroup().id) // e.g. zecnx476et7xm (13 characters)
 var sqlServerAdministratorLoginPassword = '${skip(uniqueString(resourceGroup().id), 5)}%${uniqueString('sql-password', resourceGroup().id)}' // e.g. abcde%zecnx476et7xm (19 characters)
-// avoid conflicts across multiple deployments for resources that generate FQDN based on the name
-var collisionSuffix = uniqueString(resourceGroup().id) // e.g. zecnx476et7xm (13 characters)
 var queueNames = [
   'process-synchronization'
   'repository-created'
@@ -63,7 +61,7 @@ resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-
 
 /* Service Bus namespace */
 resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2021-11-01' = {
-  name: '${name}-${collisionSuffix}'
+  name: name
   location: location
   properties: { disableLocalAuth: false, zoneRedundant: false }
   sku: { name: 'Basic' }
@@ -73,7 +71,7 @@ resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2021-11-01' = {
 
 /* AppConfiguration */
 resource appConfiguration 'Microsoft.AppConfiguration/configurationStores@2023-03-01' = {
-  name: '${name}-${collisionSuffix}'
+  name: name
   location: location
   properties: { softDeleteRetentionInDays: 0 /* Free does not support this */ }
   sku: { name: 'free' }
@@ -87,7 +85,7 @@ resource appConfiguration 'Microsoft.AppConfiguration/configurationStores@2023-0
 
 /* Storage Account */
 resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = {
-  name: '${name}${collisionSuffix}' // hyphens not allowed
+  name: name
   location: location
   kind: 'StorageV2'
   sku: { name: 'Standard_LRS' }
@@ -119,7 +117,7 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = {
 
 /* SQL Server */
 resource sqlServer 'Microsoft.Sql/servers@2022-05-01-preview' = {
-  name: '${name}-${collisionSuffix}'
+  name: name
   location: location
   properties: {
     publicNetworkAccess: 'Enabled'
