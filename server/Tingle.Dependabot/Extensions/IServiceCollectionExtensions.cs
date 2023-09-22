@@ -30,11 +30,6 @@ public static class IServiceCollectionExtensions
                                            // according to docs link below, this registration should be singleton
                                            // https://docs.microsoft.com/en-us/azure/azure-monitor/app/asp-net-core#adding-telemetryinitializers
         services.AddSingleton<ITelemetryInitializer, DependabotTelemetryInitializer>();
-        // services.AddApplicationInsightsTelemetryExtras(); // Add other extras
-
-        // services.AddActivitySourceDependencyCollector(new[] {
-        //     "Tingle.EventBus",
-        // });
 
         return services;
     }
