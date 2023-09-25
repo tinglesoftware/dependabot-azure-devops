@@ -22,6 +22,7 @@ var fileShares = [
   { name: 'working-dir', writeable: true }
 ]
 
+var storageAccountName = name == 'dependabot' ? 'dependabotstore' : name // dependabot is not available as of 2023-Sep-25 so we change just for the public deployment
 var sqlServerAdministratorLogin = uniqueString(resourceGroup().id) // e.g. zecnx476et7xm (13 characters)
 var sqlServerAdministratorLoginPassword = '${skip(uniqueString(resourceGroup().id), 5)}%${uniqueString('sql-password', resourceGroup().id)}' // e.g. abcde%zecnx476et7xm (19 characters)
 var queueNames = [
@@ -78,7 +79,7 @@ resource appConfiguration 'Microsoft.AppConfiguration/configurationStores@2023-0
 
 /* Storage Account */
 resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = {
-  name: name
+  name: storageAccountName
   location: location
   kind: 'StorageV2'
   sku: { name: 'Standard_LRS' }

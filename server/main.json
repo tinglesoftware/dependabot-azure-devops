@@ -78,6 +78,7 @@
         "writeable": true
       }
     ],
+    "storageAccountName": "[if(equals(parameters('name'), 'dependabot'), 'dependabotstore', parameters('name'))]",
     "sqlServerAdministratorLogin": "[uniqueString(resourceGroup().id)]",
     "sqlServerAdministratorLoginPassword": "[format('{0}%{1}', skip(uniqueString(resourceGroup().id), 5), uniqueString('sql-password', resourceGroup().id))]",
     "queueNames": [
@@ -98,13 +99,13 @@
       },
       "type": "Microsoft.Storage/storageAccounts/fileServices/shares",
       "apiVersion": "2022-09-01",
-      "name": "[format('{0}/{1}/{2}', parameters('name'), 'default', variables('fileShares')[copyIndex()].name)]",
+      "name": "[format('{0}/{1}/{2}', variables('storageAccountName'), 'default', variables('fileShares')[copyIndex()].name)]",
       "properties": {
         "accessTier": "[if(contains(variables('fileShares')[copyIndex()], 'accessTier'), variables('fileShares')[copyIndex()].accessTier, 'TransactionOptimized')]",
         "shareQuota": "[if(contains(variables('fileShares')[copyIndex()], 'shareQuota'), variables('fileShares')[copyIndex()].shareQuota, 1)]"
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Storage/storageAccounts', parameters('name'))]"
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
       ]
     },
     {
@@ -117,15 +118,15 @@
       "name": "[format('{0}/{1}', parameters('name'), variables('fileShares')[copyIndex()].name)]",
       "properties": {
         "azureFile": {
-          "accountName": "[parameters('name')]",
-          "accountKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('name')), '2022-09-01').keys[0].value]",
+          "accountName": "[variables('storageAccountName')]",
+          "accountKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2022-09-01').keys[0].value]",
           "shareName": "[variables('fileShares')[copyIndex()].name]",
           "accessMode": "[if(and(contains(variables('fileShares')[copyIndex()], 'writeable'), bool(variables('fileShares')[copyIndex()].writeable)), 'ReadWrite', 'ReadOnly')]"
         }
       },
       "dependsOn": [
         "[resourceId('Microsoft.App/managedEnvironments', parameters('name'))]",
-        "[resourceId('Microsoft.Storage/storageAccounts', parameters('name'))]"
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
       ]
     },
     {
@@ -171,7 +172,7 @@
     {
       "type": "Microsoft.Storage/storageAccounts",
       "apiVersion": "2022-09-01",
-      "name": "[parameters('name')]",
+      "name": "[variables('storageAccountName')]",
       "location": "[parameters('location')]",
       "kind": "StorageV2",
       "sku": {
