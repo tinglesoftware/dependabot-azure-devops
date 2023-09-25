@@ -56,8 +56,6 @@ The deployment exposes the following parameters that can be tuned to suit the se
 |projectSetups|A JSON array string representing the projects to be setup on startup. This is useful when running your own setup. Example: `[{\"url\":\"https://dev.azure.com/tingle/dependabot\",\"token\":\"dummy\",\"AutoComplete\":true}]`|
 |githubToken|Access token for authenticating requests to GitHub. Required for vulnerability checks and to avoid rate limiting on free requests|No|&lt;empty&gt;|
 |imageTag|The image tag to use when pulling the docker containers. A tag also defines the version. You should avoid using `latest`. Example: `1.1.0`|No|&lt;version-downloaded&gt;|
-|minReplicas|The minimum number of replicas to required for the deployment. Given that scheduling runs in process, this value cannot be less than `1`. This may change in the future.|No|1|
-|maxReplicas|The maximum number of replicas when automatic scaling engages. In most cases, you do not need more than 1.|No|1|
 
 > The template includes a User Assigned Managed Identity, which is used when performing Azure Resource Manager operations such as deletions. In the deployment it creates the role assignments that it needs. These role assignments are on the resource group that you deploy to.
 

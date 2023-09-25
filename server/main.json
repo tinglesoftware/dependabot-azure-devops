@@ -39,24 +39,6 @@
       "metadata": {
         "description": "Tag of the docker images."
       }
-    },
-    "minReplicas": {
-      "type": "int",
-      "defaultValue": 1,
-      "minValue": 1,
-      "maxValue": 2,
-      "metadata": {
-        "description": "The minimum number of replicas"
-      }
-    },
-    "maxReplicas": {
-      "type": "int",
-      "defaultValue": 1,
-      "minValue": 1,
-      "maxValue": 5,
-      "metadata": {
-        "description": "The maximum number of replicas"
-      }
     }
   },
   "variables": {
@@ -509,8 +491,8 @@
             }
           ],
           "scale": {
-            "minReplicas": "[parameters('minReplicas')]",
-            "maxReplicas": "[parameters('maxReplicas')]",
+            "minReplicas": 1,
+            "maxReplicas": 1,
             "rules": "[concat(createArray(createObject('name', 'http', 'http', createObject('metadata', createObject('concurrentRequests', '1000')))), variables('queueScaleRules'))]"
           }
         }

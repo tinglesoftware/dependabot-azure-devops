@@ -16,16 +16,6 @@ param githubToken string = ''
 @description('Tag of the docker images.')
 param imageTag string = '#{GITVERSION_NUGETVERSIONV2}#'
 
-@minValue(1)
-@maxValue(2)
-@description('The minimum number of replicas')
-param minReplicas int = 1 // necessary for in-memory scheduling
-
-@minValue(1)
-@maxValue(5)
-@description('The maximum number of replicas')
-param maxReplicas int = 1
-
 var fileShares = [
   { name: 'certs' }
   { name: 'distributed-locks', writeable: true }
@@ -309,8 +299,8 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
         { name: 'distributed-locks', storageName: 'distributed-locks', storageType: 'AzureFile' }
       ]
       scale: {
-        minReplicas: minReplicas
-        maxReplicas: maxReplicas
+        minReplicas: 1 // necessary for in-memory scheduling
+        maxReplicas: 1 // no need to scale beyond one instance, yet
         rules: concat(
           [ { name: 'http', http: { metadata: { concurrentRequests: '1000' } } } ],
           queueScaleRules)
