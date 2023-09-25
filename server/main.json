@@ -12,6 +12,8 @@
     "name": {
       "type": "string",
       "defaultValue": "dependabot",
+      "minLength": 5,
+      "maxLength": 24,
       "metadata": {
         "description": "Name of the resources. Make sure it is unique e.g. dependabotcontoso to avoid conflicts or failures"
       }
@@ -33,6 +35,7 @@
     "imageTag": {
       "type": "string",
       "defaultValue": "#{GITVERSION_NUGETVERSIONV2}#",
+      "minLength": 1,
       "metadata": {
         "description": "Tag of the docker images."
       }

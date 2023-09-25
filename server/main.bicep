@@ -1,6 +1,8 @@
 @description('Location for all resources.')
 param location string = resourceGroup().location
 
+@minLength(5)
+@maxLength(24)
 @description('Name of the resources. Make sure it is unique e.g. dependabotcontoso to avoid conflicts or failures')
 param name string = 'dependabot'
 
@@ -10,6 +12,7 @@ param projectSetups string = '[]'
 @description('Access token for authenticating requests to GitHub.')
 param githubToken string = ''
 
+@minLength(1)
 @description('Tag of the docker images.')
 param imageTag string = '#{GITVERSION_NUGETVERSIONV2}#'
 
