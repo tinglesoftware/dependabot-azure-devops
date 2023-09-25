@@ -102,7 +102,7 @@ jobs:
         docker push "ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:$GITVERSION_SHORTSHA"
 
     - name: Push image (NuGetVersionV2)
-      if: "!startsWith(github.ref, 'refs/pull')"
+      if: ${{ !startsWith(github.ref, 'refs/pull') }}
       run: docker push "ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:$GITVERSION_NUGETVERSIONV2"
 
     - name: Push image (major, minor)
