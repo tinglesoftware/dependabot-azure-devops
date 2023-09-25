@@ -3,6 +3,8 @@
 ARG ECOSYSTEM
 FROM ghcr.io/dependabot/dependabot-updater-$ECOSYSTEM
 
+LABEL org.opencontainers.image.source="https://github.com/tinglesoftware/dependabot-azure-devops"
+
 # ENV DEPENDABOT_HOME /home/dependabot
 WORKDIR ${DEPENDABOT_HOME}
 
