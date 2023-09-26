@@ -46,7 +46,7 @@ internal partial class UpdateRunner
 
     public async Task CreateAsync(Project project, Repository repository, RepositoryUpdate update, UpdateJob job, CancellationToken cancellationToken = default)
     {
-        var resourceName = MakeResourceName(job);
+        var resourceName = job.Id;
 
         // if we have an existing one, there is nothing more to do
         var containerAppJobs = resourceGroup.GetContainerAppJobs();
@@ -136,7 +136,7 @@ internal partial class UpdateRunner
 
     public async Task DeleteAsync(UpdateJob job, CancellationToken cancellationToken = default)
     {
-        var resourceName = MakeResourceName(job);
+        var resourceName = job.Id;
 
         try
         {
@@ -153,7 +153,7 @@ internal partial class UpdateRunner
 
     public async Task<UpdateRunnerState?> GetStateAsync(UpdateJob job, CancellationToken cancellationToken = default)
     {
-        var resourceName = MakeResourceName(job);
+        var resourceName = job.Id;
 
         try
         {
@@ -205,7 +205,7 @@ internal partial class UpdateRunner
     public async Task<string?> GetLogsAsync(UpdateJob job, CancellationToken cancellationToken = default)
     {
         var logs = (string?)null;
-        var resourceName = MakeResourceName(job);
+        var resourceName = job.Id;
 
         // pull logs from Log Analaytics
         if (string.IsNullOrWhiteSpace(logs))
@@ -221,8 +221,6 @@ internal partial class UpdateRunner
 
         return logs;
     }
-
-    internal static string MakeResourceName(UpdateJob job) => $"dependabot-{job.Id}";
 
     internal async Task<IDictionary<string, string>> CreateEnvironmentVariables(Project project,
                                                                                 Repository repository,
