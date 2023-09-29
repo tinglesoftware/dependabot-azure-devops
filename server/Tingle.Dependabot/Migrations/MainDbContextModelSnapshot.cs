@@ -99,6 +99,9 @@ namespace Tingle.Dependabot.Migrations
                     b.Property<DateTimeOffset>("Updated")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<string>("UpdaterImageTag")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Url")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");

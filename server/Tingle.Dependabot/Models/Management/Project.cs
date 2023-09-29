@@ -66,8 +66,16 @@ public class Project
     public Dictionary<string, string> Secrets { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
+    /// Version of the updater docker container images to use.
+    /// If no value is provided, the default version is used.
+    /// Providing a value allows to test new feature just for the project.
+    /// </summary>
+    /// <example>1.20</example>
+    public string? UpdaterImageTag { get; set; }
+
+    /// <summary>
     /// Token for accessing GitHub APIs.
-    /// If no value is provided, the a default token is used.
+    /// If no value is provided, a default token is used.
     /// Providing a value avoids being rate limited in case when there
     /// are many calls at the same time from the same IP.
     /// When provided, it must have <c>read</c> access to public repositories.

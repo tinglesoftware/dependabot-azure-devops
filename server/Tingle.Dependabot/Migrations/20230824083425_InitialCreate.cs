@@ -45,6 +45,7 @@ public partial class InitialCreate : Migration
                 AutoApprove_Enabled = table.Column<bool>(type: "bit", nullable: false),
                 Password = table.Column<string>(type: "nvarchar(450)", nullable: false),
                 Secrets = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                UpdaterImageTag = table.Column<string>(type: "nvarchar(max)", nullable: true),
                 GithubToken = table.Column<string>(type: "nvarchar(max)", nullable: true),
                 Location = table.Column<string>(type: "nvarchar(max)", nullable: true),
                 Synchronized = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
