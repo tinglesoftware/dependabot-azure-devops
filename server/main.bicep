@@ -269,7 +269,7 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
             { name: 'Workflow__ResourceGroupId', value: resourceGroup().id }
             { name: 'Workflow__AppEnvironmentId', value: appEnvironment.id }
             { name: 'Workflow__LogAnalyticsWorkspaceId', value: logAnalyticsWorkspace.properties.customerId }
-            { name: 'Workflow__UpdaterContainerImageTemplate', value: 'ghcr.io/tinglesoftware/dependabot-updater-{{ecosystem}}:${imageTag}' }
+            { name: 'Workflow__UpdaterImageTag', value: imageTag }
             { name: 'Workflow__GithubToken', value: githubToken }
             { name: 'Workflow__Location', value: location }
 

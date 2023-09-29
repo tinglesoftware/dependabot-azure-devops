@@ -425,8 +425,8 @@
                   "value": "[reference(resourceId('Microsoft.OperationalInsights/workspaces', parameters('name')), '2022-10-01').customerId]"
                 },
                 {
-                  "name": "Workflow__UpdaterContainerImageTemplate",
-                  "value": "[format('ghcr.io/tinglesoftware/dependabot-updater-{{{{ecosystem}}}}:{0}', parameters('imageTag'))]"
+                  "name": "Workflow__UpdaterImageTag",
+                  "value": "[parameters('imageTag')]"
                 },
                 {
                   "name": "Workflow__GithubToken",

@@ -21,14 +21,14 @@ public class WorkflowOptions
     public string? LogAnalyticsWorkspaceId { get; set; }
 
     /// <summary>
-    /// Template representing the docker container image  to use.
+    /// Version of the updater docker container images to use.
     /// Keeping this value fixed in code is important so that the code that depends on it always works.
     /// More like a dependency.
     /// <br/>
     /// However, in production there maybe an issue that requires a rollback hence the value is placed in options.
     /// </summary>
-    /// <example>ghcr.io/tinglesoftware/dependabot-updater-{{ecosystem}}:1.20</example>
-    public string? UpdaterContainerImageTemplate { get; set; }
+    /// <example>1.20</example>
+    public string? UpdaterImageTag { get; set; }
 
     /// <summary>
     /// Root working directory where file are written during job scheduling and execution.

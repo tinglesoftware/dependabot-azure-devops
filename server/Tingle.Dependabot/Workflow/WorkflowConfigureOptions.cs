@@ -31,9 +31,9 @@ internal class WorkflowConfigureOptions : IValidateOptions<WorkflowOptions>
             return ValidateOptionsResult.Fail($"'{nameof(options.LogAnalyticsWorkspaceId)}' cannot be null or whitespace");
         }
 
-        if (string.IsNullOrWhiteSpace(options.UpdaterContainerImageTemplate))
+        if (string.IsNullOrWhiteSpace(options.UpdaterImageTag))
         {
-            return ValidateOptionsResult.Fail($"'{nameof(options.UpdaterContainerImageTemplate)}' cannot be null or whitespace");
+            return ValidateOptionsResult.Fail($"'{nameof(options.UpdaterImageTag)}' cannot be null or whitespace");
         }
 
         if (string.IsNullOrWhiteSpace(options.WorkingDirectory))
