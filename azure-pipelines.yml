@@ -1,0 +1,125 @@
+name: '$(Date:yyyy)-$(Date:MM)-$(Date:dd)$(Rev:.r)'
+
+trigger:
+  batch: true
+  branches:
+    include:
+    - main
+    - refs/tags/*
+
+pr:
+  branches:
+    include:
+    - main
+  drafts: false
+  autoCancel: true
+  paths:
+    include:
+    - server/**
+    - azure-pipelines.yml
+    exclude:
+    - docs/**
+
+stages:
+- stage: Build
+  jobs:
+  - job: Build
+
+    pool:
+      vmImage: 'ubuntu-latest'
+
+    steps:
+    - checkout: self
+      fetchDepth: 0 # no shallow fetch, we need all the history for GitVersion to work
+
+    - task: gitversion/setup@0
+      displayName: Setup GitVersion
+      inputs:
+        versionSpec: '5.x'
+
+    - task: gitversion/execute@0
+      displayName: Determine Version
+      name: GitVersion
+      inputs:
+        useConfigFile: true
+        configFilePath: '$(Build.SourcesDirectory)/GitVersion.yml'
+
+    - task: replacetokens@3
+      displayName: 'Replace tokens in main.parameters.json'
+      inputs:
+        rootDirectory: '$(Build.SourcesDirectory)/server'
+        targetFiles: 'server/main.parameters.json'
+        actionOnMissing: fail
+        verbosity: detailed
+
+    # Compile bicep file to JSON to make it independent
+    - script: |
+        bicep build main.bicep --outfile main.json
+      displayName: 'Compile bicep file'
+      workingDirectory: $(Build.SourcesDirectory)/server
+
+    - task: CopyFiles@2
+      displayName: 'Copy files to drop folder'
+      inputs:
+        SourceFolder: $(Build.SourcesDirectory)/server
+        Contents: |
+          *.json
+        TargetFolder: $(Build.ArtifactStagingDirectory)/drop
+
+    - task: PublishPipelineArtifact@1
+      displayName: "Publish drop artifact"
+      inputs:
+        targetPath: $(Build.ArtifactStagingDirectory)/drop
+        artifactName: "drop"
+
+    - task: AzureCLI@2
+      displayName: "Validate Resources"
+      condition: |
+        and
+        (
+          succeeded(),
+          startsWith(variables['Build.SourceBranch'], 'refs/pull/')
+        )
+      inputs:
+        azureSubscription: $(azureConnection)
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: >
+          az deployment group validate
+          --resource-group '$(resourceGroupName)'
+          --template-file $(Build.SourcesDirectory)/server/main.json
+          --parameters $(Build.SourcesDirectory)/server/main.parameters.json
+
+- stage: Deploy
+  displayName: Deploy
+  dependsOn: Build
+  # only deploy non pr branches
+  condition: |
+    and
+    (
+      succeeded(),
+      not(startsWith(variables['Build.SourceBranch'], 'refs/pull/'))
+    )
+  jobs:
+  - deployment: Deploy
+    environment: Dependabot
+
+    pool:
+      vmImage: 'ubuntu-latest'
+
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+
+          - task: AzureCLI@2
+            displayName: "Deploy Resources"
+            inputs:
+              azureSubscription: $(azureConnection)
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: >
+                az deployment group create
+                --resource-group '$(resourceGroupName)'
+                --template-file $(Pipeline.Workspace)/drop/main.json
+                --parameters $(Pipeline.Workspace)/drop/main.parameters.json
