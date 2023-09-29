@@ -11,7 +11,6 @@
     },
     "name": {
       "type": "string",
-      "defaultValue": "dependabot",
       "minLength": 5,
       "maxLength": 24,
       "metadata": {
