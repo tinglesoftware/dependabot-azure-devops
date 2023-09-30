@@ -48,7 +48,7 @@ stages:
       displayName: 'Replace tokens in main.parameters.json'
       inputs:
         rootDirectory: '$(Build.SourcesDirectory)/server'
-        targetFiles: 'server/main.parameters.json'
+        targetFiles: 'main.parameters.json'
         actionOnMissing: fail
         verbosity: detailed
 
