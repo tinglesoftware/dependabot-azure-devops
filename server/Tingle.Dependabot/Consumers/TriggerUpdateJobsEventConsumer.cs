@@ -83,7 +83,8 @@ internal class TriggerUpdateJobsEventConsumer : IEventConsumer<TriggerUpdateJobs
                 // create the job
                 job = new UpdateJob
                 {
-                    Id = $"job_{KSUID.Ksuid.Generate()}",
+                    // no prefixing/formatting because we use this to create azure resources which have name restrictions
+                    Id = FlakeId.Id.Create().ToString(),
 
                     Created = DateTimeOffset.UtcNow,
                     Status = UpdateJobStatus.Scheduled,

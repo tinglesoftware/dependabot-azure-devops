@@ -11,6 +11,7 @@
     },
     "name": {
       "type": "string",
+      "defaultValue": "dependabot",
       "minLength": 5,
       "maxLength": 24,
       "metadata": {
@@ -77,7 +78,7 @@
         "writeable": true
       }
     ],
-    "storageAccountName": "[if(equals(parameters('name'), 'dependabot'), 'dependabotstore', parameters('name'))]",
+    "storageAccountName": "[replace(replace(if(equals(parameters('name'), 'dependabot'), 'dependabotstore', parameters('name')), '-', ''), '_', '')]",
     "sqlServerAdministratorLogin": "[uniqueString(resourceGroup().id)]",
     "sqlServerAdministratorLoginPassword": "[format('{0}%{1}', skip(uniqueString(resourceGroup().id), 5), uniqueString('sql-password', resourceGroup().id))]",
     "queueNames": [

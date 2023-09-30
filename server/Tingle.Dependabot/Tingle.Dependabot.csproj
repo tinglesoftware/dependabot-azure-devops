@@ -23,6 +23,7 @@
     <PackageReference Include="Azure.Monitor.Query" Version="1.2.0" />
     <PackageReference Include="Azure.ResourceManager.AppContainers" Version="1.1.0" />
     <PackageReference Include="DistributedLock.FileSystem" Version="1.0.1" />
+    <PackageReference Include="FlakeId" Version="1.1.2" /> <!-- TODO: replace with Tingle.Extensions.Primitives -->
     <PackageReference Include="Ksuid" Version="1.0.0" /> <!-- TODO: replace with Tingle.Extensions.Primitives -->
     <PackageReference Include="Macross.Json.Extensions" Version="3.0.0" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.21.0" />

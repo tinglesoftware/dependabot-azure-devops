@@ -4,7 +4,7 @@ param location string = resourceGroup().location
 @minLength(5)
 @maxLength(24)
 @description('Name of the resources. Make sure it is unique e.g. dependabotcontoso to avoid conflicts or failures')
-param name string
+param name string = 'dependabot'
 
 @description('JSON array string fo projects to setup. E.g. [{"url":"https://dev.azure.com/tingle/dependabot","token":"dummy","AutoComplete":true}]')
 param projectSetups string = '[]'
@@ -22,7 +22,8 @@ var fileShares = [
   { name: 'working-dir', writeable: true }
 ]
 
-var storageAccountName = name == 'dependabot' ? 'dependabotstore' : name // dependabot is not available as of 2023-Sep-25 so we change just for the public deployment
+// dependabot is not available as of 2023-Sep-25 so we change just for the public deployment
+var storageAccountName = replace(replace((name == 'dependabot' ? 'dependabotstore' : name), '-', ''), '_', '') // remove underscores and hyphens
 var sqlServerAdministratorLogin = uniqueString(resourceGroup().id) // e.g. zecnx476et7xm (13 characters)
 var sqlServerAdministratorLoginPassword = '${skip(uniqueString(resourceGroup().id), 5)}%${uniqueString('sql-password', resourceGroup().id)}' // e.g. abcde%zecnx476et7xm (19 characters)
 var queueNames = [
