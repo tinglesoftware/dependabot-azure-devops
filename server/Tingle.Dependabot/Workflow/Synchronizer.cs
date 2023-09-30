@@ -196,7 +196,7 @@ internal class Synchronizer
         {
             repository = new Repository
             {
-                Id = $"repo_{Guid.NewGuid():n}",
+                Id = $"repo_{KSUID.Ksuid.Generate()}",
                 Created = DateTimeOffset.UtcNow,
                 ProjectId = project.Id,
                 ProviderId = providerInfo.Id,

@@ -83,7 +83,7 @@ internal class TriggerUpdateJobsEventConsumer : IEventConsumer<TriggerUpdateJobs
                 // create the job
                 job = new UpdateJob
                 {
-                    Id = FlakeId.Id.Create().ToString(),
+                    Id = $"job_{KSUID.Ksuid.Generate()}",
 
                     Created = DateTimeOffset.UtcNow,
                     Status = UpdateJobStatus.Scheduled,
