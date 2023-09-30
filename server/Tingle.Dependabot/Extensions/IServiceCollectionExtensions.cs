@@ -3,7 +3,6 @@ using Medallion.Threading.FileSystem;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.FeatureManagement;
 using Tingle.Dependabot.ApplicationInsights;
-using Tingle.Dependabot.FeatureManagement;
 using Tingle.Dependabot.Workflow;
 
 namespace Microsoft.Extensions.DependencyInjection;
@@ -63,9 +62,6 @@ public static class IServiceCollectionExtensions
         builder.AddFeatureFilter<FeatureManagement.FeatureFilters.PercentageFilter>();
         builder.AddFeatureFilter<FeatureManagement.FeatureFilters.TimeWindowFilter>();
         builder.AddFeatureFilter<FeatureManagement.FeatureFilters.ContextualTargetingFilter>();
-
-        builder.Services.AddSingleton<FeatureManagement.FeatureFilters.ITargetingContextAccessor, ProjectTargetingContextAccessor>();
-        builder.AddFeatureFilter<FeatureManagement.FeatureFilters.TargetingFilter>(); // requires ITargetingContextAccessor
         builder.Services.Configure<FeatureManagement.FeatureFilters.TargetingEvaluationOptions>(o => o.IgnoreCase = true);
 
         builder.UseDisabledFeaturesHandler(new Tingle.Dependabot.CustomDisabledFeaturesHandler());
