@@ -73,7 +73,7 @@ internal partial class UpdateRunner
         var container = new ContainerAppContainer
         {
             Name = UpdaterContainerName,
-            Image = $"ghcr.io/tinglesoftware/dependabot-updater-{job.PackageEcosystem}:{options.UpdaterImageTag}",
+            Image = $"ghcr.io/tinglesoftware/dependabot-updater-{job.PackageEcosystem}:{project.UpdaterImageTag ?? options.UpdaterImageTag}",
             Resources = job.Resources!,
             Args = { useV2 ? "update_files" : "update_script", },
             VolumeMounts = { new ContainerAppVolumeMount { VolumeName = volumeName, MountPath = options.WorkingDirectory, }, },
