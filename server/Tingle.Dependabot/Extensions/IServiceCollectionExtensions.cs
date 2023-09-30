@@ -7,12 +7,8 @@ using Tingle.Dependabot.Workflow;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
-/// <summary>Extensions on <see cref="IServiceCollection"/>.</summary>
-public static class IServiceCollectionExtensions
+internal static class IServiceCollectionExtensions
 {
-    /// <summary>Add standard Application Insights services.</summary>
-    /// <param name="services">The <see cref="IServiceCollection"/> instance to add to.</param>
-    /// <param name="configuration">The root configuration instance from which to pull settings.</param>
     public static IServiceCollection AddStandardApplicationInsights(this IServiceCollection services, IConfiguration configuration)
     {
         // Add the core services

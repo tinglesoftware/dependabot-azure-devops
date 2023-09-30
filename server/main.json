@@ -92,6 +92,65 @@
   },
   "resources": [
     {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2023-02-01",
+      "name": "[format('{0}/{1}', parameters('name'), 'sql-login')]",
+      "properties": {
+        "contentType": "text/plain",
+        "value": "[variables('sqlServerAdministratorLogin')]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', parameters('name'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2023-02-01",
+      "name": "[format('{0}/{1}', parameters('name'), 'sql-password')]",
+      "properties": {
+        "contentType": "text/plain",
+        "value": "[variables('sqlServerAdministratorLoginPassword')]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', parameters('name'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/keys",
+      "apiVersion": "2023-02-01",
+      "name": "[format('{0}/{1}', parameters('name'), 'data-protection')]",
+      "properties": {
+        "keySize": 2048,
+        "attributes": {
+          "enabled": true
+        },
+        "kty": "RSA",
+        "keyOps": [
+          "encrypt",
+          "decrypt",
+          "sign",
+          "verify",
+          "wrapKey",
+          "unwrapKey"
+        ],
+        "rotationPolicy": {
+          "lifetimeActions": [
+            {
+              "action": {
+                "type": "Notify"
+              },
+              "trigger": {
+                "timeBeforeExpiry": "P30D"
+              }
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', parameters('name'))]"
+      ]
+    },
+    {
       "copy": {
         "name": "shares",
         "count": "[length(variables('fileShares'))]"
@@ -133,6 +192,26 @@
       "apiVersion": "2023-01-31",
       "name": "[parameters('name')]",
       "location": "[parameters('location')]"
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults",
+      "apiVersion": "2023-02-01",
+      "name": "[parameters('name')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "tenantId": "[subscription().tenantId]",
+        "sku": {
+          "name": "standard",
+          "family": "A"
+        },
+        "enabledForDeployment": true,
+        "enabledForDiskEncryption": true,
+        "enabledForTemplateDeployment": true,
+        "accessPolicies": [],
+        "enableRbacAuthorization": true,
+        "enableSoftDelete": true,
+        "softDeleteRetentionInDays": 90
+      }
     },
     {
       "type": "Microsoft.ServiceBus/namespaces",
@@ -381,6 +460,10 @@
                   "secretRef": "connection-strings-sql"
                 },
                 {
+                  "name": "DataProtection__Azure__KeyVault__KeyUrl",
+                  "value": "[reference(resourceId('Microsoft.KeyVault/vaults/keys', parameters('name'), 'data-protection'), '2023-02-01').keyUri]"
+                },
+                {
                   "name": "DistributedLocking__FilePath",
                   "value": "/mnt/distributed-locks"
                 },
@@ -507,6 +590,7 @@
         "[resourceId('Microsoft.AppConfiguration/configurationStores', parameters('name'))]",
         "[resourceId('Microsoft.App/managedEnvironments', parameters('name'))]",
         "[resourceId('Microsoft.Insights/components', parameters('name'))]",
+        "[resourceId('Microsoft.KeyVault/vaults/keys', parameters('name'), 'data-protection')]",
         "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('name'))]",
         "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name'))]",
         "[resourceId('Microsoft.ServiceBus/namespaces', parameters('name'))]",
@@ -520,6 +604,19 @@
       "name": "[guid(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')), 'ContributorRoleAssignment')]",
       "properties": {
         "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
+        "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')), '2023-01-31').principalId]",
+        "principalType": "ServicePrincipal"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "name": "[guid(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')), 'KeyVaultAdministrator')]",
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '00482a5a-887f-4fb3-b363-3b7fe8e74483')]",
         "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')), '2023-01-31').principalId]",
         "principalType": "ServicePrincipal"
       },
@@ -581,10 +678,6 @@
     }
   ],
   "outputs": {
-    "sqlServerAdministratorLoginPassword": {
-      "type": "string",
-      "value": "[variables('sqlServerAdministratorLoginPassword')]"
-    },
     "webhookEndpoint": {
       "type": "string",
       "value": "[format('https://{0}/webhooks/azure', reference(resourceId('Microsoft.App/containerApps', parameters('name')), '2023-05-01').configuration.ingress.fqdn)]"

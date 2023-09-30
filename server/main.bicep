@@ -71,6 +71,17 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-02-01' = {
 
   resource sqlLoginSecret 'secrets' = { name: 'sql-login', properties: { contentType: 'text/plain', value: sqlServerAdministratorLogin } }
   resource sqlPasswordSecret 'secrets' = { name: 'sql-password', properties: { contentType: 'text/plain', value: sqlServerAdministratorLoginPassword } }
+
+  resource dataProtectionKey 'keys' = {
+    name: 'data-protection'
+    properties: {
+      keySize: 2048
+      attributes: { enabled: true }
+      kty: 'RSA'
+      keyOps: [ 'encrypt', 'decrypt', 'sign', 'verify', 'wrapKey', 'unwrapKey' ]
+      rotationPolicy: { lifetimeActions: [ { action: { type: 'Notify' }, trigger: { timeBeforeExpiry: 'P30D' } } ] }
+    }
+  }
 }
 
 /* Service Bus namespace */
@@ -276,6 +287,7 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
             { name: 'ApplicationInsights__ConnectionString', secretRef: 'connection-strings-application-insights' }
             { name: 'ConnectionStrings__Sql', secretRef: 'connection-strings-sql' }
 
+            { name: 'DataProtection__Azure__KeyVault__KeyUrl', value: keyVault::dataProtectionKey.properties.keyUri }
             { name: 'DistributedLocking__FilePath', value: '/mnt/distributed-locks' }
 
             { name: 'Logging__ApplicationInsights__LogLevel__Default', value: 'None' } // do not send logs to application insights (duplicates LogAnalytics)
@@ -342,6 +354,15 @@ resource contributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022
   scope: resourceGroup()
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')
+    principalId: managedIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+resource keyVaultAdministratorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(managedIdentity.id, 'KeyVaultAdministrator')
+  scope: resourceGroup()
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '00482a5a-887f-4fb3-b363-3b7fe8e74483')
     principalId: managedIdentity.properties.principalId
     principalType: 'ServicePrincipal'
   }

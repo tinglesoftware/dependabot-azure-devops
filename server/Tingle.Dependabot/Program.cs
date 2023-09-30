@@ -49,6 +49,11 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 // Add data protection
 builder.Services.AddDataProtection().PersistKeysToDbContext<MainDbContext>();
+var keyVaultKeyUrl = builder.Configuration.GetValue<Uri?>("Azure:KeyVault:KeyUrl"); // e.g. "https://{vault_name}.vault.azure.net/keys/{key-id}"
+if (keyVaultKeyUrl is not null)
+{
+    builder.Services.AddDataProtection().ProtectKeysWithAzureKeyVault(keyVaultKeyUrl, new Azure.Identity.DefaultAzureCredential());
+}
 
 // Add controllers
 builder.Services.AddControllers()
