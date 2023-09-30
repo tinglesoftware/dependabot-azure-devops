@@ -235,7 +235,7 @@ internal partial class UpdateRunner
 
         // check if debug and determinism is enabled for the project via Feature Management
         var fmc = MakeTargetingContext(project, job);
-        var debugAllJobs = await featureManager.IsEnabledAsync(FeatureNames.DebugAllJobs, fmc);
+        var debugAllJobs = await featureManager.IsEnabledAsync(FeatureNames.DebugAllJobs); // context is not passed because this is global
         var deterministic = await featureManager.IsEnabledAsync(FeatureNames.DeterministicUpdates, fmc);
 
         // Add compulsory values
