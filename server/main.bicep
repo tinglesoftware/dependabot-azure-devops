@@ -53,6 +53,26 @@ resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-
   location: location
 }
 
+/* Key Vault */
+resource keyVault 'Microsoft.KeyVault/vaults@2023-02-01' = {
+  name: name
+  location: location
+  properties: {
+    tenantId: subscription().tenantId
+    sku: { name: 'standard', family: 'A' }
+    enabledForDeployment: true
+    enabledForDiskEncryption: true
+    enabledForTemplateDeployment: true
+    accessPolicies: []
+    enableRbacAuthorization: true
+    enableSoftDelete: true
+    softDeleteRetentionInDays: 90
+  }
+
+  resource sqlLoginSecret 'secrets' = { name: 'sql-login', properties: { contentType: 'text/plain', value: sqlServerAdministratorLogin } }
+  resource sqlPasswordSecret 'secrets' = { name: 'sql-password', properties: { contentType: 'text/plain', value: sqlServerAdministratorLoginPassword } }
+}
+
 /* Service Bus namespace */
 resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2021-11-01' = {
   name: name
@@ -363,6 +383,4 @@ resource logAnalyticsReaderRoleAssignment 'Microsoft.Authorization/roleAssignmen
   }
 }
 
-#disable-next-line outputs-should-not-contain-secrets
-output sqlServerAdministratorLoginPassword string = sqlServerAdministratorLoginPassword
 output webhookEndpoint string = 'https://${app.properties.configuration.ingress.fqdn}/webhooks/azure'
