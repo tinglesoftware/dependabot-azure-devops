@@ -6,7 +6,7 @@
       "value": "dependabot"
     },
     "projectSetups": {
-      "value": "[{\"url\":\"#{System_TeamFoundationCollectionUri}##{System_TeamProject}#\", \"token\":\"${DependabotProjectToken}\",\"AutoComplete\":true}]"
+      "value": "[{\"url\":\"#{System_TeamFoundationCollectionUri}##{System_TeamProject}#\", \"token\":\"#{DependabotProjectToken}#\",\"AutoComplete\":true}]"
     },
     "githubToken": {
       "value": "#{GithubToken}#"
