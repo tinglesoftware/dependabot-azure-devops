@@ -210,7 +210,7 @@ internal class Synchronizer
 
         if (commitChanged)
         {
-            logger.SyncConfigFileChanged(repositorySlug: repository.Slug, projectId: project.Id);
+            logger.SyncConfigFileChanged(repositorySlug: providerInfo.Slug, projectId: project.Id);
 
             // set/update existing values
             repository.Updated = DateTimeOffset.UtcNow;
