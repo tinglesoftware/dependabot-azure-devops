@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <Deterministic>true</Deterministic>
@@ -40,7 +40,7 @@
     <PackageReference Include="Tingle.EventBus.Transports.InMemory" Version="0.19.2" />
     <PackageReference Include="Tingle.Extensions.DataAnnotations" Version="4.2.2" />
     <PackageReference Include="Tingle.Extensions.Serilog" Version="4.2.2" />
-    <PackageReference Include="Tingle.PeriodicTasks" Version="1.1.0" />
+    <PackageReference Include="Tingle.PeriodicTasks" Version="1.2.0" />
     <PackageReference Include="YamlDotNet" Version="13.4.0" />
   </ItemGroup>
 
