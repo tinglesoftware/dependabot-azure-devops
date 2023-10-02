@@ -83,8 +83,9 @@ internal class TriggerUpdateJobsEventConsumer : IEventConsumer<TriggerUpdateJobs
                 // create the job
                 job = new UpdateJob
                 {
-                    // no prefixing/formatting because we use this to create azure resources which have name restrictions
-                    Id = FlakeId.Id.Create().ToString(),
+                    // we use this to create azure resources which have name restrictions
+                    // alphanumeric, starts with a letter, does not contain "--", upto 32 characters
+                    Id = $"job-{FlakeId.Id.Create()}", // flake is 19 chars, total is 23 chars
 
                     Created = DateTimeOffset.UtcNow,
                     Status = UpdateJobStatus.Scheduled,
