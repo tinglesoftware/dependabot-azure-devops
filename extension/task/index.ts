@@ -3,6 +3,7 @@ import { ToolRunner } from "azure-pipelines-task-lib/toolrunner"
 import { IDependabotConfig, IDependabotRegistry, IDependabotUpdate } from "./IDependabotConfig";
 import getSharedVariables from "./utils/getSharedVariables";
 import { parseConfigFile } from "./utils/parseConfigFile";
+import { resolveAzureDevOpsIdentities } from "./utils/resolveAzureDevOpsIdentities";
 
 async function run() {
   try {
@@ -128,12 +129,14 @@ async function run() {
 
       // Set the reviewers
       if (update.reviewers) {
-        dockerRunner.arg(["-e", `DEPENDABOT_REVIEWERS=${update.reviewers}`]);
+        const reviewers = await resolveAzureDevOpsIdentities(variables.organizationUrl, update.reviewers)
+        dockerRunner.arg(["-e", `DEPENDABOT_REVIEWERS=${JSON.stringify(reviewers)}`]);
       }
 
       // Set the assignees
       if (update.assignees) {
-        dockerRunner.arg(["-e", `DEPENDABOT_ASSIGNEES=${update.assignees}`]);
+        const assignees = await resolveAzureDevOpsIdentities(variables.organizationUrl, update.assignees)
+        dockerRunner.arg(["-e", `DEPENDABOT_ASSIGNEES=${JSON.stringify(assignees)}`]);
       }
 
       // Set the updater options, if provided

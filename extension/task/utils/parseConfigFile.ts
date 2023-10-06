@@ -189,10 +189,10 @@ function parseUpdates(config: any): IDependabotUpdate[] {
       ignore: update["ignore"] ? JSON.stringify(update["ignore"]) : undefined,
       labels: update["labels"] ? JSON.stringify(update["labels"]) : undefined,
       reviewers: update["reviewers"]
-        ? JSON.stringify(update["reviewers"])
+        ? update["reviewers"]
         : undefined,
       assignees: update["assignees"]
-        ? JSON.stringify(update["assignees"])
+        ? update["assignees"]
         : undefined,
       commitMessage: update["commit-message"]
         ? JSON.stringify(update["commit-message"])

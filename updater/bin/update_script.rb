@@ -278,18 +278,24 @@ end
 
 #########################################################################
 #                         Setup Reviewers                               #
-# DEPENDABOT_REVIEWERS Example: ["be9321e2-f404-4ffa-8d6b-44efddb04865"]
+# DEPENDABOT_REVIEWERS Example: "[{"id":"be9321e2-f404-4ffa-8d6b-44efddb04865","displayName":"Alice","input":"alice@example.com"}]"
 #########################################################################
 unless ENV["DEPENDABOT_REVIEWERS"].to_s.strip.empty?
-  $options[:reviewers] = JSON.parse(ENV.fetch("DEPENDABOT_REVIEWERS", nil))
+  reviewers = JSON.parse(ENV["DEPENDABOT_REVIEWERS"])
+  $options[:reviewers] = reviewers&.map { |entry| entry['id'] } if reviewers
+
+  puts "Pull Requests shall be assigned to required reviewers #{reviewers&.select{ |entry| entry['displayName'] }.map { |entry| "#{entry['displayName']} <#{entry['input']}>" }&.join(', ')}" if reviewers
 end
 
 #########################################################################
 #                           Setup Assignees                             #
-# DEPENDABOT_ASSIGNEES Example: ["be9321e2-f404-4ffa-8d6b-44efddb04865"]
+# DEPENDABOT_ASSIGNEES Example: "[{"id":"be9321e2-f404-4ffa-8d6b-44efddb04865","displayName":"Alice","input":"alice@example.com"}]"
 #########################################################################
 unless ENV["DEPENDABOT_ASSIGNEES"].to_s.strip.empty?
-  $options[:assignees] = JSON.parse(ENV.fetch("DEPENDABOT_ASSIGNEES", nil))
+  assignees = JSON.parse(ENV["DEPENDABOT_ASSIGNEES"])
+  $options[:assignees] = assignees&.map { |entry| entry['id'] } if assignees
+
+  puts "Pull Requests shall be assigned to optional reviewers #{assignees&.select{ |entry| entry['displayName'] }.map { |entry| "#{entry['displayName']} <#{entry['input']}>" }&.join(', ')}" if assignees
 end
 
 # Get ignore versions for a dependency
