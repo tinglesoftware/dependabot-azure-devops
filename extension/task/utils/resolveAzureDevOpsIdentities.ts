@@ -45,13 +45,14 @@ export async function resolveAzureDevOpsIdentities(organizationUrl: URL, inputs:
   return result;
 }
 
-
-const DEV_AZURE = "dev.azure.com";
-const VISUALSTUDIO = "visualstudio.com";
-
+/**
+ * Returns whether the extension is run in a hosted environment (as opposed to an on-premise environment).
+ * In Azure DevOps terms, hosted environment is also known as "Azure DevOps Services" and on-premise environment is known as
+ * "Team Foundation Server" or "Azure DevOps Server".
+ */
 function isHostedAzureDevOps(uri: URL): boolean {
   const hostname = uri.hostname.toLowerCase();
-  return hostname.startsWith(DEV_AZURE) || hostname.endsWith(VISUALSTUDIO);
+  return hostname === 'dev.azure.com' || hostname.endsWith('.visualstudio.com');
 }
 
 function decodeBase64(input: string):string {
