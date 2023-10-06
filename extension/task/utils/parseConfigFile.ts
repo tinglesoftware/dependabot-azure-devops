@@ -185,10 +185,10 @@ function parseUpdates(config: any): IDependabotUpdate[] {
       allow: update["allow"] ? JSON.stringify(update["allow"]) : undefined,
       labels: update["labels"] ? JSON.stringify(update["labels"]) : undefined,
       reviewers: update["reviewers"]
-        ? JSON.stringify(update["reviewers"])
+        ? update["reviewers"]
         : undefined,
       assignees: update["assignees"]
-        ? JSON.stringify(update["assignees"])
+        ? update["assignees"]
         : undefined,
     };
 
