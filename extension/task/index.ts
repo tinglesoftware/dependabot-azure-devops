@@ -130,13 +130,13 @@ async function run() {
       // Set the reviewers
       if (update.reviewers) {
         const reviewers = await resolveAzureDevOpsIdentities(variables.organizationUrl, update.reviewers)
-        dockerRunner.arg(["-e", `DEPENDABOT_REVIEWERS=${JSON.stringify(reviewers)}`]);
+        dockerRunner.arg(["-e", `DEPENDABOT_REVIEWERS=${JSON.stringify(reviewers.map(identity  => identity.id))}`]);
       }
 
       // Set the assignees
       if (update.assignees) {
         const assignees = await resolveAzureDevOpsIdentities(variables.organizationUrl, update.assignees)
-        dockerRunner.arg(["-e", `DEPENDABOT_ASSIGNEES=${JSON.stringify(assignees)}`]);
+        dockerRunner.arg(["-e", `DEPENDABOT_ASSIGNEES=${JSON.stringify(assignees.map(identity  => identity.id))}`]);
       }
 
       // Set the updater options, if provided
