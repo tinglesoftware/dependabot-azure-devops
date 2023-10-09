@@ -50,7 +50,7 @@ export async function resolveAzureDevOpsIdentities(organizationUrl: URL, inputs:
  * In Azure DevOps terms, hosted environment is also known as "Azure DevOps Services" and on-premise environment is known as
  * "Team Foundation Server" or "Azure DevOps Server".
  */
-function isHostedAzureDevOps(uri: URL): boolean {
+export function isHostedAzureDevOps(uri: URL): boolean {
   const hostname = uri.hostname.toLowerCase();
   return hostname === 'dev.azure.com' || hostname.endsWith('.visualstudio.com');
 }
@@ -84,10 +84,10 @@ async function querySubject(organizationUrl: URL, email: string): Promise<IIdent
  * @returns 
  */
 async function querySubjectOnPrem(organizationUrl: URL, email: string): Promise<IIdentity | undefined> {
-  var url = `${organizationUrl}_apis/identities?searchFilter=MailAddress&queryMembership=None&filterValue=${email}`;
-  tl.debug(`GET ${url}`);  
+  const url = `${organizationUrl}_apis/identities?searchFilter=MailAddress&queryMembership=None&filterValue=${email}`;
+  tl.debug(`GET ${url}`);
   try {
-    var response = await axios.get(url, {
+    const response = await axios.get(url, {
       headers: {
         Authorization: `Basic ${encodeBase64("PAT:" + tl.getVariable("System.AccessToken"))}`,
         Accept: "application/json;api-version=5.0",
@@ -101,7 +101,7 @@ async function querySubjectOnPrem(organizationUrl: URL, email: string): Promise<
         input: email}
     }
   } catch (error) {
-    var responseStatusCode = error?.response?.status;
+    const responseStatusCode = error?.response?.status;
     tl.debug(`HTTP Response Status: ${responseStatusCode}`)
     if (responseStatusCode > 400 && responseStatusCode < 500) {
       tl.debug(`Access token is ${tl.getVariable("System.AccessToken")?.length > 0 ? "not" : ""} null or empty.`);
@@ -116,16 +116,16 @@ async function querySubjectOnPrem(organizationUrl: URL, email: string): Promise<
 
 /**
  *  * Make the HTTP Request for a hosted Azure DevOps Service, to resolve an email to an IIdentity
- * @param organization 
- * @param email 
- * @returns 
+ * @param organization
+ * @param email
+ * @returns
  */
 async function querySubjectHosted(organization: string, email: string): Promise<IIdentity | undefined> {
   // make HTTP request
-  var url = `https://vssps.dev.azure.com/${organization}/_apis/graph/subjectquery`;
-  tl.debug(`GET ${url}`);  
+  const url = `https://vssps.dev.azure.com/${organization}/_apis/graph/subjectquery`;
+  tl.debug(`GET ${url}`);
   try {
-    var response = await axios.post(url, {
+    const response = await axios.post(url, {
       headers: {
         Authorization: `Basic ${encodeBase64("PAT:" + tl.getVariable("System.AccessToken"))}`,
         Accept: "application/json;api-version=6.0-preview.1",
@@ -138,15 +138,15 @@ async function querySubjectHosted(organization: string, email: string): Promise<
     });
 
     if (isSuccessStatusCode(response.status)) {
-      var descriptor: string = response.data.value[0]?.descriptor || "";
-      var id = decodeBase64(descriptor.substring(descriptor.indexOf(".") + 1))
+      const descriptor: string = response.data.value[0]?.descriptor || "";
+      const id = decodeBase64(descriptor.substring(descriptor.indexOf(".") + 1))
       return {
         id: id,
         displayName: response.data.value[0]?.displayName,
         input: email}
     }
   } catch (error) {
-    var responseStatusCode = error?.response?.status;
+    const responseStatusCode = error?.response?.status;
     tl.debug(`HTTP Response Status: ${responseStatusCode}`)
     if (responseStatusCode > 400 && responseStatusCode < 500) {
       tl.debug(`Access token is ${tl.getVariable("System.AccessToken")?.length > 0 ? "not" : ""} null or empty.`);
