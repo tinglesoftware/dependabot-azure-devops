@@ -41,7 +41,7 @@
     <PackageReference Include="Tingle.Extensions.DataAnnotations" Version="4.2.2" />
     <PackageReference Include="Tingle.Extensions.Serilog" Version="4.2.2" />
     <PackageReference Include="Tingle.PeriodicTasks" Version="1.2.0" />
-    <PackageReference Include="YamlDotNet" Version="13.4.0" />
+    <PackageReference Include="YamlDotNet" Version="13.5.2" />
   </ItemGroup>
 
   <ItemGroup>
