@@ -23,6 +23,7 @@ $files = @(
     "updater/config/.yarnrc"
 
     "updater/lib/dependabot/logger/formats.rb"
+    "updater/lib/dependabot/updater/operations/create_group_security_update_pull_request.rb"
     "updater/lib/dependabot/updater/operations/create_group_update_pull_request.rb"
     "updater/lib/dependabot/updater/operations/create_security_update_pull_request.rb"
     "updater/lib/dependabot/updater/operations/group_update_all_versions.rb"

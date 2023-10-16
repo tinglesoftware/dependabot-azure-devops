@@ -120,6 +120,15 @@ module Dependabot
     def handle_file_fetcher_error(error)
       error_details =
         case error
+        when Dependabot::ToolVersionNotSupported
+          {
+            "error-type": "tool_version_not_supported",
+            "error-detail": {
+              "tool-name": error.tool_name,
+              "detected-version": error.detected_version,
+              "supported-versions": error.supported_versions
+            }
+          }
         when Dependabot::BranchNotFound
           {
             "error-type": "branch_not_found",
@@ -161,7 +170,7 @@ module Dependabot
           # If we get a 500 from GitHub there's very little we can do about it,
           # and responsibility for fixing it is on them, not us. As a result we
           # quietly log these as errors
-          { "error-type": "unknown_error" }
+          { "error-type": "server_error" }
         when *Octokit::RATE_LIMITED_ERRORS
           # If we get a rate-limited error we let dependabot-api handle the
           # retry by re-enqueing the update job after the reset
@@ -172,11 +181,23 @@ module Dependabot
             }
           }
         else
-          Dependabot.logger.error(error.message)
-          error.backtrace.each { |line| Dependabot.logger.error line }
+          log_error(error)
+
+          unknown_error_details = {
+            "error-class" => error.class.to_s,
+            "error-message" => error.message,
+            "error-backtrace" => error.backtrace.join("\n"),
+            "package-manager" => job.package_manager,
+            "job-id" => job.id,
+            "job-dependencies" => job.dependencies,
+            "job-dependency_group" => job.dependency_groups
+          }.compact
 
           service.capture_exception(error: error, job: job)
-          { "error-type": "unknown_error" }
+          {
+            "error-type": "file_fetcher_error",
+            "error-detail": unknown_error_details
+          }
         end
 
       record_error(error_details) if error_details
@@ -190,8 +211,22 @@ module Dependabot
       remaining.positive? ? remaining : 0
     end
 
+    def log_error(error)
+      Dependabot.logger.error(error.message)
+      error.backtrace.each { |line| Dependabot.logger.error line }
+    end
+
     def record_error(error_details)
       service.record_update_job_error(
+        error_type: error_details.fetch(:"error-type"),
+        error_details: error_details[:"error-detail"]
+      )
+
+      # We don't set this flag in GHES because there older GHES version does not support reporting unknown errors.
+      return unless Experiments.enabled?(:record_update_job_unknown_error)
+      return unless error_details.fetch(:"error-type") == "file_fetcher_error"
+
+      service.record_update_job_unknown_error(
         error_type: error_details.fetch(:"error-type"),
         error_details: error_details[:"error-detail"]
       )
