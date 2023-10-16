@@ -18,7 +18,7 @@
     <PackageReference Include="AspNetCore.Authentication.ApiKey" Version="7.0.0" />
     <PackageReference Include="AspNetCore.Authentication.Basic" Version="7.0.0" />
     <PackageReference Include="Azure.Extensions.AspNetCore.DataProtection.Keys" Version="1.2.2" />
-    <PackageReference Include="Azure.Identity" Version="1.10.1" />
+    <PackageReference Include="Azure.Identity" Version="1.10.2" />
     <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.16.2" /> <!-- Allows for faster updates -->
     <PackageReference Include="Azure.Monitor.Query" Version="1.2.0" />
     <PackageReference Include="Azure.ResourceManager.AppContainers" Version="1.1.0" />
