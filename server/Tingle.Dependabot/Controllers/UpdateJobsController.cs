@@ -79,6 +79,22 @@ public class UpdateJobsController : ControllerBase // TODO: unit and integration
         return Ok();
     }
 
+    [HttpPost("{id}/record_update_job_unknown_error")]
+    public async Task<IActionResult> RecordUpdateJobUnknownErrorAsync([FromRoute, Required] string id, [FromBody] PayloadWithData<DependabotRecordUpdateJobErrorModel> model)
+    {
+        var job = await dbContext.UpdateJobs.SingleAsync(j => j.Id == id);
+
+        job.Error = new UpdateJobError
+        {
+            Type = model.Data!.ErrorType,
+            Detail = model.Data.ErrorDetail,
+        };
+
+        await dbContext.SaveChangesAsync();
+
+        return Ok();
+    }
+
     [HttpPatch("{id}/mark_as_processed")]
     public async Task<IActionResult> MarkAsProcessedAsync([FromRoute, Required] string id, [FromBody] PayloadWithData<DependabotMarkAsProcessedModel> model)
     {

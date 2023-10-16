@@ -121,7 +121,12 @@ internal partial class UpdateRunner
         };
 
         // write job definition file
-        var jobDefinitionPath = await WriteJobDefinitionAsync(project, update, job, directory, credentials, cancellationToken);
+        var experiments = new Dictionary<string, bool>
+        {
+            // ["record-ecosystem-versions"] = await featureManager.IsEnabledAsync(FeatureNames.RecordEcosystemVersions, fmc),
+            // ["record-update-job-unknown-error"] = await featureManager.IsEnabledAsync(FeatureNames.RecordUpdateJobUnknownError, fmc),
+        };
+        var jobDefinitionPath = await WriteJobDefinitionAsync(project, update, job, experiments, directory, credentials, cancellationToken);
         logger.WrittenJobDefinitionFile(job.Id, jobDefinitionPath);
 
         // create the ContainerApp Job
@@ -291,6 +296,7 @@ internal partial class UpdateRunner
     internal async Task<string> WriteJobDefinitionAsync(Project project,
                                                         RepositoryUpdate update,
                                                         UpdateJob job,
+                                                        IDictionary<string, bool> experiments,
                                                         string directory,
                                                         IList<Dictionary<string, string>> credentials,
                                                         CancellationToken cancellationToken = default) // TODO: unit test this
@@ -314,6 +320,7 @@ internal partial class UpdateRunner
                 // ["dependencies"] = null, // object array
                 ["directory"] = job.Directory,
                 // ["existing-pull-requests"] = null, // object array
+                ["experiments"] = ToJsonNode(experiments),
                 ["ignore-conditions"] = ToJsonNode(update.Ignore ?? new()),
                 // ["security-advisories"] = null, // object array
                 ["package_manager"] = ConvertEcosystemToPackageManager(job.PackageEcosystem!),
