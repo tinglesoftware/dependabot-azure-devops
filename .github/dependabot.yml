@@ -36,6 +36,8 @@ updates:
     time: "04:00"
   open-pull-requests-limit: 10
   groups:
+    xuint:
+      patterns: ["Xunit*"]
     microsoft:
       patterns: ["Microsoft.*"]
     event-bus:
