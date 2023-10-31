@@ -1,29 +1,8 @@
-GEM
-  remote: https://rubygems.org/
+GIT
+  remote: https://github.com/mburumaxwell/dependabot-core.git
+  revision: e6bf17c1fb392519eda4b29be49590bf412ff623
+  ref: e6bf17c
   specs:
-    addressable (2.8.5)
-      public_suffix (>= 2.0.2, < 6.0)
-    ast (2.4.2)
-    aws-eventstream (1.2.0)
-    aws-partitions (1.843.0)
-    aws-sdk-codecommit (1.60.0)
-      aws-sdk-core (~> 3, >= 3.184.0)
-      aws-sigv4 (~> 1.1)
-    aws-sdk-core (3.185.1)
-      aws-eventstream (~> 1, >= 1.0.2)
-      aws-partitions (~> 1, >= 1.651.0)
-      aws-sigv4 (~> 1.5)
-      jmespath (~> 1, >= 1.6.1)
-    aws-sdk-ecr (1.65.0)
-      aws-sdk-core (~> 3, >= 3.184.0)
-      aws-sigv4 (~> 1.1)
-    aws-sigv4 (1.6.1)
-      aws-eventstream (~> 1, >= 1.0.2)
-    base64 (0.1.1)
-    citrus (3.0.2)
-    commonmarker (0.23.10)
-    crack (0.4.5)
-      rexml
     dependabot-bundler (0.236.0)
       dependabot-common (= 0.236.0)
     dependabot-cargo (0.236.0)
@@ -96,6 +75,33 @@ GEM
       dependabot-common (= 0.236.0)
     dependabot-terraform (0.236.0)
       dependabot-common (= 0.236.0)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    addressable (2.8.5)
+      public_suffix (>= 2.0.2, < 6.0)
+    ast (2.4.2)
+    aws-eventstream (1.2.0)
+    aws-partitions (1.843.0)
+    aws-sdk-codecommit (1.60.0)
+      aws-sdk-core (~> 3, >= 3.184.0)
+      aws-sigv4 (~> 1.1)
+    aws-sdk-core (3.185.1)
+      aws-eventstream (~> 1, >= 1.0.2)
+      aws-partitions (~> 1, >= 1.651.0)
+      aws-sigv4 (~> 1.5)
+      jmespath (~> 1, >= 1.6.1)
+    aws-sdk-ecr (1.65.0)
+      aws-sdk-core (~> 3, >= 3.184.0)
+      aws-sigv4 (~> 1.1)
+    aws-sigv4 (1.6.1)
+      aws-eventstream (~> 1, >= 1.0.2)
+    base64 (0.1.1)
+    citrus (3.0.2)
+    commonmarker (0.23.10)
+    crack (0.4.5)
+      rexml
     diff-lcs (1.5.0)
     docker_registry2 (1.18.0)
       rest-client (>= 1.8.0)
@@ -216,7 +222,7 @@ GEM
       faraday (>= 0.17.3, < 3)
     sentry-raven (3.1.2)
       faraday (>= 1.0)
-    sorbet-runtime (0.5.11104)
+    sorbet-runtime (0.5.11108)
     stringio (3.0.8)
     terminal-table (3.0.2)
       unicode-display_width (>= 1.1.1, < 3)
@@ -238,7 +244,7 @@ PLATFORMS
   x86_64-linux
 
 DEPENDENCIES
-  dependabot-omnibus (~> 0.236.0)
+  dependabot-omnibus!
   http (~> 5.1)
   octokit (= 6.1.1)
   rspec

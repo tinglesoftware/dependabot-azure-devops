@@ -102,21 +102,7 @@ jobs:
         .
 
     - name: Log into registry
-      if: ${{ (github.ref == 'refs/heads/main') || (!startsWith(github.ref, 'refs/pull')) || startsWith(github.ref, 'refs/tags') }}
       run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login https://ghcr.io -u ${{ github.actor }} --password-stdin
 
-    - name: Push image (latest, ShortSha)
-      if: ${{ (github.ref == 'refs/heads/main') || startsWith(github.ref, 'refs/tags') }}
-      run: |
-        docker push "ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:latest"
-        docker push "ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:$GITVERSION_SHORTSHA"
-
     - name: Push image (NuGetVersionV2)
-      if: ${{ !startsWith(github.ref, 'refs/pull') }}
       run: docker push "ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:$GITVERSION_NUGETVERSIONV2"
-
-    - name: Push image (major, minor)
-      if: startsWith(github.ref, 'refs/tags')
-      run: |
-        docker push "ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:$GITVERSION_MAJOR.$GITVERSION_MINOR"
-        docker push "ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:$GITVERSION_MAJOR"
