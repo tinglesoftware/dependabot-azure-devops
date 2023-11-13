@@ -32,7 +32,7 @@ docker run --rm -t \
            -e AZURE_SET_AUTO_COMPLETE=<true/false> \
            -e AZURE_AUTO_APPROVE_PR=<true/false> \
            -e AZURE_AUTO_APPROVE_USER_TOKEN=<approving-user-token-here> \
-           ghcr.io/tinglesoftware/dependabot-updater-<ecosystem>
+           ghcr.io/tinglesoftware/dependabot-updater-<ecosystem> update_script
 ```
 
 An example, for Azure DevOps Services:
@@ -58,7 +58,7 @@ docker run --rm -t \
            -e AZURE_SET_AUTO_COMPLETE=true \
            -e AZURE_AUTO_APPROVE_PR=true \
            -e AZURE_AUTO_APPROVE_USER_TOKEN=ijkl..mnop \
-           ghcr.io/tinglesoftware/dependabot-updater-nuget
+           ghcr.io/tinglesoftware/dependabot-updater-nuget update_script
 ```
 
 An example, for Azure DevOps Server:
@@ -87,7 +87,7 @@ docker run --rm -t \
            -e AZURE_SET_AUTO_COMPLETE=true \
            -e AZURE_AUTO_APPROVE_PR=true \
            -e AZURE_AUTO_APPROVE_USER_TOKEN=ijkl..mnop \
-           ghcr.io/tinglesoftware/dependabot-updater-nuget
+           ghcr.io/tinglesoftware/dependabot-updater-nuget update_script
 ```
 
 ## Environment Variables
