@@ -36,16 +36,18 @@ updates:
     time: "04:00"
   open-pull-requests-limit: 10
   groups:
-    xuint:
-      patterns: ["Xunit*"]
-    microsoft:
-      patterns: ["Microsoft.*"]
     event-bus:
       patterns: ["Tingle.EventBus*"]
+    microsoft:
+      patterns: ["Microsoft.*"]
+    system:
+      patterns: ["System.*"]
     tingle:
       patterns:
       - "Tingle.AspNetCore.*"
       - "Tingle.Extensions.*"
+    xuint:
+      patterns: ["Xunit*"]
 
 - package-ecosystem: "npm" # See documentation for possible values
   directory: "/extension" # Location of package manifests
