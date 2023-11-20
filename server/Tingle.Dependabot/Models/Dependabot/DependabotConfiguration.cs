@@ -14,13 +14,13 @@ public class DependabotConfiguration : IValidatableObject
     public List<DependabotUpdate>? Updates { get; set; }
 
     [JsonPropertyName("registries")]
-    public Dictionary<string, DependabotRegistry> Registries { get; set; } = new();
+    public Dictionary<string, DependabotRegistry> Registries { get; set; } = [];
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
-        var updates = Updates ?? new();
+        var updates = Updates ?? [];
         var configured = Registries.Keys;
-        var referenced = updates.SelectMany(r => r.Registries ?? new()).ToList();
+        var referenced = updates.SelectMany(r => r.Registries ?? []).ToList();
 
         // ensure there are no configured registries that have not been referenced
         var missingConfiguration = referenced.Except(configured).ToList();

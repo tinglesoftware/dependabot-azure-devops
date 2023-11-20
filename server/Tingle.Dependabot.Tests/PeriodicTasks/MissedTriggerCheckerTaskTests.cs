@@ -120,8 +120,8 @@ public class MissedTriggerCheckerTaskTests
             ProviderId = Guid.NewGuid().ToString(),
             Name = "test-repo",
             ConfigFileContents = "",
-            Updates = new List<RepositoryUpdate>
-            {
+            Updates =
+            [
                 new RepositoryUpdate
                 {
                     PackageEcosystem = "npm",
@@ -144,7 +144,7 @@ public class MissedTriggerCheckerTaskTests
                     },
                     LatestUpdate = lastUpdate1,
                 },
-            },
+            ],
         });
         await context.SaveChangesAsync();
 

@@ -385,7 +385,7 @@
         "configuration": {
           "ingress": {
             "external": true,
-            "targetPort": 80,
+            "targetPort": 8080,
             "traffic": [
               {
                 "latestRevision": true,
@@ -545,14 +545,14 @@
                 {
                   "type": "Liveness",
                   "httpGet": {
-                    "port": 80,
+                    "port": 8080,
                     "path": "/liveness"
                   }
                 },
                 {
                   "type": "Readiness",
                   "httpGet": {
-                    "port": 80,
+                    "port": 8080,
                     "path": "/health"
                   },
                   "failureThreshold": 10,

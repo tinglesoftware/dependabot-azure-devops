@@ -51,14 +51,14 @@ public class Repository
     /// Updates for the repository, extracted from the configuration file.
     /// When <c>null</c> or empty, there was a parsing exception.
     /// </summary>
-    public List<RepositoryUpdate> Updates { get; set; } = new List<RepositoryUpdate>();
+    public List<RepositoryUpdate> Updates { get; set; } = [];
 
     /// <summary>
     /// Registries for the repository, extracted from the configuration file.
     /// When <c>null</c> or empty, there was a parsing exception.
     /// </summary>
     [JsonIgnore] // only for internal use
-    public Dictionary<string, DependabotRegistry> Registries { get; set; } = new();
+    public Dictionary<string, DependabotRegistry> Registries { get; set; } = [];
 
     [Timestamp]
     public byte[]? Etag { get; set; }

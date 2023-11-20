@@ -11,7 +11,7 @@ public record RepositoryUpdate : DependabotUpdate
 
     /// <summary>The dependency files.</summary>
     [JsonPropertyName("files")]
-    public List<string> Files { get; set; } = new List<string>();
+    public List<string> Files { get; set; } = [];
 
     /// <summary>Identifier of the latest job.</summary>
     [JsonPropertyName("latest-job-id")]

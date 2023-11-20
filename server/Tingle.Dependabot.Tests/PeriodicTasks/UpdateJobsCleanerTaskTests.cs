@@ -169,8 +169,8 @@ public class UpdateJobsCleanerTaskTests
             ProviderId = Guid.NewGuid().ToString(),
             Name = "test-repo",
             ConfigFileContents = "",
-            Updates = new List<RepositoryUpdate>
-            {
+            Updates =
+            [
                 new RepositoryUpdate
                 {
                     PackageEcosystem = "npm",
@@ -191,7 +191,7 @@ public class UpdateJobsCleanerTaskTests
                         Time = new(3, 30),
                     },
                 },
-            },
+            ],
         });
         await context.SaveChangesAsync();
 

@@ -231,7 +231,7 @@ internal class Synchronizer
                 var updates = configuration.Updates!;
                 repository.Updates = updates.Select(update => new RepositoryUpdate(update)
                 {
-                    Files = new List<string>(), // files are populated by an API call from Ruby during job execution
+                    Files = [], // files are populated by an API call from Ruby during job execution
 
                     LatestJobId = null,
                     LatestJobStatus = null,

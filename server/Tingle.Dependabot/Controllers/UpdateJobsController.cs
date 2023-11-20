@@ -117,7 +117,7 @@ public class UpdateJobsController : ControllerBase // TODO: unit and integration
         var update = repository.Updates.SingleOrDefault(u => u.PackageEcosystem == job.PackageEcosystem && u.Directory == job.Directory);
         if (update is not null)
         {
-            update.Files = model.Data?.DependencyFiles ?? new();
+            update.Files = model.Data?.DependencyFiles ?? [];
         }
         await dbContext.SaveChangesAsync();
 

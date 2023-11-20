@@ -24,12 +24,12 @@ builder.Services.AddSerilog(builder =>
 {
     builder.ConfigureSensitiveDataMasking(options =>
     {
-        options.ExcludeProperties.AddRange(new[] {
+        options.ExcludeProperties.AddRange([
             "ExecutionId",
             "JobDefinitionPath",
             "UpdateJobId",
             "RepositoryUrl",
-        });
+        ]);
     });
 });
 
@@ -72,26 +72,22 @@ builder.Services.AddAuthentication()
                 .AddApiKeyInAuthorizationHeader<ApiKeyProvider>(AuthConstants.SchemeNameUpdater, options => options.Realm = "Dependabot")
                 .AddBasic<BasicUserValidationService>(AuthConstants.SchemeNameServiceHooks, options => options.Realm = "Dependabot");
 
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy(AuthConstants.PolicyNameManagement, policy =>
-    {
-        policy.AddAuthenticationSchemes(AuthConstants.SchemeNameManagement)
-              .RequireAuthenticatedUser();
-    });
-
-    options.AddPolicy(AuthConstants.PolicyNameServiceHooks, policy =>
-    {
-        policy.AddAuthenticationSchemes(AuthConstants.SchemeNameServiceHooks)
-              .RequireAuthenticatedUser();
-    });
-
-    options.AddPolicy(AuthConstants.PolicyNameUpdater, policy =>
-    {
-        policy.AddAuthenticationSchemes(AuthConstants.SchemeNameUpdater)
-              .RequireAuthenticatedUser();
-    });
-});
+builder.Services.AddAuthorizationBuilder()
+                .AddPolicy(AuthConstants.PolicyNameManagement, policy =>
+                {
+                    policy.AddAuthenticationSchemes(AuthConstants.SchemeNameManagement)
+                          .RequireAuthenticatedUser();
+                })
+                .AddPolicy(AuthConstants.PolicyNameServiceHooks, policy =>
+                {
+                    policy.AddAuthenticationSchemes(AuthConstants.SchemeNameServiceHooks)
+                          .RequireAuthenticatedUser();
+                })
+                .AddPolicy(AuthConstants.PolicyNameUpdater, policy =>
+                {
+                    policy.AddAuthenticationSchemes(AuthConstants.SchemeNameUpdater)
+                          .RequireAuthenticatedUser();
+                });
 
 // Configure other services
 builder.Services.AddMemoryCache();

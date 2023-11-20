@@ -35,58 +35,58 @@ public class UpdateRunnerTests
 
         // composer-repository
         var metadata = metadatas[0];
-        Assert.Equal(new[] { "type", "host", }, metadata.Keys);
-        Assert.Equal(new[] { "composer_repository", "repo.packagist.com", }, metadata.Values);
+        Assert.Equal<string>(["type", "host"], metadata.Keys);
+        Assert.Equal<string>(["composer_repository", "repo.packagist.com"], metadata.Values);
 
         // docker-registry
         metadata = metadatas[1];
-        Assert.Equal(new[] { "type", "host", }, metadata.Keys);
-        Assert.Equal(new[] { "docker_registry", "registry.hub.docker.com", }, metadata.Values);
+        Assert.Equal<string>(["type", "host"], metadata.Keys);
+        Assert.Equal<string>(["docker_registry", "registry.hub.docker.com"], metadata.Values);
 
         // git
         metadata = metadatas[2];
-        Assert.Equal(new[] { "type", "host", }, metadata.Keys);
-        Assert.Equal(new[] { "git", "github.com", }, metadata.Values);
+        Assert.Equal<string>(["type", "host"], metadata.Keys);
+        Assert.Equal<string>(["git", "github.com"], metadata.Values);
 
         // hex-organization
         metadata = metadatas[3];
-        Assert.Equal(new[] { "type", }, metadata.Keys);
-        Assert.Equal(new[] { "hex_organization", }, metadata.Values);
+        Assert.Equal<string>(["type"], metadata.Keys);
+        Assert.Equal<string>(["hex_organization"], metadata.Values);
 
         // hex-repository
         metadata = metadatas[4];
-        Assert.Equal(new[] { "type", "host", }, metadata.Keys);
-        Assert.Equal(new[] { "hex_repository", "private-repo.example.com", }, metadata.Values);
+        Assert.Equal<string>(["type", "host"], metadata.Keys);
+        Assert.Equal<string>(["hex_repository", "private-repo.example.com"], metadata.Values);
 
         // maven-repository
         metadata = metadatas[5];
-        Assert.Equal(new[] { "type", "host", }, metadata.Keys);
-        Assert.Equal(new[] { "maven_repository", "artifactory.example.com", }, metadata.Values);
+        Assert.Equal<string>(["type", "host"], metadata.Keys);
+        Assert.Equal<string>(["maven_repository", "artifactory.example.com"], metadata.Values);
 
         // npm-registry
         metadata = metadatas[6];
-        Assert.Equal(new[] { "type", "host", }, metadata.Keys);
-        Assert.Equal(new[] { "npm_registry", "npm.pkg.github.com", }, metadata.Values);
+        Assert.Equal<string>(["type", "host"], metadata.Keys);
+        Assert.Equal<string>(["npm_registry", "npm.pkg.github.com"], metadata.Values);
 
         // nuget-feed
         metadata = metadatas[7];
-        Assert.Equal(new[] { "type", "host", }, metadata.Keys);
-        Assert.Equal(new[] { "nuget_feed", "pkgs.dev.azure.com", }, metadata.Values);
+        Assert.Equal<string>(["type", "host"], metadata.Keys);
+        Assert.Equal<string>(["nuget_feed", "pkgs.dev.azure.com"], metadata.Values);
 
         // python-index
         metadata = metadatas[8];
-        Assert.Equal(new[] { "type", "host", }, metadata.Keys);
-        Assert.Equal(new[] { "python_index", "pkgs.dev.azure.com", }, metadata.Values);
+        Assert.Equal<string>(["type", "host"], metadata.Keys);
+        Assert.Equal<string>(["python_index", "pkgs.dev.azure.com"], metadata.Values);
 
         // rubygems-server
         metadata = metadatas[9];
-        Assert.Equal(new[] { "type", "host", }, metadata.Keys);
-        Assert.Equal(new[] { "rubygems_server", "rubygems.pkg.github.com", }, metadata.Values);
+        Assert.Equal<string>(["type", "host"], metadata.Keys);
+        Assert.Equal<string>(["rubygems_server", "rubygems.pkg.github.com"], metadata.Values);
 
         // terraform-registry
         metadata = metadatas[10];
-        Assert.Equal(new[] { "type", "host", }, metadata.Keys);
-        Assert.Equal(new[] { "terraform_registry", "terraform.example.com", }, metadata.Values);
+        Assert.Equal<string>(["type", "host"], metadata.Keys);
+        Assert.Equal<string>(["terraform_registry", "terraform.example.com"], metadata.Values);
     }
 
     [Fact]

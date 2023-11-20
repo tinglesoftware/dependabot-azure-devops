@@ -286,7 +286,7 @@ internal partial class UpdateRunner
               .AddIfNotDefault("AZURE_REPOSITORY", Uri.EscapeDataString(repository.Name!))
               .AddIfNotDefault("AZURE_ACCESS_TOKEN", project.Token)
               .AddIfNotDefault("AZURE_SET_AUTO_COMPLETE", project.AutoComplete.Enabled.ToString().ToLowerInvariant())
-              .AddIfNotDefault("AZURE_AUTO_COMPLETE_IGNORE_CONFIG_IDS", ToJson(project.AutoComplete.IgnoreConfigs ?? new()))
+              .AddIfNotDefault("AZURE_AUTO_COMPLETE_IGNORE_CONFIG_IDS", ToJson(project.AutoComplete.IgnoreConfigs ?? []))
               .AddIfNotDefault("AZURE_MERGE_STRATEGY", project.AutoComplete.MergeStrategy?.ToString())
               .AddIfNotDefault("AZURE_AUTO_APPROVE_PR", project.AutoApprove.Enabled.ToString().ToLowerInvariant());
 
@@ -315,13 +315,13 @@ internal partial class UpdateRunner
         {
             ["job"] = new JsonObject
             {
-                ["allowed-updates"] = ToJsonNode(update.Allow ?? new()),
+                ["allowed-updates"] = ToJsonNode(update.Allow ?? []),
                 ["credentials-metadata"] = ToJsonNode(credentialsMetadata).AsArray(),
                 // ["dependencies"] = null, // object array
                 ["directory"] = job.Directory,
                 // ["existing-pull-requests"] = null, // object array
                 ["experiments"] = ToJsonNode(experiments),
-                ["ignore-conditions"] = ToJsonNode(update.Ignore ?? new()),
+                ["ignore-conditions"] = ToJsonNode(update.Ignore ?? []),
                 // ["security-advisories"] = null, // object array
                 ["package_manager"] = ConvertEcosystemToPackageManager(job.PackageEcosystem!),
                 ["repo-name"] = job.RepositorySlug,
