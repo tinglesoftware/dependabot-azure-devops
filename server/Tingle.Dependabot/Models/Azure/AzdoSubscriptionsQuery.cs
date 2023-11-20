@@ -75,7 +75,7 @@ public class AzdoSubscription
     public required string PublisherId { get; set; }
 
     [JsonPropertyName("publisherInputs")]
-    public Dictionary<string, string> PublisherInputs { get; set; } = new();
+    public Dictionary<string, string> PublisherInputs { get; set; } = [];
 
     [JsonPropertyName("consumerId")]
     public string? ConsumerId { get; set; }
@@ -84,7 +84,7 @@ public class AzdoSubscription
     public string? ConsumerActionId { get; set; }
 
     [JsonPropertyName("consumerInputs")]
-    public Dictionary<string, string> ConsumerInputs { get; set; } = new();
+    public Dictionary<string, string> ConsumerInputs { get; set; } = [];
 
     [JsonPropertyName("eventType")]
     public required string EventType { get; set; }

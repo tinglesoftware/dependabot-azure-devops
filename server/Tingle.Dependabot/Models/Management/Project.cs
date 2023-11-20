@@ -89,7 +89,7 @@ public class Project
     public string? Location { get; set; }
 
     [JsonIgnore] // only for internal use
-    public List<Repository> Repositories { get; set; } = new();
+    public List<Repository> Repositories { get; set; } = [];
 
     /// <summary>Time at which the synchronization was last done for the project.</summary>
     public DateTimeOffset? Synchronized { get; set; }

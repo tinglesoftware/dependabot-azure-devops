@@ -19,12 +19,12 @@ public class AzureDevOpsProvider
     };
 
     private static readonly (string, string)[] SubscriptionEventTypes =
-    {
+    [
         ("git.push", "1.0"),
         ("git.pullrequest.updated", "1.0"),
         ("git.pullrequest.merged", "1.0"),
         ("ms.vss-code.git-pullrequest-comment-event", "2.0"),
-    };
+    ];
 
     private readonly HttpClient httpClient;
     private readonly WorkflowOptions options;
@@ -42,21 +42,21 @@ public class AzureDevOpsProvider
         var query = new AzdoSubscriptionsQuery
         {
             PublisherId = "tfs",
-            PublisherInputFilters = new List<AzdoSubscriptionsQueryInputFilter>
-            {
+            PublisherInputFilters =
+            [
                 new AzdoSubscriptionsQueryInputFilter
                 {
-                    Conditions = new List<AzdoSubscriptionsQueryInputFilterCondition>
-                    {
+                    Conditions =
+                    [
                         new AzdoSubscriptionsQueryInputFilterCondition
                         {
                             InputId = "projectId",
                             Operator = AzdoSubscriptionsQueryInputFilterOperator.Equals,
                             InputValue = projectId,
                         },
-                    },
+                    ],
                 },
-            },
+            ],
 
             ConsumerId = "webHooks",
             ConsumerActionId = "httpRequest",

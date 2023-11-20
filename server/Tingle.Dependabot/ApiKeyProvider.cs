@@ -5,15 +5,8 @@ using Tingle.Dependabot.Models;
 
 namespace Tingle.Dependabot;
 
-internal class ApiKeyProvider : IApiKeyProvider
+internal class ApiKeyProvider(MainDbContext dbContext) : IApiKeyProvider
 {
-    private readonly MainDbContext dbContext;
-
-    public ApiKeyProvider(MainDbContext dbContext)
-    {
-        this.dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-    }
-
     public async Task<IApiKey?> ProvideAsync(string key)
     {
         var job = await dbContext.UpdateJobs.SingleOrDefaultAsync(j => j.AuthKey == key);
@@ -25,17 +18,10 @@ internal class ApiKeyProvider : IApiKeyProvider
         return null;
     }
 
-    class ApiKey : IApiKey
+    class ApiKey(string key, string owner, IReadOnlyCollection<Claim>? claims = null) : IApiKey
     {
-        public ApiKey(string key, string owner, IReadOnlyCollection<Claim>? claims = null)
-        {
-            Key = key;
-            OwnerName = owner;
-            Claims = claims ?? new List<Claim>();
-        }
-
-        public string Key { get; }
-        public string OwnerName { get; }
-        public IReadOnlyCollection<Claim> Claims { get; }
+        public string Key { get; } = key;
+        public string OwnerName { get; } = owner;
+        public IReadOnlyCollection<Claim> Claims { get; } = claims ?? new List<Claim>();
     }
 }

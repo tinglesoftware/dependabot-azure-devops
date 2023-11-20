@@ -4,10 +4,12 @@
 #
 # As a result, we only copy publish output and put it in the container
 
-FROM mcr.microsoft.com/dotnet/aspnet:7.0-bullseye-slim AS base
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-bookworm-slim AS base
 LABEL org.opencontainers.image.source="https://github.com/tinglesoftware/dependabot-azure-devops"
-EXPOSE 80
-EXPOSE 443
+USER app
 WORKDIR /app
+EXPOSE 8080
+EXPOSE 8081
+
 COPY . .
 ENTRYPOINT ["dotnet", "Tingle.Dependabot.dll"]

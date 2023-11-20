@@ -245,7 +245,7 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
   properties: {
     managedEnvironmentId: appEnvironment.id
     configuration: {
-      ingress: { external: true, targetPort: 80, traffic: [ { latestRevision: true, weight: 100 } ] }
+      ingress: { external: true, targetPort: 8080, traffic: [ { latestRevision: true, weight: 100 } ] }
       secrets: [
         { name: 'connection-strings-application-insights', value: appInsights.properties.ConnectionString }
         { name: 'project-setups', value: projectSetups }
@@ -317,10 +317,10 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
             memory: '0.5Gi'
           }
           probes: [
-            { type: 'Liveness', httpGet: { port: 80, path: '/liveness' } }
+            { type: 'Liveness', httpGet: { port: 8080, path: '/liveness' } }
             {
               type: 'Readiness'
-              httpGet: { port: 80, path: '/health' }
+              httpGet: { port: 8080, path: '/health' }
               failureThreshold: 10
               initialDelaySeconds: 3
               timeoutSeconds: 5

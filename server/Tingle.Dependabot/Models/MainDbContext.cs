@@ -7,10 +7,8 @@ using Tingle.Dependabot.Workflow;
 
 namespace Tingle.Dependabot.Models;
 
-public class MainDbContext : DbContext, IDataProtectionKeyContext
+public class MainDbContext(DbContextOptions<MainDbContext> options) : DbContext(options), IDataProtectionKeyContext
 {
-    public MainDbContext(DbContextOptions<MainDbContext> options) : base(options) { }
-
     public DbSet<Project> Projects => Set<Project>();
     public DbSet<Repository> Repositories => Set<Repository>();
     public DbSet<UpdateJob> UpdateJobs => Set<UpdateJob>();

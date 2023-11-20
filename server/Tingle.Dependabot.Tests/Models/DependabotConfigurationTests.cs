@@ -42,7 +42,7 @@ public class DependabotConfigurationTests
         Assert.Equal(DependabotScheduleDay.Monday, second.Schedule?.Day);
         Assert.Equal("Etc/UTC", second.Schedule?.Timezone);
         Assert.Equal("deny", second.InsecureExternalCodeExecution);
-        Assert.Equal(new[] { "reg1", "reg2", }, second.Registries);
+        Assert.Equal(["reg1", "reg2"], second.Registries);
     }
 
     [Fact]
@@ -51,15 +51,15 @@ public class DependabotConfigurationTests
         var configuration = new DependabotConfiguration
         {
             Version = 2,
-            Updates = new List<DependabotUpdate>
-            {
+            Updates =
+            [
                 new DependabotUpdate
                 {
                     PackageEcosystem = "npm",
                     Directory = "/",
-                    Registries = new List<string> { "dummy1", "dummy2", },
+                    Registries = ["dummy1", "dummy2",],
                 },
-            },
+            ],
             Registries = new Dictionary<string, DependabotRegistry>
             {
                 ["dummy1"] = new DependabotRegistry
@@ -87,7 +87,7 @@ public class DependabotConfigurationTests
 
         // fails: registry not referenced
         configuration.Updates[0].Registries?.Clear();
-        results = new List<ValidationResult>();
+        results = [];
         actual = RecursiveValidator.TryValidateObject(configuration, results);
         Assert.False(actual);
         var val = Assert.Single(results);
@@ -96,8 +96,8 @@ public class DependabotConfigurationTests
         Assert.Equal("Registries: 'dummy1,dummy2' have not been referenced by any update", val.ErrorMessage);
 
         // fails: registrynot configured
-        configuration.Updates[0].Registries?.AddRange(new[] { "dummy1", "dummy2", "dummy3" });
-        results = new List<ValidationResult>();
+        configuration.Updates[0].Registries?.AddRange(["dummy1", "dummy2", "dummy3"]);
+        results = [];
         actual = RecursiveValidator.TryValidateObject(configuration, results);
         Assert.False(actual);
         val = Assert.Single(results);

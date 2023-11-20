@@ -61,7 +61,7 @@ public class WebhooksControllerIntegrationTests
             var response = await client.SendAsync(request);
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
             var body = await response.Content.ReadAsStringAsync();
-            Assert.Contains("\"type\":\"https://tools.ietf.org/html/rfc7231#section-6.5.1\"", body);
+            Assert.Contains("\"type\":\"https://tools.ietf.org/html/rfc9110#section-15.5.1\"", body);
             Assert.Contains("\"title\":\"One or more validation errors occurred.\"", body);
             Assert.Contains("\"status\":400", body);
             Assert.Contains("\"errors\":{\"\":[\"A non-empty request body is required.\"],\"model\":[\"The model field is required.\"]}", body);
@@ -80,7 +80,7 @@ public class WebhooksControllerIntegrationTests
             var response = await client.SendAsync(request);
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
             var body = await response.Content.ReadAsStringAsync();
-            Assert.Contains("\"type\":\"https://tools.ietf.org/html/rfc7231#section-6.5.1\"", body);
+            Assert.Contains("\"type\":\"https://tools.ietf.org/html/rfc9110#section-15.5.1\"", body);
             Assert.Contains("\"title\":\"One or more validation errors occurred.\"", body);
             Assert.Contains("\"status\":400", body);
             Assert.Contains("\"SubscriptionId\":[\"The SubscriptionId field is required.\"]", body);
@@ -102,7 +102,7 @@ public class WebhooksControllerIntegrationTests
             var response = await client.SendAsync(request);
             Assert.Equal(HttpStatusCode.UnsupportedMediaType, response.StatusCode);
             var body = await response.Content.ReadAsStringAsync();
-            Assert.Contains("\"type\":\"https://tools.ietf.org/html/rfc7231#section-6.5.13\"", body);
+            Assert.Contains("\"type\":\"https://tools.ietf.org/html/rfc9110#section-15.5.16\"", body);
             Assert.Contains("\"title\":\"Unsupported Media Type\"", body);
             Assert.Contains("\"status\":415", body);
             Assert.Empty(await harness.PublishedAsync());

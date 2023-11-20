@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using Tingle.Dependabot.Events;
 using Tingle.Dependabot.Models;
 using Tingle.Dependabot.Models.Management;

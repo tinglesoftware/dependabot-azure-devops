@@ -105,7 +105,7 @@ public static class PropertyBuilderExtensions
 
     private static List<T> ConvertFromString<T>(string? value, string separator, JsonSerializerOptions? serializerOptions) where T : IConvertible
     {
-        if (string.IsNullOrWhiteSpace(value)) return new List<T>();
+        if (string.IsNullOrWhiteSpace(value)) return [];
         if (string.IsNullOrWhiteSpace(separator))
         {
             throw new ArgumentException($"'{nameof(separator)}' cannot be null or whitespace.", nameof(separator));

@@ -6,16 +6,10 @@ using Tingle.PeriodicTasks;
 
 namespace Tingle.Dependabot.Workflow;
 
-internal class SynchronizationTask : IPeriodicTask
+internal class SynchronizationTask(MainDbContext dbContext, IEventPublisher publisher) : IPeriodicTask
 {
-    private readonly MainDbContext dbContext;
-    private readonly IEventPublisher publisher;
-
-    public SynchronizationTask(MainDbContext dbContext, IEventPublisher publisher)
-    {
-        this.dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-        this.publisher = publisher ?? throw new ArgumentNullException(nameof(publisher));
-    }
+    private readonly MainDbContext dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+    private readonly IEventPublisher publisher = publisher ?? throw new ArgumentNullException(nameof(publisher));
 
     public async Task ExecuteAsync(PeriodicTaskExecutionContext context, CancellationToken cancellationToken)
     {

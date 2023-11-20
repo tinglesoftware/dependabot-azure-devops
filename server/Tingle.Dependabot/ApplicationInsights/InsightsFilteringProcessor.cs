@@ -10,10 +10,10 @@ namespace Tingle.Dependabot.ApplicationInsights;
 internal class InsightsFilteringProcessor : ITelemetryProcessor
 {
     private static readonly string[] excludedRequestNames =
-    {
+    [
         "ServiceBusReceiver.Receive",
         "ServiceBusProcessor.ProcessMessage",
-    };
+    ];
 
     private readonly ITelemetryProcessor next;
 
