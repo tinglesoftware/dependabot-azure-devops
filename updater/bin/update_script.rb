@@ -242,7 +242,7 @@ end
 #                                     Setup Ignore conditions                                   #
 # DEPENDABOT_IGNORE_CONDITIONS Example: [{"dependency-name":"ruby","versions":[">= 3.a", "< 4"]}]
 ##################################################################################################
-ignores = JSON.parse(ENV.fetch("DEPENDABOT_IGNORE_CONDITIONS", nil)) || []
+ignores = JSON.parse(ENV.fetch("DEPENDABOT_IGNORE_CONDITIONS", "[]"), symbolize_names: true)
 $options[:ignore_conditions] = ignores.map do |ic|
   Dependabot::Config::IgnoreCondition.new(
     dependency_name: ic[:"dependency-name"],
@@ -255,7 +255,7 @@ end
 #                                   Setup Commit Message Options                                 #
 # DEPENDABOT_COMMIT_MESSAGE_OPTIONS Example: {"prefix":"(dependabot)"}
 ##################################################################################################
-commit_message = JSON.parse(ENV.fetch("DEPENDABOT_COMMIT_MESSAGE_OPTIONS", nil)) || {}
+commit_message = JSON.parse(ENV.fetch("DEPENDABOT_COMMIT_MESSAGE_OPTIONS", "{}"), symbolize_names: true)
 $options[:commit_message_options] = Dependabot::Config::UpdateConfig::CommitMessageOptions.new(
   prefix: commit_message[:prefix],
   prefix_development: commit_message[:"prefix-development"] || commit_message[:prefix],
