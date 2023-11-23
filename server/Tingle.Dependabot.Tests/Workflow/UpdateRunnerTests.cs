@@ -309,13 +309,13 @@ public class UpdateRunnerTests
         { "mix", "hex" },
         { "npm", "npm_and_yarn" },
         { "yarn", "npm_and_yarn" },
+        { "pnpm", "npm_and_yarn" },
         { "pipenv", "pip" },
         { "pip-compile", "pip" },
         { "poetry", "pip" },
 
         // retained
         { "nuget", "nuget" },
-        { "npm", "npm_and_yarn" },
         { "gradle", "gradle" },
         { "maven", "maven" },
         { "swift", "swift" },

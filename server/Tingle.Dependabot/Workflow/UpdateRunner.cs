@@ -474,6 +474,7 @@ internal partial class UpdateRunner
             "npm" => "npm_and_yarn",
             // Additional ones
             "yarn" => "npm_and_yarn",
+            "pnpm" => "npm_and_yarn",
             "pipenv" => "pip",
             "pip-compile" => "pip",
             "poetry" => "pip",
