@@ -183,6 +183,7 @@ function parseUpdates(config: any): IDependabotUpdate[] {
 
       // Convert to JSON or as required by the script
       allow: update["allow"] ? JSON.stringify(update["allow"]) : undefined,
+      ignore: update["ignore"] ? JSON.stringify(update["ignore"]) : undefined,
       labels: update["labels"] ? JSON.stringify(update["labels"]) : undefined,
       reviewers: update["reviewers"]
         ? JSON.stringify(update["reviewers"])

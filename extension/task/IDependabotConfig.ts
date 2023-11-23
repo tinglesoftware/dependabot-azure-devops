@@ -33,6 +33,10 @@ export interface IDependabotUpdate {
    */
   allow?: string;
   /**
+   * Customize which updates are ignored.
+   */
+  ignore?: string;
+  /**
    * Custom labels/tags.
    */
   labels?: string;

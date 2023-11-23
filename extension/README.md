@@ -78,6 +78,7 @@ schedules:
 # variables declared below can be put in one or more Variable Groups for sharing across pipelines
 variables:
   DEPENDABOT_ALLOW_CONDITIONS: '[{\"dependency-name\":"django*",\"dependency-type\":\"direct\"}]' # packages allowed to be updated
+  DEPENDABOT_IGNORE_CONDITIONS: '[{\"dependency-name\":"@types/*"}]' # packages ignored to be updated
 
 pool:
   vmImage: 'ubuntu-latest' # requires macos or ubuntu (windows is not supported)

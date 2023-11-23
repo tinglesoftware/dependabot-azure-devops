@@ -104,6 +104,12 @@ async function run() {
         dockerRunner.arg(["-e", `DEPENDABOT_ALLOW_CONDITIONS=${allow}`]);
       }
 
+      // Set the dependencies to ignore
+      let ignore = update.ignore;
+      if (ignore) {
+        dockerRunner.arg(["-e", `DEPENDABOT_IGNORE_CONDITIONS=${ignore}`]);
+      }
+
       // Set the requirements that should not be unlocked
       if (variables.excludeRequirementsToUnlock) {
         dockerRunner.arg(["-e", `DEPENDABOT_EXCLUDE_REQUIREMENTS_TO_UNLOCK=${variables.excludeRequirementsToUnlock}`]);
