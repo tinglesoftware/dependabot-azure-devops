@@ -191,6 +191,9 @@ function parseUpdates(config: any): IDependabotUpdate[] {
       assignees: update["assignees"]
         ? JSON.stringify(update["assignees"])
         : undefined,
+      commitMessage: update["commit-message"]
+        ? JSON.stringify(update["commit-message"])
+        : undefined,
     };
 
     if (!dependabotUpdate.packageEcosystem) {

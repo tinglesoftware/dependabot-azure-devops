@@ -275,6 +275,7 @@ internal partial class UpdateRunner
               .AddIfNotDefault("DEPENDABOT_VERSIONING_STRATEGY", update.VersioningStrategy)
               .AddIfNotDefault("DEPENDABOT_ALLOW_CONDITIONS", ToJson(update.Allow))
               .AddIfNotDefault("DEPENDABOT_IGNORE_CONDITIONS", ToJson(update.Ignore))
+              .AddIfNotDefault("DEPENDABOT_COMMIT_MESSAGE_OPTIONS", ToJson(update.CommitMessage))
               .AddIfNotDefault("DEPENDABOT_LABELS", ToJson(update.Labels))
               .AddIfNotDefault("DEPENDABOT_BRANCH_NAME_SEPARATOR", update.PullRequestBranchName?.Separator)
               .AddIfNotDefault("DEPENDABOT_MILESTONE", update.Milestone?.ToString());

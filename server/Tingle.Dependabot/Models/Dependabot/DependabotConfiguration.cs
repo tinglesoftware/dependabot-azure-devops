@@ -63,6 +63,8 @@ public record DependabotUpdate
     public List<DependabotAllowDependency>? Allow { get; set; }
     [JsonPropertyName("ignore")]
     public List<DependabotIgnoreDependency>? Ignore { get; set; }
+    [JsonPropertyName("commit-message")]
+    public DependabotCommitMessage? CommitMessage { get; set; }
     [JsonPropertyName("labels")]
     public List<string>? Labels { get; set; }
     [JsonPropertyName("milestone")]
@@ -151,6 +153,18 @@ public class DependabotIgnoreDependency : IValidatableObject
             yield return new ValidationResult("Each entry under 'ignore' must have one of 'dependency-name', 'versions', or 'update-types' set");
         }
     }
+}
+
+public class DependabotCommitMessage
+{
+    [JsonPropertyName("prefix")]
+    public string? Prefix { get; set; }
+
+    [JsonPropertyName("prefix-development")]
+    public string? PrefixDevelopment { get; set; }
+
+    [JsonPropertyName("include")]
+    public string? Include { get; set; }
 }
 
 public class DependabotPullRequestBranchName

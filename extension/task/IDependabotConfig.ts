@@ -48,6 +48,7 @@ export interface IDependabotUpdate {
    * Assignees.
    */
   assignees?: string;
+  commitMessage?: string;
   /**
    * The milestone to associate pull requests with.
    */
@@ -92,7 +93,7 @@ export interface IDependabotRegistry {
    * The protocol is optional. If not specified, `https://` is assumed.
    */
   url?: string | null | undefined;
-  "index-url"?: string | null | undefined; // only flor python_index
+  "index-url"?: string | null | undefined; // only for python_index
 
   /**
    * The URL of the registry to use to access the dependencies.

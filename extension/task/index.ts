@@ -110,6 +110,12 @@ async function run() {
         dockerRunner.arg(["-e", `DEPENDABOT_IGNORE_CONDITIONS=${ignore}`]);
       }
 
+      // Set the commit message options
+      let commitMessage = update.commitMessage;
+      if (commitMessage) {
+        dockerRunner.arg(["-e", `DEPENDABOT_COMMIT_MESSAGE_OPTIONS=${commitMessage}`]);
+      }
+
       // Set the requirements that should not be unlocked
       if (variables.excludeRequirementsToUnlock) {
         dockerRunner.arg(["-e", `DEPENDABOT_EXCLUDE_REQUIREMENTS_TO_UNLOCK=${variables.excludeRequirementsToUnlock}`]);
