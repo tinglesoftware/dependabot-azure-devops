@@ -17,7 +17,6 @@ require "dependabot/update_checkers"
 require "dependabot/file_updaters"
 require "dependabot/pull_request_creator"
 require "dependabot/pull_request_updater"
-require "dependabot/config/file_fetcher"
 require "dependabot/simple_instrumentor"
 
 require "dependabot/bundler"
@@ -243,9 +242,25 @@ end
 #                                     Setup Ignore conditions                                   #
 # DEPENDABOT_IGNORE_CONDITIONS Example: [{"dependency-name":"ruby","versions":[">= 3.a", "< 4"]}]
 ##################################################################################################
-unless ENV["DEPENDABOT_IGNORE_CONDITIONS"].to_s.strip.empty?
-  $options[:ignore_conditions] = JSON.parse(ENV.fetch("DEPENDABOT_IGNORE_CONDITIONS", nil))
+ignores = JSON.parse(ENV.fetch("DEPENDABOT_IGNORE_CONDITIONS", nil)) || []
+$options[:ignore_conditions] = ignores.map do |ic|
+  Dependabot::Config::IgnoreCondition.new(
+    dependency_name: ic[:"dependency-name"],
+    versions: ic[:versions],
+    update_types: ic[:"update-types"]
+  )
 end
+
+##################################################################################################
+#                                   Setup Commit Message Options                                 #
+# DEPENDABOT_COMMIT_MESSAGE_OPTIONS Example: {"prefix":"(dependabot)"}
+##################################################################################################
+commit_message = JSON.parse(ENV.fetch("DEPENDABOT_COMMIT_MESSAGE_OPTIONS", nil)) || {}
+$options[:commit_message_options] = Dependabot::Config::UpdateConfig::CommitMessageOptions.new(
+  prefix: commit_message[:prefix],
+  prefix_development: commit_message[:"prefix-development"] || commit_message[:prefix],
+  include: commit_message[:include]
+)
 
 #################################################################
 #                        Setup Labels                           #
@@ -273,25 +288,10 @@ end
 
 # Get ignore versions for a dependency
 def ignored_versions_for(dep)
-  if $options[:ignore_conditions].any?
-    ignore_conditions = $options[:ignore_conditions].map do |ic|
-      Dependabot::Config::IgnoreCondition.new(
-        dependency_name: ic["dependency-name"],
-        versions: ic["versions"],
-        update_types: ic["update-types"]
-      )
-    end
-    Dependabot::Config::UpdateConfig.new(ignore_conditions: ignore_conditions)
-                                    .ignored_versions_for(
-                                      dep,
-                                      security_updates_only: $options[:security_updates_only]
-                                    )
-  else
-    $update_config.ignored_versions_for(
-      dep,
-      security_updates_only: $options[:security_updates_only]
-    )
-  end
+  $update_config.ignored_versions_for(
+    dep,
+    security_updates_only: $options[:security_updates_only]
+  )
 end
 
 # rubocop:disable Metrics/PerceivedComplexity
@@ -472,36 +472,10 @@ $source = Dependabot::Source.new(
   branch: $options[:branch]
 )
 
-## Read the update configuration if present
-puts "Looking for configuration file in the repository ..."
-$config_file = begin
-  # Using fetcher_args as before or in the examples will result in the
-  # config file not being found if the directory specified is not the root.
-  # This happens because the files are checked relative to the supplied directory.
-  # https://github.com/dependabot/dependabot-core/blob/c5cd618812b07ece4a4b53ea18d80ad213b077e7/common/lib/dependabot/config/file_fetcher.rb#L29
-  #
-  # To solve this, the FileFetcher for the Config should have its own source
-  # with the directory pointing to the root. Cloning makes it much easier
-  # since we are only making the change for fetching the config file.
-  #
-  # See https://github.com/tinglesoftware/dependabot-azure-devops/issues/399
-  cfg_source = $source.clone
-  cfg_source.directory = "/"
-  cfg_file = Dependabot::Config::FileFetcher.new(
-    source: cfg_source,
-    credentials: $options[:credentials],
-    options: $options[:updater_options]
-  ).config_file
-  puts "Using configuration file at '#{cfg_file.path}' 😎"
-  Dependabot::Config::File.parse(cfg_file.content)
-rescue Dependabot::RepoNotFound, Dependabot::DependencyFileNotFound
-  puts "Configuration file was not found, a default config will be used. 😔"
-  Dependabot::Config::File.new(updates: [])
-end
-$update_config = $config_file.update_config(
-  $package_manager,
-  directory: $options[:directory],
-  target_branch: $options[:branch]
+## Create the update configuration (we no longer parse the file because of BOM and type issues)
+$update_config = Dependabot::Config::UpdateConfig.new(
+  ignore_conditions: $options[:ignore_conditions],
+  commit_message_options: $options[:commit_message_options]
 )
 
 if $options[:requirements_update_strategy]
