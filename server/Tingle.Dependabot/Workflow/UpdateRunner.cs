@@ -82,10 +82,11 @@ internal partial class UpdateRunner
         foreach (var (key, value) in env) container.Env.Add(new ContainerAppEnvironmentVariable { Name = key, Value = value, });
 
         // prepare the ContainerApp job
+        var timeoutSec = Convert.ToInt32(TimeSpan.FromHours(1).TotalSeconds);
         var data = new ContainerAppJobData((project.Location ?? options.Location)!)
         {
             EnvironmentId = options.AppEnvironmentId,
-            Configuration = new ContainerAppJobConfiguration(ContainerAppJobTriggerType.Manual, 1)
+            Configuration = new ContainerAppJobConfiguration(ContainerAppJobTriggerType.Manual, replicaTimeout: timeoutSec)
             {
                 ManualTriggerConfig = new JobConfigurationManualTriggerConfig
                 {
@@ -93,7 +94,6 @@ internal partial class UpdateRunner
                     ReplicaCompletionCount = 1,
                 },
                 ReplicaRetryLimit = 1,
-                ReplicaTimeout = Convert.ToInt32(TimeSpan.FromHours(1).TotalSeconds),
             },
             Template = new ContainerAppJobTemplate
             {
