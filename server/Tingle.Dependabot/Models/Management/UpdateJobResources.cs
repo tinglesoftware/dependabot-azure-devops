@@ -33,11 +33,11 @@ public class UpdateJobResources
     {
         return ecosystem switch
         {
-            //"nuget" => new(cpu: 0.25, memory: 0.2),
-            //"gitsubmodule" => new(cpu: 0.1, memory: 0.2),
-            //"terraform" => new(cpu: 0.25, memory: 1),
-            //"npm" => new(cpu: 0.25, memory: 1),
-            _ => new UpdateJobResources(cpu: 0.25, memory: 0.5), // the minimum
+            "npm" => new(cpu: 0.5, memory: 1),
+            "yarn" => new(cpu: 0.5, memory: 1),
+            "pnpm" => new(cpu: 0.5, memory: 1),
+            "terraform" => new(cpu: 0.5, memory: 1),
+            _ => new(cpu: 0.25, memory: 0.5), // the minimum
         };
     }
 
