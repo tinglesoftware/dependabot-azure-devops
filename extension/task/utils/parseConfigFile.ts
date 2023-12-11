@@ -25,6 +25,9 @@ import axios from "axios";
  */
 async function parseConfigFile(variables: ISharedVariables): Promise<IDependabotConfig> {
   const possibleFilePaths = [
+    ".azuredevops/dependabot.yml",
+    ".azuredevops/dependabot.yaml",
+
     "/.github/dependabot.yaml",
     "/.github/dependabot.yml",
   ];

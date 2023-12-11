@@ -10,9 +10,8 @@ public class AzureDevOpsProvider
 {
     // Possible/allowed paths for the configuration files in a repository.
     private static readonly IReadOnlyList<string> ConfigurationFilePaths = new[] {
-        // TODO: restore checks in .azuredevops folder once either the code can check that folder or we are passing ignore conditions via update_jobs API
-        //".azuredevops/dependabot.yml",
-        //".azuredevops/dependabot.yaml",
+        ".azuredevops/dependabot.yml",
+        ".azuredevops/dependabot.yaml",
 
         ".github/dependabot.yml",
         ".github/dependabot.yaml",
