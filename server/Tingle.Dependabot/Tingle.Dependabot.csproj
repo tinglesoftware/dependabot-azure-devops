@@ -21,7 +21,7 @@
     <PackageReference Include="Azure.Identity" Version="1.10.4" />
     <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.17.1" /> <!-- Allows for faster updates -->
     <PackageReference Include="Azure.Monitor.Query" Version="1.2.0" />
-    <PackageReference Include="Azure.ResourceManager.AppContainers" Version="1.1.0" />
+    <PackageReference Include="Azure.ResourceManager.AppContainers" Version="1.1.1" />
     <PackageReference Include="DistributedLock.FileSystem" Version="1.0.1" />
     <PackageReference Include="FlakeId" Version="1.1.2" /> <!-- TODO: replace with Tingle.Extensions.Primitives -->
     <PackageReference Include="Ksuid" Version="1.0.0" /> <!-- TODO: replace with Tingle.Extensions.Primitives -->
