@@ -76,7 +76,7 @@ $options = {
   # See description of requirements here:
   # https://github.com/dependabot/dependabot-core/issues/600#issuecomment-407808103
   # https://github.com/wemake-services/kira-dependencies/pull/210
-  excluded_requirements: ENV["DEPENDABOT_EXCLUDE_REQUIREMENTS_TO_UNLOCK"]&.split(" ")&.map(&:to_sym) || [],
+  excluded_requirements: ENV["DEPENDABOT_EXCLUDE_REQUIREMENTS_TO_UNLOCK"]&.split&.map(&:to_sym) || [],
 
   # Details on the location of the repository
   azure_organization: ENV.fetch("AZURE_ORGANIZATION", nil),
