@@ -4,12 +4,16 @@ public record ProcessSynchronization
 {
     public ProcessSynchronization() { } // required for deserialization
 
-    public ProcessSynchronization(bool trigger, string? repositoryId = null, string? repositoryProviderId = null)
+    public ProcessSynchronization(string projectId, bool trigger, string? repositoryId = null, string? repositoryProviderId = null)
     {
+        ProjectId = projectId ?? throw new ArgumentNullException(nameof(projectId));
         Trigger = trigger;
         RepositoryId = repositoryId;
         RepositoryProviderId = repositoryProviderId;
     }
+
+    /// <summary>Identifier of the project.</summary>
+    public string? ProjectId { get; set; }
 
     /// <summary>
     /// Indicates whether we should trigger the update jobs where changes have been detected.

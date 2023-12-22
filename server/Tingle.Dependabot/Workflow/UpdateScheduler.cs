@@ -1,6 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using Tingle.Dependabot.Events;
-using Tingle.Dependabot.Models;
+using Tingle.Dependabot.Models.Management;
 using Tingle.EventBus;
 using Tingle.PeriodicTasks;
 
@@ -30,19 +30,20 @@ internal class UpdateScheduler
 
     public async Task CreateOrUpdateAsync(Repository repository, CancellationToken cancellationToken = default)
     {
-        logger.LogDebug("Creating/Updating schedules for repository '{RepositoryId}'.", repository.Id);
+        logger.SchedulesUpdating(repositoryId: repository.Id, projectId: repository.ProjectId);
         var updates = new List<SchedulableUpdate>();
         foreach (var update in repository.Updates)
         {
             updates.Add(new(repository.Updates.IndexOf(update), update.Schedule!));
         }
 
+        var projectId = repository.ProjectId!;
         var repositoryId = repository.Id!;
         var timers = new List<CronScheduleTimer>();
         foreach (var (index, supplied) in updates)
         {
             var schedule = supplied.GenerateCron();
-            var payload = new TimerPayload(repositoryId, index);
+            var payload = new TimerPayload(projectId, repositoryId, index);
             var timer = new CronScheduleTimer(schedule, supplied.Timezone, CustomTimerCallback, payload);
             timers.Add(timer);
         }
@@ -72,13 +73,14 @@ internal class UpdateScheduler
     {
         if (arg2 is not TimerPayload payload)
         {
-            logger.LogError("Timer call back does not have correct argument");
+            logger.SchedulesTimerInvalidCallbackArgument(typeof(TimerPayload).FullName, arg2?.GetType().FullName);
             return;
         }
 
         // publish event for the job to be run
         var evt = new TriggerUpdateJobsEvent
         {
+            ProjectId = payload.ProjectId,
             RepositoryId = payload.RepositoryId,
             RepositoryUpdateId = payload.RepositoryUpdateId,
             Trigger = UpdateJobTrigger.Scheduled,
@@ -87,5 +89,5 @@ internal class UpdateScheduler
         await publisher.PublishAsync(evt, cancellationToken: cancellationToken);
     }
 
-    private readonly record struct TimerPayload(string RepositoryId, int RepositoryUpdateId);
+    private readonly record struct TimerPayload(string ProjectId, string RepositoryId, int RepositoryUpdateId);
 }

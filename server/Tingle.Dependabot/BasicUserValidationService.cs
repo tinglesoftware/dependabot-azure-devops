@@ -1,19 +1,21 @@
 ﻿using AspNetCore.Authentication.Basic;
+using Microsoft.EntityFrameworkCore;
+using Tingle.Dependabot.Models;
 
 namespace Tingle.Dependabot;
 
 internal class BasicUserValidationService : IBasicUserValidationService
 {
-    private readonly IConfiguration configuration;
+    private readonly MainDbContext dbContext;
 
-    public BasicUserValidationService(IConfiguration configuration)
+    public BasicUserValidationService(MainDbContext dbContext)
     {
-        this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+        this.dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
     }
 
-    public Task<bool> IsValidAsync(string username, string password)
+    public async Task<bool> IsValidAsync(string username, string password)
     {
-        var expected = configuration.GetValue<string?>($"Authentication:Schemes:ServiceHooks:Credentials:{username}");
-        return Task.FromResult(string.Equals(expected, password, StringComparison.Ordinal));
+        var project = await dbContext.Projects.SingleOrDefaultAsync(p => p.Id == username);
+        return project is not null && string.Equals(project.Password, password, StringComparison.Ordinal);
     }
 }

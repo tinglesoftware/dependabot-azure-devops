@@ -1,0 +1,35 @@
+# To get started with Dependabot version updates, you'll need to specify which
+# package ecosystems to update and where the package manifests are located.
+# Please see the documentation for all configuration options:
+# https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
+version: 2
+updates:
+  - package-ecosystem: 'docker' # See documentation for possible values
+    directory: '/' # Location of package manifests
+    open-pull-requests-limit: 10
+  - package-ecosystem: 'npm' # See documentation for possible values
+    directory: '/client' # Location of package manifests
+    open-pull-requests-limit: 10
+    registries:
+    - reg1
+    - reg2
+    insecure-external-code-execution: 'deny'
+    ignore:
+    - dependency-name: 'react'
+      update-types: ['version-update:semver-major']
+    - dependency-name: 'react-dom'
+      update-types: ['version-update:semver-major']
+    - dependency-name: '@types/react'
+      update-types: ['version-update:semver-major']
+    - dependency-name: '@types/react-dom'
+      update-types: ['version-update:semver-major']
+registries:
+  reg1:
+    type: nuget-feed
+    url: 'https://pkgs.dev.azure.com/dependabot/_packaging/dependabot/nuget/v3/index.json'
+    token: ':${{DEFAULT_TOKEN}}'
+  reg2:
+    type: npm-registry
+    url: 'https://pkgs.dev.azure.com/dependabot/_packaging/dependabot-npm/npm/registry/'
+    token: 'tingle-npm:${{DEFAULT_TOKEN}}'

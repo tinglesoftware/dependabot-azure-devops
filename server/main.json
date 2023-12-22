@@ -12,34 +12,17 @@
     "name": {
       "type": "string",
       "defaultValue": "dependabot",
+      "minLength": 5,
+      "maxLength": 24,
       "metadata": {
-        "description": "Name of the resources"
+        "description": "Name of the resources. Make sure it is unique e.g. dependabotcontoso to avoid conflicts or failures"
       }
     },
-    "projectUrl": {
+    "projectSetups": {
       "type": "string",
+      "defaultValue": "[[]",
       "metadata": {
-        "description": "URL of the project. For example \"https://dev.azure.com/fabrikam/DefaultCollection\""
-      }
-    },
-    "projectToken": {
-      "type": "string",
-      "metadata": {
-        "description": "Token for accessing the project."
-      }
-    },
-    "synchronizeOnStartup": {
-      "type": "bool",
-      "defaultValue": false,
-      "metadata": {
-        "description": "Whether to synchronize repositories on startup."
-      }
-    },
-    "createOrUpdateWebhooksOnStartup": {
-      "type": "bool",
-      "defaultValue": false,
-      "metadata": {
-        "description": "Whether to create or update subscriptions on startup."
+        "description": "JSON array string fo projects to setup. E.g. [{\"url\":\"https://dev.azure.com/tingle/dependabot\",\"token\":\"dummy\",\"AutoComplete\":true}]"
       }
     },
     "githubToken": {
@@ -49,170 +32,162 @@
         "description": "Access token for authenticating requests to GitHub."
       }
     },
-    "eventBusTransport": {
-      "type": "string",
-      "defaultValue": "ServiceBus",
-      "metadata": {
-        "description": "Merge strategy to use when setting auto complete on created pull requests."
-      },
-      "allowedValues": [
-        "InMemory",
-        "ServiceBus",
-        "QueueStorage"
-      ]
-    },
-    "failOnException": {
-      "type": "bool",
-      "defaultValue": false,
-      "metadata": {
-        "description": "Whether update jobs should fail when an exception occurs."
-      }
-    },
-    "autoComplete": {
-      "type": "bool",
-      "defaultValue": true,
-      "metadata": {
-        "description": "Whether to set auto complete on created pull requests."
-      }
-    },
-    "autoCompleteIgnoreConfigs": {
-      "type": "array",
-      "defaultValue": [],
-      "metadata": {
-        "description": "Identifiers of configs to be ignored in auto complete. E.g 3,4,10"
-      }
-    },
-    "autoCompleteMergeStrategy": {
-      "type": "string",
-      "defaultValue": "Squash",
-      "metadata": {
-        "description": "Merge strategy to use when setting auto complete on created pull requests."
-      },
-      "allowedValues": [
-        "NoFastForward",
-        "Rebase",
-        "RebaseMerge",
-        "Squash"
-      ]
-    },
-    "autoApprove": {
-      "type": "bool",
-      "defaultValue": false,
-      "metadata": {
-        "description": "Whether to automatically approve created pull requests."
-      }
-    },
-    "jobHostType": {
-      "type": "string",
-      "defaultValue": "ContainerInstances",
-      "metadata": {
-        "description": "Where to host new update jobs."
-      },
-      "allowedValues": [
-        "ContainerInstances"
-      ]
-    },
-    "jobsResourceGroupName": {
-      "type": "string",
-      "defaultValue": "[resourceGroup().name]",
-      "metadata": {
-        "description": "Name of the resource group where jobs will be created."
-      }
-    },
-    "notificationsPassword": {
-      "type": "string",
-      "defaultValue": "[uniqueString('service-hooks', resourceGroup().id)]",
-      "metadata": {
-        "description": "Password for Webhooks, ServiceHooks, and Notifications from Azure DevOps."
-      }
-    },
-    "dockerImageRegistry": {
-      "type": "string",
-      "defaultValue": "ghcr.io",
-      "metadata": {
-        "description": "Registry of the docker image. E.g. \"contoso.azurecr.io\". Leave empty unless you have a private registry mirroring the image from GHCR"
-      }
-    },
-    "serverImageRepository": {
-      "type": "string",
-      "defaultValue": "tinglesoftware/dependabot-server",
-      "metadata": {
-        "description": "Registry and repository of the server docker image. Ideally, you do not need to edit this value."
-      }
-    },
-    "serverImageTag": {
+    "imageTag": {
       "type": "string",
       "defaultValue": "#{GITVERSION_NUGETVERSIONV2}#",
+      "minLength": 1,
       "metadata": {
-        "description": "Tag of the server docker image."
+        "description": "Tag of the docker images."
       }
-    },
-    "updaterImageTag": {
-      "type": "string",
-      "defaultValue": "#{GITVERSION_NUGETVERSIONV2}#",
-      "metadata": {
-        "description": "Tag of the updater docker image."
-      }
-    },
-    "serviceBusNamespaceId": {
-      "type": "string",
-      "defaultValue": "",
-      "metadata": {
-        "description": "Resource identifier of the ServiceBus namespace to use. If none is provided, a new one is created."
-      }
-    },
-    "storageAccountId": {
-      "type": "string",
-      "defaultValue": "",
-      "metadata": {
-        "description": "Resource identifier of the storage account to use. If none is provided, a new one is created."
-      }
-    },
-    "logAnalyticsWorkspaceId": {
-      "type": "string",
-      "defaultValue": "",
-      "metadata": {
-        "description": "Resource identifier of the LogAnalytics Workspace to use. If none is provided, a new one is created."
-      }
-    },
-    "appEnvironmentId": {
-      "type": "string",
-      "defaultValue": "",
-      "metadata": {
-        "description": "Resource identifier of the ContainerApp Environment to deploy to. If none is provided, a new one is created."
-      }
-    },
-    "minReplicas": {
-      "type": "int",
-      "defaultValue": 1,
-      "metadata": {
-        "description": "The minimum number of replicas"
-      },
-      "maxValue": 2,
-      "minValue": 1
-    },
-    "maxReplicas": {
-      "type": "int",
-      "defaultValue": 1,
-      "metadata": {
-        "description": "The maximum number of replicas"
-      },
-      "maxValue": 5,
-      "minValue": 1
     }
   },
   "variables": {
+    "copy": [
+      {
+        "name": "queueScaleRules",
+        "count": "[length(variables('queueNames'))]",
+        "input": {
+          "name": "[format('azure-servicebus-{0}', variables('queueNames')[copyIndex('queueScaleRules')])]",
+          "custom": {
+            "type": "azure-servicebus",
+            "metadata": {
+              "namespace": "[parameters('name')]",
+              "queueName": "[variables('queueNames')[copyIndex('queueScaleRules')]]",
+              "messageCount": "100"
+            },
+            "auth": [
+              {
+                "secretRef": "connection-strings-asb-scaler",
+                "triggerParameter": "connection"
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "fileShares": [
+      {
+        "name": "certs"
+      },
+      {
+        "name": "distributed-locks",
+        "writeable": true
+      },
+      {
+        "name": "working-dir",
+        "writeable": true
+      }
+    ],
+    "storageAccountName": "[replace(replace(if(equals(parameters('name'), 'dependabot'), 'dependabotstore', parameters('name')), '-', ''), '_', '')]",
     "sqlServerAdministratorLogin": "[uniqueString(resourceGroup().id)]",
     "sqlServerAdministratorLoginPassword": "[format('{0}%{1}', skip(uniqueString(resourceGroup().id), 5), uniqueString('sql-password', resourceGroup().id))]",
-    "hasDockerImageRegistry": "[and(not(equals(parameters('dockerImageRegistry'), null())), not(empty(parameters('dockerImageRegistry'))))]",
-    "isAcrServer": "[and(variables('hasDockerImageRegistry'), endsWith(parameters('dockerImageRegistry'), environment().suffixes.acrLoginServer))]",
-    "hasProvidedServiceBusNamespace": "[and(not(equals(parameters('serviceBusNamespaceId'), null())), not(empty(parameters('serviceBusNamespaceId'))))]",
-    "hasProvidedStorageAccount": "[and(not(equals(parameters('storageAccountId'), null())), not(empty(parameters('storageAccountId'))))]",
-    "hasProvidedLogAnalyticsWorkspace": "[and(not(equals(parameters('logAnalyticsWorkspaceId'), null())), not(empty(parameters('logAnalyticsWorkspaceId'))))]",
-    "hasProvidedAppEnvironment": "[and(not(equals(parameters('appEnvironmentId'), null())), not(empty(parameters('appEnvironmentId'))))]",
-    "collisionSuffix": "[uniqueString(resourceGroup().id)]"
+    "queueNames": [
+      "process-synchronization",
+      "repository-created",
+      "repository-updated",
+      "repository-deleted",
+      "trigger-update-jobs",
+      "update-job-check-state",
+      "update-job-collect-logs"
+    ]
   },
   "resources": [
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2023-02-01",
+      "name": "[format('{0}/{1}', parameters('name'), 'sql-login')]",
+      "properties": {
+        "contentType": "text/plain",
+        "value": "[variables('sqlServerAdministratorLogin')]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', parameters('name'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2023-02-01",
+      "name": "[format('{0}/{1}', parameters('name'), 'sql-password')]",
+      "properties": {
+        "contentType": "text/plain",
+        "value": "[variables('sqlServerAdministratorLoginPassword')]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', parameters('name'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/keys",
+      "apiVersion": "2023-02-01",
+      "name": "[format('{0}/{1}', parameters('name'), 'data-protection')]",
+      "properties": {
+        "keySize": 2048,
+        "attributes": {
+          "enabled": true
+        },
+        "kty": "RSA",
+        "keyOps": [
+          "encrypt",
+          "decrypt",
+          "sign",
+          "verify",
+          "wrapKey",
+          "unwrapKey"
+        ],
+        "rotationPolicy": {
+          "lifetimeActions": [
+            {
+              "action": {
+                "type": "Notify"
+              },
+              "trigger": {
+                "timeBeforeExpiry": "P30D"
+              }
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', parameters('name'))]"
+      ]
+    },
+    {
+      "copy": {
+        "name": "shares",
+        "count": "[length(variables('fileShares'))]"
+      },
+      "type": "Microsoft.Storage/storageAccounts/fileServices/shares",
+      "apiVersion": "2022-09-01",
+      "name": "[format('{0}/{1}/{2}', variables('storageAccountName'), 'default', variables('fileShares')[copyIndex()].name)]",
+      "properties": {
+        "accessTier": "[if(contains(variables('fileShares')[copyIndex()], 'accessTier'), variables('fileShares')[copyIndex()].accessTier, 'TransactionOptimized')]",
+        "shareQuota": "[if(contains(variables('fileShares')[copyIndex()], 'shareQuota'), variables('fileShares')[copyIndex()].shareQuota, 1)]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+      ]
+    },
+    {
+      "copy": {
+        "name": "storages",
+        "count": "[length(variables('fileShares'))]"
+      },
+      "type": "Microsoft.App/managedEnvironments/storages",
+      "apiVersion": "2023-05-01",
+      "name": "[format('{0}/{1}', parameters('name'), variables('fileShares')[copyIndex()].name)]",
+      "properties": {
+        "azureFile": {
+          "accountName": "[variables('storageAccountName')]",
+          "accountKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2022-09-01').keys[0].value]",
+          "shareName": "[variables('fileShares')[copyIndex()].name]",
+          "accessMode": "[if(and(contains(variables('fileShares')[copyIndex()], 'writeable'), bool(variables('fileShares')[copyIndex()].writeable)), 'ReadWrite', 'ReadOnly')]"
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.App/managedEnvironments', parameters('name'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+      ]
+    },
     {
       "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
       "apiVersion": "2023-01-31",
@@ -220,16 +195,29 @@
       "location": "[parameters('location')]"
     },
     {
-      "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
-      "apiVersion": "2023-01-31",
-      "name": "[format('{0}-jobs', parameters('name'))]",
-      "location": "[parameters('location')]"
+      "type": "Microsoft.KeyVault/vaults",
+      "apiVersion": "2023-02-01",
+      "name": "[parameters('name')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "tenantId": "[subscription().tenantId]",
+        "sku": {
+          "name": "standard",
+          "family": "A"
+        },
+        "enabledForDeployment": true,
+        "enabledForDiskEncryption": true,
+        "enabledForTemplateDeployment": true,
+        "accessPolicies": [],
+        "enableRbacAuthorization": true,
+        "enableSoftDelete": true,
+        "softDeleteRetentionInDays": 90
+      }
     },
     {
-      "condition": "[and(equals(parameters('eventBusTransport'), 'ServiceBus'), not(variables('hasProvidedServiceBusNamespace')))]",
       "type": "Microsoft.ServiceBus/namespaces",
       "apiVersion": "2021-11-01",
-      "name": "[format('{0}-{1}', parameters('name'), variables('collisionSuffix'))]",
+      "name": "[parameters('name')]",
       "location": "[parameters('location')]",
       "properties": {
         "disableLocalAuth": false,
@@ -240,10 +228,30 @@
       }
     },
     {
-      "condition": "[and(equals(parameters('eventBusTransport'), 'QueueStorage'), not(variables('hasProvidedStorageAccount')))]",
+      "type": "Microsoft.AppConfiguration/configurationStores",
+      "apiVersion": "2023-03-01",
+      "name": "[parameters('name')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "softDeleteRetentionInDays": 0
+      },
+      "sku": {
+        "name": "free"
+      },
+      "identity": {
+        "type": "UserAssigned",
+        "userAssignedIdentities": {
+          "[format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')))]": {}
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name'))]"
+      ]
+    },
+    {
       "type": "Microsoft.Storage/storageAccounts",
       "apiVersion": "2022-09-01",
-      "name": "[format('{0}-{1}', parameters('name'), variables('collisionSuffix'))]",
+      "name": "[variables('storageAccountName')]",
       "location": "[parameters('location')]",
       "kind": "StorageV2",
       "sku": {
@@ -252,7 +260,7 @@
       "properties": {
         "accessTier": "Hot",
         "supportsHttpsTrafficOnly": true,
-        "allowBlobPublicAccess": true,
+        "allowBlobPublicAccess": false,
         "networkAcls": {
           "bypass": "AzureServices",
           "defaultAction": "Allow"
@@ -262,7 +270,7 @@
     {
       "type": "Microsoft.Sql/servers",
       "apiVersion": "2022-05-01-preview",
-      "name": "[format('{0}-{1}', parameters('name'), variables('collisionSuffix'))]",
+      "name": "[parameters('name')]",
       "location": "[parameters('location')]",
       "properties": {
         "publicNetworkAccess": "Enabled",
@@ -284,19 +292,19 @@
     {
       "type": "Microsoft.Sql/servers/firewallRules",
       "apiVersion": "2022-08-01-preview",
-      "name": "[format('{0}/{1}', format('{0}-{1}', parameters('name'), variables('collisionSuffix')), 'AllowAllWindowsAzureIps')]",
+      "name": "[format('{0}/{1}', parameters('name'), 'AllowAllWindowsAzureIps')]",
       "properties": {
         "endIpAddress": "0.0.0.0",
         "startIpAddress": "0.0.0.0"
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Sql/servers', format('{0}-{1}', parameters('name'), variables('collisionSuffix')))]"
+        "[resourceId('Microsoft.Sql/servers', parameters('name'))]"
       ]
     },
     {
       "type": "Microsoft.Sql/servers/databases",
       "apiVersion": "2022-05-01-preview",
-      "name": "[format('{0}/{1}', format('{0}-{1}', parameters('name'), variables('collisionSuffix')), parameters('name'))]",
+      "name": "[format('{0}/{1}', parameters('name'), parameters('name'))]",
       "location": "[parameters('location')]",
       "sku": {
         "name": "Basic"
@@ -318,11 +326,10 @@
       },
       "dependsOn": [
         "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name'))]",
-        "[resourceId('Microsoft.Sql/servers', format('{0}-{1}', parameters('name'), variables('collisionSuffix')))]"
+        "[resourceId('Microsoft.Sql/servers', parameters('name'))]"
       ]
     },
     {
-      "condition": "[not(variables('hasProvidedLogAnalyticsWorkspace'))]",
       "type": "Microsoft.OperationalInsights/workspaces",
       "apiVersion": "2022-10-01",
       "name": "[parameters('name')]",
@@ -337,17 +344,16 @@
       }
     },
     {
-      "condition": "[not(variables('hasProvidedAppEnvironment'))]",
       "type": "Microsoft.App/managedEnvironments",
-      "apiVersion": "2022-10-01",
+      "apiVersion": "2023-05-01",
       "name": "[parameters('name')]",
       "location": "[parameters('location')]",
       "properties": {
         "appLogsConfiguration": {
           "destination": "log-analytics",
           "logAnalyticsConfiguration": {
-            "customerId": "[if(variables('hasProvidedLogAnalyticsWorkspace'), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', split(parameters('logAnalyticsWorkspaceId'), '/')[2], split(parameters('logAnalyticsWorkspaceId'), '/')[4]), 'Microsoft.OperationalInsights/workspaces', split(parameters('logAnalyticsWorkspaceId'), '/')[8]), '2022-10-01').customerId, reference(resourceId('Microsoft.OperationalInsights/workspaces', parameters('name')), '2022-10-01').customerId)]",
-            "sharedKey": "[if(variables('hasProvidedLogAnalyticsWorkspace'), listKeys(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', split(parameters('logAnalyticsWorkspaceId'), '/')[2], split(parameters('logAnalyticsWorkspaceId'), '/')[4]), 'Microsoft.OperationalInsights/workspaces', split(parameters('logAnalyticsWorkspaceId'), '/')[8]), '2022-10-01').primarySharedKey, listKeys(resourceId('Microsoft.OperationalInsights/workspaces', parameters('name')), '2022-10-01').primarySharedKey)]"
+            "customerId": "[reference(resourceId('Microsoft.OperationalInsights/workspaces', parameters('name')), '2022-10-01').customerId]",
+            "sharedKey": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces', parameters('name')), '2022-10-01').primarySharedKey]"
           }
         }
       },
@@ -363,7 +369,7 @@
       "kind": "web",
       "properties": {
         "Application_Type": "web",
-        "WorkspaceResourceId": "[if(variables('hasProvidedLogAnalyticsWorkspace'), extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', split(parameters('logAnalyticsWorkspaceId'), '/')[2], split(parameters('logAnalyticsWorkspaceId'), '/')[4]), 'Microsoft.OperationalInsights/workspaces', split(parameters('logAnalyticsWorkspaceId'), '/')[8]), resourceId('Microsoft.OperationalInsights/workspaces', parameters('name')))]"
+        "WorkspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('name'))]"
       },
       "dependsOn": [
         "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('name'))]"
@@ -371,15 +377,15 @@
     },
     {
       "type": "Microsoft.App/containerApps",
-      "apiVersion": "2022-10-01",
+      "apiVersion": "2023-05-01",
       "name": "[parameters('name')]",
       "location": "[parameters('location')]",
       "properties": {
-        "managedEnvironmentId": "[if(variables('hasProvidedAppEnvironment'), extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', split(parameters('appEnvironmentId'), '/')[2], split(parameters('appEnvironmentId'), '/')[4]), 'Microsoft.App/managedEnvironments', split(parameters('appEnvironmentId'), '/')[8]), resourceId('Microsoft.App/managedEnvironments', parameters('name')))]",
+        "managedEnvironmentId": "[resourceId('Microsoft.App/managedEnvironments', parameters('name'))]",
         "configuration": {
           "ingress": {
             "external": true,
-            "targetPort": 80,
+            "targetPort": 8080,
             "traffic": [
               {
                 "latestRevision": true,
@@ -387,35 +393,40 @@
               }
             ]
           },
-          "registries": "[if(variables('isAcrServer'), createArray(createObject('identity', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')), 'server', parameters('dockerImageRegistry'))), createArray())]",
           "secrets": [
             {
               "name": "connection-strings-application-insights",
               "value": "[reference(resourceId('Microsoft.Insights/components', parameters('name')), '2020-02-02').ConnectionString]"
             },
             {
+              "name": "project-setups",
+              "value": "[parameters('projectSetups')]"
+            },
+            {
               "name": "connection-strings-sql",
-              "value": "[join(createArray(format('Server=tcp:{0},1433', reference(resourceId('Microsoft.Sql/servers', format('{0}-{1}', parameters('name'), variables('collisionSuffix'))), '2022-05-01-preview').fullyQualifiedDomainName), format('Initial Catalog={0}', parameters('name')), format('User ID={0}', variables('sqlServerAdministratorLogin')), format('Password={0}', variables('sqlServerAdministratorLoginPassword')), 'Persist Security Info=False', 'MultipleActiveResultSets=False', 'Encrypt=True', 'TrustServerCertificate=False', 'Connection Timeout=30'), ';')]"
+              "value": "[join(createArray(format('Server=tcp:{0},1433', reference(resourceId('Microsoft.Sql/servers', parameters('name')), '2022-05-01-preview').fullyQualifiedDomainName), format('Initial Catalog={0}', parameters('name')), format('User ID={0}', variables('sqlServerAdministratorLogin')), format('Password={0}', variables('sqlServerAdministratorLoginPassword')), 'Persist Security Info=False', 'MultipleActiveResultSets=False', 'Encrypt=True', 'TrustServerCertificate=False', 'Connection Timeout=30'), ';')]"
             },
             {
-              "name": "notifications-password",
-              "value": "[parameters('notificationsPassword')]"
-            },
-            {
-              "name": "project-token",
-              "value": "[parameters('projectToken')]"
-            },
-            {
-              "name": "log-analytics-workspace-key",
-              "value": "[if(variables('hasProvidedLogAnalyticsWorkspace'), listKeys(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', split(parameters('logAnalyticsWorkspaceId'), '/')[2], split(parameters('logAnalyticsWorkspaceId'), '/')[4]), 'Microsoft.OperationalInsights/workspaces', split(parameters('logAnalyticsWorkspaceId'), '/')[8]), '2022-10-01').primarySharedKey, listKeys(resourceId('Microsoft.OperationalInsights/workspaces', parameters('name')), '2022-10-01').primarySharedKey)]"
+              "name": "connection-strings-asb-scaler",
+              "value": "[listKeys(resourceId('Microsoft.ServiceBus/namespaces/AuthorizationRules', parameters('name'), 'RootManageSharedAccessKey'), '2021-11-01').primaryConnectionString]"
             }
           ]
         },
         "template": {
           "containers": [
             {
-              "image": "[format('{0}{1}:{2}', format('{0}', if(variables('hasDockerImageRegistry'), format('{0}/', parameters('dockerImageRegistry')), '')), parameters('serverImageRepository'), parameters('serverImageTag'))]",
+              "image": "[format('ghcr.io/tinglesoftware/dependabot-server:{0}', parameters('imageTag'))]",
               "name": "dependabot",
+              "volumeMounts": [
+                {
+                  "mountPath": "/mnt/dependabot",
+                  "volumeName": "working-dir"
+                },
+                {
+                  "mountPath": "/mnt/distributed-locks",
+                  "volumeName": "distributed-locks"
+                }
+              ],
               "env": [
                 {
                   "name": "AZURE_CLIENT_ID",
@@ -430,6 +441,18 @@
                   "value": "true"
                 },
                 {
+                  "name": "PROJECT_SETUPS",
+                  "secretRef": "project-setups"
+                },
+                {
+                  "name": "AzureAppConfig__Endpoint",
+                  "value": "[reference(resourceId('Microsoft.AppConfiguration/configurationStores', parameters('name')), '2023-03-01').endpoint]"
+                },
+                {
+                  "name": "AzureAppConfig__Label",
+                  "value": "Production"
+                },
+                {
                   "name": "ApplicationInsights__ConnectionString",
                   "secretRef": "connection-strings-application-insights"
                 },
@@ -438,80 +461,60 @@
                   "secretRef": "connection-strings-sql"
                 },
                 {
-                  "name": "Workflow__SynchronizeOnStartup",
-                  "value": "[if(parameters('synchronizeOnStartup'), 'true', 'false')]"
+                  "name": "DataProtection__Azure__KeyVault__KeyUrl",
+                  "value": "[reference(resourceId('Microsoft.KeyVault/vaults/keys', parameters('name'), 'data-protection'), '2023-02-01').keyUri]"
                 },
                 {
-                  "name": "Workflow__LoadSchedulesOnStartup",
-                  "value": "true"
+                  "name": "DistributedLocking__FilePath",
+                  "value": "/mnt/distributed-locks"
                 },
                 {
-                  "name": "Workflow__CreateOrUpdateWebhooksOnStartup",
-                  "value": "[if(parameters('createOrUpdateWebhooksOnStartup'), 'true', 'false')]"
+                  "name": "Logging__ApplicationInsights__LogLevel__Default",
+                  "value": "None"
                 },
                 {
-                  "name": "Workflow__ProjectUrl",
-                  "value": "[parameters('projectUrl')]"
+                  "name": "Logging__Seq__LogLevel__Default",
+                  "value": "Warning"
                 },
                 {
-                  "name": "Workflow__ProjectToken",
-                  "secretRef": "project-token"
+                  "name": "Logging__Seq__ServerUrl",
+                  "value": ""
+                },
+                {
+                  "name": "Logging__Seq__ApiKey",
+                  "value": ""
+                },
+                {
+                  "name": "Workflow__JobsApiUrl",
+                  "value": "[format('https://{0}.{1}', parameters('name'), reference(resourceId('Microsoft.App/managedEnvironments', parameters('name')), '2023-05-01').defaultDomain)]"
+                },
+                {
+                  "name": "Workflow__WorkingDirectory",
+                  "value": "/mnt/dependabot"
                 },
                 {
                   "name": "Workflow__WebhookEndpoint",
-                  "value": "[format('https://{0}.{1}/webhooks/azure', parameters('name'), if(variables('hasProvidedAppEnvironment'), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', split(parameters('appEnvironmentId'), '/')[2], split(parameters('appEnvironmentId'), '/')[4]), 'Microsoft.App/managedEnvironments', split(parameters('appEnvironmentId'), '/')[8]), '2022-10-01').defaultDomain, reference(resourceId('Microsoft.App/managedEnvironments', parameters('name')), '2022-10-01').defaultDomain))]"
-                },
-                {
-                  "name": "Workflow__SubscriptionPassword",
-                  "secretRef": "notifications-password"
+                  "value": "[format('https://{0}.{1}/webhooks/azure', parameters('name'), reference(resourceId('Microsoft.App/managedEnvironments', parameters('name')), '2023-05-01').defaultDomain)]"
                 },
                 {
                   "name": "Workflow__ResourceGroupId",
-                  "value": "[format('{0}/resourceGroups/{1}', subscription().id, parameters('jobsResourceGroupName'))]"
+                  "value": "[resourceGroup().id]"
+                },
+                {
+                  "name": "Workflow__AppEnvironmentId",
+                  "value": "[resourceId('Microsoft.App/managedEnvironments', parameters('name'))]"
                 },
                 {
                   "name": "Workflow__LogAnalyticsWorkspaceId",
-                  "value": "[if(variables('hasProvidedLogAnalyticsWorkspace'), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', split(parameters('logAnalyticsWorkspaceId'), '/')[2], split(parameters('logAnalyticsWorkspaceId'), '/')[4]), 'Microsoft.OperationalInsights/workspaces', split(parameters('logAnalyticsWorkspaceId'), '/')[8]), '2022-10-01').customerId, reference(resourceId('Microsoft.OperationalInsights/workspaces', parameters('name')), '2022-10-01').customerId)]"
+                  "value": "[reference(resourceId('Microsoft.OperationalInsights/workspaces', parameters('name')), '2022-10-01').customerId]"
                 },
                 {
-                  "name": "Workflow__LogAnalyticsWorkspaceKey",
-                  "secretRef": "log-analytics-workspace-key"
-                },
-                {
-                  "name": "Workflow__ManagedIdentityId",
-                  "value": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-jobs', parameters('name')))]"
-                },
-                {
-                  "name": "Workflow__UpdaterContainerImageTemplate",
-                  "value": "[format('{0}tinglesoftware/dependabot-updater-{{{{ecosystem}}}}:{1}', format('{0}', if(variables('hasDockerImageRegistry'), format('{0}/', parameters('dockerImageRegistry')), '')), parameters('updaterImageTag'))]"
-                },
-                {
-                  "name": "Workflow__FailOnException",
-                  "value": "[if(parameters('failOnException'), 'true', 'false')]"
-                },
-                {
-                  "name": "Workflow__AutoComplete",
-                  "value": "[if(parameters('autoComplete'), 'true', 'false')]"
-                },
-                {
-                  "name": "Workflow__AutoCompleteIgnoreConfigs",
-                  "value": "[join(parameters('autoCompleteIgnoreConfigs'), ';')]"
-                },
-                {
-                  "name": "Workflow__AutoCompleteMergeStrategy",
-                  "value": "[parameters('autoCompleteMergeStrategy')]"
-                },
-                {
-                  "name": "Workflow__AutoApprove",
-                  "value": "[if(parameters('autoApprove'), 'true', 'false')]"
+                  "name": "Workflow__UpdaterImageTag",
+                  "value": "[parameters('imageTag')]"
                 },
                 {
                   "name": "Workflow__GithubToken",
                   "value": "[parameters('githubToken')]"
-                },
-                {
-                  "name": "Workflow__JobHostType",
-                  "value": "[parameters('jobHostType')]"
                 },
                 {
                   "name": "Workflow__Location",
@@ -523,23 +526,15 @@
                 },
                 {
                   "name": "Authentication__Schemes__Management__ValidAudiences__0",
-                  "value": "[format('https://{0}.{1}', parameters('name'), if(variables('hasProvidedAppEnvironment'), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', split(parameters('appEnvironmentId'), '/')[2], split(parameters('appEnvironmentId'), '/')[4]), 'Microsoft.App/managedEnvironments', split(parameters('appEnvironmentId'), '/')[8]), '2022-10-01').defaultDomain, reference(resourceId('Microsoft.App/managedEnvironments', parameters('name')), '2022-10-01').defaultDomain))]"
-                },
-                {
-                  "name": "Authentication__Schemes__ServiceHooks__Credentials__vsts",
-                  "secretRef": "notifications-password"
+                  "value": "[format('https://{0}.{1}', parameters('name'), reference(resourceId('Microsoft.App/managedEnvironments', parameters('name')), '2023-05-01').defaultDomain)]"
                 },
                 {
                   "name": "EventBus__SelectedTransport",
-                  "value": "[parameters('eventBusTransport')]"
+                  "value": "ServiceBus"
                 },
                 {
                   "name": "EventBus__Transports__azure-service-bus__FullyQualifiedNamespace",
-                  "value": "[if(equals(parameters('eventBusTransport'), 'ServiceBus'), split(split(if(variables('hasProvidedServiceBusNamespace'), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', split(parameters('serviceBusNamespaceId'), '/')[2], split(parameters('serviceBusNamespaceId'), '/')[4]), 'Microsoft.ServiceBus/namespaces', split(parameters('serviceBusNamespaceId'), '/')[8]), '2021-11-01').serviceBusEndpoint, reference(resourceId('Microsoft.ServiceBus/namespaces', format('{0}-{1}', parameters('name'), variables('collisionSuffix'))), '2021-11-01').serviceBusEndpoint), '/')[2], ':')[0], '')]"
-                },
-                {
-                  "name": "EventBus__Transports__azure-queue-storage__ServiceUrl",
-                  "value": "[if(equals(parameters('eventBusTransport'), 'QueueStorage'), if(variables('hasProvidedStorageAccount'), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', split(parameters('storageAccountId'), '/')[2], split(parameters('storageAccountId'), '/')[4]), 'Microsoft.Storage/storageAccounts', split(parameters('storageAccountId'), '/')[8]), '2022-09-01').primaryEndpoints.queue, reference(resourceId('Microsoft.Storage/storageAccounts', format('{0}-{1}', parameters('name'), variables('collisionSuffix'))), '2022-09-01').primaryEndpoints.queue), '')]"
+                  "value": "[split(split(reference(resourceId('Microsoft.ServiceBus/namespaces', parameters('name')), '2021-11-01').serviceBusEndpoint, '/')[2], ':')[0]]"
                 }
               ],
               "resources": {
@@ -550,14 +545,14 @@
                 {
                   "type": "Liveness",
                   "httpGet": {
-                    "port": 80,
+                    "port": 8080,
                     "path": "/liveness"
                   }
                 },
                 {
                   "type": "Readiness",
                   "httpGet": {
-                    "port": 80,
+                    "port": 8080,
                     "path": "/health"
                   },
                   "failureThreshold": 10,
@@ -567,9 +562,22 @@
               ]
             }
           ],
+          "volumes": [
+            {
+              "name": "working-dir",
+              "storageName": "working-dir",
+              "storageType": "AzureFile"
+            },
+            {
+              "name": "distributed-locks",
+              "storageName": "distributed-locks",
+              "storageType": "AzureFile"
+            }
+          ],
           "scale": {
-            "minReplicas": "[parameters('minReplicas')]",
-            "maxReplicas": "[parameters('maxReplicas')]"
+            "minReplicas": 1,
+            "maxReplicas": 1,
+            "rules": "[concat(createArray(createObject('name', 'http', 'http', createObject('metadata', createObject('concurrentRequests', '1000')))), variables('queueScaleRules'))]"
           }
         }
       },
@@ -580,15 +588,15 @@
         }
       },
       "dependsOn": [
+        "[resourceId('Microsoft.AppConfiguration/configurationStores', parameters('name'))]",
         "[resourceId('Microsoft.App/managedEnvironments', parameters('name'))]",
         "[resourceId('Microsoft.Insights/components', parameters('name'))]",
+        "[resourceId('Microsoft.KeyVault/vaults/keys', parameters('name'), 'data-protection')]",
         "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('name'))]",
         "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name'))]",
-        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-jobs', parameters('name')))]",
-        "[resourceId('Microsoft.ServiceBus/namespaces', format('{0}-{1}', parameters('name'), variables('collisionSuffix')))]",
-        "[resourceId('Microsoft.Sql/servers', format('{0}-{1}', parameters('name'), variables('collisionSuffix')))]",
-        "[resourceId('Microsoft.Sql/servers/databases', format('{0}-{1}', parameters('name'), variables('collisionSuffix')), parameters('name'))]",
-        "[resourceId('Microsoft.Storage/storageAccounts', format('{0}-{1}', parameters('name'), variables('collisionSuffix')))]"
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('name'))]",
+        "[resourceId('Microsoft.Sql/servers', parameters('name'))]",
+        "[resourceId('Microsoft.Sql/servers/databases', parameters('name'), parameters('name'))]"
       ]
     },
     {
@@ -605,7 +613,19 @@
       ]
     },
     {
-      "condition": "[equals(parameters('eventBusTransport'), 'ServiceBus')]",
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "name": "[guid(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')), 'KeyVaultAdministrator')]",
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '00482a5a-887f-4fb3-b363-3b7fe8e74483')]",
+        "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')), '2023-01-31').principalId]",
+        "principalType": "ServicePrincipal"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name'))]"
+      ]
+    },
+    {
       "type": "Microsoft.Authorization/roleAssignments",
       "apiVersion": "2022-04-01",
       "name": "[guid(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')), 'AzureServiceBusDataOwner')]",
@@ -619,12 +639,24 @@
       ]
     },
     {
-      "condition": "[equals(parameters('eventBusTransport'), 'QueueStorage')]",
       "type": "Microsoft.Authorization/roleAssignments",
       "apiVersion": "2022-04-01",
-      "name": "[guid(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')), 'StorageQueueDataContributor')]",
+      "name": "[guid(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')), 'AppConfigurationDataReader')]",
       "properties": {
-        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '974c5e8b-45b9-4653-ba55-5f855dd0fb88')]",
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '516239f1-63e1-4d78-a4de-a74fb236a071')]",
+        "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')), '2023-01-31').principalId]",
+        "principalType": "ServicePrincipal"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "name": "[guid(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')), 'StorageBlobDataContributor')]",
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')]",
         "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')), '2023-01-31').principalId]",
         "principalType": "ServicePrincipal"
       },
@@ -647,17 +679,9 @@
     }
   ],
   "outputs": {
-    "sqlServerAdministratorLoginPassword": {
-      "type": "string",
-      "value": "[variables('sqlServerAdministratorLoginPassword')]"
-    },
     "webhookEndpoint": {
       "type": "string",
-      "value": "[format('https://{0}/webhooks/azure', reference(resourceId('Microsoft.App/containerApps', parameters('name')), '2022-10-01').configuration.ingress.fqdn)]"
-    },
-    "notificationsPassword": {
-      "type": "string",
-      "value": "[parameters('notificationsPassword')]"
+      "value": "[format('https://{0}/webhooks/azure', reference(resourceId('Microsoft.App/containerApps', parameters('name')), '2023-05-01').configuration.ingress.fqdn)]"
     }
   }
 }

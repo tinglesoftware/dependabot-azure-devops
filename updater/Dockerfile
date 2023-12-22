@@ -1,6 +1,9 @@
-#TODO: find out how to lock the base image version
+# The docker images in https://github.com/dependabot/dependabot-core are no longer versioned like the ruby Gems
+#TODO: find out how to lock the base image version without the ruby Gem version
 ARG ECOSYSTEM
 FROM ghcr.io/dependabot/dependabot-updater-$ECOSYSTEM
+
+LABEL org.opencontainers.image.source="https://github.com/tinglesoftware/dependabot-azure-devops"
 
 # ENV DEPENDABOT_HOME /home/dependabot
 WORKDIR ${DEPENDABOT_HOME}
@@ -18,9 +21,6 @@ RUN bundle config set --local path 'vendor' && \
 COPY --chown=dependabot:dependabot LICENSE $DEPENDABOT_HOME
 COPY --chown=dependabot:dependabot updater $DEPENDABOT_HOME/dependabot-updater
 
-# This entrypoint exists to solve specific setup problems.
-# It is only used with the extension and directly on Docker.
-# Hosted version does not allow this.
-ENTRYPOINT ["bin/entrypoint.sh"]
-
-CMD ["bundle", "exec", "ruby", "bin/update-script.rb"]
+# ENTRYPOINT IS USED instead of CMD so as to avoid adding
+# 'bin/run.sh' before the file name when running the image
+ENTRYPOINT ["bin/run.sh"]

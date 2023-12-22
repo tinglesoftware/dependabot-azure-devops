@@ -1,176 +1,149 @@
 @description('Location for all resources.')
 param location string = resourceGroup().location
 
-@description('Name of the resources')
+@minLength(5)
+@maxLength(24)
+@description('Name of the resources. Make sure it is unique e.g. dependabotcontoso to avoid conflicts or failures')
 param name string = 'dependabot'
 
-@description('URL of the project. For example "https://dev.azure.com/fabrikam/DefaultCollection"')
-param projectUrl string
-
-@description('Token for accessing the project.')
-param projectToken string
-
-@description('Whether to synchronize repositories on startup.')
-param synchronizeOnStartup bool = false
-
-@description('Whether to create or update subscriptions on startup.')
-param createOrUpdateWebhooksOnStartup bool = false
+@description('JSON array string fo projects to setup. E.g. [{"url":"https://dev.azure.com/tingle/dependabot","token":"dummy","AutoComplete":true}]')
+param projectSetups string = '[]'
 
 @description('Access token for authenticating requests to GitHub.')
 param githubToken string = ''
 
-@allowed([
-  'InMemory'
-  'ServiceBus'
-  'QueueStorage'
-])
-@description('Merge strategy to use when setting auto complete on created pull requests.')
-param eventBusTransport string = 'ServiceBus'
+@minLength(1)
+@description('Tag of the docker images.')
+param imageTag string = '#{GITVERSION_NUGETVERSIONV2}#'
 
-@description('Whether update jobs should fail when an exception occurs.')
-param failOnException bool = false
+var fileShares = [
+  { name: 'certs' }
+  { name: 'distributed-locks', writeable: true }
+  { name: 'working-dir', writeable: true }
+]
 
-@description('Whether to set auto complete on created pull requests.')
-param autoComplete bool = true
-
-@description('Identifiers of configs to be ignored in auto complete. E.g 3,4,10')
-param autoCompleteIgnoreConfigs array = []
-
-@allowed([
-  'NoFastForward'
-  'Rebase'
-  'RebaseMerge'
-  'Squash'
-])
-@description('Merge strategy to use when setting auto complete on created pull requests.')
-param autoCompleteMergeStrategy string = 'Squash'
-
-@description('Whether to automatically approve created pull requests.')
-param autoApprove bool = false
-
-@allowed([
-  'ContainerInstances'
-  // 'ContainerApps' // TODO: restore this once jobs support is added
-])
-@description('Where to host new update jobs.')
-param jobHostType string = 'ContainerInstances'
-
-@description('Name of the resource group where jobs will be created.')
-param jobsResourceGroupName string = resourceGroup().name
-
-@description('Password for Webhooks, ServiceHooks, and Notifications from Azure DevOps.')
-#disable-next-line secure-secrets-in-params // need sensible defaults
-param notificationsPassword string = uniqueString('service-hooks', resourceGroup().id) // e.g. zecnx476et7xm (13 characters)
-
-@description('Registry of the docker image. E.g. "contoso.azurecr.io". Leave empty unless you have a private registry mirroring the image from GHCR')
-param dockerImageRegistry string = 'ghcr.io'
-
-@description('Registry and repository of the server docker image. Ideally, you do not need to edit this value.')
-param serverImageRepository string = 'tinglesoftware/dependabot-server'
-
-@description('Tag of the server docker image.')
-param serverImageTag string = '#{GITVERSION_NUGETVERSIONV2}#'
-
-@description('Tag of the updater docker image.')
-param updaterImageTag string = '#{GITVERSION_NUGETVERSIONV2}#'
-
-@description('Resource identifier of the ServiceBus namespace to use. If none is provided, a new one is created.')
-param serviceBusNamespaceId string = ''
-
-@description('Resource identifier of the storage account to use. If none is provided, a new one is created.')
-param storageAccountId string = ''
-
-// Example: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/Fabrikam/providers/Microsoft.OperationalInsights/workspaces/fabrikam
-@description('Resource identifier of the LogAnalytics Workspace to use. If none is provided, a new one is created.')
-param logAnalyticsWorkspaceId string = ''
-
-@description('Resource identifier of the ContainerApp Environment to deploy to. If none is provided, a new one is created.')
-param appEnvironmentId string = ''
-
-@minValue(1)
-@maxValue(2)
-@description('The minimum number of replicas')
-param minReplicas int = 1 // necessary for in-memory scheduling
-
-@minValue(1)
-@maxValue(5)
-@description('The maximum number of replicas')
-param maxReplicas int = 1
-
+// dependabot is not available as of 2023-Sep-25 so we change just for the public deployment
+var storageAccountName = replace(replace((name == 'dependabot' ? 'dependabotstore' : name), '-', ''), '_', '') // remove underscores and hyphens
 var sqlServerAdministratorLogin = uniqueString(resourceGroup().id) // e.g. zecnx476et7xm (13 characters)
 var sqlServerAdministratorLoginPassword = '${skip(uniqueString(resourceGroup().id), 5)}%${uniqueString('sql-password', resourceGroup().id)}' // e.g. abcde%zecnx476et7xm (19 characters)
-var hasDockerImageRegistry = (dockerImageRegistry != null && !empty(dockerImageRegistry))
-var isAcrServer = hasDockerImageRegistry && endsWith(dockerImageRegistry, environment().suffixes.acrLoginServer)
-var hasProvidedServiceBusNamespace = (serviceBusNamespaceId != null && !empty(serviceBusNamespaceId))
-var hasProvidedStorageAccount = (storageAccountId != null && !empty(storageAccountId))
-var hasProvidedLogAnalyticsWorkspace = (logAnalyticsWorkspaceId != null && !empty(logAnalyticsWorkspaceId))
-var hasProvidedAppEnvironment = (appEnvironmentId != null && !empty(appEnvironmentId))
-// avoid conflicts across multiple deployments for resources that generate FQDN based on the name
-var collisionSuffix = uniqueString(resourceGroup().id) // e.g. zecnx476et7xm (13 characters)
+var queueNames = [
+  'process-synchronization'
+  'repository-created'
+  'repository-updated'
+  'repository-deleted'
+  'trigger-update-jobs'
+  'update-job-check-state'
+  'update-job-collect-logs'
+]
+var queueScaleRules = [for qn in queueNames: {
+  name: 'azure-servicebus-${qn}'
+  custom: {
+    type: 'azure-servicebus'
+    metadata: {
+      namespace: serviceBusNamespace.name // Name of the Azure Service Bus namespace that contains your queue or topic.
+      queueName: qn // Name of the Azure Service Bus queue to scale on.
+      messageCount: '100' // Amount of active messages in your Azure Service Bus queue or topic to scale on.
+    }
+    auth: [ { secretRef: 'connection-strings-asb-scaler', triggerParameter: 'connection' } ]
+  }
+}]
 
-/* Managed Identities */
+/* Managed Identity */
 resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
   name: name
   location: location
 }
-resource managedIdentityJobs 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
-  name: '${name}-jobs'
+
+/* Key Vault */
+resource keyVault 'Microsoft.KeyVault/vaults@2023-02-01' = {
+  name: name
   location: location
+  properties: {
+    tenantId: subscription().tenantId
+    sku: { name: 'standard', family: 'A' }
+    enabledForDeployment: true
+    enabledForDiskEncryption: true
+    enabledForTemplateDeployment: true
+    accessPolicies: []
+    enableRbacAuthorization: true
+    enableSoftDelete: true
+    softDeleteRetentionInDays: 90
+  }
+
+  resource sqlLoginSecret 'secrets' = { name: 'sql-login', properties: { contentType: 'text/plain', value: sqlServerAdministratorLogin } }
+  resource sqlPasswordSecret 'secrets' = { name: 'sql-password', properties: { contentType: 'text/plain', value: sqlServerAdministratorLoginPassword } }
+
+  resource dataProtectionKey 'keys' = {
+    name: 'data-protection'
+    properties: {
+      keySize: 2048
+      attributes: { enabled: true }
+      kty: 'RSA'
+      keyOps: [ 'encrypt', 'decrypt', 'sign', 'verify', 'wrapKey', 'unwrapKey' ]
+      rotationPolicy: { lifetimeActions: [ { action: { type: 'Notify' }, trigger: { timeBeforeExpiry: 'P30D' } } ] }
+    }
+  }
 }
 
 /* Service Bus namespace */
-resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2021-11-01' = if (eventBusTransport == 'ServiceBus' && !hasProvidedServiceBusNamespace) {
-  name: '${name}-${collisionSuffix}'
+resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2021-11-01' = {
+  name: name
   location: location
-  properties: {
-    disableLocalAuth: false
-    zoneRedundant: false
-  }
-  sku: {
-    name: 'Basic'
-  }
+  properties: { disableLocalAuth: false, zoneRedundant: false }
+  sku: { name: 'Basic' }
+
+  resource authorizationRule 'AuthorizationRules' existing = { name: 'RootManageSharedAccessKey' }
 }
-resource providedServiceBusNamespace 'Microsoft.ServiceBus/namespaces@2021-11-01' existing = if (eventBusTransport == 'ServiceBus' && hasProvidedServiceBusNamespace) {
-  // Inspired by https://github.com/Azure/bicep/issues/1722#issuecomment-952118402
-  // Example: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/Fabrikam/providers/Microsoft.ServiceBus/namespaces/fabrikam
-  // 0 -> '', 1 -> 'subscriptions', 2 -> '00000000-0000-0000-0000-000000000000', 3 -> 'resourceGroups'
-  // 4 -> 'Fabrikam', 5 -> 'providers', 6 -> 'Microsoft.ServiceBus' 7 -> 'namespaces'
-  // 8 -> 'fabrikam'
-  name: split(serviceBusNamespaceId, '/')[8]
-  scope: resourceGroup(split(serviceBusNamespaceId, '/')[2], split(serviceBusNamespaceId, '/')[4])
+
+/* AppConfiguration */
+resource appConfiguration 'Microsoft.AppConfiguration/configurationStores@2023-03-01' = {
+  name: name
+  location: location
+  properties: { softDeleteRetentionInDays: 0 /* Free does not support this */ }
+  sku: { name: 'free' }
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${managedIdentity.id}': {/*ttk bug*/ }
+    }
+  }
 }
 
 /* Storage Account */
-resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = if (eventBusTransport == 'QueueStorage' && !hasProvidedStorageAccount) {
-  name: '${name}-${collisionSuffix}'
+resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = {
+  name: storageAccountName
   location: location
   kind: 'StorageV2'
-  sku: {
-    name: 'Standard_LRS'
-  }
+  sku: { name: 'Standard_LRS' }
   properties: {
     accessTier: 'Hot'
     supportsHttpsTrafficOnly: true
-    allowBlobPublicAccess: true // CDN does not work without this
+    allowBlobPublicAccess: false
     networkAcls: {
       bypass: 'AzureServices'
       defaultAction: 'Allow'
     }
   }
-}
-resource providedStorageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' existing = if (eventBusTransport == 'QueueStorage' && hasProvidedStorageAccount) {
-  // Inspired by https://github.com/Azure/bicep/issues/1722#issuecomment-952118402
-  // Example: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/Fabrikam/providers/Microsoft.Storage/storageAccounts/fabrikam
-  // 0 -> '', 1 -> 'subscriptions', 2 -> '00000000-0000-0000-0000-000000000000', 3 -> 'resourceGroups'
-  // 4 -> 'Fabrikam', 5 -> 'providers', 6 -> 'Microsoft.Storage' 7 -> 'storageAccounts'
-  // 8 -> 'fabrikam'
-  name: split(storageAccountId, '/')[8]
-  scope: resourceGroup(split(storageAccountId, '/')[2], split(storageAccountId, '/')[4])
+
+  resource fileServices 'fileServices' existing = {
+    name: 'default'
+
+    resource shares 'shares' = [for fs in fileShares: {
+      name: fs.name
+      properties: {
+        accessTier: contains(fs, 'accessTier') ? fs.accessTier : 'TransactionOptimized'
+        // container apps does not support NFS
+        // https://github.com/microsoft/azure-container-apps/issues/717
+        // enabledProtocols: contains(fs, 'enabledProtocols') ? fs.enabledProtocols : 'SMB'
+        shareQuota: contains(fs, 'shareQuota') ? fs.shareQuota : 1
+      }
+    }]
+  }
 }
 
 /* SQL Server */
 resource sqlServer 'Microsoft.Sql/servers@2022-05-01-preview' = {
-  name: '${name}-${collisionSuffix}'
+  name: name
   location: location
   properties: {
     publicNetworkAccess: 'Enabled'
@@ -189,18 +162,13 @@ resource sqlServer 'Microsoft.Sql/servers@2022-05-01-preview' = {
 resource sqlServerFirewallRuleForAzure 'Microsoft.Sql/servers/firewallRules@2022-08-01-preview' = {
   parent: sqlServer
   name: 'AllowAllWindowsAzureIps'
-  properties: {
-    endIpAddress: '0.0.0.0'
-    startIpAddress: '0.0.0.0'
-  }
+  properties: { endIpAddress: '0.0.0.0', startIpAddress: '0.0.0.0' }
 }
 resource sqlServerDatabase 'Microsoft.Sql/servers/databases@2022-05-01-preview' = {
   parent: sqlServer
   name: name
   location: location
-  sku: {
-    name: 'Basic'
-  }
+  sku: { name: 'Basic' }
   properties: {
     collation: 'SQL_Latin1_General_CP1_CI_AS'
     maxSizeBytes: 2147483648
@@ -219,7 +187,7 @@ resource sqlServerDatabase 'Microsoft.Sql/servers/databases@2022-05-01-preview' 
 }
 
 /* LogAnalytics */
-resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' = if (!hasProvidedLogAnalyticsWorkspace) {
+resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
   name: name
   location: location
   properties: {
@@ -231,38 +199,32 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10
     }
   }
 }
-resource providedLogAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = if (hasProvidedLogAnalyticsWorkspace) {
-  // Inspired by https://github.com/Azure/bicep/issues/1722#issuecomment-952118402
-  // Example: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/Fabrikam/providers/Microsoft.OperationalInsights/workspaces/fabrikam
-  // 0 -> '', 1 -> 'subscriptions', 2 -> '00000000-0000-0000-0000-000000000000', 3 -> 'resourceGroups'
-  // 4 -> 'Fabrikam', 5 -> 'providers', 6 -> 'Microsoft.OperationalInsights' 7 -> 'workspaces'
-  // 8 -> 'fabrikam'
-  name: split(logAnalyticsWorkspaceId, '/')[8]
-  scope: resourceGroup(split(logAnalyticsWorkspaceId, '/')[2], split(logAnalyticsWorkspaceId, '/')[4])
-}
 
 /* Container App Environment */
-resource appEnvironment 'Microsoft.App/managedEnvironments@2022-10-01' = if (!hasProvidedAppEnvironment) {
+resource appEnvironment 'Microsoft.App/managedEnvironments@2023-05-01' = {
   name: name
   location: location
   properties: {
     appLogsConfiguration: {
       destination: 'log-analytics'
       logAnalyticsConfiguration: {
-        customerId: hasProvidedLogAnalyticsWorkspace ? providedLogAnalyticsWorkspace.properties.customerId : logAnalyticsWorkspace.properties.customerId
-        sharedKey: hasProvidedLogAnalyticsWorkspace ? providedLogAnalyticsWorkspace.listKeys().primarySharedKey : logAnalyticsWorkspace.listKeys().primarySharedKey
+        customerId: logAnalyticsWorkspace.properties.customerId
+        sharedKey: logAnalyticsWorkspace.listKeys().primarySharedKey
       }
     }
   }
-}
-resource providedAppEnvironment 'Microsoft.App/managedEnvironments@2022-10-01' existing = if (hasProvidedAppEnvironment) {
-  // Inspired by https://github.com/Azure/bicep/issues/1722#issuecomment-952118402
-  // Example: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/Fabrikam/providers/Microsoft.App/managedEnvironments/fabrikam
-  // 0 -> '', 1 -> 'subscriptions', 2 -> '00000000-0000-0000-0000-000000000000', 3 -> 'resourceGroups'
-  // 4 -> 'Fabrikam', 5 -> 'providers', 6 -> 'Microsoft.App' 7 -> 'managedEnvironments'
-  // 8 -> 'fabrikam'
-  name: split(appEnvironmentId, '/')[8]
-  scope: resourceGroup(split(appEnvironmentId, '/')[2], split(appEnvironmentId, '/')[4])
+
+  resource storages 'storages' = [for fs in fileShares: {
+    name: fs.name
+    properties: {
+      azureFile: {
+        accountName: storageAccount.name
+        accountKey: storageAccount.listKeys().keys[0].value
+        shareName: fs.name
+        accessMode: contains(fs, 'writeable') && bool(fs.writeable) ? 'ReadWrite' : 'ReadOnly'
+      }
+    }
+  }]
 }
 
 /* Application Insights */
@@ -272,35 +234,21 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
   kind: 'web'
   properties: {
     Application_Type: 'web'
-    WorkspaceResourceId: hasProvidedLogAnalyticsWorkspace ? providedLogAnalyticsWorkspace.id : logAnalyticsWorkspace.id
+    WorkspaceResourceId: logAnalyticsWorkspace.id
   }
 }
 
 /* Container App */
-resource app 'Microsoft.App/containerApps@2022-10-01' = {
+resource app 'Microsoft.App/containerApps@2023-05-01' = {
   name: name
   location: location
   properties: {
-    managedEnvironmentId: hasProvidedAppEnvironment ? providedAppEnvironment.id : appEnvironment.id
+    managedEnvironmentId: appEnvironment.id
     configuration: {
-      ingress: {
-        external: true
-        targetPort: 80
-        traffic: [
-          {
-            latestRevision: true
-            weight: 100
-          }
-        ]
-      }
-      registries: isAcrServer ? [
-        {
-          identity: managedIdentity.id
-          server: dockerImageRegistry
-        }
-      ] : []
+      ingress: { external: true, targetPort: 8080, traffic: [ { latestRevision: true, weight: 100 } ] }
       secrets: [
         { name: 'connection-strings-application-insights', value: appInsights.properties.ConnectionString }
+        { name: 'project-setups', value: projectSetups }
         {
           name: 'connection-strings-sql'
           value: join([
@@ -315,89 +263,64 @@ resource app 'Microsoft.App/containerApps@2022-10-01' = {
               'Connection Timeout=30'
             ], ';')
         }
-        { name: 'notifications-password', value: notificationsPassword }
-        { name: 'project-token', value: projectToken }
-        {
-          name: 'log-analytics-workspace-key'
-          value: hasProvidedLogAnalyticsWorkspace ? providedLogAnalyticsWorkspace.listKeys().primarySharedKey : logAnalyticsWorkspace.listKeys().primarySharedKey
-        }
+        { name: 'connection-strings-asb-scaler', value: serviceBusNamespace::authorizationRule.listKeys().primaryConnectionString }
       ]
     }
     template: {
       containers: [
         {
-          image: '${'${hasDockerImageRegistry ? '${dockerImageRegistry}/' : ''}'}${serverImageRepository}:${serverImageTag}'
+          image: 'ghcr.io/tinglesoftware/dependabot-server:${imageTag}'
           name: 'dependabot'
+          volumeMounts: [
+            { mountPath: '/mnt/dependabot', volumeName: 'working-dir' }
+            { mountPath: '/mnt/distributed-locks', volumeName: 'distributed-locks' }
+          ]
           env: [
             { name: 'AZURE_CLIENT_ID', value: managedIdentity.properties.clientId } // Specifies the User-Assigned Managed Identity to use. Without this, the app attempt to use the system assigned one.
             { name: 'ASPNETCORE_FORWARDEDHEADERS_ENABLED', value: 'true' } // Application is behind proxy
             { name: 'EFCORE_PERFORM_MIGRATIONS', value: 'true' } // Perform migrations on startup
 
+            { name: 'PROJECT_SETUPS', secretRef: 'project-setups' }
+
+            { name: 'AzureAppConfig__Endpoint', value: appConfiguration.properties.endpoint }
+            { name: 'AzureAppConfig__Label', value: 'Production' }
+
             { name: 'ApplicationInsights__ConnectionString', secretRef: 'connection-strings-application-insights' }
             { name: 'ConnectionStrings__Sql', secretRef: 'connection-strings-sql' }
 
-            { name: 'Workflow__SynchronizeOnStartup', value: synchronizeOnStartup ? 'true' : 'false' }
-            { name: 'Workflow__LoadSchedulesOnStartup', value: 'true' }
-            { name: 'Workflow__CreateOrUpdateWebhooksOnStartup', value: createOrUpdateWebhooksOnStartup ? 'true' : 'false' }
-            { name: 'Workflow__ProjectUrl', value: projectUrl }
-            { name: 'Workflow__ProjectToken', secretRef: 'project-token' }
-            {
-              name: 'Workflow__WebhookEndpoint'
-              value: 'https://${name}.${hasProvidedAppEnvironment ? providedAppEnvironment.properties.defaultDomain : appEnvironment.properties.defaultDomain}/webhooks/azure'
-            }
-            { name: 'Workflow__SubscriptionPassword', secretRef: 'notifications-password' }
-            {
-              name: 'Workflow__ResourceGroupId'
-              // Format: /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}
-              value: '${subscription().id}/resourceGroups/${jobsResourceGroupName}'
-            }
-            {
-              name: 'Workflow__LogAnalyticsWorkspaceId'
-              value: hasProvidedLogAnalyticsWorkspace ? providedLogAnalyticsWorkspace.properties.customerId : logAnalyticsWorkspace.properties.customerId
-            }
-            { name: 'Workflow__LogAnalyticsWorkspaceKey', secretRef: 'log-analytics-workspace-key' }
-            { name: 'Workflow__ManagedIdentityId', value: managedIdentityJobs.id }
-            { name: 'Workflow__UpdaterContainerImageTemplate', value: '${'${hasDockerImageRegistry ? '${dockerImageRegistry}/' : ''}'}tinglesoftware/dependabot-updater-{{ecosystem}}:${updaterImageTag}' }
-            { name: 'Workflow__FailOnException', value: failOnException ? 'true' : 'false' }
-            { name: 'Workflow__AutoComplete', value: autoComplete ? 'true' : 'false' }
-            { name: 'Workflow__AutoCompleteIgnoreConfigs', value: join(autoCompleteIgnoreConfigs, ';') }
-            { name: 'Workflow__AutoCompleteMergeStrategy', value: autoCompleteMergeStrategy }
-            { name: 'Workflow__AutoApprove', value: autoApprove ? 'true' : 'false' }
+            { name: 'DataProtection__Azure__KeyVault__KeyUrl', value: keyVault::dataProtectionKey.properties.keyUri }
+            { name: 'DistributedLocking__FilePath', value: '/mnt/distributed-locks' }
+
+            { name: 'Logging__ApplicationInsights__LogLevel__Default', value: 'None' } // do not send logs to application insights (duplicates LogAnalytics)
+            { name: 'Logging__Seq__LogLevel__Default', value: 'Warning' }
+            { name: 'Logging__Seq__ServerUrl', value: '' } // set via AppConfig
+            { name: 'Logging__Seq__ApiKey', value: '' } // set via AppConfig
+
+            { name: 'Workflow__JobsApiUrl', value: 'https://${name}.${appEnvironment.properties.defaultDomain}' }
+            { name: 'Workflow__WorkingDirectory', value: '/mnt/dependabot' }
+            { name: 'Workflow__WebhookEndpoint', value: 'https://${name}.${appEnvironment.properties.defaultDomain}/webhooks/azure' }
+            { name: 'Workflow__ResourceGroupId', value: resourceGroup().id }
+            { name: 'Workflow__AppEnvironmentId', value: appEnvironment.id }
+            { name: 'Workflow__LogAnalyticsWorkspaceId', value: logAnalyticsWorkspace.properties.customerId }
+            { name: 'Workflow__UpdaterImageTag', value: imageTag }
             { name: 'Workflow__GithubToken', value: githubToken }
-            { name: 'Workflow__JobHostType', value: jobHostType }
             { name: 'Workflow__Location', value: location }
 
-            {
-              name: 'Authentication__Schemes__Management__Authority'
-              // Format: https://login.microsoftonline.com/{tenant-id}/v2.0
-              value: '${environment().authentication.loginEndpoint}${subscription().tenantId}/v2.0'
-            }
-            {
-              name: 'Authentication__Schemes__Management__ValidAudiences__0'
-              value: 'https://${name}.${hasProvidedAppEnvironment ? providedAppEnvironment.properties.defaultDomain : appEnvironment.properties.defaultDomain}'
-            }
-            { name: 'Authentication__Schemes__ServiceHooks__Credentials__vsts', secretRef: 'notifications-password' }
+            { name: 'Authentication__Schemes__Management__Authority', value: '${environment().authentication.loginEndpoint}${subscription().tenantId}/v2.0' }
+            { name: 'Authentication__Schemes__Management__ValidAudiences__0', value: 'https://${name}.${appEnvironment.properties.defaultDomain}' }
 
-            { name: 'EventBus__SelectedTransport', value: eventBusTransport }
-            {
-              name: 'EventBus__Transports__azure-service-bus__FullyQualifiedNamespace'
-              // manipulating https://{your-namespace}.servicebus.windows.net:443/
-              value: eventBusTransport == 'ServiceBus' ? split(split(hasProvidedServiceBusNamespace ? providedServiceBusNamespace.properties.serviceBusEndpoint : serviceBusNamespace.properties.serviceBusEndpoint, '/')[2], ':')[0] : ''
-            }
-            {
-              name: 'EventBus__Transports__azure-queue-storage__ServiceUrl'
-              value: eventBusTransport == 'QueueStorage' ? (hasProvidedStorageAccount ? providedStorageAccount.properties.primaryEndpoints.queue : storageAccount.properties.primaryEndpoints.queue) : ''
-            }
+            { name: 'EventBus__SelectedTransport', value: 'ServiceBus' }
+            { name: 'EventBus__Transports__azure-service-bus__FullyQualifiedNamespace', value: split(split(serviceBusNamespace.properties.serviceBusEndpoint, '/')[2], ':')[0] } // manipulating https://{your-namespace}.servicebus.windows.net:443/
           ]
           resources: {// these are the least resources we can provision
             cpu: json('0.25')
             memory: '0.5Gi'
           }
           probes: [
-            { type: 'Liveness', httpGet: { port: 80, path: '/liveness' } }
+            { type: 'Liveness', httpGet: { port: 8080, path: '/liveness' } }
             {
               type: 'Readiness'
-              httpGet: { port: 80, path: '/health' }
+              httpGet: { port: 8080, path: '/health' }
               failureThreshold: 10
               initialDelaySeconds: 3
               timeoutSeconds: 5
@@ -405,9 +328,16 @@ resource app 'Microsoft.App/containerApps@2022-10-01' = {
           ]
         }
       ]
+      volumes: [
+        { name: 'working-dir', storageName: 'working-dir', storageType: 'AzureFile' }
+        { name: 'distributed-locks', storageName: 'distributed-locks', storageType: 'AzureFile' }
+      ]
       scale: {
-        minReplicas: minReplicas
-        maxReplicas: maxReplicas
+        minReplicas: 1 // necessary for in-memory scheduling
+        maxReplicas: 1 // no need to scale beyond one instance, yet
+        rules: concat(
+          [ { name: 'http', http: { metadata: { concurrentRequests: '1000' } } } ],
+          queueScaleRules)
       }
     }
   }
@@ -429,7 +359,16 @@ resource contributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022
     principalType: 'ServicePrincipal'
   }
 }
-resource serviceBusDataOwnerRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (eventBusTransport == 'ServiceBus') {
+resource keyVaultAdministratorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(managedIdentity.id, 'KeyVaultAdministrator')
+  scope: resourceGroup()
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '00482a5a-887f-4fb3-b363-3b7fe8e74483')
+    principalId: managedIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+resource serviceBusDataOwnerRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: guid(managedIdentity.id, 'AzureServiceBusDataOwner')
   scope: resourceGroup()
   properties: {
@@ -438,11 +377,20 @@ resource serviceBusDataOwnerRoleAssignment 'Microsoft.Authorization/roleAssignme
     principalType: 'ServicePrincipal'
   }
 }
-resource storageQueueDataContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (eventBusTransport == 'QueueStorage') {
-  name: guid(managedIdentity.id, 'StorageQueueDataContributor')
+resource appConfigurationDataReaderRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(managedIdentity.id, 'AppConfigurationDataReader')
   scope: resourceGroup()
   properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '974c5e8b-45b9-4653-ba55-5f855dd0fb88')
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '516239f1-63e1-4d78-a4de-a74fb236a071')
+    principalId: managedIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+resource storageBlobDataContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(managedIdentity.id, 'StorageBlobDataContributor')
+  scope: resourceGroup()
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
     principalId: managedIdentity.properties.principalId
     principalType: 'ServicePrincipal'
   }
@@ -457,10 +405,4 @@ resource logAnalyticsReaderRoleAssignment 'Microsoft.Authorization/roleAssignmen
   }
 }
 
-// output id string = app.id
-// output fqdn string = app.properties.configuration.ingress.fqdn
-#disable-next-line outputs-should-not-contain-secrets
-output sqlServerAdministratorLoginPassword string = sqlServerAdministratorLoginPassword
 output webhookEndpoint string = 'https://${app.properties.configuration.ingress.fqdn}/webhooks/azure'
-#disable-next-line outputs-should-not-contain-secrets
-output notificationsPassword string = notificationsPassword

@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
+using System.Security.Cryptography;
+using System.Text.Json;
 using Tingle.Dependabot.Models;
 using Tingle.Dependabot.Workflow;
 
@@ -7,6 +8,20 @@ namespace Tingle.Dependabot;
 
 internal static class AppSetup
 {
+    private class ProjectSetupInfo
+    {
+        public required AzureDevOpsProjectUrl Url { get; set; }
+        public required string Token { get; set; }
+        public string? UpdaterImageTag { get; set; }
+        public bool AutoComplete { get; set; }
+        public List<int>? AutoCompleteIgnoreConfigs { get; set; }
+        public MergeStrategy? AutoCompleteMergeStrategy { get; set; }
+        public bool AutoApprove { get; set; }
+        public Dictionary<string, string> Secrets { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+    }
+
+    private static readonly JsonSerializerOptions serializerOptions = new(JsonSerializerDefaults.Web);
+
     public static async Task SetupAsync(WebApplication app, CancellationToken cancellationToken = default)
     {
         using var scope = app.Services.CreateScope();
@@ -22,29 +37,94 @@ internal static class AppSetup
             }
         }
 
-        var options = provider.GetRequiredService<IOptions<WorkflowOptions>>().Value;
-        if (options.SynchronizeOnStartup)
+        // parse projects to be setup
+        var setupsJson = app.Configuration.GetValue<string?>("PROJECT_SETUPS");
+        var setups = new List<ProjectSetupInfo>();
+        if (!string.IsNullOrWhiteSpace(setupsJson))
         {
-            var synchronizer = provider.GetRequiredService<Synchronizer>();
-            await synchronizer.SynchronizeAsync(false, cancellationToken); /* database sync should not trigger, just in case it's too many */
+            setups = JsonSerializer.Deserialize<List<ProjectSetupInfo>>(setupsJson, serializerOptions)!;
         }
 
-        if (options.LoadSchedulesOnStartup)
+        // add projects if there are projects to be added
+        var adoProvider = provider.GetRequiredService<AzureDevOpsProvider>();
+        var context = provider.GetRequiredService<MainDbContext>();
+        var projects = await context.Projects.ToListAsync(cancellationToken);
+        foreach (var setup in setups)
         {
-            var dbContext = provider.GetRequiredService<MainDbContext>();
-            var repositories = await dbContext.Repositories.ToListAsync(cancellationToken);
+            var url = setup.Url;
+            var project = projects.SingleOrDefault(p => p.Url == setup.Url);
+            if (project is null)
+            {
+                project = new Models.Management.Project
+                {
+                    Id = $"prj_{KSUID.Ksuid.Generate()}",
+                    Created = DateTimeOffset.UtcNow,
+                    Password = GeneratePassword(32),
+                    Url = setup.Url.ToString(),
+                    Type = Models.Management.ProjectType.Azure,
+                };
+                await context.Projects.AddAsync(project, cancellationToken);
+            }
+
+            // update project using values from the setup
+            project.Token = setup.Token;
+            project.UpdaterImageTag = setup.UpdaterImageTag;
+            project.AutoComplete.Enabled = setup.AutoComplete;
+            project.AutoComplete.IgnoreConfigs = setup.AutoCompleteIgnoreConfigs;
+            project.AutoComplete.MergeStrategy = setup.AutoCompleteMergeStrategy;
+            project.AutoApprove.Enabled = setup.AutoApprove;
+            project.Secrets = setup.Secrets;
+
+            // update values from the project
+            var tp = await adoProvider.GetProjectAsync(project, cancellationToken);
+            project.ProviderId = tp.Id.ToString();
+            project.Name = tp.Name;
+            project.Description = tp.Description;
+            project.Slug = url.Slug;
+            project.Private = tp.Visibility is not Models.Azure.AzdoProjectVisibility.Public;
+
+            // if there are changes, set the Updated field
+            if (context.ChangeTracker.HasChanges())
+            {
+                project.Updated = DateTimeOffset.UtcNow;
+            }
+        }
+
+        // update database and list of projects
+        var updated = await context.SaveChangesAsync(cancellationToken);
+        projects = updated > 0 ? await context.Projects.ToListAsync(cancellationToken) : projects;
+
+        // synchronize and create/update subscriptions if we have setups
+        var synchronizer = provider.GetRequiredService<Synchronizer>();
+        if (setups.Count > 0)
+        {
+            foreach (var project in projects)
+            {
+                // synchronize project
+                await synchronizer.SynchronizeAsync(project, false, cancellationToken); /* database sync should not trigger, just in case it's too many */
+
+                // create or update webhooks/subscriptions
+                await adoProvider.CreateOrUpdateSubscriptionsAsync(project, cancellationToken);
+            }
+        }
+
+        // skip loading schedules if told to
+        if (!app.Configuration.GetValue<bool>("SKIP_LOAD_SCHEDULES"))
+        {
+            var repositories = await context.Repositories.ToListAsync(cancellationToken);
             var scheduler = provider.GetRequiredService<UpdateScheduler>();
             foreach (var repository in repositories)
             {
                 await scheduler.CreateOrUpdateAsync(repository, cancellationToken);
             }
         }
+    }
 
-        // create or update webhooks/subscriptions if asked to
-        if (options.CreateOrUpdateWebhooksOnStartup)
-        {
-            var adoProvider = provider.GetRequiredService<AzureDevOpsProvider>();
-            await adoProvider.CreateOrUpdateSubscriptionsAsync(cancellationToken);
-        }
+    private static string GeneratePassword(int length = 32)
+    {
+        var data = new byte[length];
+        using var rng = RandomNumberGenerator.Create();
+        rng.GetBytes(data);
+        return Convert.ToBase64String(data);
     }
 }

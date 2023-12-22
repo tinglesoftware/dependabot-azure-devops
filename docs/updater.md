@@ -18,6 +18,8 @@ docker run --rm -t \
            -e DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT=10 \
            -e DEPENDABOT_EXTRA_CREDENTIALS=<your-extra-credentials> \
            -e DEPENDABOT_ALLOW_CONDITIONS=<your-allowed-packages> \
+           -e DEPENDABOT_IGNORE_CONDITIONS=<your-ignored-packages> \
+           -e DEPENDABOT_COMMIT_MESSAGE_OPTIONS=<your-commit-message-options> \
            -e DEPENDABOT_BRANCH_NAME_SEPARATOR=<your-custom-separator> \
            -e DEPENDABOT_MILESTONE=<your-work-item-id> \
            -e DEPENDABOT_UPDATER_OPTIONS=<your-updater-options> \
@@ -32,7 +34,7 @@ docker run --rm -t \
            -e AZURE_SET_AUTO_COMPLETE=<true/false> \
            -e AZURE_AUTO_APPROVE_PR=<true/false> \
            -e AZURE_AUTO_APPROVE_USER_TOKEN=<approving-user-token-here> \
-           ghcr.io/tinglesoftware/dependabot-updater-<ecosystem>
+           ghcr.io/tinglesoftware/dependabot-updater-<ecosystem> update_script
 ```
 
 An example, for Azure DevOps Services:
@@ -47,6 +49,8 @@ docker run --rm -t \
            -e DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT=10 \
            -e DEPENDABOT_EXTRA_CREDENTIALS='[{"type":"npm_registry","token":"<redacted>","registry":"npm.fontawesome.com"}]' \
            -e DEPENDABOT_ALLOW_CONDITIONS='[{"dependency-name":"django*","dependency-type":"direct"}]' \
+           -e DEPENDABOT_IGNORE_CONDITIONS='[{"dependency-name":"@types/*"}]' \
+           -e DEPENDABOT_COMMIT_MESSAGE_OPTIONS='{"prefix":"(dependabot)"}' \
            -e DEPENDABOT_BRANCH_NAME_SEPARATOR='/' \
            -e DEPENDABOT_MILESTONE=123 \
            -e DEPENDABOT_UPDATER_OPTIONS='goprivate=true,kubernetes_updates=true' \
@@ -58,7 +62,7 @@ docker run --rm -t \
            -e AZURE_SET_AUTO_COMPLETE=true \
            -e AZURE_AUTO_APPROVE_PR=true \
            -e AZURE_AUTO_APPROVE_USER_TOKEN=ijkl..mnop \
-           ghcr.io/tinglesoftware/dependabot-updater-nuget
+           ghcr.io/tinglesoftware/dependabot-updater-nuget update_script
 ```
 
 An example, for Azure DevOps Server:
@@ -73,6 +77,8 @@ docker run --rm -t \
            -e DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT=10 \
            -e DEPENDABOT_EXTRA_CREDENTIALS='[{"type":"npm_registry","token":"<redacted>","registry":"npm.fontawesome.com"}]' \
            -e DEPENDABOT_ALLOW_CONDITIONS='[{"dependency-name":"django*","dependency-type":"direct"}]' \
+           -e DEPENDABOT_IGNORE_CONDITIONS='[{"dependency-name":"@types/*"}]' \
+           -e DEPENDABOT_COMMIT_MESSAGE_OPTIONS='{"prefix":"(dependabot)"}' \
            -e DEPENDABOT_BRANCH_NAME_SEPARATOR='/' \
            -e DEPENDABOT_MILESTONE=123 \
            -e DEPENDABOT_UPDATER_OPTIONS='goprivate=true,kubernetes_updates=true' \
@@ -87,7 +93,7 @@ docker run --rm -t \
            -e AZURE_SET_AUTO_COMPLETE=true \
            -e AZURE_AUTO_APPROVE_PR=true \
            -e AZURE_AUTO_APPROVE_USER_TOKEN=ijkl..mnop \
-           ghcr.io/tinglesoftware/dependabot-updater-nuget
+           ghcr.io/tinglesoftware/dependabot-updater-nuget update_script
 ```
 
 ## Environment Variables
@@ -97,14 +103,15 @@ To run the script, some environment variables are required.
 |Variable Name|Description|
 |--|--|
 |GITHUB_ACCESS_TOKEN|**_Optional_**. The GitHub token (classic) for authenticating requests against GitHub public repositories. This is useful to avoid rate limiting errors. The token must include permissions to read public repositories. See the [documentation](https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token) for more on Personal Access Tokens.|
-|DEPENDABOT_PACKAGE_MANAGER|**_Required_**. The type of packages to check for dependency upgrades. Examples: `nuget`, `maven`, `gradle`, `npm_and_yarn`, etc. See the [updated-script](./script/update-script.rb) or [docs](https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/configuration-options-for-dependency-updates#package-ecosystem) for more.|
+|DEPENDABOT_PACKAGE_MANAGER|**_Required_**. The type of packages to check for dependency upgrades. Examples: `nuget`, `maven`, `gradle`, `npm_and_yarn`, etc. See the [updated-script](./script/update_script.rb) or [docs](https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/configuration-options-for-dependency-updates#package-ecosystem) for more.|
 |DEPENDABOT_DIRECTORY|**_Optional_**. The directory in which dependencies are to be checked. When not specified, the root of the repository (denoted as '/') is used.|
 |DEPENDABOT_TARGET_BRANCH|**_Optional_**. The branch to be targeted when creating a pull request. When not specified, Dependabot will resolve the default branch of the repository.|
 |DEPENDABOT_VERSIONING_STRATEGY|**_Optional_**. The versioning strategy to use. See [official docs](https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/configuration-options-for-dependency-updates#versioning-strategy) for the allowed values|
 |DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT|**_Optional_**. The maximum number of open pull requests to have at any one time. Defaults to 5. Setting to 0 implies security only updates.|
 |DEPENDABOT_EXTRA_CREDENTIALS|**_Optional_**. The extra credentials in JSON format. Extra credentials can be used to access private NuGet feeds, docker registries, maven repositories, etc. For example a private registry authentication (For example FontAwesome Pro: `[{"type":"npm_registry","token":"<redacted>","registry":"npm.fontawesome.com"}]`)|
 |DEPENDABOT_ALLOW_CONDITIONS|**_Optional_**. The dependencies whose updates are allowed, in JSON format. This can be used to control which packages can be updated. For example: `[{\"dependency-name\":"django*",\"dependency-type\":\"direct\"}]`. See [official docs](https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/configuration-options-for-dependency-updates#allow) for more.|
-|DEPENDABOT_IGNORE_CONDITIONS|**_Optional_**. The dependencies to be ignored, in JSON format. This can be used to control which packages can be updated. For example: `[{\"dependency-name\":\"express\",\"versions\":[\"4.x\",\"5.x\"]}]`. See [official docs](https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/configuration-options-for-dependency-updates#ignore) for more.<br/><br/>We do not pass this ENV by default from the extension/server to the container. It is intentional. The ruby script in the docker container does it automatically. Only use it if you want to override what is in the configuration file and you are comfortable with the untidiness. If you are having issues search for related issues such as https://github.com/tinglesoftware/dependabot-azure-devops/pull/582 before creating a new issue. You can also test against various reproductions such as https://dev.azure.com/tingle/dependabot/_git/repro-582|
+|DEPENDABOT_IGNORE_CONDITIONS|**_Optional_**. The dependencies to be ignored, in JSON format. This can be used to control which packages can be updated. For example: `[{\"dependency-name\":\"express\",\"versions\":[\"4.x\",\"5.x\"]}]`. See [official docs](https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/configuration-options-for-dependency-updates#ignore) for more.|
+|DEPENDABOT_COMMIT_MESSAGE_OPTIONS|**_Optional_**. The commit message options, in JSON format. For example: `{\"prefix\":\"(dependabot)\"}`. See [official docs](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#commit-message) for more.|
 |DEPENDABOT_LABELS|**_Optional_**. The custom labels to be used, in JSON format. This can be used to override the default values. For example: `[\"npm dependencies\",\"triage-board\"]`. See [official docs](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/customizing-dependency-updates#setting-custom-labels) for more.|
 |DEPENDABOT_REVIEWERS|**_Optional_**. The identifiers of the users to review the pull requests, in JSON format. These shall be added as optional approvers. For example: `[\"23d9f23d-981e-4a0c-a975-8e5c665914ec\",\"62b67ef1-58e9-4be9-83d3-690a6fc67d6b\"]`.
 |DEPENDABOT_ASSIGNEES|**_Optional_**. The identifiers of the users to be assigned to the pull requests, in JSON format. These shall be added as required approvers. For example: `[\"be9321e2-f404-4ffa-8d6b-44efddb04865\"]`. |

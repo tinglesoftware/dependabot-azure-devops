@@ -37,7 +37,8 @@ jobs:
         package-name: 'dependabot-updater-${{ matrix.suite.ecosystem }}'
         package-type: 'container'
         min-versions-to-keep: 20
-        delete-only-pre-release-versions: "true"
+        # exclude major and minor versions as per SemVer e.g. 1.20
+        ignore-versions: '^([0-9]\\d*)\\.([0-9]\\d*)$'
 
   cleanup-server:
     runs-on: ubuntu-latest
@@ -49,4 +50,5 @@ jobs:
         package-name: 'dependabot-server'
         package-type: 'container'
         min-versions-to-keep: 20
-        delete-only-pre-release-versions: "true"
+        # exclude major and minor versions as per SemVer e.g. 1.20
+        ignore-versions: '^([0-9]\\d*)\\.([0-9]\\d*)$'

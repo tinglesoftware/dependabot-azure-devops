@@ -5,16 +5,22 @@
       "commandName": "Project",
       "launchBrowser": true,
       "launchUrl": "health",
+      "applicationUrl": "https://localhost:44390;http://localhost:59269",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "EFCORE_PERFORM_MIGRATIONS": "true"
-      },
-      "applicationUrl": "https://localhost:44390;http://localhost:59269"
+        "EFCORE_PERFORM_MIGRATIONS": "true",
+        "SKIP_LOAD_SCHEDULES": "true",
+        "PROJECT_SETUPS_": "[{\"url\":\"https://dev.azure.com/tingle/dependabot\",\"token\":\"dummy\",\"AutoComplete\":true}]"
+      }
     },
     "Docker": {
       "commandName": "Docker",
       "launchBrowser": true,
       "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}/health",
+      "environmentVariables": {
+        "ASPNETCORE_HTTPS_PORTS": "8081",
+        "ASPNETCORE_HTTP_PORTS": "8080"
+      },
       "publishAllPorts": true,
       "useSSL": true
     }
