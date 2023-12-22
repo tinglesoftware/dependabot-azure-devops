@@ -25,6 +25,9 @@ import axios from "axios";
  */
 async function parseConfigFile(variables: ISharedVariables): Promise<IDependabotConfig> {
   const possibleFilePaths = [
+    ".azuredevops/dependabot.yml",
+    ".azuredevops/dependabot.yaml",
+
     "/.github/dependabot.yaml",
     "/.github/dependabot.yml",
   ];
@@ -133,13 +136,15 @@ async function parseConfigFile(variables: ISharedVariables): Promise<IDependabot
     );
   }
 
-  var dependabotConfig: IDependabotConfig = {
-    version: version,
-    updates: parseUpdates(config),
-    registries: parseRegistries(config),
-  };
+  const updates = parseUpdates(config);
+  const registries = parseRegistries(config);
+  validateConfiguration(updates, registries);
 
-  return dependabotConfig;
+  return {
+    version: version,
+    updates: updates,
+    registries: registries,
+  };
 }
 
 function parseUpdates(config: any): IDependabotUpdate[] {
@@ -162,6 +167,7 @@ function parseUpdates(config: any): IDependabotUpdate[] {
       directory: update["directory"],
 
       openPullRequestsLimit: update["open-pull-requests-limit"],
+      registries: update["registries"] || [],
 
       targetBranch: update["target-branch"],
       vendor: update["vendor"] ? JSON.parse(update["vendor"]) : null,
@@ -170,7 +176,7 @@ function parseUpdates(config: any): IDependabotUpdate[] {
       branchNameSeparator: update["pull-request-branch-name"]
         ? update["pull-request-branch-name"]["separator"]
         : undefined,
-      rejectExternalCode: update["insecure-external-code-execution"] === "deny",
+      insecureExternalCodeExecution: update["insecure-external-code-execution"],
 
       // We are well aware that ignore is not parsed here. It is intentional.
       // The ruby script in the docker container does it automatically.
@@ -180,12 +186,16 @@ function parseUpdates(config: any): IDependabotUpdate[] {
 
       // Convert to JSON or as required by the script
       allow: update["allow"] ? JSON.stringify(update["allow"]) : undefined,
+      ignore: update["ignore"] ? JSON.stringify(update["ignore"]) : undefined,
       labels: update["labels"] ? JSON.stringify(update["labels"]) : undefined,
       reviewers: update["reviewers"]
         ? JSON.stringify(update["reviewers"])
         : undefined,
       assignees: update["assignees"]
         ? JSON.stringify(update["assignees"])
+        : undefined,
+      commitMessage: update["commit-message"]
+        ? JSON.stringify(update["commit-message"])
         : undefined,
     };
 
@@ -214,8 +224,8 @@ function parseUpdates(config: any): IDependabotUpdate[] {
   return updates;
 }
 
-function parseRegistries(config: any): IDependabotRegistry[] {
-  var registries: IDependabotRegistry[] = [];
+function parseRegistries(config: any): Record<string, IDependabotRegistry> {
+  var registries: Record<string, IDependabotRegistry> = {};
 
   var rawRegistries = config["registries"];
 
@@ -243,7 +253,7 @@ function parseRegistries(config: any): IDependabotRegistry[] {
     var type = rawType?.replace("-", "_");
 
     var parsed: IDependabotRegistry = { type: type, };
-    registries.push(parsed);
+    registries[registryConfigKey] = parsed;
 
     // handle special fields for 'hex-organization' types
     if (type === 'hex_organization') {
@@ -311,6 +321,29 @@ function parseRegistries(config: any): IDependabotRegistry[] {
   return registries;
 }
 
+function validateConfiguration(updates: IDependabotUpdate[], registries: Record<string, IDependabotRegistry>) {
+  const configured = Object.keys(registries);
+  const referenced: string[] = [];
+  for (const u of updates) referenced.push(...u.registries);
+
+  // ensure there are no configured registries that have not been referenced
+  const missingConfiguration = referenced.filter((el) => !configured.includes(el));
+  if (missingConfiguration.length > 0) {
+    throw new Error(
+      `Referenced registries: '${missingConfiguration.join(',')}' have not been configured in the root of dependabot.yml`
+    );
+  }
+
+  // ensure there are no registries referenced but not configured
+  const missingReferences = configured.filter((el) => !referenced.includes(el));
+  if (missingReferences.length > 0)
+  {
+    throw new Error(
+      `Registries: '${missingReferences.join(',')}' have not been referenced by any update`
+    );
+  }
+}
+
 const KnownRegistryTypes = [
   "composer-repository",
   "docker-registry",
@@ -325,4 +358,4 @@ const KnownRegistryTypes = [
   "terraform-registry",
 ];
 
-export { parseConfigFile, parseUpdates, parseRegistries, };
+export { parseConfigFile, parseUpdates, parseRegistries, validateConfiguration, };

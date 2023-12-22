@@ -22,29 +22,37 @@ internal class ProcessSynchronizationConsumer : IEventConsumer<ProcessSynchroniz
     public async Task ConsumeAsync(EventContext<ProcessSynchronization> context, CancellationToken cancellationToken = default)
     {
         var evt = context.Event;
-
         var trigger = evt.Trigger;
+
+        // ensure project exists
+        var projectId = evt.ProjectId ?? throw new InvalidOperationException($"'{nameof(evt.ProjectId)}' cannot be null");
+        var project = await dbContext.Projects.SingleOrDefaultAsync(r => r.Id == projectId, cancellationToken);
+        if (project is null)
+        {
+            logger.SkippingSyncProjectNotFound(projectId);
+            return;
+        }
 
         if (evt.RepositoryId is not null)
         {
             // ensure repository exists
             var repositoryId = evt.RepositoryId ?? throw new InvalidOperationException($"'{nameof(evt.RepositoryId)}' cannot be null");
-            var repository = await dbContext.Repositories.SingleOrDefaultAsync(r => r.Id == repositoryId, cancellationToken);
+            var repository = await dbContext.Repositories.SingleOrDefaultAsync(r => r.ProjectId == project.Id && r.Id == repositoryId, cancellationToken);
             if (repository is null)
             {
-                logger.LogWarning("Skipping synchronization because repository '{Repository}' does not exist.", repositoryId);
+                logger.SkippingSyncRepositoryNotFound(repositoryId);
                 return;
             }
 
-            await synchronizer.SynchronizeAsync(repository, trigger, cancellationToken);
+            await synchronizer.SynchronizeAsync(project, repository, trigger, cancellationToken);
         }
         else if (evt.RepositoryProviderId is not null)
         {
-            await synchronizer.SynchronizeAsync(repositoryProviderId: evt.RepositoryProviderId, trigger, cancellationToken);
+            await synchronizer.SynchronizeAsync(project, repositoryProviderId: evt.RepositoryProviderId, trigger, cancellationToken);
         }
         else
         {
-            await synchronizer.SynchronizeAsync(evt.Trigger, cancellationToken);
+            await synchronizer.SynchronizeAsync(project, evt.Trigger, cancellationToken);
         }
     }
 }

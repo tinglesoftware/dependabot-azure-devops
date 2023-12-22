@@ -28,7 +28,7 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0 # Required for GitVersion
 
@@ -43,9 +43,9 @@ jobs:
         useConfigFile: true
 
     - name: Setup .NET SDK
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '7.x'
+        dotnet-version: '8.x'
 
     - name: Test
       run: dotnet test -c $buildConfiguration --verbosity normal --collect "Code coverage"
@@ -102,7 +102,7 @@ jobs:
         docker push "ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:$GITVERSION_SHORTSHA"
 
     - name: Push image (NuGetVersionV2)
-      if: "!startsWith(github.ref, 'refs/pull')"
+      if: ${{ !startsWith(github.ref, 'refs/pull') }}
       run: docker push "ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:$GITVERSION_NUGETVERSIONV2"
 
     - name: Push image (major, minor)
@@ -112,7 +112,7 @@ jobs:
         docker push "ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:$GITVERSION_MAJOR"
 
     - name: Publish Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         path: ${{ github.workspace }}/drop/*
         name: drop

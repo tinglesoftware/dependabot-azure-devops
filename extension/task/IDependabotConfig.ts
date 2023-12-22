@@ -16,23 +16,26 @@ export interface IDependabotConfig {
   /**
    *  Optional. Specify authentication details to access private package registries.
    */
-  registries?: IDependabotRegistry[];
+  registries?: Record<string, IDependabotRegistry>;
 }
 
 export interface IDependabotUpdate {
+  /**
+   * Package manager to use.
+   * */
+  packageEcosystem: string;
   /**
    * Location of package manifests.
    * */
   directory: string;
   /**
-   * Package manager to use.
-   * */
-  packageEcosystem: string;
-  schedule?: IDependabotUpdateSchedule;
-  /**
    * Customize which updates are allowed.
    */
   allow?: string;
+  /**
+   * Customize which updates are ignored.
+   */
+  ignore?: string;
   /**
    * Custom labels/tags.
    */
@@ -45,6 +48,7 @@ export interface IDependabotUpdate {
    * Assignees.
    */
   assignees?: string;
+  commitMessage?: string;
   /**
    * The milestone to associate pull requests with.
    */
@@ -56,11 +60,15 @@ export interface IDependabotUpdate {
   /**
    * Whether to reject external code
    */
-  rejectExternalCode: boolean;
+  insecureExternalCodeExecution?: string;
   /**
    * 	Limit number of open pull requests for version updates.
    */
   openPullRequestsLimit?: number;
+  /**
+   * 	Registries configured for this update.
+   */
+  registries: string[];
   /**
    * Branch to create pull requests against.
    */
@@ -75,25 +83,6 @@ export interface IDependabotUpdate {
   versioningStrategy?: string;
 }
 
-export interface IDependabotUpdateSchedule {
-  /**
-   * Time of day to check for updates (hh:mm)
-   */
-  time?: string;
-  /**
-   * Day of week to check for updates
-   */
-  day?: string;
-  /**
-   * Timezone for time of day (zone identifier)
-   */
-  timezone?: string;
-  /**
-   * 	How often to check for updates
-   */
-  interval: string;
-}
-
 export interface IDependabotRegistry {
   /** Identifies the type of registry*/
   type: string;
@@ -104,7 +93,7 @@ export interface IDependabotRegistry {
    * The protocol is optional. If not specified, `https://` is assumed.
    */
   url?: string | null | undefined;
-  "index-url"?: string | null | undefined; // only flor python_index
+  "index-url"?: string | null | undefined; // only for python_index
 
   /**
    * The URL of the registry to use to access the dependencies.

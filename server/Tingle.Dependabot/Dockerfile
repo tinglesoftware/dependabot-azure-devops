@@ -1,20 +1,25 @@
-#See https://aka.ms/containerfastmode to understand how Visual Studio uses this Dockerfile to build your images for faster debugging.
+#See https://aka.ms/customizecontainer to learn how to customize your debug container and how Visual Studio uses this Dockerfile to build your images for faster debugging.
 
-FROM mcr.microsoft.com/dotnet/aspnet:7.0-bullseye-slim AS base
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-bookworm-slim AS base
+LABEL org.opencontainers.image.source="https://github.com/tinglesoftware/dependabot-azure-devops"
+USER app
 WORKDIR /app
-EXPOSE 80
-EXPOSE 443
+EXPOSE 8080
+EXPOSE 8081
 
-FROM mcr.microsoft.com/dotnet/sdk:7.0-bullseye-slim AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0-bookworm-slim AS build
+ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["Tingle.Dependabot/Tingle.Dependabot.csproj", "Tingle.Dependabot/"]
-RUN dotnet restore "Tingle.Dependabot/Tingle.Dependabot.csproj"
+COPY ["server/Directory.Build.props", "server/"]
+COPY ["server/Tingle.Dependabot/Tingle.Dependabot.csproj", "server/Tingle.Dependabot/"]
+RUN dotnet restore "./server/Tingle.Dependabot/./Tingle.Dependabot.csproj"
 COPY . .
-WORKDIR "/src/Tingle.Dependabot"
-RUN dotnet build "Tingle.Dependabot.csproj" -c Release -o /app/build
+WORKDIR "/src/server/Tingle.Dependabot"
+RUN dotnet build "./Tingle.Dependabot.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "Tingle.Dependabot.csproj" -c Release -o /app/publish
+ARG BUILD_CONFIGURATION=Release
+RUN dotnet publish "./Tingle.Dependabot.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app

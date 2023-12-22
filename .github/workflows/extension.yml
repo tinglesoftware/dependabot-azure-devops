@@ -27,7 +27,7 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0 # Required for GitVersion
 
@@ -43,7 +43,7 @@ jobs:
         useConfigFile: true
 
     - name: Use Node.js 18.x
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: '18.x'
 
@@ -96,7 +96,7 @@ jobs:
         --overrides-file $GITHUB_WORKSPACE/extension/overrides.prod.json
 
     - name: Publish Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         path: ${{ github.workspace }}/drop/*
         name: drop
@@ -107,7 +107,7 @@ jobs:
 
     steps:
     - name: Download Artifact
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: drop
 
@@ -121,7 +121,7 @@ jobs:
         allowUpdates: true
 
     - name: Use Node.js 18.x
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: '18.x'
 

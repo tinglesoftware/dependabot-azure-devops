@@ -43,7 +43,6 @@ internal class RepositoryEventsConsumer : IEventConsumer<RepositoryCreatedEvent>
 
         // remove from scheduler
         var repositoryId = evt.RepositoryId ?? throw new InvalidOperationException($"'{nameof(evt.RepositoryId)}' cannot be null");
-        var repository = await dbContext.Repositories.SingleAsync(r => r.Id == repositoryId, cancellationToken);
         await scheduler.RemoveAsync(repositoryId, cancellationToken);
     }
 }

@@ -2,21 +2,39 @@ using AspNetCore.Authentication.ApiKey;
 using AspNetCore.Authentication.Basic;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using MiniValidation;
-using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 using Tingle.Dependabot;
 using Tingle.Dependabot.Consumers;
-using Tingle.Dependabot.Events;
 using Tingle.Dependabot.Models;
+using Tingle.Dependabot.PeriodicTasks;
 using Tingle.Dependabot.Workflow;
-using Tingle.EventBus;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddApplicationInsightsTelemetry(builder.Configuration);
+builder.Services.Configure<HostOptions>(options => options.ShutdownTimeout = TimeSpan.FromSeconds(30)); /* default is 5 seconds */
+
+// Add Azure AppConfiguration
+builder.Configuration.AddStandardAzureAppConfiguration(builder.Environment);
+builder.Services.AddAzureAppConfiguration();
+builder.Services.AddSingleton<IStartupFilter, AzureAppConfigurationStartupFilter>(); // Use IStartupFilter to setup AppConfiguration middleware correctly
+
+// Add Serilog
+builder.Services.AddSerilog(builder =>
+{
+    builder.ConfigureSensitiveDataMasking(options =>
+    {
+        options.ExcludeProperties.AddRange([
+            "ExecutionId",
+            "JobDefinitionPath",
+            "UpdateJobId",
+            "RepositoryUrl",
+        ]);
+    });
+});
+
+// Add Application Insights
+builder.Services.AddStandardApplicationInsights(builder.Configuration);
 
 // Add DbContext
 builder.Services.AddDbContext<MainDbContext>(options =>
@@ -31,7 +49,20 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 // Add data protection
 builder.Services.AddDataProtection().PersistKeysToDbContext<MainDbContext>();
+var keyVaultKeyUrl = builder.Configuration.GetValue<Uri?>("Azure:KeyVault:KeyUrl"); // e.g. "https://{vault_name}.vault.azure.net/keys/{key-id}"
+if (keyVaultKeyUrl is not null)
+{
+    builder.Services.AddDataProtection().ProtectKeysWithAzureKeyVault(keyVaultKeyUrl, new Azure.Identity.DefaultAzureCredential());
+}
 
+// Add controllers
+builder.Services.AddControllers()
+                .AddControllersAsServices()
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.AllowTrailingCommas = true;
+                    options.JsonSerializerOptions.ReadCommentHandling = JsonCommentHandling.Skip;
+                });
 
 // Configure any generated URL to be in lower case
 builder.Services.Configure<RouteOptions>(options => options.LowercaseUrls = true);
@@ -41,37 +72,28 @@ builder.Services.AddAuthentication()
                 .AddApiKeyInAuthorizationHeader<ApiKeyProvider>(AuthConstants.SchemeNameUpdater, options => options.Realm = "Dependabot")
                 .AddBasic<BasicUserValidationService>(AuthConstants.SchemeNameServiceHooks, options => options.Realm = "Dependabot");
 
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy(AuthConstants.PolicyNameManagement, policy =>
-    {
-        policy.AddAuthenticationSchemes(AuthConstants.SchemeNameManagement)
-              .RequireAuthenticatedUser();
-    });
-
-    options.AddPolicy(AuthConstants.PolicyNameServiceHooks, policy =>
-    {
-        policy.AddAuthenticationSchemes(AuthConstants.SchemeNameServiceHooks)
-              .RequireAuthenticatedUser();
-    });
-
-    options.AddPolicy(AuthConstants.PolicyNameUpdater, policy =>
-    {
-        policy.AddAuthenticationSchemes(AuthConstants.SchemeNameUpdater)
-              .RequireAuthenticatedUser();
-    });
-});
-
-builder.Services.AddMemoryCache();
-builder.Services.AddDistributedMemoryCache();
+builder.Services.AddAuthorizationBuilder()
+                .AddPolicy(AuthConstants.PolicyNameManagement, policy =>
+                {
+                    policy.AddAuthenticationSchemes(AuthConstants.SchemeNameManagement)
+                          .RequireAuthenticatedUser();
+                })
+                .AddPolicy(AuthConstants.PolicyNameServiceHooks, policy =>
+                {
+                    policy.AddAuthenticationSchemes(AuthConstants.SchemeNameServiceHooks)
+                          .RequireAuthenticatedUser();
+                })
+                .AddPolicy(AuthConstants.PolicyNameUpdater, policy =>
+                {
+                    policy.AddAuthenticationSchemes(AuthConstants.SchemeNameUpdater)
+                          .RequireAuthenticatedUser();
+                });
 
 // Configure other services
-builder.Services.ConfigureHttpJsonOptions(options =>
-{
-    options.SerializerOptions.AllowTrailingCommas = true;
-    options.SerializerOptions.ReadCommentHandling = JsonCommentHandling.Skip;
-});
-builder.Services.AddNotificationsHandler();
+builder.Services.AddMemoryCache();
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddStandardFeatureManagement();
+builder.Services.AddDistributedLockProvider(builder.Environment, builder.Configuration);
 builder.Services.AddWorkflowServices(builder.Configuration.GetSection("Workflow"));
 
 // Add event bus
@@ -91,15 +113,17 @@ builder.Services.AddEventBus(builder =>
         builder.AddAzureServiceBusTransport(
             options => ((AzureServiceBusTransportCredentials)options.Credentials).TokenCredential = credential);
     }
-    else if (selectedTransport is EventBusTransportKind.QueueStorage)
-    {
-        builder.AddAzureQueueStorageTransport(
-            options => ((AzureQueueStorageTransportCredentials)options.Credentials).TokenCredential = credential);
-    }
     else if (selectedTransport is EventBusTransportKind.InMemory)
     {
         builder.AddInMemoryTransport();
     }
+});
+
+builder.Services.AddPeriodicTasks(builder =>
+{
+    builder.AddTask<MissedTriggerCheckerTask>(schedule: "8 * * * *"); // every hour at minute 8
+    builder.AddTask<UpdateJobsCleanerTask>(schedule: "*/15 * * * *"); // every 15 minutes
+    builder.AddTask<SynchronizationTask>(schedule: "23 */6 * * *"); // every 6 hours at minute 23
 });
 
 // Add health checks
@@ -115,195 +139,11 @@ app.UseAuthorization();
 
 app.MapHealthChecks("/health");
 app.MapHealthChecks("/liveness", new HealthCheckOptions { Predicate = _ => false, });
-app.MapWebhooks();
-app.MapManagementApi();
-app.MapUpdateJobsApi();
+app.MapControllers();
 
 // setup the application environment
 await AppSetup.SetupAsync(app);
 
 await app.RunAsync();
 
-internal enum EventBusTransportKind { InMemory, ServiceBus, QueueStorage, }
-
-internal static class AuthConstants
-{
-    // These values are fixed strings due to configuration sections
-    internal const string SchemeNameManagement = "Management";
-    internal const string SchemeNameServiceHooks = "ServiceHooks";
-    internal const string SchemeNameUpdater = "Updater";
-
-    internal const string PolicyNameManagement = "Management";
-    internal const string PolicyNameServiceHooks = "ServiceHooks";
-    internal const string PolicyNameUpdater = "Updater";
-}
-
-internal static class ApplicationExtensions
-{
-    public static IServiceCollection AddNotificationsHandler(this IServiceCollection services)
-    {
-        services.AddScoped<AzureDevOpsEventHandler>();
-        return services;
-    }
-
-    public static IServiceCollection AddWorkflowServices(this IServiceCollection services, IConfiguration configuration)
-    {
-        services.Configure<WorkflowOptions>(configuration);
-        services.ConfigureOptions<WorkflowConfigureOptions>();
-
-        services.AddSingleton<UpdateRunner>();
-        services.AddSingleton<UpdateScheduler>();
-
-        services.AddScoped<AzureDevOpsProvider>();
-        services.AddScoped<Synchronizer>();
-        services.AddHostedService<WorkflowBackgroundService>();
-
-        return services;
-    }
-
-    public static IEndpointConventionBuilder MapWebhooks(this IEndpointRouteBuilder builder)
-    {
-        var endpoint = builder.MapPost("/webhooks/azure", async (AzureDevOpsEventHandler handler, [FromBody] AzureDevOpsEvent model) =>
-        {
-            if (!MiniValidator.TryValidate(model, out var errors)) return Results.ValidationProblem(errors);
-
-            await handler.HandleAsync(model);
-            return Results.Ok();
-        });
-
-        endpoint.RequireAuthorization(AuthConstants.PolicyNameServiceHooks);
-
-        return endpoint;
-    }
-
-    public static IEndpointRouteBuilder MapManagementApi(this IEndpointRouteBuilder builder)
-    {
-        var group = builder.MapGroup("");
-        group.RequireAuthorization(AuthConstants.PolicyNameManagement);
-
-        group.MapPost("/sync", async (IEventPublisher publisher, [FromBody] SynchronizationRequest model) =>
-        {
-            // request synchronization of the project
-            var evt = new ProcessSynchronization(model.Trigger);
-            await publisher.PublishAsync(evt);
-
-            return Results.Ok();
-        });
-
-        group.MapPost("/webhooks/register/azure", async (AzureDevOpsProvider adoProvider) =>
-        {
-            await adoProvider.CreateOrUpdateSubscriptionsAsync();
-            return Results.Ok();
-        });
-
-        group.MapGet("repos", async (MainDbContext dbContext) => Results.Ok(await dbContext.Repositories.ToListAsync()));
-        group.MapGet("repos/{id}", async (MainDbContext dbContext, [FromRoute, Required] string id) => Results.Ok(await dbContext.Repositories.SingleOrDefaultAsync(r => r.Id == id)));
-        group.MapPost("repos/{id}/sync", async (IEventPublisher publisher, MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] SynchronizationRequest model) =>
-        {
-            if (!MiniValidator.TryValidate(model, out var errors)) return Results.ValidationProblem(errors);
-
-            // ensure repository exists
-            var repository = await dbContext.Repositories.SingleOrDefaultAsync(r => r.Id == id);
-            if (repository is null)
-            {
-                return Results.Problem(title: "repository_not_found", statusCode: 400);
-            }
-
-            // request synchronization of the repository
-            var evt = new ProcessSynchronization(model.Trigger, repositoryId: repository.Id, null);
-            await publisher.PublishAsync(evt);
-
-            return Results.Ok(repository);
-        });
-        group.MapGet("repos/{id}/jobs/{jobId}", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromRoute, Required] string jobId) =>
-        {
-            // ensure repository exists
-            var repository = await dbContext.Repositories.SingleOrDefaultAsync(r => r.Id == id);
-            if (repository is null)
-            {
-                return Results.Problem(title: "repository_not_found", statusCode: 400);
-            }
-
-            // find the job
-            var job = dbContext.UpdateJobs.Where(j => j.RepositoryId == repository.Id && j.Id == jobId).SingleOrDefaultAsync();
-            return Results.Ok(job);
-        });
-        group.MapPost("repos/{id}/trigger", async (IEventPublisher publisher, MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] TriggerUpdateRequest model) =>
-        {
-            if (!MiniValidator.TryValidate(model, out var errors)) return Results.ValidationProblem(errors);
-
-            // ensure repository exists
-            var repository = await dbContext.Repositories.SingleOrDefaultAsync(r => r.Id == id);
-            if (repository is null)
-            {
-                return Results.Problem(title: "repository_not_found", statusCode: 400);
-            }
-
-            // ensure the repository update exists
-            var update = repository.Updates.ElementAtOrDefault(model.Id!.Value);
-            if (update is null)
-            {
-                return Results.Problem(title: "repository_update_not_found", statusCode: 400);
-            }
-
-            // trigger update for specific update
-            var evt = new TriggerUpdateJobsEvent
-            {
-                RepositoryId = repository.Id,
-                RepositoryUpdateId = model.Id.Value,
-                Trigger = UpdateJobTrigger.Manual,
-            };
-            await publisher.PublishAsync(evt);
-
-            return Results.Ok(repository);
-        });
-
-        return builder;
-    }
-
-    public static IEndpointRouteBuilder MapUpdateJobsApi(this IEndpointRouteBuilder builder)
-    {
-        var group = builder.MapGroup("update_jobs");
-        group.RequireAuthorization(AuthConstants.PolicyNameUpdater);
-
-        // TODO: create endpoints accessed by the updater during execution similar to the one hosted by GitHub
-
-        //group.MapGet("/{id}", async (MainDbContext dbContext, [FromRoute, Required] string id) =>
-        //{
-        //    var job = await dbContext.UpdateJobs.SingleAsync(p => p.Id == id);
-
-        //    var attr = new UpdateJobAttributes(job)
-        //    {
-        //        AllowedUpdates = Array.Empty<object>(),
-        //        CredentialsMetadata = Array.Empty<object>(),
-        //        Dependencies = Array.Empty<object>(),
-        //        Directory = job.Directory!,
-        //        ExistingPullRequests = Array.Empty<object>(),
-        //        IgnoreConditions = Array.Empty<object>(),
-        //        PackageManager = job.PackageEcosystem,
-        //        RepoName = job.RepositorySlug!,
-        //        SecurityAdvisories = Array.Empty<object>(),
-        //        Source = new UpdateJobAttributesSource
-        //        {
-        //            Directory = job.Directory!,
-        //            Provider = "azure",
-        //            Repo = job.RepositorySlug!,
-        //            Branch = job.Branch,
-        //            Hostname = ,
-        //            ApiEndpoint =,
-        //        },
-        //    };
-        //    return Results.Ok(new UpdateJobResponse(new(attr)));
-        //});
-
-        //group.MapPost("/{id}/create_pull_request", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] CreatePullRequestModel model) => { });
-        //group.MapPost("/{id}/update_pull_request", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] UpdatePullRequestModel model) => { });
-        //group.MapPost("/{id}/close_pull_request", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] ClosePullRequestModel model) => { });
-        //group.MapPost("/{id}/record_update_job_error", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] RecordUpdateJobErrorModel model) => { });
-        //group.MapPatch("/{id}/mark_as_processed", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] MarkAsProcessedModel model) => { });
-        //group.MapPost("/{id}/update_dependency_list", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] UpdateDependencyListModel model) => { });
-        //group.MapPost("/{id}/record_package_manager_version", async (MainDbContext dbContext, [FromRoute, Required] string id, [FromBody] RecordPackageManagerVersionModel model) => { });
-
-        return builder;
-    }
-}
+internal enum EventBusTransportKind { InMemory, ServiceBus, }

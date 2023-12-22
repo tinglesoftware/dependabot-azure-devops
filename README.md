@@ -9,14 +9,15 @@ This repository contains tools for updating dependencies in Azure DevOps reposit
 In this repository you'll find:
 
 1. Dependabot [updater](./updater) in Ruby. See [docs](./docs/updater.md).
-2. Dockerfile and build/image for running the updater via Docker [here](./Dockerfile).
+2. Dockerfile and build/image for running the updater via Docker [here](./updater/Dockerfile).
 3. Dependabot [server](./server/) in .NET/C#. See [docs](./docs/server.md).
 4. Azure DevOps [Extension](https://marketplace.visualstudio.com/items?itemName=tingle-software.dependabot) and [source](./extension).
-5. Kubernetes CronJob [template](#kubernetes-cronjob).
+
+> The hosted version is available to sponsors (most, but not all). It includes hustle free runs where the infrastructure is maintained for you. Much like the GitHub hosted version. Alternatively, you can run and host your own [server](./docs/server.md). Once you sponsor, you can send out an email to an maintainer or wait till they reach out. This is meant to ease the burden until GitHub/Azure/Microsoft can get it working natively (which could also be never) and hopefully for free.
 
 ## Using a configuration file
 
-Similar to the GitHub native version where you add a `.github/dependabot.yml` file, this repository adds support for the same official [configuration options](https://help.github.com/github/administering-a-repository/configuration-options-for-dependency-updates) via a file located at `.github/dependabot.yml`. This support is only available in the Azure DevOps extension and the [managed version](https://managd.dev). However, the extension does not currently support automatically picking up the file, a pipeline is still required. See [docs](./extension/README.md#usage).
+Similar to the GitHub native version where you add a `.github/dependabot.yml` file, this repository adds support for the same official [configuration options](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file) via a file located at `.github/dependabot.yml`. This support is only available in the Azure DevOps extension and the [managed version](https://managd.dev). However, the extension does not currently support automatically picking up the file, a pipeline is still required. See [docs](./extension/README.md#usage).
 
 We are well aware that ignore conditions are not explicitly passed and passed on from the extension/server to the container. It is intentional. The ruby script in the docker container does it automatically. If you are having issues, search for related issues such as https://github.com/tinglesoftware/dependabot-azure-devops/pull/582 before creating a new issue. You can also test against various reproductions such as https://dev.azure.com/tingle/dependabot/_git/repro-582
 
@@ -66,20 +67,6 @@ When working with Azure Artifacts, some extra permission steps need to be done:
 Security-only updates ia a mechanism to only create pull requests for dependencies with vulnerabilities by updating them to the earliest available non-vulnerable version. Security updates are supported in the same way as the GitHub-hosted version. In addition, you can provide extra advisories, such as those for an internal dependency, in a JSON file via the `securityAdvisoriesFile` input e.g. `securityAdvisoriesFile: '$(Pipeline.Workspace)/advisories.json'`. A file example is available [here](./advisories-example.json).
 
 A GitHub access token with `public_repo` access is required to perform the GitHub GraphQL for `securityVulnerabilities`.
-
-## Kubernetes CronJob
-
-A Kubernetes CronJobs is a useful resource for running tasks (a.k.a Jobs) on a recurring schedule. For more information on them read the [documentation](https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/). Using the updater docker image, we can create a CronJob and have it run periodically. The [environment variables](./docs/updater.md#environment-variables) are supplied in the job template but can be stored in a [ConfigMap](https://kubernetes.io/docs/concepts/configuration/configmap/) for ease of reuse.
-
-Use the [template provided](./cronjob-template.yaml) and replace the parameters in curly braces (e.g. replace `{{azure_organization}}` with the actual value for your organization), then deploy it. Be sure to replace the `{{k8s_schedule}}` variable with the desired schedule as per the [Cron format](https://en.wikipedia.org/wiki/Cron).
-
-### Notes
-
-1. History for successful and failed jobs is restricted to 1 (change to suit you).
-2. Jobs are removed after 2 days (`ttlSecondsAfterFinished: 172800`). No need keep it for too long.
-3. Jobs run duration is capped at 1 hour (`activeDeadlineSeconds: 3600`). This should be enough time.
-4. Labels can be used to find cronjobs created.
-5. Annotations can be used to store extra data for comparison but not searching/finding e.g. package ecosystem.
 
 ### Acknowledgements
 

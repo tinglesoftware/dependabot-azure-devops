@@ -1,6 +1,6 @@
 import * as tl from "azure-pipelines-task-lib/task"
 import { ToolRunner } from "azure-pipelines-task-lib/toolrunner"
-import { IDependabotConfig, IDependabotUpdate } from "./IDependabotConfig";
+import { IDependabotConfig, IDependabotRegistry, IDependabotUpdate } from "./IDependabotConfig";
 import getSharedVariables from "./utils/getSharedVariables";
 import { parseConfigFile } from "./utils/parseConfigFile";
 
@@ -88,7 +88,7 @@ async function run() {
       }
 
       // Set exception behaviour if true
-      if (update.rejectExternalCode === true) {
+      if (update.insecureExternalCodeExecution === "deny") {
         dockerRunner.arg(["-e", 'DEPENDABOT_REJECT_EXTERNAL_CODE=true']);
       }
 
@@ -102,6 +102,18 @@ async function run() {
       let allow = update.allow;
       if (allow) {
         dockerRunner.arg(["-e", `DEPENDABOT_ALLOW_CONDITIONS=${allow}`]);
+      }
+
+      // Set the dependencies to ignore
+      let ignore = update.ignore;
+      if (ignore) {
+        dockerRunner.arg(["-e", `DEPENDABOT_IGNORE_CONDITIONS=${ignore}`]);
+      }
+
+      // Set the commit message options
+      let commitMessage = update.commitMessage;
+      if (commitMessage) {
+        dockerRunner.arg(["-e", `DEPENDABOT_COMMIT_MESSAGE_OPTIONS=${commitMessage}`]);
       }
 
       // Set the requirements that should not be unlocked
@@ -130,8 +142,12 @@ async function run() {
       }
 
       // Set the extra credentials
-      if (config.registries != undefined && config.registries.length > 0) {
-        let extraCredentials = JSON.stringify(config.registries, (k, v) => v === null ? undefined : v);
+      if (config.registries != undefined && Object.keys(config.registries).length > 0) {
+        let selectedRegistries: IDependabotRegistry[] = [];
+        for (const reg of update.registries) {
+          selectedRegistries.push(config.registries[reg]);
+        }
+        let extraCredentials = JSON.stringify(selectedRegistries, (k, v) => v === null ? undefined : v);
         dockerRunner.arg(["-e", `DEPENDABOT_EXTRA_CREDENTIALS=${extraCredentials}`]);
       }
 
@@ -221,30 +237,14 @@ async function run() {
         dockerRunner.arg(['--mount', `type=bind,source=/ssh-agent,target=/ssh-agent`]);
       }
 
-      let dockerImageRegistry = variables.dockerImageRegistry;
-      if (variables.dockerImageRegistry) {
-        if (dockerImageRegistry !== 'ghcr.io') { // skip known default value
-          tl.warning(
-            `
-          You supplied the dockerImageRegistry input but it is set to be removed.
-          \n
-          If you have a compelling enough reason why it should be retained, air your views
-          at https://github.com/tinglesoftware/dependabot-azure-devops/issues/736
-          \n
-          Do this before Monday, 11 September, 2023 when we intend to throw errors if the input is set or ignore it altogether.
-          `);
-        }
-      } else {
-        dockerImageRegistry = 'ghcr.io';
-      }
-
-      // Form the docker image based on the ecosystem (repository) and the tag e.g. tinglesoftware/dependabot-updater-nuget
-      // For custom/enterprise registries, prefix with the registry, e.g. contoso.azurecr.io/tinglesoftware/dependabot-updater-nuget
-      let dockerImage: string = `tinglesoftware/dependabot-updater-${update.packageEcosystem}:${variables.dockerImageTag}`
-      dockerImage = `${dockerImageRegistry}/${dockerImage}`.replace("//", "/");
+      // Form the docker image based on the ecosystem
+      let dockerImage = `ghcr.io/tinglesoftware/dependabot-updater-${update.packageEcosystem}:${variables.dockerImageTag}`;
 
       tl.debug(`Running docker container -> '${dockerImage}' ...`);
       dockerRunner.arg(dockerImage);
+
+      // set the script to be run
+      dockerRunner.arg('update_script');
 
       // Now execute using docker
       await dockerRunner.exec();

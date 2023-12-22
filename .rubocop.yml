@@ -1,21 +1,25 @@
 ---
-require: rubocop-performance
+require:
+  - rubocop-performance
 
 AllCops:
   DisplayCopNames: true
   Exclude:
-    - "../*/bin/**/*" # TODO: remove this once files in bin have been distributed
-    - "updater/tmp/**/*"
-    - "updater/spec/fixtures/**/*"
-    - "updater/vendor/**/*"
+    - "*/vendor/**/*"
+    - "**/tmp/**/*"
+    - "*/spec/fixtures/**/*"
+    - "vendor/**/*"
+    - "dry-run/**/*"
   NewCops: enable
   SuggestExtensions: false
 Gemspec/DeprecatedAttributeAssignment:
   Enabled: true
+Gemspec/DevelopmentDependencies:
+  Enabled: false
 Gemspec/RequireMFA:
   Enabled: false
 Layout/DotPosition:
-  EnforcedStyle: trailing
+  EnforcedStyle: leading # See https://srb.help/2001
 Layout/EmptyLinesAroundAttributeAccessor:
   Enabled: false
 Layout/FirstArrayElementIndentation:
@@ -106,9 +110,9 @@ Metrics/AbcSize:
   Max: 35
 Metrics/BlockLength:
   Exclude:
-    - "../*/Rakefile"
-    - "../**/spec/**/*"
-    - "../*/dependabot-*.gemspec"
+    - "*/Rakefile"
+    - "**/spec/**/*"
+    - "*/dependabot-*.gemspec"
   Max: 35
 Metrics/ClassLength:
   Max: 350
@@ -278,7 +282,7 @@ Style/NilLambda:
   Enabled: true
 Style/NumericPredicate:
   Exclude:
-    - "../*/spec/**/*"
+    - "*/spec/**/*"
 Style/OptionalBooleanParameter:
   Enabled: false
 Style/PercentLiteralDelimiters:
@@ -332,6 +336,4 @@ Style/SelectByRegexp:
 # in order to keep the upgrade diff small, they will be enabled/fixed in
 # a follow-on PR.
 Naming/BlockForwarding:
-  Enabled: false
-Style/MutableConstant:
   Enabled: false

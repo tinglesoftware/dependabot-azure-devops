@@ -44,16 +44,17 @@ function getGithubEndPointToken(githubEndpoint: string): string {
  * @returns the Github access token
  */
 export default function getGithubAccessToken() {
-  let githubAccessToken: string = getInput("gitHubAccessToken");
-
-  if (!githubAccessToken) {
-    const githubEndpointId = getInput("gitHubConnection");
-
-    if (githubEndpointId) {
-      debug("GitHub connection supplied. A token shall be extracted from it.");
-      githubAccessToken = getGithubEndPointToken(githubEndpointId);
-    }
+  let gitHubAccessToken: string = getInput("gitHubAccessToken");
+  if (gitHubAccessToken) {
+    debug("gitHubAccessToken provided, using for authenticating");
+    return gitHubAccessToken;
   }
 
-  return githubAccessToken;
+  const githubEndpointId = getInput("gitHubConnection");
+  if (githubEndpointId) {
+    debug("GitHub connection supplied. A token shall be extracted from it.");
+    gitHubAccessToken = getGithubEndPointToken(githubEndpointId);
+  }
+
+  return gitHubAccessToken;
 }

@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Tingle.Dependabot.Events;
 using Tingle.Dependabot.Models;
+using Tingle.Dependabot.Models.Management;
 using Tingle.Dependabot.Workflow;
 using Tingle.EventBus;
 
@@ -23,12 +24,21 @@ internal class TriggerUpdateJobsEventConsumer : IEventConsumer<TriggerUpdateJobs
     {
         var evt = context.Event;
 
+        // ensure project exists
+        var projectId = evt.ProjectId ?? throw new InvalidOperationException($"'{nameof(evt.ProjectId)}' cannot be null");
+        var project = await dbContext.Projects.SingleOrDefaultAsync(r => r.Id == projectId, cancellationToken);
+        if (project is null)
+        {
+            logger.SkippingTriggerProjectNotFound(projectId);
+            return;
+        }
+
         // ensure repository exists
         var repositoryId = evt.RepositoryId ?? throw new InvalidOperationException($"'{nameof(evt.RepositoryId)}' cannot be null");
         var repository = await dbContext.Repositories.SingleOrDefaultAsync(r => r.Id == repositoryId, cancellationToken);
         if (repository is null)
         {
-            logger.LogWarning("Skipping trigger for update because repository '{Repository}' does not exist.", repositoryId);
+            logger.SkippingTriggerRepositoryNotFound(repositoryId: repositoryId, projectId: project.Id);
             return;
         }
 
@@ -40,7 +50,7 @@ internal class TriggerUpdateJobsEventConsumer : IEventConsumer<TriggerUpdateJobs
             var update = repository.Updates.ElementAtOrDefault(repositoryUpdateId.Value);
             if (update is null)
             {
-                logger.LogWarning("Skipping trigger for update because repository update '{RepositoryUpdateId}' does not exist.", repositoryUpdateId);
+                logger.SkippingTriggerRepositoryUpdateNotFound(repositoryId: repositoryId, repositoryUpdateId.Value, projectId: project.Id);
                 return;
             }
             updates = new[] { update, };
@@ -54,30 +64,34 @@ internal class TriggerUpdateJobsEventConsumer : IEventConsumer<TriggerUpdateJobs
         var eventBusId = context.Id;
         foreach (var update in updates)
         {
+            var ecosystem = update.PackageEcosystem!;
+
             // check if there is an existing one
-            var job = await dbContext.UpdateJobs.SingleOrDefaultAsync(j => j.PackageEcosystem == update.PackageEcosystem && j.Directory == update.Directory && j.EventBusId == eventBusId, cancellationToken);
+            var job = await dbContext.UpdateJobs.SingleOrDefaultAsync(j => j.PackageEcosystem == ecosystem && j.Directory == update.Directory && j.EventBusId == eventBusId, cancellationToken);
             if (job is not null)
             {
-                logger.LogWarning("A job for update '{RepositoryId}({UpdateId})' requested by event '{EventBusId}' already exists. Skipping it ...",
-                                  repository.Id,
-                                  repository.Updates.IndexOf(update),
-                                  eventBusId);
+                logger.SkippingTriggerJobAlreadyExists(repositoryId: repository.Id,
+                                                       repositoryUpdateId: repository.Updates.IndexOf(update),
+                                                       projectId: project.Id,
+                                                       eventBusId: eventBusId);
             }
             else
             {
                 // decide the resources based on the ecosystem
-                var ecosystem = update.PackageEcosystem!.Value;
                 var resources = UpdateJobResources.FromEcosystem(ecosystem);
 
                 // create the job
                 job = new UpdateJob
                 {
-                    Id = FlakeId.Id.Create().ToString(),
+                    // we use this to create azure resources which have name restrictions
+                    // alphanumeric, starts with a letter, does not contain "--", up to 32 characters
+                    Id = $"job-{FlakeId.Id.Create()}", // flake is 19 chars, total is 23 chars
 
                     Created = DateTimeOffset.UtcNow,
                     Status = UpdateJobStatus.Scheduled,
                     Trigger = evt.Trigger,
 
+                    ProjectId = project.Id,
                     RepositoryId = repository.Id,
                     RepositorySlug = repository.Slug,
                     EventBusId = eventBusId,
@@ -92,6 +106,7 @@ internal class TriggerUpdateJobsEventConsumer : IEventConsumer<TriggerUpdateJobs
                     End = null,
                     Duration = null,
                     Log = null,
+                    Error = null,
                 };
                 await dbContext.UpdateJobs.AddAsync(job, cancellationToken);
 
@@ -105,7 +120,7 @@ internal class TriggerUpdateJobsEventConsumer : IEventConsumer<TriggerUpdateJobs
             }
 
             // call the update runner to run the update
-            await updateRunner.CreateAsync(repository, update, job, cancellationToken);
+            await updateRunner.CreateAsync(project, repository, update, job, cancellationToken);
 
             // save changes that may have been made by the updateRunner
             update.LatestJobStatus = job.Status;
