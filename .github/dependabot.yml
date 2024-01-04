@@ -46,7 +46,7 @@ updates:
       patterns:
       - "Tingle.AspNetCore.*"
       - "Tingle.Extensions.*"
-    xunint:
+    xunit:
       patterns: ["Xunit*"]
 
 - package-ecosystem: "npm" # See documentation for possible values
