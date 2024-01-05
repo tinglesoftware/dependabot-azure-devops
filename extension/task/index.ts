@@ -11,7 +11,7 @@ async function run() {
       throw new Error(
         `
         Using explicit inputs is no longer supported.
-        Migrate to using a config file at .github/dependabot.yml.
+        Migrate to using a config file at .azuredevops/dependabot.yml or .github/dependabot.yml.
         See https://github.com/tinglesoftware/dependabot-azure-devops/tree/main/extension#usage for more information.
         `
       );

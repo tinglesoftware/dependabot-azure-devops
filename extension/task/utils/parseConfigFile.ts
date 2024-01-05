@@ -15,7 +15,7 @@ import axios from "axios";
 /**
  * Parse the dependabot config YAML file to specify update configuration
  *
- * The file should be located at '/.github/dependabot.yml' or '/.github/dependabot.yaml'
+ * The file should be located at '/.azuredevops/dependabot.yml' or '/.github/dependabot.yml'
  *
  * To view YAML file format, visit
  * https://docs.github.com/en/github/administering-a-repository/configuration-options-for-dependency-updates#allow
@@ -25,8 +25,8 @@ import axios from "axios";
  */
 async function parseConfigFile(variables: ISharedVariables): Promise<IDependabotConfig> {
   const possibleFilePaths = [
-    ".azuredevops/dependabot.yml",
-    ".azuredevops/dependabot.yaml",
+    "/.azuredevops/dependabot.yml",
+    "/.azuredevops/dependabot.yaml",
 
     "/.github/dependabot.yaml",
     "/.github/dependabot.yml",
