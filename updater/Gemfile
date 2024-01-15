@@ -10,7 +10,7 @@ source "https://rubygems.org"
 
 # gem "dependabot-omnibus", github: "dependabot/dependabot-core", branch: "main"
 # gem "dependabot-omnibus", github: "dependabot/dependabot-core", tag: "v0.232.0"
-gem "dependabot-omnibus", "~>0.239.0"
+gem "dependabot-omnibus", "~>0.240.0"
 
 gem "http", "~> 5.1"
 gem "octokit", "6.1.1"
