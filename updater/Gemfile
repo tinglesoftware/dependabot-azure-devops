@@ -8,7 +8,7 @@ source "https://rubygems.org"
 # They are so many, our reference won't be found for it to be updated.
 # Hence adding the branch.
 
-gem "dependabot-omnibus", "~>0.241.0"
+gem "dependabot-omnibus", "~>0.240.0"
 # gem "dependabot-omnibus", github: "dependabot/dependabot-core", branch: "main"
 # gem "dependabot-omnibus", github: "dependabot/dependabot-core", tag: "v0.232.0"
 # gem "dependabot-omnibus", github: "dependabot/dependabot-core", ref: "ffde6f6"
