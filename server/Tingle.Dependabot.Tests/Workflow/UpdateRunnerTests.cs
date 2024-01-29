@@ -319,6 +319,7 @@ public class UpdateRunnerTests
         { "gradle", "gradle" },
         { "maven", "maven" },
         { "swift", "swift" },
+        { "devcontainers", "devcontainers" },
         { "terraform", "terraform" },
         { "docker", "docker" },
     };

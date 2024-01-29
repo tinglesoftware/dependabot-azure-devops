@@ -36,7 +36,8 @@ Raven.configure do |config|
     npm_and_yarn|
     bundler|
     pub|
-    swift
+    swift|
+    devcontainers
   )}x
 
   config.processors += [ExceptionSanitizer]

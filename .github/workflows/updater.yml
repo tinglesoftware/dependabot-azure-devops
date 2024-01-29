@@ -40,6 +40,7 @@ jobs:
         - { ecosystem: pub }
         - { ecosystem: pip }
         - { ecosystem: swift }
+        - { ecosystem: devcontainers }
         - { ecosystem: terraform }
 
     env:
