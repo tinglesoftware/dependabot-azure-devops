@@ -59,7 +59,7 @@ $files = @(
     # "updater/spec/dependabot/updater/operations/refresh_group_update_pull_request_spec.rb"
     # "updater/spec/dependabot/updater/operations/update_all_versions_spec.rb"
     "updater/spec/dependabot/updater/dependency_group_change_batch_spec.rb"
-    "updater/spec/dependabot/updater/error_handler_spec.rb"
+    # "updater/spec/dependabot/updater/error_handler_spec.rb"
     "updater/spec/dependabot/updater/operations_spec.rb"
     "updater/spec/dependabot/api_client_spec.rb"
     # "updater/spec/dependabot/dependency_change_builder_spec.rb"
