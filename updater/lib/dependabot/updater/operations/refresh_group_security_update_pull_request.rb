@@ -3,6 +3,7 @@
 
 require "dependabot/updater/security_update_helpers"
 require "dependabot/updater/group_update_creation"
+require "dependabot/updater/group_update_refreshing"
 
 # This class implements our strategy for updating multiple, insecure dependencies
 # to a secure version. We attempt to make the smallest version update possible,
@@ -10,24 +11,24 @@ require "dependabot/updater/group_update_creation"
 module Dependabot
   class Updater
     module Operations
-      class CreateGroupSecurityUpdatePullRequest
+      class RefreshGroupSecurityUpdatePullRequest
         include SecurityUpdateHelpers
         include GroupUpdateCreation
+        include GroupUpdateRefreshing
 
         def self.applies_to?(job:)
           return false if Dependabot::Experiments.enabled?(:grouped_security_updates_disabled)
-          return false if job.updating_a_pull_request?
           # If we haven't been given data for the vulnerable dependency,
           # this strategy cannot act.
           return false unless job.dependencies&.any?
-
           return false unless job.security_updates_only?
+          return false unless job.dependencies.count > 1
 
-          true if job.dependencies.count > 1 || (job.source.directories && job.source.directories.count > 1)
+          job.updating_a_pull_request?
         end
 
         def self.tag_name
-          :create_security_pr
+          :update_security_group_pr
         end
 
         def initialize(service:, job:, dependency_snapshot:, error_handler:)
@@ -35,18 +36,16 @@ module Dependabot
           @job = job
           @dependency_snapshot = dependency_snapshot
           @error_handler = error_handler
-          # TODO: Collect @created_pull_requests on the Job object?
-          @created_pull_requests = []
         end
 
         def perform
-          Dependabot.logger.info("Starting security update job for #{job.source.repo}")
+          Dependabot.logger.info("Starting a refresh of grouped security update for #{job.source.repo}")
           return record_security_update_dependency_not_found if dependency_snapshot.job_dependencies.empty?
 
           if dependency_change.updated_dependencies.any?
-            Dependabot.logger.info("Creating a pull request for '#{group.name}'")
+            Dependabot.logger.info("Upserting pull request for '#{group.name}'")
             begin
-              service.create_pull_request(dependency_change, dependency_snapshot.base_commit_sha)
+              upsert_pull_request_with_error_handling(dependency_change, group)
             rescue StandardError => e
               error_handler.handle_job_error(error: e, dependency_group: group)
             end

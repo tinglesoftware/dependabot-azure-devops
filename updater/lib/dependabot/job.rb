@@ -1,4 +1,4 @@
-# typed: false
+# typed: true
 # frozen_string_literal: true
 
 require "dependabot/config/ignore_condition"
@@ -140,6 +140,10 @@ module Dependabot
 
     def repo_private?
       @repo_private
+    end
+
+    def repo_owner
+      source&.organization
     end
 
     def updating_a_pull_request?
