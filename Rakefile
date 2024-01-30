@@ -32,6 +32,7 @@ require "yaml"
 #   pub/dependabot-pub.gemspec
 #   omnibus/dependabot-omnibus.gemspec
 #   swift/dependabot-swift.gemspec
+#   devcontainers/dependabot-devcontainers.gemspec
 # ).freeze
 
 def run_command(command)
