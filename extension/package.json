@@ -25,7 +25,7 @@
   },
   "homepage": "https://github.com/tinglesoftware/dependabot-azure-devops#readme",
   "dependencies": {
-    "axios": "1.6.0",
+    "axios": "1.6.7",
     "azure-pipelines-task-lib": "4.8.2",
     "js-yaml": "4.1.0"
   },
