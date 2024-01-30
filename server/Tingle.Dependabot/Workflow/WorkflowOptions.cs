@@ -31,6 +31,14 @@ public class WorkflowOptions
     public string? UpdaterImageTag { get; set; }
 
     /// <summary>
+    /// Versions of the updater docker container images to use per ecosystem.
+    /// Keeping this value fixed in code is important so that the code that depends on it always works.
+    /// If no value is provided for an ecosystem, the default version is used.
+    /// </summary>
+    /// <example>1.20</example>
+    public Dictionary<string, string?> UpdaterImageTags { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
     /// Root working directory where file are written during job scheduling and execution.
     /// This directory is the root for all jobs.
     /// Subdirectories are created for each job and further for each usage type.
