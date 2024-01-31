@@ -36,7 +36,7 @@ public class WorkflowOptions
     /// If no value is provided for an ecosystem, the default version is used.
     /// </summary>
     /// <example>1.20</example>
-    public Dictionary<string, string?> UpdaterImageTags { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+    public Dictionary<string, string> UpdaterImageTags { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
     /// Root working directory where file are written during job scheduling and execution.
@@ -62,4 +62,13 @@ public class WorkflowOptions
     /// <summary>Location/region where to create new update jobs.</summary>
     /// <example>westeurope</example>
     public string? Location { get; set; } // using Azure.Core.Location does not work when binding from IConfiguration
+
+    public string GetUpdaterImageTag(string ecosystem, Models.Management.Project project)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(ecosystem);
+
+        if (UpdaterImageTags.TryGetValue(ecosystem, out var tag)) return tag;
+
+        return project.UpdaterImageTag ?? UpdaterImageTag!;
+    }
 }

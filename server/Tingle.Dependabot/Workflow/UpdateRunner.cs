@@ -71,7 +71,7 @@ internal partial class UpdateRunner
         // prepare the container
         var volumeName = "working-dir";
         var ecosystem = job.PackageEcosystem!;
-        var updaterImageTag = options.UpdaterImageTags.GetValueOrDefault(ecosystem, project.UpdaterImageTag ?? options.UpdaterImageTag);
+        var updaterImageTag = options.GetUpdaterImageTag(ecosystem, project);
         var container = new ContainerAppContainer
         {
             Name = UpdaterContainerName,
