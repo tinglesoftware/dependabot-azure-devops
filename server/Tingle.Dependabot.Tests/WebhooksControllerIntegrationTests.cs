@@ -204,14 +204,12 @@ public class WebhooksControllerIntegrationTests(ITestOutputHelper outputHelper)
                 services.AddAuthentication()
                         .AddBasic<BasicUserValidationService>(AuthConstants.SchemeNameServiceHooks, options => options.Realm = "Dependabot");
 
-                services.AddAuthorization(options =>
-                {
-                    options.AddPolicy(AuthConstants.PolicyNameServiceHooks, policy =>
-                    {
-                        policy.AddAuthenticationSchemes(AuthConstants.SchemeNameServiceHooks)
-                              .RequireAuthenticatedUser();
-                    });
-                });
+                services.AddAuthorizationBuilder()
+                        .AddPolicy(AuthConstants.PolicyNameServiceHooks, policy =>
+                        {
+                            policy.AddAuthenticationSchemes(AuthConstants.SchemeNameServiceHooks)
+                                  .RequireAuthenticatedUser();
+                        });
 
                 services.AddEventBus(builder => builder.AddInMemoryTransport().AddInMemoryTestHarness());
             })
