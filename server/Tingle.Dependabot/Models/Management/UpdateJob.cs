@@ -57,6 +57,9 @@ public class UpdateJob
     [Required]
     public UpdateJobResources? Resources { get; set; }
 
+    /// <summary>Image used for the updater.</summary>
+    public string? UpdaterImage { get; set; }
+
     /// <summary>
     /// Authorization key for the job.
     /// Used by the updater to make API calls.
