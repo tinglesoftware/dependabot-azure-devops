@@ -14,17 +14,10 @@ using Xunit.Abstractions;
 
 namespace Tingle.Dependabot.Tests.PeriodicTasks;
 
-public class UpdateJobsCleanerTaskTests
+public class UpdateJobsCleanerTaskTests(ITestOutputHelper outputHelper)
 {
     private const string ProjectId = "prj_1234567890";
     private const string RepositoryId = "repo_1234567890";
-
-    private readonly ITestOutputHelper outputHelper;
-
-    public UpdateJobsCleanerTaskTests(ITestOutputHelper outputHelper)
-    {
-        this.outputHelper = outputHelper ?? throw new ArgumentNullException(nameof(outputHelper));
-    }
 
     [Fact]
     public async Task CleanupAsync_ResolvesJobs()

@@ -12,19 +12,8 @@ namespace Tingle.Dependabot.Controllers;
 [ApiController]
 [Route("/webhooks")]
 [Authorize(AuthConstants.PolicyNameServiceHooks)]
-public class WebhooksController : ControllerBase // TODO: unit test this
+public class WebhooksController(MainDbContext dbContext, IEventPublisher publisher, ILogger<WebhooksController> logger) : ControllerBase // TODO: unit test this
 {
-    private readonly MainDbContext dbContext;
-    private readonly IEventPublisher publisher;
-    private readonly ILogger logger;
-
-    public WebhooksController(MainDbContext dbContext, IEventPublisher publisher, ILogger<WebhooksController> logger)
-    {
-        this.dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-        this.publisher = publisher ?? throw new ArgumentNullException(nameof(publisher));
-        this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
-
     [HttpPost("azure")]
     public async Task<IActionResult> PostAsync([FromBody] AzureDevOpsEvent model)
     {

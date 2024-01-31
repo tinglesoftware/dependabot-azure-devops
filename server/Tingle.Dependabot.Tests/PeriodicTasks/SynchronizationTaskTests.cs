@@ -13,16 +13,9 @@ using Xunit.Abstractions;
 
 namespace Tingle.Dependabot.Tests.PeriodicTasks;
 
-public class SynchronizationTaskTests
+public class SynchronizationTaskTests(ITestOutputHelper outputHelper)
 {
     private const string ProjectId = "prj_1234567890";
-
-    private readonly ITestOutputHelper outputHelper;
-
-    public SynchronizationTaskTests(ITestOutputHelper outputHelper)
-    {
-        this.outputHelper = outputHelper ?? throw new ArgumentNullException(nameof(outputHelper));
-    }
 
     [Fact]
     public async Task SynchronizationInnerAsync_Works()

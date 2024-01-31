@@ -6,7 +6,7 @@ using Tingle.Dependabot.Models.Management;
 
 namespace Tingle.Dependabot.Workflow;
 
-public class AzureDevOpsProvider
+public class AzureDevOpsProvider(HttpClient httpClient, IOptions<WorkflowOptions> optionsAccessor)
 {
     // Possible/allowed paths for the configuration files in a repository.
     private static readonly IReadOnlyList<string> ConfigurationFilePaths = new[] {
@@ -25,14 +25,7 @@ public class AzureDevOpsProvider
         ("ms.vss-code.git-pullrequest-comment-event", "2.0"),
     ];
 
-    private readonly HttpClient httpClient;
-    private readonly WorkflowOptions options;
-
-    public AzureDevOpsProvider(HttpClient httpClient, IOptions<WorkflowOptions> optionsAccessor)
-    {
-        this.httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
-        options = optionsAccessor?.Value ?? throw new ArgumentNullException(nameof(optionsAccessor));
-    }
+    private readonly WorkflowOptions options = optionsAccessor?.Value ?? throw new ArgumentNullException(nameof(optionsAccessor));
 
     public async Task<List<string>> CreateOrUpdateSubscriptionsAsync(Project project, CancellationToken cancellationToken = default)
     {

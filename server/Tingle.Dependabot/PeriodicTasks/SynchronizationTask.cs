@@ -8,9 +8,6 @@ namespace Tingle.Dependabot.Workflow;
 
 internal class SynchronizationTask(MainDbContext dbContext, IEventPublisher publisher) : IPeriodicTask
 {
-    private readonly MainDbContext dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-    private readonly IEventPublisher publisher = publisher ?? throw new ArgumentNullException(nameof(publisher));
-
     public async Task ExecuteAsync(PeriodicTaskExecutionContext context, CancellationToken cancellationToken)
     {
         await SyncAsync(cancellationToken);

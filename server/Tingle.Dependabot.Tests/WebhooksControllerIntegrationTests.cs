@@ -17,16 +17,9 @@ using Xunit.Abstractions;
 
 namespace Tingle.Dependabot.Tests;
 
-public class WebhooksControllerIntegrationTests
+public class WebhooksControllerIntegrationTests(ITestOutputHelper outputHelper)
 {
     private const string ProjectId = "prj_1234567890";
-
-    private readonly ITestOutputHelper outputHelper;
-
-    public WebhooksControllerIntegrationTests(ITestOutputHelper outputHelper)
-    {
-        this.outputHelper = outputHelper ?? throw new ArgumentNullException(nameof(outputHelper));
-    }
 
     [Fact]
     public async Task Returns_Unauthorized()

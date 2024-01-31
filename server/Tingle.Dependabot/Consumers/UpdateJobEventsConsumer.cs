@@ -7,19 +7,8 @@ using Tingle.EventBus;
 
 namespace Tingle.Dependabot.Consumers;
 
-internal class UpdateJobEventsConsumer : IEventConsumer<UpdateJobCheckStateEvent>, IEventConsumer<UpdateJobCollectLogsEvent>
+internal class UpdateJobEventsConsumer(MainDbContext dbContext, UpdateRunner updateRunner, ILogger<UpdateJobEventsConsumer> logger) : IEventConsumer<UpdateJobCheckStateEvent>, IEventConsumer<UpdateJobCollectLogsEvent>
 {
-    private readonly MainDbContext dbContext;
-    private readonly UpdateRunner updateRunner;
-    private readonly ILogger logger;
-
-    public UpdateJobEventsConsumer(MainDbContext dbContext, UpdateRunner updateRunner, ILogger<UpdateJobEventsConsumer> logger)
-    {
-        this.dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-        this.updateRunner = updateRunner ?? throw new ArgumentNullException(nameof(updateRunner));
-        this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
-
     public async Task ConsumeAsync(EventContext<UpdateJobCheckStateEvent> context, CancellationToken cancellationToken)
     {
         var evt = context.Event;

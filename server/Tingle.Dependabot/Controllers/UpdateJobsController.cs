@@ -15,19 +15,8 @@ namespace Tingle.Dependabot.Controllers;
 [ApiController]
 [Route("/update_jobs")]
 [Authorize(AuthConstants.PolicyNameUpdater)]
-public class UpdateJobsController : ControllerBase // TODO: unit and integration test this
+public class UpdateJobsController(MainDbContext dbContext, IEventPublisher publisher, ILogger<UpdateJobsController> logger) : ControllerBase // TODO: unit and integration test this
 {
-    private readonly MainDbContext dbContext;
-    private readonly IEventPublisher publisher;
-    private readonly ILogger logger;
-
-    public UpdateJobsController(MainDbContext dbContext, IEventPublisher publisher, ILogger<UpdateJobsController> logger)
-    {
-        this.dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-        this.publisher = publisher ?? throw new ArgumentNullException(nameof(publisher));
-        this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
-
     // TODO: implement logic for *pull_request endpoints
 
     [HttpPost("{id}/create_pull_request")]
