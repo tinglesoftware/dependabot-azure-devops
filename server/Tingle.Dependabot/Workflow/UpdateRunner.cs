@@ -139,6 +139,7 @@ internal partial class UpdateRunner
         _ = await operation.Value.StartAsync(Azure.WaitUntil.Completed, cancellationToken: cancellationToken);
         logger.StartedContainerAppJob(job.Id);
         job.Status = UpdateJobStatus.Running;
+        job.UpdaterImage = container.Image;
     }
 
     public async Task DeleteAsync(UpdateJob job, CancellationToken cancellationToken = default)
