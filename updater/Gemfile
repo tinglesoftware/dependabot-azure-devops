@@ -13,7 +13,7 @@ gem "dependabot-omnibus", "~>0.242.1"
 # gem "dependabot-omnibus", github: "dependabot/dependabot-core", tag: "v0.232.0"
 # gem "dependabot-omnibus", github: "dependabot/dependabot-core", ref: "ffde6f6"
 
-gem "http", "~> 5.1"
+gem "http", "~> 5.2"
 gem "octokit", "6.1.1"
 gem "opentelemetry-exporter-otlp", "~> 0.26"
 gem "opentelemetry-instrumentation-excon", "~> 0.22"
