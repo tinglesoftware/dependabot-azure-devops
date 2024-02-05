@@ -18,7 +18,7 @@ public class WebhooksController(MainDbContext dbContext, IEventPublisher publish
     public async Task<IActionResult> PostAsync([FromBody] AzureDevOpsEvent model)
     {
         var type = model.EventType;
-        logger.WebhooksReceivedEvent(type, model.NotificationId, model.SubscriptionId);
+        logger.WebhooksReceivedEvent(type, model.NotificationId, model.SubscriptionId?.Replace(Environment.NewLine, ""));
 
         if (type is AzureDevOpsEventType.GitPush)
         {

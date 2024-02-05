@@ -26,7 +26,7 @@ public class UpdateJobsController(MainDbContext dbContext, IEventPublisher publi
         var repository = await dbContext.Repositories.SingleAsync(r => r.Id == job.RepositoryId);
         var project = await dbContext.Projects.SingleAsync(p => p.Id == job.ProjectId);
 
-        logger.LogInformation("Received request to create a pull request from job {JobId} but we did nothing.\r\n{ModelJson}", id, JsonSerializer.Serialize(model));
+        logger.LogInformation("Received request to create a pull request from job {JobId} but we did nothing.\r\n{ModelJson}", id.Replace(Environment.NewLine, ""), JsonSerializer.Serialize(model));
         return Ok();
     }
 
@@ -37,7 +37,7 @@ public class UpdateJobsController(MainDbContext dbContext, IEventPublisher publi
         var repository = await dbContext.Repositories.SingleAsync(r => r.Id == job.RepositoryId);
         var project = await dbContext.Projects.SingleAsync(p => p.Id == job.ProjectId);
 
-        logger.LogInformation("Received request to update a pull request from job {JobId} but we did nothing.\r\n{ModelJson}", id, JsonSerializer.Serialize(model));
+        logger.LogInformation("Received request to update a pull request from job {JobId} but we did nothing.\r\n{ModelJson}", id.Replace(Environment.NewLine, ""), JsonSerializer.Serialize(model));
         return Ok();
     }
 
@@ -48,7 +48,7 @@ public class UpdateJobsController(MainDbContext dbContext, IEventPublisher publi
         var repository = await dbContext.Repositories.SingleAsync(r => r.Id == job.RepositoryId);
         var project = await dbContext.Projects.SingleAsync(p => p.Id == job.ProjectId);
 
-        logger.LogInformation("Received request to close a pull request from job {JobId} but we did nothing.\r\n{ModelJson}", id, JsonSerializer.Serialize(model));
+        logger.LogInformation("Received request to close a pull request from job {JobId} but we did nothing.\r\n{ModelJson}", id.Replace(Environment.NewLine, ""), JsonSerializer.Serialize(model));
         return Ok();
     }
 
@@ -117,7 +117,7 @@ public class UpdateJobsController(MainDbContext dbContext, IEventPublisher publi
     public async Task<IActionResult> RecordEcosystemVersionsAsync([FromRoute, Required] string id, [FromBody] JsonNode model)
     {
         var job = await dbContext.UpdateJobs.SingleAsync(j => j.Id == id);
-        logger.LogInformation("Received request to record ecosystem version from job {JobId} but we did nothing.\r\n{ModelJson}", id, model.ToJsonString());
+        logger.LogInformation("Received request to record ecosystem version from job {JobId} but we did nothing.\r\n{ModelJson}", id.Replace(Environment.NewLine, ""), model.ToJsonString());
         return Ok();
     }
 
@@ -125,7 +125,7 @@ public class UpdateJobsController(MainDbContext dbContext, IEventPublisher publi
     public async Task<IActionResult> IncrementMetricAsync([FromRoute, Required] string id, [FromBody] JsonNode model)
     {
         var job = await dbContext.UpdateJobs.SingleAsync(j => j.Id == id);
-        logger.LogInformation("Received metrics from job {JobId} but we did nothing with them.\r\n{ModelJson}", id, model.ToJsonString());
+        logger.LogInformation("Received metrics from job {JobId} but we did nothing with them.\r\n{ModelJson}", id.Replace(Environment.NewLine, ""), model.ToJsonString());
         return Ok();
     }
 }
