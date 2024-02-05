@@ -33,9 +33,9 @@ public class UpdateJobResources
     {
         return ecosystem switch
         {
-            "npm" => new(cpu: 0.5, memory: 1),
-            "yarn" => new(cpu: 0.5, memory: 1),
-            "pnpm" => new(cpu: 0.5, memory: 1),
+            "npm" => new(cpu: 1, memory: 2),
+            "yarn" => new(cpu: 1, memory: 2),
+            "pnpm" => new(cpu: 1, memory: 2),
             "terraform" => new(cpu: 0.5, memory: 1),
             _ => new(cpu: 0.25, memory: 0.5), // the minimum
         };
