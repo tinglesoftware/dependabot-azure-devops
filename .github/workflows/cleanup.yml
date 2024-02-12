@@ -33,7 +33,7 @@ jobs:
 
     steps:
     - name: Delete old dependabot-updater-${{ matrix.suite.ecosystem }} images
-      uses: actions/delete-package-versions@v4
+      uses: actions/delete-package-versions@v5
       with:
         package-name: 'dependabot-updater-${{ matrix.suite.ecosystem }}'
         package-type: 'container'
@@ -46,7 +46,7 @@ jobs:
 
     steps:
     - name: Delete old dependabot-server images
-      uses: actions/delete-package-versions@v4
+      uses: actions/delete-package-versions@v5
       with:
         package-name: 'dependabot-server'
         package-type: 'container'
