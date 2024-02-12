@@ -1,4 +1,4 @@
-# typed: false
+# typed: true
 # frozen_string_literal: true
 
 require "dependabot/updater/operations/create_group_update_pull_request"
@@ -86,6 +86,9 @@ module Dependabot
               dependency_snapshot.add_handled_dependencies(
                 dependencies_in_existing_pr_for_group(group).map { |d| d["dependency-name"] }
               )
+              # also add dependencies that might be in the group, as a rebase would add them;
+              # this avoids individual PR creation that immediately is superseded by a group PR supersede
+              dependency_snapshot.add_handled_dependencies(group.dependencies.map(&:name))
               next
             end
 

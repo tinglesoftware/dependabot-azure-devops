@@ -13,19 +13,8 @@ namespace Tingle.Dependabot.Controllers;
 [ApiController]
 [Route("/mgnt")]
 [Authorize(AuthConstants.PolicyNameManagement)]
-public class ManagementController : ControllerBase // TODO: unit test this
+public class ManagementController(MainDbContext dbContext, IEventPublisher publisher, AzureDevOpsProvider adoProvider) : ControllerBase // TODO: unit test this
 {
-    private readonly MainDbContext dbContext;
-    private readonly IEventPublisher publisher;
-    private readonly AzureDevOpsProvider adoProvider;
-
-    public ManagementController(MainDbContext dbContext, IEventPublisher publisher, AzureDevOpsProvider adoProvider)
-    {
-        this.dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-        this.publisher = publisher ?? throw new ArgumentNullException(nameof(publisher));
-        this.adoProvider = adoProvider ?? throw new ArgumentNullException(nameof(adoProvider));
-    }
-
     [HttpPost("sync")]
     public async Task<IActionResult> SyncAsync([FromBody] SynchronizationRequest model)
     {

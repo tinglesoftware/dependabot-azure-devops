@@ -70,10 +70,12 @@ internal partial class UpdateRunner
 
         // prepare the container
         var volumeName = "working-dir";
+        var ecosystem = job.PackageEcosystem!;
+        var updaterImageTag = options.GetUpdaterImageTag(ecosystem, project);
         var container = new ContainerAppContainer
         {
             Name = UpdaterContainerName,
-            Image = $"ghcr.io/tinglesoftware/dependabot-updater-{job.PackageEcosystem}:{project.UpdaterImageTag ?? options.UpdaterImageTag}",
+            Image = $"ghcr.io/tinglesoftware/dependabot-updater-{ecosystem}:{updaterImageTag}",
             Resources = job.Resources!,
             Args = { useV2 ? "update_files" : "update_script", },
             VolumeMounts = { new ContainerAppVolumeMount { VolumeName = volumeName, MountPath = options.WorkingDirectory, }, },
@@ -113,7 +115,7 @@ internal partial class UpdateRunner
             Tags =
             {
                 ["purpose"] = "dependabot",
-                ["ecosystem"] = job.PackageEcosystem,
+                ["ecosystem"] = ecosystem,
                 ["repository"] = job.RepositorySlug,
                 ["directory"] = job.Directory,
                 ["machine-name"] = Environment.MachineName,
@@ -137,6 +139,7 @@ internal partial class UpdateRunner
         _ = await operation.Value.StartAsync(Azure.WaitUntil.Completed, cancellationToken: cancellationToken);
         logger.StartedContainerAppJob(job.Id);
         job.Status = UpdateJobStatus.Running;
+        job.UpdaterImage = container.Image;
     }
 
     public async Task DeleteAsync(UpdateJob job, CancellationToken cancellationToken = default)

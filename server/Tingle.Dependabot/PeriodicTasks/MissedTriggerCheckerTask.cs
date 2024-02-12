@@ -10,10 +10,6 @@ namespace Tingle.Dependabot.PeriodicTasks;
 
 internal class MissedTriggerCheckerTask(MainDbContext dbContext, IEventPublisher publisher, ILogger<MissedTriggerCheckerTask> logger) : IPeriodicTask
 {
-    private readonly MainDbContext dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-    private readonly IEventPublisher publisher = publisher ?? throw new ArgumentNullException(nameof(publisher));
-    private readonly ILogger logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
     public async Task ExecuteAsync(PeriodicTaskExecutionContext context, CancellationToken cancellationToken)
     {
         await CheckAsync(DateTimeOffset.UtcNow, cancellationToken);

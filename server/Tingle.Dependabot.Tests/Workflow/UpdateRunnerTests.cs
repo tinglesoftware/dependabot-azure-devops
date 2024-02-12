@@ -1,7 +1,6 @@
 ﻿using Tingle.Dependabot.Models.Dependabot;
 using Tingle.Dependabot.Workflow;
 using Xunit;
-using Xunit.Abstractions;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -9,13 +8,6 @@ namespace Tingle.Dependabot.Tests.Workflow;
 
 public class UpdateRunnerTests
 {
-    private readonly ITestOutputHelper outputHelper;
-
-    public UpdateRunnerTests(ITestOutputHelper outputHelper)
-    {
-        this.outputHelper = outputHelper ?? throw new ArgumentNullException(nameof(outputHelper));
-    }
-
     [Fact]
     public void MakeCredentialsMetadata_Works()
     {
@@ -319,6 +311,7 @@ public class UpdateRunnerTests
         { "gradle", "gradle" },
         { "maven", "maven" },
         { "swift", "swift" },
+        { "devcontainers", "devcontainers" },
         { "terraform", "terraform" },
         { "docker", "docker" },
     };

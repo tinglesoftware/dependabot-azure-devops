@@ -152,6 +152,17 @@
       ]
     },
     {
+      "type": "Microsoft.AppConfiguration/configurationStores/keyValues",
+      "apiVersion": "2023-03-01",
+      "name": "[format('{0}/{1}', parameters('name'), 'Workflow:UpdaterImageTags:nuget$Production')]",
+      "properties": {
+        "value": "1.24"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.AppConfiguration/configurationStores', parameters('name'))]"
+      ]
+    },
+    {
       "copy": {
         "name": "shares",
         "count": "[length(variables('fileShares'))]"

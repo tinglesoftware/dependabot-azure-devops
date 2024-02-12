@@ -8,13 +8,20 @@ source "https://rubygems.org"
 # They are so many, our reference won't be found for it to be updated.
 # Hence adding the branch.
 
+gem "dependabot-omnibus", "~>0.242.1"
 # gem "dependabot-omnibus", github: "dependabot/dependabot-core", branch: "main"
 # gem "dependabot-omnibus", github: "dependabot/dependabot-core", tag: "v0.232.0"
-gem "dependabot-omnibus", "~>0.237.0"
+# gem "dependabot-omnibus", github: "dependabot/dependabot-core", ref: "ffde6f6"
 
-gem "http", "~> 5.1"
+gem "http", "~> 5.2"
 gem "octokit", "6.1.1"
-gem "sentry-raven", "~> 3.1"
+gem "opentelemetry-exporter-otlp", "~> 0.26"
+gem "opentelemetry-instrumentation-excon", "~> 0.22"
+gem "opentelemetry-instrumentation-faraday", "~> 0.23"
+gem "opentelemetry-instrumentation-http", "~> 0.23"
+gem "opentelemetry-instrumentation-net_http", "~> 0.22"
+gem "opentelemetry-sdk", "~> 1.4"
+gem "sentry-ruby", "~> 5.1"
 gem "terminal-table", "~> 3.0.2"
 
 group :test do

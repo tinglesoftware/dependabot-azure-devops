@@ -14,18 +14,11 @@ using Xunit.Abstractions;
 
 namespace Tingle.Dependabot.Tests.PeriodicTasks;
 
-public class MissedTriggerCheckerTaskTests
+public class MissedTriggerCheckerTaskTests(ITestOutputHelper outputHelper)
 {
     private const string ProjectId = "prj_1234567890";
     private const string RepositoryId = "repo_1234567890";
     private const int UpdateId1 = 1;
-
-    private readonly ITestOutputHelper outputHelper;
-
-    public MissedTriggerCheckerTaskTests(ITestOutputHelper outputHelper)
-    {
-        this.outputHelper = outputHelper ?? throw new ArgumentNullException(nameof(outputHelper));
-    }
 
     [Fact]
     public async Task CheckAsync_MissedScheduleIsDetected()

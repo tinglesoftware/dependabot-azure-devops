@@ -81,11 +81,11 @@ The script becomes:
 ```bash
 az deployment group create --resource-group DEPENDABOT \
                            --template-file main.bicep \
-                           --parameters dependabot.parameters.json \
+                           --parameters main.parameters.json \
                            --confirm-with-what-if
 ```
 
-The parameters file (`dependabot.parameters.json`):
+The parameters file (`main.parameters.json`):
 
 ```json
 {

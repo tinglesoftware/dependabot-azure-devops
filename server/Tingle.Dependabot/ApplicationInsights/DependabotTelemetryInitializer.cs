@@ -4,16 +4,9 @@ using Microsoft.ApplicationInsights.Extensibility;
 
 namespace Tingle.Dependabot.ApplicationInsights;
 
-internal class DependabotTelemetryInitializer : ITelemetryInitializer
+internal class DependabotTelemetryInitializer(IHttpContextAccessor httpContextAccessor) : ITelemetryInitializer
 {
     private const string KeyProjectId = "ProjectId";
-
-    private readonly IHttpContextAccessor httpContextAccessor;
-
-    public DependabotTelemetryInitializer(IHttpContextAccessor httpContextAccessor)
-    {
-        this.httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
-    }
 
     public void Initialize(ITelemetry telemetry)
     {

@@ -1,4 +1,4 @@
-# typed: false
+# typed: true
 # frozen_string_literal: true
 
 require "dependabot/updater/security_update_helpers"
@@ -120,7 +120,7 @@ module Dependabot
 
           # Prevent updates that don't end up fixing any security advisories,
           # blocking any updates where dependabot-core updates to a vulnerable
-          # version. This happens for npm/yarn subdendencies where Dependabot has no
+          # version. This happens for npm/yarn sub-dependencies where Dependabot has no
           # control over the target version. Related issue:
           #   https://github.com/github/dependabot-api/issues/905
           return record_security_update_not_possible_error(checker) if updated_deps.none? { |d| job.security_fix?(d) }
@@ -250,20 +250,6 @@ module Dependabot
               "dependency-removed" => dep.removed? ? true : nil
             }.compact
           end
-        end
-
-        def update_pull_request(dependency_change)
-          Dependabot.logger.info("Submitting #{dependency_change.updated_dependencies.map(&:name).join(', ')} " \
-                                 "pull request for update")
-
-          service.update_pull_request(dependency_change, dependency_snapshot.base_commit_sha)
-        end
-
-        def close_pull_request(reason:)
-          reason_string = reason.to_s.tr("_", " ")
-          Dependabot.logger.info("Telling backend to close pull request for " \
-                                 "#{job.dependencies.join(', ')} - #{reason_string}")
-          service.close_pull_request(job.dependencies, reason)
         end
       end
     end

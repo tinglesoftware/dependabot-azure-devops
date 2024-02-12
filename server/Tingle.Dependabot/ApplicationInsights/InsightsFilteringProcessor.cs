@@ -7,20 +7,13 @@ namespace Tingle.Dependabot.ApplicationInsights;
 /// <summary>
 /// Implementation of <see cref="ITelemetryProcessor"/> that filters out unneeded telemetry.
 /// </summary>
-internal class InsightsFilteringProcessor : ITelemetryProcessor
+internal class InsightsFilteringProcessor(ITelemetryProcessor next) : ITelemetryProcessor
 {
     private static readonly string[] excludedRequestNames =
     [
         "ServiceBusReceiver.Receive",
         "ServiceBusProcessor.ProcessMessage",
     ];
-
-    private readonly ITelemetryProcessor next;
-
-    public InsightsFilteringProcessor(ITelemetryProcessor next)
-    {
-        this.next = next;
-    }
 
     /// <inheritdoc/>
     public void Process(ITelemetry item)

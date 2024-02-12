@@ -4,7 +4,7 @@ This is the unofficial [dependabot](https://github.com/Dependabot/dependabot-cor
 
 ## Usage
 
-Add a configuration file stored at `.github/dependabot.yml` or  `.github/dependabot.yaml` conforming to the [official spec](https://docs.github.com/en/github/administering-a-repository/configuration-options-for-dependency-updates).
+Add a configuration file stored at `.azuredevops/dependabot.yml` or `.github/dependabot.yml` conforming to the [official spec](https://docs.github.com/en/github/administering-a-repository/configuration-options-for-dependency-updates).
 
 To use in a YAML pipeline:
 

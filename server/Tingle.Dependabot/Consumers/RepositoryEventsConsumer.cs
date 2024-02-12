@@ -6,17 +6,8 @@ using Tingle.EventBus;
 
 namespace Tingle.Dependabot.Consumers;
 
-internal class RepositoryEventsConsumer : IEventConsumer<RepositoryCreatedEvent>, IEventConsumer<RepositoryUpdatedEvent>, IEventConsumer<RepositoryDeletedEvent>
+internal class RepositoryEventsConsumer(MainDbContext dbContext, UpdateScheduler scheduler) : IEventConsumer<RepositoryCreatedEvent>, IEventConsumer<RepositoryUpdatedEvent>, IEventConsumer<RepositoryDeletedEvent>
 {
-    private readonly MainDbContext dbContext;
-    private readonly UpdateScheduler scheduler;
-
-    public RepositoryEventsConsumer(MainDbContext dbContext, UpdateScheduler scheduler)
-    {
-        this.dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-        this.scheduler = scheduler ?? throw new ArgumentNullException(nameof(scheduler));
-    }
-
     public async Task ConsumeAsync(EventContext<RepositoryCreatedEvent> context, CancellationToken cancellationToken)
     {
         var evt = context.Event;

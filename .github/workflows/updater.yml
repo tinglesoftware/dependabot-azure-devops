@@ -40,6 +40,7 @@ jobs:
         - { ecosystem: pub }
         - { ecosystem: pip }
         - { ecosystem: swift }
+        - { ecosystem: devcontainers }
         - { ecosystem: terraform }
 
     env:
@@ -55,12 +56,12 @@ jobs:
         fetch-depth: 0 # Required for GitVersion
 
     - name: Install GitVersion
-      uses: gittools/actions/gitversion/setup@v0
+      uses: gittools/actions/gitversion/setup@v0.10
       with:
         versionSpec: '5.x'
 
     - name: Determine Version
-      uses: gittools/actions/gitversion/execute@v0
+      uses: gittools/actions/gitversion/execute@v0.10
       with:
         useConfigFile: true
 

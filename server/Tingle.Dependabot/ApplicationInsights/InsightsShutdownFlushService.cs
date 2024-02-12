@@ -3,15 +3,8 @@
 namespace Tingle.Dependabot.ApplicationInsights;
 
 // from https://medium.com/@asimmon/prevent-net-application-insights-telemetry-loss-d82a06c3673f
-internal class InsightsShutdownFlushService : IHostedService
+internal class InsightsShutdownFlushService(TelemetryClient telemetryClient) : IHostedService
 {
-    private readonly TelemetryClient telemetryClient;
-
-    public InsightsShutdownFlushService(TelemetryClient telemetryClient)
-    {
-        this.telemetryClient = telemetryClient ?? throw new ArgumentNullException(nameof(telemetryClient));
-    }
-
     public Task StartAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
     public async Task StopAsync(CancellationToken cancellationToken)

@@ -35,6 +35,7 @@ require "dependabot/nuget"
 require "dependabot/python"
 require "dependabot/pub"
 require "dependabot/swift"
+require "dependabot/devcontainers"
 require "dependabot/terraform"
 
 require_relative "azure_helpers"

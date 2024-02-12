@@ -7,19 +7,8 @@ using Tingle.PeriodicTasks;
 
 namespace Tingle.Dependabot.PeriodicTasks;
 
-internal class UpdateJobsCleanerTask : IPeriodicTask
+internal class UpdateJobsCleanerTask(MainDbContext dbContext, IEventPublisher publisher, ILogger<MissedTriggerCheckerTask> logger) : IPeriodicTask
 {
-    private readonly MainDbContext dbContext;
-    private readonly IEventPublisher publisher;
-    private readonly ILogger logger;
-
-    public UpdateJobsCleanerTask(MainDbContext dbContext, IEventPublisher publisher, ILogger<MissedTriggerCheckerTask> logger)
-    {
-        this.dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-        this.publisher = publisher ?? throw new ArgumentNullException(nameof(publisher));
-        this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
-
     public async Task ExecuteAsync(PeriodicTaskExecutionContext context, CancellationToken cancellationToken)
     {
         await CleanupAsync(cancellationToken);

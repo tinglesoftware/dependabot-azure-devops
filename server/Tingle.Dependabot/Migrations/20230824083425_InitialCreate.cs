@@ -73,6 +73,7 @@ public partial class InitialCreate : Migration
                 Directory = table.Column<string>(type: "nvarchar(450)", nullable: false),
                 Resources_Cpu = table.Column<double>(type: "float", nullable: false),
                 Resources_Memory = table.Column<double>(type: "float", nullable: false),
+                UpdaterImage = table.Column<string>(type: "nvarchar(max)", nullable: true),
                 AuthKey = table.Column<string>(type: "nvarchar(450)", nullable: false),
                 Start = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
                 End = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),

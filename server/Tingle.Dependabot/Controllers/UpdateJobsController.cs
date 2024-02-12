@@ -15,19 +15,8 @@ namespace Tingle.Dependabot.Controllers;
 [ApiController]
 [Route("/update_jobs")]
 [Authorize(AuthConstants.PolicyNameUpdater)]
-public class UpdateJobsController : ControllerBase // TODO: unit and integration test this
+public class UpdateJobsController(MainDbContext dbContext, IEventPublisher publisher, ILogger<UpdateJobsController> logger) : ControllerBase // TODO: unit and integration test this
 {
-    private readonly MainDbContext dbContext;
-    private readonly IEventPublisher publisher;
-    private readonly ILogger logger;
-
-    public UpdateJobsController(MainDbContext dbContext, IEventPublisher publisher, ILogger<UpdateJobsController> logger)
-    {
-        this.dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-        this.publisher = publisher ?? throw new ArgumentNullException(nameof(publisher));
-        this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
-
     // TODO: implement logic for *pull_request endpoints
 
     [HttpPost("{id}/create_pull_request")]
@@ -37,7 +26,7 @@ public class UpdateJobsController : ControllerBase // TODO: unit and integration
         var repository = await dbContext.Repositories.SingleAsync(r => r.Id == job.RepositoryId);
         var project = await dbContext.Projects.SingleAsync(p => p.Id == job.ProjectId);
 
-        logger.LogInformation("Received request to create a pull request from job {JobId} but we did nothing.\r\n{ModelJson}", id, JsonSerializer.Serialize(model));
+        logger.LogInformation("Received request to create a pull request from job {JobId} but we did nothing.\r\n{ModelJson}", id.Replace(Environment.NewLine, ""), JsonSerializer.Serialize(model));
         return Ok();
     }
 
@@ -48,7 +37,7 @@ public class UpdateJobsController : ControllerBase // TODO: unit and integration
         var repository = await dbContext.Repositories.SingleAsync(r => r.Id == job.RepositoryId);
         var project = await dbContext.Projects.SingleAsync(p => p.Id == job.ProjectId);
 
-        logger.LogInformation("Received request to update a pull request from job {JobId} but we did nothing.\r\n{ModelJson}", id, JsonSerializer.Serialize(model));
+        logger.LogInformation("Received request to update a pull request from job {JobId} but we did nothing.\r\n{ModelJson}", id.Replace(Environment.NewLine, ""), JsonSerializer.Serialize(model));
         return Ok();
     }
 
@@ -59,7 +48,7 @@ public class UpdateJobsController : ControllerBase // TODO: unit and integration
         var repository = await dbContext.Repositories.SingleAsync(r => r.Id == job.RepositoryId);
         var project = await dbContext.Projects.SingleAsync(p => p.Id == job.ProjectId);
 
-        logger.LogInformation("Received request to close a pull request from job {JobId} but we did nothing.\r\n{ModelJson}", id, JsonSerializer.Serialize(model));
+        logger.LogInformation("Received request to close a pull request from job {JobId} but we did nothing.\r\n{ModelJson}", id.Replace(Environment.NewLine, ""), JsonSerializer.Serialize(model));
         return Ok();
     }
 
@@ -128,7 +117,7 @@ public class UpdateJobsController : ControllerBase // TODO: unit and integration
     public async Task<IActionResult> RecordEcosystemVersionsAsync([FromRoute, Required] string id, [FromBody] JsonNode model)
     {
         var job = await dbContext.UpdateJobs.SingleAsync(j => j.Id == id);
-        logger.LogInformation("Received request to record ecosystem version from job {JobId} but we did nothing.\r\n{ModelJson}", id, model.ToJsonString());
+        logger.LogInformation("Received request to record ecosystem version from job {JobId} but we did nothing.\r\n{ModelJson}", id.Replace(Environment.NewLine, ""), model.ToJsonString());
         return Ok();
     }
 
@@ -136,7 +125,7 @@ public class UpdateJobsController : ControllerBase // TODO: unit and integration
     public async Task<IActionResult> IncrementMetricAsync([FromRoute, Required] string id, [FromBody] JsonNode model)
     {
         var job = await dbContext.UpdateJobs.SingleAsync(j => j.Id == id);
-        logger.LogInformation("Received metrics from job {JobId} but we did nothing with them.\r\n{ModelJson}", id, model.ToJsonString());
+        logger.LogInformation("Received metrics from job {JobId} but we did nothing with them.\r\n{ModelJson}", id.Replace(Environment.NewLine, ""), model.ToJsonString());
         return Ok();
     }
 }

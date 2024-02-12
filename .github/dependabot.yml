@@ -12,15 +12,22 @@ updates:
     time: "04:00"
   open-pull-requests-limit: 10
 
+- package-ecosystem: "devcontainers" # See documentation for possible values
+  directory: "/" # Location of package manifests
+  schedule:
+    interval: "weekly"
+    time: "04:00"
+  open-pull-requests-limit: 10
+
 - package-ecosystem: "bundler" # See documentation for possible values
   directory: "/updater" # Location of package manifests
   schedule:
     interval: "weekly"
     time: "04:00"
   open-pull-requests-limit: 10
-  ignore:
-  - dependency-name: "rubocop*"
-    update-types: ["version-update:semver-patch"]
+  groups:
+    rubocop:
+      patterns: ["*rubocop*"]
 
 - package-ecosystem: "docker" # See documentation for possible values
   directory: "/updater" # Location of package manifests
@@ -46,7 +53,7 @@ updates:
       patterns:
       - "Tingle.AspNetCore.*"
       - "Tingle.Extensions.*"
-    xuint:
+    xunit:
       patterns: ["Xunit*"]
 
 - package-ecosystem: "npm" # See documentation for possible values
@@ -55,10 +62,10 @@ updates:
     interval: "weekly"
     time: "04:00"
   open-pull-requests-limit: 10
-  ignore:
-  - dependency-name: "axios"
-    update-types: ["version-update:semver-patch"]
-  - dependency-name: "jest"
-    update-types: ["version-update:semver-patch"]
-  - dependency-name: "@types/*"
-    update-types: ["version-update:semver-patch"]
+  groups:
+    jest:
+      patterns: ["*jest*"]
+    js-yaml:
+      patterns: ["*js-yaml*"]
+    js-ts-types:
+      patterns: ["@types/*"]

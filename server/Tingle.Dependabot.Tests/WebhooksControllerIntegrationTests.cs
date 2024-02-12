@@ -17,16 +17,9 @@ using Xunit.Abstractions;
 
 namespace Tingle.Dependabot.Tests;
 
-public class WebhooksControllerIntegrationTests
+public class WebhooksControllerIntegrationTests(ITestOutputHelper outputHelper)
 {
     private const string ProjectId = "prj_1234567890";
-
-    private readonly ITestOutputHelper outputHelper;
-
-    public WebhooksControllerIntegrationTests(ITestOutputHelper outputHelper)
-    {
-        this.outputHelper = outputHelper ?? throw new ArgumentNullException(nameof(outputHelper));
-    }
 
     [Fact]
     public async Task Returns_Unauthorized()
@@ -211,14 +204,12 @@ public class WebhooksControllerIntegrationTests
                 services.AddAuthentication()
                         .AddBasic<BasicUserValidationService>(AuthConstants.SchemeNameServiceHooks, options => options.Realm = "Dependabot");
 
-                services.AddAuthorization(options =>
-                {
-                    options.AddPolicy(AuthConstants.PolicyNameServiceHooks, policy =>
-                    {
-                        policy.AddAuthenticationSchemes(AuthConstants.SchemeNameServiceHooks)
-                              .RequireAuthenticatedUser();
-                    });
-                });
+                services.AddAuthorizationBuilder()
+                        .AddPolicy(AuthConstants.PolicyNameServiceHooks, policy =>
+                        {
+                            policy.AddAuthenticationSchemes(AuthConstants.SchemeNameServiceHooks)
+                                  .RequireAuthenticatedUser();
+                        });
 
                 services.AddEventBus(builder => builder.AddInMemoryTransport().AddInMemoryTestHarness());
             })

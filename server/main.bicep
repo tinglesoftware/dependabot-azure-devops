@@ -107,6 +107,10 @@ resource appConfiguration 'Microsoft.AppConfiguration/configurationStores@2023-0
       '${managedIdentity.id}': {/*ttk bug*/ }
     }
   }
+
+  // override the default updater image tag for nuget jobs
+  // TODO: remove this here and on Azure once the authentication issues are resolved (https://github.com/tinglesoftware/dependabot-azure-devops/issues/921)
+  resource nugetVersion 'keyValues' = { name: 'Workflow:UpdaterImageTags:nuget$Production', properties: { value: '1.24' } }
 }
 
 /* Storage Account */
