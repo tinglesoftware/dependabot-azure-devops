@@ -452,9 +452,7 @@ end
 ####################################################
 # Setup the hostname, protocol and port to be used #
 ####################################################
-# $options[:azure_port] = ENV["AZURE_PORT"] || ($options[:azure_protocol] == "http" ? "80" : "443")
 $api_endpoint = "#{$options[:azure_protocol]}://#{$options[:azure_hostname]}
-# :#{$options[:azure_port]}/"
 unless $options[:azure_virtual_directory].empty?
   $api_endpoint = $api_endpoint + "#{$options[:azure_virtual_directory]}/"
 end
