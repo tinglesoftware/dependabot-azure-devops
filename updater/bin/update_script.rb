@@ -483,6 +483,7 @@ puts "Debug 0"
 puts "Debug 1 #{$options[:directory]}"
 puts "Debug 2 #{$options[:vendor_dependencies]}"
 puts "Debug 3 #{Dependabot::Utils.always_clone_for_package_manager?($package_manager)}"
+puts "Debug 4 #{$options[:credentials]}"
 ##############################
 # Fetch the dependency files #
 ##############################
