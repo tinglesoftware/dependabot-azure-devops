@@ -474,7 +474,7 @@ $update_config = Dependabot::Config::UpdateConfig.new(
   ignore_conditions: $options[:ignore_conditions],
   commit_message_options: $options[:commit_message_options]
 )
-
+Excon.defaults[:ssl_verify_peer] = false
 if $options[:requirements_update_strategy]
   puts "Using '#{$options[:requirements_update_strategy]}' requirements update strategy"
 end
