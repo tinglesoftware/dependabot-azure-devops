@@ -452,7 +452,7 @@ end
 ####################################################
 # Setup the hostname, protocol and port to be used #
 ####################################################
-$api_endpoint = "#{$options[:azure_protocol]}://#{$options[:azure_hostname]}:#{$options[:azure_port]}/"
+$api_endpoint = "#{$options[:azure_protocol]}://#{$options[:azure_hostname]}/"
 # Full name of the repo targeted.
 $repo_name = "#{$options[:azure_organization]}/#{$options[:azure_project]}/_git/#{$options[:azure_repository]}"
 puts "Using '#{$api_endpoint}' as API endpoint"
@@ -478,8 +478,7 @@ $update_config = Dependabot::Config::UpdateConfig.new(
 if $options[:requirements_update_strategy]
   puts "Using '#{$options[:requirements_update_strategy]}' requirements update strategy"
 end
-
-    DEPENDABOT_DIRECTORY
+    
 puts "Debug 0"
 puts "Debug 1 #{$options[:directory]}"
 puts "Debug 2 #{$options[:vendor_dependencies]}"
