@@ -35,7 +35,6 @@ require "dependabot/nuget"
 require "dependabot/python"
 require "dependabot/pub"
 require "dependabot/swift"
-require "dependabot/devcontainers"
 require "dependabot/terraform"
 
 require_relative "azure_helpers"
@@ -452,7 +451,13 @@ end
 ####################################################
 # Setup the hostname, protocol and port to be used #
 ####################################################
+$options[:azure_port] = ""
+# ENV["AZURE_PORT"] || ($options[:azure_protocol] == "http" ? "80" : "443")
 $api_endpoint = "#{$options[:azure_protocol]}://#{$options[:azure_hostname]}/"
+# $api_endpoint = "#{$options[:azure_protocol]}://#{$options[:azure_hostname]}:#{$options[:azure_port]}/"
+unless $options[:azure_virtual_directory].empty?
+  $api_endpoint = $api_endpoint + "#{$options[:azure_virtual_directory]}/"
+end
 # Full name of the repo targeted.
 $repo_name = "#{$options[:azure_organization]}/#{$options[:azure_project]}/_git/#{$options[:azure_repository]}"
 puts "Using '#{$api_endpoint}' as API endpoint"
@@ -469,41 +474,50 @@ $source = Dependabot::Source.new(
   branch: $options[:branch]
 )
 
+Excon.defaults[:ssl_verify_peer] = false
 ## Create the update configuration (we no longer parse the file because of BOM and type issues)
 $update_config = Dependabot::Config::UpdateConfig.new(
   ignore_conditions: $options[:ignore_conditions],
   commit_message_options: $options[:commit_message_options]
 )
-Excon.defaults[:ssl_verify_peer] = false
+
 if $options[:requirements_update_strategy]
   puts "Using '#{$options[:requirements_update_strategy]}' requirements update strategy"
 end
-    
-puts "Debug 0"
-puts "Debug 1 #{$options[:directory]}"
-puts "Debug 2 #{$options[:vendor_dependencies]}"
-puts "Debug 3 #{Dependabot::Utils.always_clone_for_package_manager?($package_manager)}"
-puts "Debug 4 #{$options[:credentials]}"
+
 ##############################
 # Fetch the dependency files #
 ##############################
-clone = $options[:vendor_dependencies] || Dependabot::Utils.always_clone_for_package_manager?($package_manager)
-$options[:repo_contents_path] ||= File.expand_path(File.join("tmp", $repo_name.split("/"))) if clone
-fetcher_args = {
+
+puts "Fetching #{$package_manager} dependency files for #{$repo_name}"
+fetcher = Dependabot::FileFetchers.for_package_manager($package_manager).new(
   source: $source,
   credentials: $options[:credentials],
   repo_contents_path: $options[:repo_contents_path],
   options: $options[:updater_options]
-}
-fetcher = Dependabot::FileFetchers.for_package_manager($package_manager).new(**fetcher_args)
-if clone
-  puts "Cloning repository into #{$options[:repo_contents_path]}"
-  fetcher.clone_repo_contents
-else
-  puts "Fetching #{$package_manager} dependency files ..."
-end
+)
+
 files = fetcher.files
 commit = fetcher.commit
+
+# clone = $options[:vendor_dependencies] || Dependabot::Utils.always_clone_for_package_manager?($package_manager)
+# $options[:repo_contents_path] ||= File.expand_path(File.join("tmp", $repo_name.split("/"))) if clone
+# fetcher_args = {
+#   source: $source,
+#   credentials: $options[:credentials],
+#   repo_contents_path: $options[:repo_contents_path],
+#   options: $options[:updater_options]
+# }
+# fetcher = Dependabot::FileFetchers.for_package_manager($package_manager).new(**fetcher_args)
+
+# if clone
+#   puts "Cloning repository into #{$options[:repo_contents_path]}"
+#   fetcher.clone_repo_contents
+# else
+#   puts "Fetching #{$package_manager} dependency files ..."
+# end
+# files = fetcher.files
+# commit = fetcher.commit
 puts "Found #{files.length} dependency file(s) at commit #{commit}"
 files.each { |f| puts " - #{f.path}" }
 
