@@ -484,6 +484,11 @@ if $options[:requirements_update_strategy]
   puts "Using '#{$options[:requirements_update_strategy]}' requirements update strategy"
 end
 
+    DEPENDABOT_DIRECTORY
+puts "Debug 0"
+puts "Debug 1 #{$options[:directory]}"
+puts "Debug 2 #{$options[:vendor_dependencies]}"
+puts "Debug 3 #{Dependabot::Utils.always_clone_for_package_manager?($package_manager)}"
 ##############################
 # Fetch the dependency files #
 ##############################
