@@ -1,5 +1,5 @@
 {
     "id":"dependabot-dev",
-    "version": "#{GITVERSION_MAJORMINORPATCH}#.#{GITHUB_RUN_NUMBER}#",
+    "version": "#{MAJOR_MINOR_PATCH}#.#{BUILD_NUMBER}#",
     "name": "Dependabot (Dev)"
 }

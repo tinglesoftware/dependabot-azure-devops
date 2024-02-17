@@ -32,13 +32,13 @@ jobs:
         fetch-depth: 0 # Required for GitVersion
 
     - name: Install GitVersion
-      uses: gittools/actions/gitversion/setup@v0.10
+      uses: gittools/actions/gitversion/setup@v0
       with:
         versionSpec: '5.x'
 
     - name: Determine Version
       id: gitversion
-      uses: gittools/actions/gitversion/execute@v0.10
+      uses: gittools/actions/gitversion/execute@v0
       with:
         useConfigFile: true
 
@@ -70,6 +70,9 @@ jobs:
       uses: cschleiden/replace-tokens@v1
       with:
         files: '["${{ github.workspace }}/extension/overrides*.json"]'
+      env:
+        MAJOR_MINOR_PATCH: ${{ steps.gitversion.outputs.majorMinorPatch }}
+        BUILD_NUMBER: ${{ github.run_number }}
 
     - name: Update values in extension/task/task.json
       run: |
@@ -82,18 +85,18 @@ jobs:
         tfx extension create
         --root extension
         --manifest-globs vss-extension.json
-        --output-path $GITHUB_WORKSPACE/drop/dev
+        --output-path ${{ github.workspace }}/drop/dev
         --json5
-        --overrides-file $GITHUB_WORKSPACE/extension/overrides.dev.json
+        --overrides-file ${{ github.workspace }}/extension/overrides.dev.json
 
     - name: Create Extension (prod)
       run: >
         tfx extension create
         --root extension
         --manifest-globs vss-extension.json
-        --output-path $GITHUB_WORKSPACE/drop/prod
+        --output-path ${{ github.workspace }}/drop/prod
         --json5
-        --overrides-file $GITHUB_WORKSPACE/extension/overrides.prod.json
+        --overrides-file ${{ github.workspace }}/extension/overrides.prod.json
 
     - name: Publish Artifact
       uses: actions/upload-artifact@v4
@@ -132,7 +135,7 @@ jobs:
       if: github.ref == 'refs/heads/main'
       run: >
         tfx extension publish
-        --vsix $GITHUB_WORKSPACE/dev/*.vsix
+        --vsix ${{ github.workspace }}/dev/*.vsix
         --auth-type pat
         --token ${{ secrets.AZURE_DEVOPS_EXTENSION_TOKEN }}
         --share-with tingle
@@ -141,6 +144,6 @@ jobs:
       if: startsWith(github.ref, 'refs/tags/')
       run: >
         tfx extension publish
-        --vsix $GITHUB_WORKSPACE/prod/*.vsix
+        --vsix ${{ github.workspace }}/prod/*.vsix
         --auth-type pat
         --token ${{ secrets.AZURE_DEVOPS_EXTENSION_TOKEN }}

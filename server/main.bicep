@@ -14,7 +14,7 @@ param githubToken string = ''
 
 @minLength(1)
 @description('Tag of the docker images.')
-param imageTag string = '#{GITVERSION_NUGETVERSIONV2}#'
+param imageTag string = '#{IMAGE_TAG}#'
 
 var fileShares = [
   { name: 'certs' }
