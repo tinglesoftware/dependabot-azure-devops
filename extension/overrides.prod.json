@@ -1,4 +1,4 @@
 {
-    "version": "#{GITVERSION_MAJORMINORPATCH}#.#{GITHUB_RUN_NUMBER}#",
+    "version": "#{MAJOR_MINOR_PATCH}#.#{BUILD_NUMBER}#",
     "public": true
 }
