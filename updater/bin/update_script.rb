@@ -486,7 +486,7 @@ end
 ##############################
 # Fetch the dependency files #
 ##############################
-clone = $options[:vendor_dependencies] || Dependabot::Utils.always_clone_for_package_manager?($package_manager)
+clone = true
 $options[:repo_contents_path] ||= File.expand_path(File.join("tmp", $repo_name.split("/"))) if clone
 fetcher_args = {
   source: $source,
