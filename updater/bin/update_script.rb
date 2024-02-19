@@ -63,7 +63,7 @@ $options = {
   reviewers: nil, # nil instead of empty array to avoid API rejection
   assignees: nil, # nil instead of empty array to avoid API rejection
   branch_name_separator: ENV["DEPENDABOT_BRANCH_NAME_SEPARATOR"] || "/", # Separator used for created branches.
-  milestone: ENV["DEPENDABOT_MILESTONE"] || nil, # Get the work item to attach
+  milestone: ENV["DEPENDABOT_MILESTONE"].to_i || nil, # Get the work item to attach
   vendor_dependencies: ENV["DEPENDABOT_VENDOR"] == "true",
   repo_contents_path: ENV["DEPENDABOT_REPO_CONTENTS_PATH"] || nil,
   updater_options: {},
