@@ -46,8 +46,7 @@ require_relative "vulnerabilities"
 # https://github.com/dependabot/dependabot-core/blob/main/bin/dry-run.rb
 
 $options = {
-  credentials: [],
-  credentials_converted: [Dependabot::Credential],
+  credentials: [Dependabot::Credential],
   provider: "azure",
 
   directory: ENV["DEPENDABOT_DIRECTORY"] || "/", # Directory where the base dependency files are.
@@ -141,7 +140,8 @@ $package_manager = PACKAGE_ECOSYSTEM_MAPPING.fetch($package_manager, $package_ma
 # Add GitHub Access Token (PAT) to avoid rate limiting, #
 # Setup extra credentials                               #
 ########################################################
-$options[:credentials] << {
+credentials_hash = []
+credentials_hash << {
   "type" => "git_source",
   "host" => $options[:azure_hostname],
   "username" => ENV["AZURE_ACCESS_USERNAME"] || "x-access-token",
@@ -152,7 +152,7 @@ $vulnerabilities_fetcher = nil
 unless ENV["GITHUB_ACCESS_TOKEN"].to_s.strip.empty?
   puts "GitHub access token has been provided."
   github_token = ENV.fetch("GITHUB_ACCESS_TOKEN", nil) # A GitHub access token with read access to public repos
-  $options[:credentials] << {
+  credentials_hash << {
     "type" => "git_source",
     "host" => "github.com",
     "username" => "x-access-token",
@@ -164,13 +164,13 @@ end
 # DEPENDABOT_EXTRA_CREDENTIALS, for example:
 # "[{\"type\":\"npm_registry\",\"registry\":\"registry.npmjs.org\",\"token\":\"123\"}]"
 unless ENV["DEPENDABOT_EXTRA_CREDENTIALS"].to_s.strip.empty?
-  $options[:credentials] += JSON.parse(ENV.fetch("DEPENDABOT_EXTRA_CREDENTIALS", nil))
+  credentials_hash += JSON.parse(ENV.fetch("DEPENDABOT_EXTRA_CREDENTIALS", nil))
 end
 
 ##################################################
 # Convert the raw credentials to a usable format #
 ##################################################
-$options[:credentials_converted] = $options[:credentials].map do |cred|
+$options[:credentials] = credentials_hash.map do |cred|
   Dependabot::Credential.new(cred)
 end
 
@@ -343,7 +343,7 @@ def update_checker_for(dependency, files, security_advisories)
   Dependabot::UpdateCheckers.for_package_manager($package_manager).new(
     dependency: dependency,
     dependency_files: files,
-    credentials: $options[:credentials_converted],
+    credentials: $options[:credentials],
     requirements_update_strategy: $options[:requirements_update_strategy],
     ignored_versions: ignored_versions_for(dependency),
     security_advisories: security_advisories,
@@ -537,7 +537,7 @@ dependencies.select(&:top_level?).each { |d| puts " - #{d.name} (#{d.version})" 
 ################################################
 azure_client = Dependabot::Clients::Azure.for_source(
   source: $source,
-  credentials: $options[:credentials_converted]
+  credentials: $options[:credentials]
 )
 user_id = azure_client.get_user_id
 target_branch_name = $options[:branch] || azure_client.fetch_default_branch($source.repo)
@@ -664,7 +664,7 @@ dependencies.select(&:top_level?).each do |dep|
       dependencies: updated_deps,
       dependency_files: files,
       repo_contents_path: $options[:repo_contents_path],
-      credentials: $options[:credentials_converted],
+      credentials: $options[:credentials],
       options: $options[:updater_options]
     )
 
@@ -675,7 +675,7 @@ dependencies.select(&:top_level?).each do |dep|
       source: $source,
       dependencies: updated_deps,
       files: updated_files,
-      credentials: $options[:credentials_converted],
+      credentials: $options[:credentials],
       commit_message_options: $update_config.commit_message_options.to_h,
       # pr_message_header: ,
       # pr_message_footer: ,
@@ -794,7 +794,7 @@ dependencies.select(&:top_level?).each do |dep|
         base_commit: commit,
         old_commit: conflict_pull_request_commit,
         files: updated_files,
-        credentials: $options[:credentials_converted],
+        credentials: $options[:credentials],
         pull_request_number: conflict_pull_request_id,
         author_details: $options[:author_details]
       )
@@ -812,7 +812,7 @@ dependencies.select(&:top_level?).each do |dep|
         base_commit: commit,
         dependencies: updated_deps,
         files: updated_files,
-        credentials: $options[:credentials_converted],
+        credentials: $options[:credentials],
         author_details: $options[:author_details],
         commit_message_options: $update_config.commit_message_options.to_h,
         custom_labels: $options[:custom_labels],
