@@ -81,7 +81,7 @@ jobs:
 
     - name: Pull Docker base image & warm Docker cache
       run: docker pull "ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest"
-      # TODO: remove this after at least one release tagged 'latest'
+      # remove this after at least one release tagged 'latest'
       continue-on-error: true
 
     - name: Build image
