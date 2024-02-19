@@ -11,6 +11,7 @@ Dependabot.logger = Logger.new($stdout)
 # ensure logs are output immediately. Useful when running in certain hosts like ContainerGroups
 $stdout.sync = true
 
+require "dependabot/credential"
 require "dependabot/file_fetchers"
 require "dependabot/file_parsers"
 require "dependabot/update_checkers"
@@ -46,6 +47,7 @@ require_relative "vulnerabilities"
 
 $options = {
   credentials: [],
+  credentials_converted: [Dependabot::Credential],
   provider: "azure",
 
   directory: ENV["DEPENDABOT_DIRECTORY"] || "/", # Directory where the base dependency files are.
@@ -163,6 +165,13 @@ end
 # "[{\"type\":\"npm_registry\",\"registry\":\"registry.npmjs.org\",\"token\":\"123\"}]"
 unless ENV["DEPENDABOT_EXTRA_CREDENTIALS"].to_s.strip.empty?
   $options[:credentials] += JSON.parse(ENV.fetch("DEPENDABOT_EXTRA_CREDENTIALS", nil))
+end
+
+##################################################
+# Convert the raw credentials to a usable format #
+##################################################
+$options[:credentials_converted] = $options[:credentials].map do |cred|
+  Dependabot::Credential.new(cred)
 end
 
 ##########################################
@@ -528,7 +537,7 @@ dependencies.select(&:top_level?).each { |d| puts " - #{d.name} (#{d.version})" 
 ################################################
 azure_client = Dependabot::Clients::Azure.for_source(
   source: $source,
-  credentials: $options[:credentials]
+  credentials: $options[:credentials_converted]
 )
 user_id = azure_client.get_user_id
 target_branch_name = $options[:branch] || azure_client.fetch_default_branch($source.repo)
@@ -655,7 +664,7 @@ dependencies.select(&:top_level?).each do |dep|
       dependencies: updated_deps,
       dependency_files: files,
       repo_contents_path: $options[:repo_contents_path],
-      credentials: $options[:credentials],
+      credentials: $options[:credentials_converted],
       options: $options[:updater_options]
     )
 
@@ -666,7 +675,7 @@ dependencies.select(&:top_level?).each do |dep|
       source: $source,
       dependencies: updated_deps,
       files: updated_files,
-      credentials: $options[:credentials],
+      credentials: $options[:credentials_converted],
       commit_message_options: $update_config.commit_message_options.to_h,
       # pr_message_header: ,
       # pr_message_footer: ,
@@ -785,7 +794,7 @@ dependencies.select(&:top_level?).each do |dep|
         base_commit: commit,
         old_commit: conflict_pull_request_commit,
         files: updated_files,
-        credentials: $options[:credentials],
+        credentials: $options[:credentials_converted],
         pull_request_number: conflict_pull_request_id,
         author_details: $options[:author_details]
       )
@@ -803,7 +812,7 @@ dependencies.select(&:top_level?).each do |dep|
         base_commit: commit,
         dependencies: updated_deps,
         files: updated_files,
-        credentials: $options[:credentials],
+        credentials: $options[:credentials_converted],
         author_details: $options[:author_details],
         commit_message_options: $update_config.commit_message_options.to_h,
         custom_labels: $options[:custom_labels],
