@@ -343,7 +343,7 @@ def update_checker_for(dependency, files, security_advisories)
   Dependabot::UpdateCheckers.for_package_manager($package_manager).new(
     dependency: dependency,
     dependency_files: files,
-    credentials: $options[:credentials],
+    credentials: $options[:credentials_converted],
     requirements_update_strategy: $options[:requirements_update_strategy],
     ignored_versions: ignored_versions_for(dependency),
     security_advisories: security_advisories,
