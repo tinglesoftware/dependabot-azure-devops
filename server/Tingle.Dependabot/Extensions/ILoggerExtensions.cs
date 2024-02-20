@@ -66,7 +66,7 @@ internal static partial class ILoggerExtensions
     [LoggerMessage(400, LogLevel.Debug, "Creating/Updating schedules for repository '{RepositoryId}' in project '{ProjectId}'")]
     public static partial void SchedulesUpdating(this ILogger logger, string? repositoryId, string? projectId);
 
-    [LoggerMessage(401, LogLevel.Error, "Timer call back does not have correct argument. Exepected '{ExpectedType}' but got '{ActualType}'")]
+    [LoggerMessage(401, LogLevel.Error, "Timer call back does not have correct argument. Expected '{ExpectedType}' but got '{ActualType}'")]
     public static partial void SchedulesTimerInvalidCallbackArgument(this ILogger logger, string? expectedType, string? actualType);
 
     [LoggerMessage(402, LogLevel.Warning, "Schedule was missed for {RepositoryId}({UpdateId}) in project '{ProjectId}'. Triggering now ...")]

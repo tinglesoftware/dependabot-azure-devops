@@ -22,7 +22,7 @@
       "type": "string",
       "defaultValue": "[[]",
       "metadata": {
-        "description": "JSON array string fo projects to setup. E.g. [{\"url\":\"https://dev.azure.com/tingle/dependabot\",\"token\":\"dummy\",\"AutoComplete\":true}]"
+        "description": "JSON array string for projects to setup. E.g. [{\"url\":\"https://dev.azure.com/tingle/dependabot\",\"token\":\"dummy\",\"AutoComplete\":true}]"
       }
     },
     "githubToken": {

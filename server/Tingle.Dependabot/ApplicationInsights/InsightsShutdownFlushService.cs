@@ -13,7 +13,7 @@ internal class InsightsShutdownFlushService(TelemetryClient telemetryClient) : I
         // Using "CancellationToken.None" ensures that the application doesn't stop until the telemetry data is flushed.
         //
         // If you want to use the "cancellationToken" argument, make sure to configure "HostOptions.ShutdownTimeout" with a sufficiently large duration,
-        // and silence the eventual "OperationCanceledException" exception. Otherwise, you will still be at risk of loosing telemetry data.
+        // and silence the eventual "OperationCanceledException" exception. Otherwise, you will still be at risk of losing telemetry data.
         var successfullyFlushed = await telemetryClient.FlushAsync(CancellationToken.None);
         if (!successfullyFlushed)
         {
