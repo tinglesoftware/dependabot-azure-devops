@@ -6,7 +6,7 @@ param location string = resourceGroup().location
 @description('Name of the resources. Make sure it is unique e.g. dependabotcontoso to avoid conflicts or failures')
 param name string = 'dependabot'
 
-@description('JSON array string fo projects to setup. E.g. [{"url":"https://dev.azure.com/tingle/dependabot","token":"dummy","AutoComplete":true}]')
+@description('JSON array string for projects to setup. E.g. [{"url":"https://dev.azure.com/tingle/dependabot","token":"dummy","AutoComplete":true}]')
 param projectSetups string = '[]'
 
 @description('Access token for authenticating requests to GitHub.')
