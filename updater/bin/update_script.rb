@@ -46,7 +46,7 @@ require_relative "vulnerabilities"
 # https://github.com/dependabot/dependabot-core/blob/main/bin/dry-run.rb
 
 $options = {
-  credentials: [Dependabot::Credential],
+  credentials: [],
   provider: "azure",
 
   directory: ENV["DEPENDABOT_DIRECTORY"] || "/", # Directory where the base dependency files are.
@@ -140,38 +140,34 @@ $package_manager = PACKAGE_ECOSYSTEM_MAPPING.fetch($package_manager, $package_ma
 # Add GitHub Access Token (PAT) to avoid rate limiting, #
 # Setup extra credentials                               #
 ########################################################
-credentials_hash = []
-credentials_hash << {
+$options[:credentials] << Dependabot::Credential.new({
   "type" => "git_source",
   "host" => $options[:azure_hostname],
   "username" => ENV["AZURE_ACCESS_USERNAME"] || "x-access-token",
   "password" => ENV.fetch("AZURE_ACCESS_TOKEN", nil)
-}
+})
 
 $vulnerabilities_fetcher = nil
 unless ENV["GITHUB_ACCESS_TOKEN"].to_s.strip.empty?
   puts "GitHub access token has been provided."
   github_token = ENV.fetch("GITHUB_ACCESS_TOKEN", nil) # A GitHub access token with read access to public repos
-  credentials_hash << {
+  $options[:credentials] << Dependabot::Credential.new({
     "type" => "git_source",
     "host" => "github.com",
     "username" => "x-access-token",
     "password" => github_token
-  }
+  })
   $vulnerabilities_fetcher =
     Dependabot::Vulnerabilities::Fetcher.new($package_manager, github_token)
 end
 # DEPENDABOT_EXTRA_CREDENTIALS, for example:
 # "[{\"type\":\"npm_registry\",\"registry\":\"registry.npmjs.org\",\"token\":\"123\"}]"
 unless ENV["DEPENDABOT_EXTRA_CREDENTIALS"].to_s.strip.empty?
-  credentials_hash += JSON.parse(ENV.fetch("DEPENDABOT_EXTRA_CREDENTIALS", nil))
-end
-
-##################################################
-# Convert the raw credentials to a usable format #
-##################################################
-$options[:credentials] = credentials_hash.map do |cred|
-  Dependabot::Credential.new(cred)
+  $options[:credentials].concat(
+    JSON.parse(ENV.fetch("DEPENDABOT_EXTRA_CREDENTIALS", nil)).map do |cred|
+      Dependabot::Credential.new(cred)
+    end
+  )
 end
 
 ##########################################
