@@ -65,7 +65,7 @@ jobs:
         IMAGE_TAG: ${{ steps.gitversion.outputs.nuGetVersionV2 }}
 
     - name: Build bicep file
-      uses: azure/cli@v1
+      uses: azure/cli@v2
       with:
         inlineScript: |
           cp ${{ github.workspace }}/server/main.bicep ${{ github.workspace }}/drop/main.bicep && \
