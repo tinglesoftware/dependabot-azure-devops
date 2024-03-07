@@ -321,6 +321,13 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
             memory: '0.5Gi'
           }
           probes: [
+            {
+              type: 'Startup'
+              httpGet: { port: 8080, path: '/liveness' }
+              initialDelaySeconds: 10
+              timeoutSeconds: 100
+              failureThreshold: 10
+            }
             { type: 'Liveness', httpGet: { port: 8080, path: '/liveness' } }
             {
               type: 'Readiness'
