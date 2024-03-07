@@ -101,7 +101,7 @@ jobs:
         --json5
         --overrides-file ${{ github.workspace }}/extension/overrides.prod.json
 
-    - name: Publish Artifact
+    - name: Upload Artifact (drop)
       uses: actions/upload-artifact@v4
       with:
         path: ${{ github.workspace }}/drop/*

@@ -78,7 +78,7 @@ jobs:
           cp ${{ github.workspace }}/server/main.bicep ${{ github.workspace }}/drop/main.bicep && \
           az bicep build --file server/main.bicep --outfile ${{ github.workspace }}/drop/main.json
 
-    - name: Publish Artifact
+    - name: Upload Artifact (drop)
       uses: actions/upload-artifact@v4
       with:
         path: ${{ github.workspace }}/drop/*
@@ -99,7 +99,7 @@ jobs:
         DEPENDABOT_PROJECT_TOKEN: ${{ secrets.DEPENDABOT_PROJECT_TOKEN }}
         DEPENDABOT_GITHUB_TOKEN: ${{ secrets.DEPENDABOT_GITHUB_TOKEN }}
 
-    - name: Publish deploy artifact
+    - name: Upload Artifact (deploy)
       uses: actions/upload-artifact@v4
       with:
         path: deploy
