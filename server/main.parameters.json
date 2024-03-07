@@ -6,13 +6,13 @@
       "value": "dependabot"
     },
     "projectSetups": {
-      "value": "[{\"url\":\"#{System_TeamFoundationCollectionUri}##{System_TeamProject}#\", \"token\":\"#{DependabotProjectToken}#\",\"AutoComplete\":true}]"
+      "value": "[{\"url\":\"https://dev.azure.com/tingle/\", \"token\":\"#{DEPENDABOT_PROJECT_TOKEN}#\",\"AutoComplete\":true}]"
     },
     "githubToken": {
-      "value": "#{GithubToken}#"
+      "value": "#{DEPENDABOT_GITHUB_TOKEN}#"
     },
     "imageTag": {
-      "value": "#{GITVERSION_SHORTSHA}#"
+      "value": "#{DOCKER_IMAGE_TAG}#"
     }
   }
 }
