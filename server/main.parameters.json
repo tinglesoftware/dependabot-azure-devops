@@ -6,7 +6,7 @@
       "value": "dependabot"
     },
     "projectSetups": {
-      "value": "[{\"url\":\"https://dev.azure.com/tingle/\", \"token\":\"#{DEPENDABOT_PROJECT_TOKEN}#\",\"AutoComplete\":true}]"
+      "value": "[{\"url\":\"https://dev.azure.com/tingle/Core\", \"token\":\"#{DEPENDABOT_PROJECT_TOKEN}#\",\"AutoComplete\":true}]"
     },
     "githubToken": {
       "value": "#{DEPENDABOT_GITHUB_TOKEN}#"
