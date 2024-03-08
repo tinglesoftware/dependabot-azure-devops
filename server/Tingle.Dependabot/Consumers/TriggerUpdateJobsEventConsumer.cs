@@ -4,6 +4,7 @@ using Tingle.Dependabot.Models;
 using Tingle.Dependabot.Models.Management;
 using Tingle.Dependabot.Workflow;
 using Tingle.EventBus;
+using Tingle.Extensions.Primitives;
 
 namespace Tingle.Dependabot.Consumers;
 
@@ -74,7 +75,7 @@ internal class TriggerUpdateJobsEventConsumer(MainDbContext dbContext, UpdateRun
                 {
                     // we use this to create azure resources which have name restrictions
                     // alphanumeric, starts with a letter, does not contain "--", up to 32 characters
-                    Id = $"job-{FlakeId.Id.Create()}", // flake is 19 chars, total is 23 chars
+                    Id = $"job-{SequenceNumber.Generate()}", // sequence number is 19 chars, total is 23 chars
 
                     Created = DateTimeOffset.UtcNow,
                     Status = UpdateJobStatus.Scheduled,

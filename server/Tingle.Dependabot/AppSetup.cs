@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using Tingle.Dependabot.Models;
 using Tingle.Dependabot.Workflow;
+using Tingle.Extensions.Primitives;
 
 namespace Tingle.Dependabot;
 
@@ -57,7 +58,7 @@ internal static class AppSetup
             {
                 project = new Models.Management.Project
                 {
-                    Id = $"prj_{KSUID.Ksuid.Generate()}",
+                    Id = $"prj_{Ksuid.Generate()}",
                     Created = DateTimeOffset.UtcNow,
                     Password = GeneratePassword(32),
                     Url = setup.Url.ToString(),

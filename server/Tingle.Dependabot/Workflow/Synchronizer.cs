@@ -5,6 +5,7 @@ using Tingle.Dependabot.Models;
 using Tingle.Dependabot.Models.Dependabot;
 using Tingle.Dependabot.Models.Management;
 using Tingle.EventBus;
+using Tingle.Extensions.Primitives;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -181,7 +182,7 @@ internal class Synchronizer(MainDbContext dbContext, AzureDevOpsProvider adoProv
         {
             repository = new Repository
             {
-                Id = $"repo_{KSUID.Ksuid.Generate()}",
+                Id = $"repo_{Ksuid.Generate()}",
                 Created = DateTimeOffset.UtcNow,
                 ProjectId = project.Id,
                 ProviderId = providerInfo.Id,
