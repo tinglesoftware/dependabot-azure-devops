@@ -19,7 +19,7 @@
     <PackageReference Include="AspNetCore.Authentication.Basic" Version="8.0.0" />
     <PackageReference Include="Azure.Extensions.AspNetCore.DataProtection.Keys" Version="1.2.3" />
     <PackageReference Include="Azure.Identity" Version="1.10.4" />
-    <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.17.3" /> <!-- Allows for faster updates -->
+    <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.17.4" /> <!-- Allows for faster updates -->
     <PackageReference Include="Azure.Monitor.Query" Version="1.2.0" />
     <PackageReference Include="Azure.ResourceManager.AppContainers" Version="1.1.1" />
     <PackageReference Include="DistributedLock.FileSystem" Version="1.0.1" />
