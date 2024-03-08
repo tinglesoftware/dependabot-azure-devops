@@ -21,9 +21,6 @@ on:
     - "!extension/README.md"
     - "!docs/**"
 
-concurrency:
-  group: ${{ github.workflow }}
-
 jobs:
   Build:
     runs-on: ubuntu-latest
@@ -110,6 +107,9 @@ jobs:
   Publish:
     runs-on: ubuntu-latest
     needs: [ Build ]
+
+    concurrency:
+      group: ${{ github.workflow }}
 
     steps:
     - name: Download Artifact
