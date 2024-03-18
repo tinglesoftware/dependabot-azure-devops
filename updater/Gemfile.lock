@@ -276,10 +276,11 @@ GEM
     sawyer (0.9.2)
       addressable (>= 2.3.5)
       faraday (>= 0.17.3, < 3)
-    sentry-opentelemetry (5.16.1)
+    sentry-opentelemetry (5.17.1)
       opentelemetry-sdk (~> 1.0)
-      sentry-ruby (~> 5.16.1)
-    sentry-ruby (5.16.1)
+      sentry-ruby (~> 5.17.1)
+    sentry-ruby (5.17.1)
+      bigdecimal
       concurrent-ruby (~> 1.0, >= 1.0.2)
     sorbet-runtime (0.5.11284)
     stackprof (0.2.26)
@@ -324,8 +325,8 @@ DEPENDENCIES
   rubocop
   rubocop-performance
   rubocop-sorbet
-  sentry-opentelemetry (~> 5.16)
-  sentry-ruby (~> 5.16)
+  sentry-opentelemetry (~> 5.17)
+  sentry-ruby (~> 5.17)
   stackprof
   terminal-table (~> 3.0.2)
   turbo_tests
