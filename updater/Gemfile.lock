@@ -1,35 +1,8 @@
-GEM
-  remote: https://rubygems.org/
+GIT
+  remote: https://github.com/dependabot/dependabot-core.git
+  revision: b056893ba88f7ef56d6b98dd21f9b0a63f42bb35
+  ref: b056893
   specs:
-    addressable (2.8.6)
-      public_suffix (>= 2.0.2, < 6.0)
-    ast (2.4.2)
-    aws-eventstream (1.3.0)
-    aws-partitions (1.898.0)
-    aws-sdk-codecommit (1.64.0)
-      aws-sdk-core (~> 3, >= 3.191.0)
-      aws-sigv4 (~> 1.1)
-    aws-sdk-core (3.191.4)
-      aws-eventstream (~> 1, >= 1.3.0)
-      aws-partitions (~> 1, >= 1.651.0)
-      aws-sigv4 (~> 1.8)
-      jmespath (~> 1, >= 1.6.1)
-    aws-sdk-ecr (1.69.0)
-      aws-sdk-core (~> 3, >= 3.191.0)
-      aws-sigv4 (~> 1.1)
-    aws-sigv4 (1.8.0)
-      aws-eventstream (~> 1, >= 1.0.2)
-    base64 (0.2.0)
-    bigdecimal (3.1.6)
-    citrus (3.0.2)
-    commonmarker (0.23.10)
-    concurrent-ruby (1.2.3)
-    crack (1.0.0)
-      bigdecimal
-      rexml
-    debug (1.9.1)
-      irb (~> 1.10)
-      reline (>= 0.3.8)
     dependabot-bundler (0.247.0)
       dependabot-common (= 0.247.0)
     dependabot-cargo (0.247.0)
@@ -107,6 +80,39 @@ GEM
       dependabot-common (= 0.247.0)
     dependabot-terraform (0.247.0)
       dependabot-common (= 0.247.0)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    addressable (2.8.6)
+      public_suffix (>= 2.0.2, < 6.0)
+    ast (2.4.2)
+    aws-eventstream (1.3.0)
+    aws-partitions (1.898.0)
+    aws-sdk-codecommit (1.64.0)
+      aws-sdk-core (~> 3, >= 3.191.0)
+      aws-sigv4 (~> 1.1)
+    aws-sdk-core (3.191.4)
+      aws-eventstream (~> 1, >= 1.3.0)
+      aws-partitions (~> 1, >= 1.651.0)
+      aws-sigv4 (~> 1.8)
+      jmespath (~> 1, >= 1.6.1)
+    aws-sdk-ecr (1.69.0)
+      aws-sdk-core (~> 3, >= 3.191.0)
+      aws-sigv4 (~> 1.1)
+    aws-sigv4 (1.8.0)
+      aws-eventstream (~> 1, >= 1.0.2)
+    base64 (0.2.0)
+    bigdecimal (3.1.6)
+    citrus (3.0.2)
+    commonmarker (0.23.10)
+    concurrent-ruby (1.2.3)
+    crack (1.0.0)
+      bigdecimal
+      rexml
+    debug (1.9.1)
+      irb (~> 1.10)
+      reline (>= 0.3.8)
     diff-lcs (1.5.1)
     docker_registry2 (1.18.0)
       rest-client (>= 1.8.0)
@@ -308,7 +314,7 @@ PLATFORMS
 
 DEPENDENCIES
   debug
-  dependabot-omnibus (~> 0.247.0)
+  dependabot-omnibus!
   gpgme
   http (~> 5.2)
   octokit (= 6.1.1)
