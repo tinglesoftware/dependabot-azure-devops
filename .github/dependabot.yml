@@ -47,6 +47,8 @@ updates:
       patterns: ["Tingle.EventBus*"]
     microsoft:
       patterns: ["Microsoft*"]
+      exclude-patterns:
+        - "Microsoft.VisualStudio.Azure.Containers.Tools.Targets"
     system:
       patterns: ["System*"]
     tingle:
