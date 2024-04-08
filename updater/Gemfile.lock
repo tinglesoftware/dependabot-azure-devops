@@ -20,7 +20,7 @@ GEM
     aws-sigv4 (1.8.0)
       aws-eventstream (~> 1, >= 1.0.2)
     base64 (0.2.0)
-    bigdecimal (3.1.6)
+    bigdecimal (3.1.7)
     citrus (3.0.2)
     commonmarker (0.23.10)
     concurrent-ruby (1.2.3)
@@ -279,7 +279,7 @@ GEM
     sentry-opentelemetry (5.17.1)
       opentelemetry-sdk (~> 1.0)
       sentry-ruby (~> 5.17.1)
-    sentry-ruby (5.17.1)
+    sentry-ruby (5.17.2)
       bigdecimal
       concurrent-ruby (~> 1.0, >= 1.0.2)
     sorbet-runtime (0.5.11319)
