@@ -5,71 +5,71 @@
 
 version: 2
 updates:
-- package-ecosystem: "github-actions" # See documentation for possible values
-  directory: "/" # Location of package manifests
-  schedule:
-    interval: "weekly"
-    time: "04:00"
-  open-pull-requests-limit: 10
+  - package-ecosystem: "github-actions" # See documentation for possible values
+    directory: "/" # Location of package manifests
+    schedule:
+      interval: "weekly"
+      time: "04:00"
+    open-pull-requests-limit: 10
 
-- package-ecosystem: "devcontainers" # See documentation for possible values
-  directory: "/" # Location of package manifests
-  schedule:
-    interval: "weekly"
-    time: "04:00"
-  open-pull-requests-limit: 10
+  - package-ecosystem: "devcontainers" # See documentation for possible values
+    directory: "/" # Location of package manifests
+    schedule:
+      interval: "weekly"
+      time: "04:00"
+    open-pull-requests-limit: 10
 
-- package-ecosystem: "bundler" # See documentation for possible values
-  directory: "/updater" # Location of package manifests
-  schedule:
-    interval: "weekly"
-    time: "04:00"
-  open-pull-requests-limit: 10
-  groups:
-    rubocop:
-      patterns: ["*rubocop*"]
+  - package-ecosystem: "bundler" # See documentation for possible values
+    directory: "/updater" # Location of package manifests
+    schedule:
+      interval: "weekly"
+      time: "04:00"
+    open-pull-requests-limit: 10
+    groups:
+      rubocop:
+        patterns: ["*rubocop*"]
 
-- package-ecosystem: "docker" # See documentation for possible values
-  directory: "/updater" # Location of package manifests
-  schedule:
-    interval: "weekly"
-    time: "04:00"
-  open-pull-requests-limit: 10
+  - package-ecosystem: "docker" # See documentation for possible values
+    directory: "/updater" # Location of package manifests
+    schedule:
+      interval: "weekly"
+      time: "04:00"
+    open-pull-requests-limit: 10
 
-- package-ecosystem: "nuget" # See documentation for possible values
-  directory: "/" # Location of package manifests
-  schedule:
-    interval: "weekly"
-    time: "04:00"
-  open-pull-requests-limit: 10
-  groups:
-    azure:
-      patterns: ['Azure.*']
-    event-bus:
-      patterns: ["Tingle.EventBus*"]
-    microsoft:
-      patterns: ["Microsoft*"]
-      exclude-patterns:
-        - "Microsoft.VisualStudio.Azure.Containers.Tools.Targets"
-    system:
-      patterns: ["System*"]
-    tingle:
-      patterns:
-      - "Tingle.AspNetCore*"
-      - "Tingle.Extensions*"
-    xunit:
-      patterns: ["Xunit*"]
+  - package-ecosystem: "nuget" # See documentation for possible values
+    directory: "/" # Location of package manifests
+    schedule:
+      interval: "weekly"
+      time: "04:00"
+    open-pull-requests-limit: 10
+    groups:
+      azure:
+        patterns: ['Azure.*']
+      event-bus:
+        patterns: ["Tingle.EventBus*"]
+      microsoft:
+        patterns: ["Microsoft*"]
+        exclude-patterns:
+          - "Microsoft.VisualStudio.Azure.Containers.Tools.Targets"
+      system:
+        patterns: ["System*"]
+      tingle:
+        patterns:
+          - "Tingle.AspNetCore*"
+          - "Tingle.Extensions*"
+      xunit:
+        patterns: ["Xunit*"]
 
-- package-ecosystem: "npm" # See documentation for possible values
-  directory: "/extension" # Location of package manifests
-  schedule:
-    interval: "weekly"
-    time: "04:00"
-  open-pull-requests-limit: 10
-  groups:
-    jest:
-      patterns: ["*jest*"]
-    js-yaml:
-      patterns: ["*js-yaml*"]
-    js-ts-types:
-      patterns: ["@types/*"]
+  - package-ecosystem: "npm" # See documentation for possible values
+    directory: "/extension" # Location of package manifests
+    schedule:
+      interval: "weekly"
+      time: "04:00"
+    open-pull-requests-limit: 10
+    groups:
+      jest:
+        patterns: ["*jest*"]
+      js-yaml:
+        patterns: ["*js-yaml*"]
+      js-ts-types:
+        patterns: ["@types/*"]
