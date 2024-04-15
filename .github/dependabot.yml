@@ -43,6 +43,8 @@ updates:
     time: "04:00"
   open-pull-requests-limit: 10
   groups:
+    azure:
+      patterns: ['Azure.*']
     event-bus:
       patterns: ["Tingle.EventBus*"]
     microsoft:
