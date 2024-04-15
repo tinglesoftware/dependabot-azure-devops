@@ -280,7 +280,7 @@ GEM
     sentry-opentelemetry (5.17.2)
       opentelemetry-sdk (~> 1.0)
       sentry-ruby (~> 5.17.2)
-    sentry-ruby (5.17.2)
+    sentry-ruby (5.17.3)
       bigdecimal
       concurrent-ruby (~> 1.0, >= 1.0.2)
     sorbet-runtime (0.5.11346)
