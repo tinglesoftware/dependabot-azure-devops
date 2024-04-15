@@ -29,6 +29,10 @@ jobs:
       IMAGE_NAME: 'dependabot-server'
       DOCKER_BUILDKIT: 1 # Enable Docker BuildKit
 
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
+
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -161,7 +165,8 @@ jobs:
   #   if: ${{ github.actor != 'dependabot[bot]' && ((github.ref == 'refs/heads/main') || startsWith(github.ref, 'refs/tags')) }}
 
   #   concurrency:
-  #     group: ${{ github.workflow }}
+  #     group: ${{ github.workflow }}-${{ github.ref }}
+  #     cancel-in-progress: false # wait for previous runs to complete
 
   #   steps:
   #   - name: Download Artifact
