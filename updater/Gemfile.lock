@@ -277,9 +277,9 @@ GEM
     sawyer (0.9.2)
       addressable (>= 2.3.5)
       faraday (>= 0.17.3, < 3)
-    sentry-opentelemetry (5.17.2)
+    sentry-opentelemetry (5.17.3)
       opentelemetry-sdk (~> 1.0)
-      sentry-ruby (~> 5.17.2)
+      sentry-ruby (~> 5.17.3)
     sentry-ruby (5.17.3)
       bigdecimal
       concurrent-ruby (~> 1.0, >= 1.0.2)
