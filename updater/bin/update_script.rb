@@ -781,6 +781,7 @@ dependencies.select(&:top_level?).each do |dep|
     end
 
     pull_request_id = nil
+    created_or_updated = false
     if conflict_pull_request_commit && conflict_pull_request_id
       ##############################################
       # Update pull request with conflict resolved #
@@ -799,6 +800,8 @@ dependencies.select(&:top_level?).each do |dep|
       pr_updater.update
       pull_request = existing_pull_request
       pull_request_id = conflict_pull_request_id
+
+      created_or_updated = true
     elsif !existing_pull_request # Only create PR if there is none existing
       ########################################
       # Create a pull request for the update #
@@ -844,6 +847,8 @@ dependencies.select(&:top_level?).each do |dep|
       else
         puts "Seems PR is already present."
       end
+
+      created_or_updated = true
     else
       pull_request = existing_pull_request # One already existed
       pull_request_id = pull_request["pullRequestId"]
@@ -854,7 +859,7 @@ dependencies.select(&:top_level?).each do |dep|
     next unless pull_request_id
 
     # Auto approve this Pull Request
-    if $options[:auto_approve_pr]
+    if $options[:auto_approve_pr] && created_or_updated
       puts "Auto Approving PR #{pull_request_id}"
 
       azure_client.pull_request_approve(
@@ -878,7 +883,7 @@ dependencies.select(&:top_level?).each do |dep|
     # - [Changelog](....)
     # - [Commits](....)
     merge_commit_message = "Merged PR #{pull_request_id}: #{msg.pr_name}\n\n#{msg.commit_message}"
-    if $options[:set_auto_complete]
+    if $options[:set_auto_complete] && created_or_updated
       auto_complete_user_id = pull_request["createdBy"]["id"]
       puts "Setting auto complete on ##{pull_request_id}."
       azure_client.autocomplete_pull_request(
