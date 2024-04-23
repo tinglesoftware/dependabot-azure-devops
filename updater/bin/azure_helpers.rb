@@ -12,7 +12,7 @@ module Dependabot
         response = get(source.api_endpoint +
              source.organization + "/" + source.project +
              "/_apis/git/repositories/" + source.unscoped_repo +
-             "/pullrequests?api-version=6.0&searchCriteria.status=active" \
+             "/pullrequests?api-version=7.0&searchCriteria.status=active" \
              "&searchCriteria.creatorId=#{user_id}" \
              "&searchCriteria.targetRefName=refs/heads/#{default_branch}")
 
@@ -27,7 +27,7 @@ module Dependabot
         patch(source.api_endpoint +
              source.organization + "/" + source.project +
              "/_apis/git/repositories/" + source.unscoped_repo +
-             "/pullrequests/#{pull_request_id}?api-version=6.0", content.to_json)
+             "/pullrequests/#{pull_request_id}?api-version=7.0", content.to_json)
       end
 
       def branch_delete(name)
@@ -43,7 +43,7 @@ module Dependabot
         response = get(source.api_endpoint +
                          source.organization + "/" + source.project +
                          "/_apis/git/repositories/" + source.unscoped_repo +
-                         "/pullrequests/#{pull_request_id}/commits?api-version=6.0")
+                         "/pullrequests/#{pull_request_id}/commits?api-version=7.0")
 
         JSON.parse(response.body).fetch("value")
       end
@@ -71,7 +71,7 @@ module Dependabot
         put_with_token(source.api_endpoint + source.organization + "/" + source.project +
                        "/_apis/git/repositories/" + source.unscoped_repo +
                        "/pullrequests/#{pull_request_id}/reviewers/#{user_id}" \
-                       "?api-version=6.0", content.to_json, reviewer_token)
+                       "?api-version=7.0", content.to_json, reviewer_token)
       end
 
       def get_with_token(url, token)
