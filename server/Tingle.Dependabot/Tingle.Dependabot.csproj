@@ -32,7 +32,7 @@
     <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.4" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="8.0.4" />
-    <PackageReference Include="Microsoft.FeatureManagement.AspNetCore" Version="3.2.0" />
+    <PackageReference Include="Microsoft.FeatureManagement.AspNetCore" Version="3.3.0" />
     <PackageReference Include="System.Linq.Async" Version="6.0.1" />
     <PackageReference Include="Tingle.EventBus.Transports.Azure.ServiceBus" Version="0.21.1" />
     <PackageReference Include="Tingle.EventBus.Transports.InMemory" Version="0.21.1" />
