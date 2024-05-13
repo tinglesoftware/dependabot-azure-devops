@@ -16,11 +16,7 @@ param githubToken string = ''
 @description('Tag of the docker images.')
 param imageTag string = '#{IMAGE_TAG}#'
 
-var fileShares = [
-  { name: 'certs' }
-  { name: 'distributed-locks', writeable: true }
-  { name: 'working-dir', writeable: true }
-]
+var fileShares = ['certs', 'distributed-locks', 'working-dir']
 
 // dependabot is not available as of 2023-Sep-25 so we change just for the public deployment
 var storageAccountName = replace(replace((name == 'dependabot' ? 'dependabotstore' : name), '-', ''), '_', '') // remove underscores and hyphens
@@ -133,13 +129,13 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = {
     name: 'default'
 
     resource shares 'shares' = [for fs in fileShares: {
-      name: fs.name
+      name: fs
       properties: {
-        accessTier: contains(fs, 'accessTier') ? fs.accessTier : 'TransactionOptimized'
+        accessTier: 'TransactionOptimized'
         // container apps does not support NFS
         // https://github.com/microsoft/azure-container-apps/issues/717
         // enabledProtocols: contains(fs, 'enabledProtocols') ? fs.enabledProtocols : 'SMB'
-        shareQuota: contains(fs, 'shareQuota') ? fs.shareQuota : 1
+        shareQuota: 1
       }
     }]
   }
@@ -219,13 +215,13 @@ resource appEnvironment 'Microsoft.App/managedEnvironments@2023-05-01' = {
   }
 
   resource storages 'storages' = [for fs in fileShares: {
-    name: fs.name
+    name: fs
     properties: {
       azureFile: {
         accountName: storageAccount.name
         accountKey: storageAccount.listKeys().keys[0].value
-        shareName: fs.name
-        accessMode: contains(fs, 'writeable') && bool(fs.writeable) ? 'ReadWrite' : 'ReadOnly'
+        shareName: fs
+        accessMode: 'ReadWrite'
       }
     }
   }]
