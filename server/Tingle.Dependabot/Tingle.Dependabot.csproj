@@ -34,8 +34,8 @@
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="8.0.4" />
     <PackageReference Include="Microsoft.FeatureManagement.AspNetCore" Version="3.2.0" />
     <PackageReference Include="System.Linq.Async" Version="6.0.1" />
-    <PackageReference Include="Tingle.EventBus.Transports.Azure.ServiceBus" Version="0.21.1" />
-    <PackageReference Include="Tingle.EventBus.Transports.InMemory" Version="0.21.1" />
+    <PackageReference Include="Tingle.EventBus.Transports.Azure.ServiceBus" Version="0.21.2" />
+    <PackageReference Include="Tingle.EventBus.Transports.InMemory" Version="0.21.2" />
     <PackageReference Include="Tingle.Extensions.DataAnnotations" Version="4.8.0" />
     <PackageReference Include="Tingle.Extensions.Primitives" Version="4.8.0" />
     <PackageReference Include="Tingle.Extensions.Serilog" Version="4.8.0" />
