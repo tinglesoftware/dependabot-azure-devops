@@ -227,7 +227,7 @@ GEM
     rake (13.2.1)
     rdoc (6.6.3.1)
       psych (>= 4.0.0)
-    regexp_parser (2.9.0)
+    regexp_parser (2.9.1)
     reline (0.5.0)
       io-console (~> 0.5)
     rest-client (2.1.0)
@@ -254,7 +254,7 @@ GEM
     rspec-sorbet (1.9.2)
       sorbet-runtime
     rspec-support (3.13.1)
-    rubocop (1.63.4)
+    rubocop (1.63.5)
       json (~> 2.3)
       language_server-protocol (>= 3.17.0)
       parallel (~> 1.10)
