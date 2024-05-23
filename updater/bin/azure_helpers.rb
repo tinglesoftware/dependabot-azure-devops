@@ -65,7 +65,8 @@ module Dependabot
         # https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-reviewers/create-pull-request-reviewers?view=azure-devops-rest-6.0
         content = {
           # 10 - approved 5 - approved with suggestions 0 - no vote -5 - waiting for author -10 - rejected
-          vote: 10
+          vote: 10,
+          isReapprove: true
         }
 
         put_with_token(source.api_endpoint + source.organization + "/" + source.project +
