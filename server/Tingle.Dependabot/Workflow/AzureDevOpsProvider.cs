@@ -62,7 +62,7 @@ public class AzureDevOpsProvider(HttpClient httpClient, IOptions<WorkflowOptions
             Host = url.Hostname,
             Port = url.Port ?? -1,
             Path = $"{url.OrganizationName}/_apis/hooks/subscriptionsquery",
-            Query = "?api-version=7.0",
+            Query = "?api-version=7.1",
         }.Uri;
         var request = new HttpRequestMessage(HttpMethod.Post, uri) { Content = JsonContent.Create(query), };
         var subscriptions = (await SendAsync<AzdoSubscriptionsQueryResponse>(project.Token!, request, cancellationToken)).Results;
@@ -132,7 +132,7 @@ public class AzureDevOpsProvider(HttpClient httpClient, IOptions<WorkflowOptions
             Host = url.Hostname,
             Port = url.Port ?? -1,
             Path = $"{url.OrganizationName}/_apis/projects/{url.ProjectIdOrName}",
-            Query = "?api-version=7.0",
+            Query = "?api-version=7.1",
         }.Uri;
         var request = new HttpRequestMessage(HttpMethod.Get, uri);
         return await SendAsync<AzdoProject>(project.Token!, request, cancellationToken);
@@ -147,7 +147,7 @@ public class AzureDevOpsProvider(HttpClient httpClient, IOptions<WorkflowOptions
             Host = url.Hostname,
             Port = url.Port ?? -1,
             Path = $"{url.OrganizationName}/{url.ProjectIdOrName}/_apis/git/repositories",
-            Query = "?api-version=7.0",
+            Query = "?api-version=7.1",
         }.Uri;
         var request = new HttpRequestMessage(HttpMethod.Get, uri);
         var data = await SendAsync<AzdoListResponse<AzdoRepository>>(project.Token!, request, cancellationToken);
@@ -163,7 +163,7 @@ public class AzureDevOpsProvider(HttpClient httpClient, IOptions<WorkflowOptions
             Host = url.Hostname,
             Port = url.Port ?? -1,
             Path = $"{url.OrganizationName}/{url.ProjectIdOrName}/_apis/git/repositories/{repositoryIdOrName}",
-            Query = "?api-version=7.0",
+            Query = "?api-version=7.1",
         }.Uri;
         var request = new HttpRequestMessage(HttpMethod.Get, uri);
         return await SendAsync<AzdoRepository>(project.Token!, request, cancellationToken);
@@ -184,7 +184,7 @@ public class AzureDevOpsProvider(HttpClient httpClient, IOptions<WorkflowOptions
                     Host = url.Hostname,
                     Port = url.Port ?? -1,
                     Path = $"{url.OrganizationName}/{url.ProjectIdOrName}/_apis/git/repositories/{repositoryIdOrName}/items",
-                    Query = $"?path={path}&includeContent=true&latestProcessedChange=true&api-version=7.0"
+                    Query = $"?path={path}&includeContent=true&latestProcessedChange=true&api-version=7.1"
                 }.Uri;
                 var request = new HttpRequestMessage(HttpMethod.Get, uri);
                 var item = await SendAsync<AzdoRepositoryItem>(project.Token!, request, cancellationToken);
