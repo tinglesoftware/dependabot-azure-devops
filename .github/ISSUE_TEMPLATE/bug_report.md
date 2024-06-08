@@ -10,6 +10,13 @@ assignees: ''
 **Describe the bug**
 A clear and concise description of what the bug is.
 
+**Categorization**
+- [ ] This is not a permissions issue (We cannot solve permission issues)
+
+**Repository**
+URL: e.g. https://dev.azure.com/tingle/dependabot/_git/repro-684
+<!-- If credentials are required, send them to support@tingle.software -->
+
 **To Reproduce**
 Steps to reproduce the behavior:
 1. ...
