@@ -15,7 +15,7 @@ gem "dependabot-omnibus", "~>0.259.0"
 
 gem "http", "~> 5.2"
 gem "octokit", "6.1.1"
-gem "opentelemetry-exporter-otlp", "~> 0.26"
+gem "opentelemetry-exporter-otlp", "~> 0.27"
 gem "opentelemetry-instrumentation-excon", "~> 0.22"
 gem "opentelemetry-instrumentation-faraday", "~> 0.24"
 gem "opentelemetry-instrumentation-http", "~> 0.23"
