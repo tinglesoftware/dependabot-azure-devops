@@ -222,9 +222,9 @@ end
 # [Hash<String, Proc>] handlers for type allow rules
 TYPE_HANDLERS = {
   "all" => proc { true },
-  "direct" => proc { |dep| dep.top_level? },
+  "direct" => proc(&:top_level?),
   "indirect" => proc { |dep| !dep.top_level? },
-  "production" => proc { |dep| dep.production? },
+  "production" => proc(&:production?),
   "development" => proc { |dep| !dep.production? },
   "security" => proc { |_, checker| checker.vulnerable? }
 }.freeze
