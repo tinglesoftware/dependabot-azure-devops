@@ -36,9 +36,9 @@
     <PackageReference Include="System.Linq.Async" Version="6.0.1" />
     <PackageReference Include="Tingle.EventBus.Transports.Azure.ServiceBus" Version="0.22.0" />
     <PackageReference Include="Tingle.EventBus.Transports.InMemory" Version="0.22.0" />
-    <PackageReference Include="Tingle.Extensions.DataAnnotations" Version="4.10.0" />
-    <PackageReference Include="Tingle.Extensions.Primitives" Version="4.10.0" />
-    <PackageReference Include="Tingle.Extensions.Serilog" Version="4.10.0" />
+    <PackageReference Include="Tingle.Extensions.DataAnnotations" Version="4.11.0" />
+    <PackageReference Include="Tingle.Extensions.Primitives" Version="4.11.0" />
+    <PackageReference Include="Tingle.Extensions.Serilog" Version="4.11.0" />
     <PackageReference Include="Tingle.PeriodicTasks" Version="1.5.0" />
     <PackageReference Include="YamlDotNet" Version="15.1.6" />
   </ItemGroup>
