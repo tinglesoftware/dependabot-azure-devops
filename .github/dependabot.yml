@@ -9,21 +9,21 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
-      time: "04:00"
+      time: "02:00"
     open-pull-requests-limit: 10
 
   - package-ecosystem: "devcontainers" # See documentation for possible values
     directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
-      time: "04:00"
+      time: "02:00"
     open-pull-requests-limit: 10
 
   - package-ecosystem: "bundler" # See documentation for possible values
     directory: "/updater" # Location of package manifests
     schedule:
       interval: "weekly"
-      time: "04:00"
+      time: "02:00"
     open-pull-requests-limit: 10
     groups:
       rubocop:
@@ -33,14 +33,14 @@ updates:
     directory: "/updater" # Location of package manifests
     schedule:
       interval: "weekly"
-      time: "04:00"
+      time: "02:00"
     open-pull-requests-limit: 10
 
   - package-ecosystem: "nuget" # See documentation for possible values
     directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
-      time: "04:00"
+      time: "02:00"
     open-pull-requests-limit: 10
     groups:
       azure:
@@ -64,7 +64,7 @@ updates:
     directory: "/extension" # Location of package manifests
     schedule:
       interval: "weekly"
-      time: "04:00"
+      time: "02:00"
     open-pull-requests-limit: 10
     groups:
       jest:
