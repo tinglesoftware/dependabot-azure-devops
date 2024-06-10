@@ -18,6 +18,7 @@ require "dependabot/update_checkers"
 require "dependabot/file_updaters"
 require "dependabot/pull_request_creator"
 require "dependabot/pull_request_updater"
+require "dependabot/requirements_update_strategy"
 require "dependabot/simple_instrumentor"
 
 require "dependabot/bundler"
