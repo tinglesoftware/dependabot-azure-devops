@@ -26,8 +26,12 @@ updates:
       time: "02:00"
     open-pull-requests-limit: 10
     groups:
+      opentelemetry:
+        patterns: ["opentelemetry-*"]
       rubocop:
         patterns: ["*rubocop*"]
+      sentry:
+        patterns: ["sentry-*"]
 
   - package-ecosystem: "docker" # See documentation for possible values
     directory: "/updater" # Location of package manifests
