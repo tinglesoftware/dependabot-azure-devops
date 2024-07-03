@@ -2,6 +2,8 @@
 
 # rubocop:disable Style/GlobalVars
 
+$LOAD_PATH.unshift(__dir__ + "/../lib")
+
 require "json"
 require "logger"
 require "dependabot/logger"
@@ -40,8 +42,8 @@ require "dependabot/swift"
 require "dependabot/devcontainers"
 require "dependabot/terraform"
 
-require_relative "azure_helpers"
-require_relative "vulnerabilities"
+require "tinglesoftware/dependabot/clients/azure"
+require "tinglesoftware/dependabot/vulnerabilities"
 
 # These options try to follow the dry-run.rb script.
 # https://github.com/dependabot/dependabot-core/blob/main/bin/dry-run.rb
