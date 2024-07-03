@@ -11,6 +11,8 @@ Next create and run a container from the image:
 ```bash
 docker run --rm -t \
            -e GITHUB_ACCESS_TOKEN=<your-github-token-here> \
+           -e DEPENDABOT_JOB_ID=<any-unique-number-here> \
+           -e DEPENDABOT_JOB_PATH=<any-unique-directory-path-here> \
            -e DEPENDABOT_PACKAGE_MANAGER=<your-package-manager-here> \
            -e DEPENDABOT_DIRECTORY=/ \
            -e DEPENDABOT_TARGET_BRANCH=<your-target-branch> \
@@ -42,6 +44,8 @@ An example, for Azure DevOps Services:
 ```bash
 docker run --rm -t \
            -e GITHUB_ACCESS_TOKEN=ijkl..mnop \
+           -e DEPENDABOT_JOB_ID=1 \
+           -e DEPENDABOT_JOB_PATH=/tmp/dependabot-job-1 \
            -e DEPENDABOT_PACKAGE_MANAGER=nuget \
            -e DEPENDABOT_DIRECTORY=/ \
            -e DEPENDABOT_TARGET_BRANCH=main \
@@ -70,6 +74,8 @@ An example, for Azure DevOps Server:
 ```bash
 docker run --rm -t \
            -e GITHUB_ACCESS_TOKEN=ijkl..mnop \
+           -e DEPENDABOT_JOB_ID=1 \
+           -e DEPENDABOT_JOB_PATH=/tmp/dependabot-job-1 \
            -e DEPENDABOT_PACKAGE_MANAGER=nuget \
            -e DEPENDABOT_DIRECTORY=/ \
            -e DEPENDABOT_TARGET_BRANCH=main \
@@ -103,6 +109,8 @@ To run the script, some environment variables are required.
 |Variable Name|Description|
 |--|--|
 |GITHUB_ACCESS_TOKEN|**_Optional_**. The GitHub token (classic) for authenticating requests against GitHub public repositories. This is useful to avoid rate limiting errors. The token must include permissions to read public repositories. See the [documentation](https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token) for more on Personal Access Tokens.|
+|DEPENDABOT_JOB_ID|**_Optional_**. The unique id for the update job run. Used for logging and auditing. When not specified, the current date/timestamp is used.|
+|DEPENDABOT_JOB_PATH|**_Optional_**. The temporary working directory for dependency updates. When not specified, the path '/tmp/dependabot-job-<DEPENDABOT_JOB_ID>' is used.|
 |DEPENDABOT_PACKAGE_MANAGER|**_Required_**. The type of packages to check for dependency upgrades. Examples: `nuget`, `maven`, `gradle`, `npm_and_yarn`, etc. See the [updated-script](./script/update_script.rb) or [docs](https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/configuration-options-for-dependency-updates#package-ecosystem) for more.|
 |DEPENDABOT_DIRECTORY|**_Optional_**. The directory in which dependencies are to be checked. When not specified, the root of the repository (denoted as '/') is used.|
 |DEPENDABOT_TARGET_BRANCH|**_Optional_**. The branch to be targeted when creating a pull request. When not specified, Dependabot will resolve the default branch of the repository.|
