@@ -146,3 +146,42 @@ To run the script, some environment variables are required.
 |AZURE_AUTO_COMPLETE_IGNORE_CONFIG_IDS|**_Optional_**. List of any policy configuration Id's which auto-complete should not wait for. Only applies to optional policies. Auto-complete always waits for required (blocking) policies.|
 |AZURE_AUTO_APPROVE_PR|**_Optional_**. Determines if the pull requests that dependabot creates should be automatically completed. When set to `true`, pull requests will be approved automatically.|
 |AZURE_AUTO_APPROVE_USER_TOKEN|**_Optional_**. A personal access token for the user to automatically approve the created PR. `AZURE_AUTO_APPROVE_PR` must be set to `true` for this to work.|
+# Development guide
+
+## Getting a development environment ready
+First, ensure you have [Docker](https://docs.docker.com/engine/install/) and [Ruby](https://www.ruby-lang.org/en/documentation/installation/) installed.
+On Linux systems, you'll need the the build essentials and Ruby development packages too; These are typically `build-essentials` and `ruby-dev`.
+
+Next, install project build tools with bundle:
+
+```bash
+cd updater
+bundle install
+```
+
+## Building the Docker image
+Each package ecosystem must be built seperately; You only need to build images for the ecosystems that you plan on testing.
+
+```bash
+docker build \
+    -f updater/Dockerfile \
+    --build-arg BUILDKIT_INLINE_CACHE=1 \
+    --build-arg ECOSYSTEM=<your-ecosystem> \
+    -t "ghcr.io/tinglesoftware/dependabot-updater-<your_ecosystem>:latest" \
+    .
+```
+
+## Running your code changes
+To test run your code changes, you'll first need to build the updater Docker image (see above), then run the updater Docker image in a container with all the required environment variables (see above).
+
+## Running the code linter
+```bash
+cd updater
+bundle exec rubocop
+```
+
+## Running the unit tests
+```bash
+cd updater
+bundle exec rspec spec
+```
