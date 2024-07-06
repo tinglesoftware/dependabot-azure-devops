@@ -13,8 +13,6 @@ module TingleSoftware
     class EmptyApiClient < ::Dependabot::ApiClient
       extend T::Sig
 
-      def initialize() end
-
       sig { params(dependency_change: ::Dependabot::DependencyChange, base_commit_sha: String).void }
       def create_pull_request(dependency_change, base_commit_sha) end
 

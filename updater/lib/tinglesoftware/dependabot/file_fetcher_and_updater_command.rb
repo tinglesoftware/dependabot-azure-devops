@@ -17,7 +17,6 @@ require "octokit"
 module TingleSoftware
   module Dependabot
     class FileFetcherAndUpdaterCommand < ::Dependabot::BaseCommand
-
       attr_reader :base_commit_sha
 
       attr_reader :job
@@ -51,7 +50,7 @@ module TingleSoftware
           if Octokit::RATE_LIMITED_ERRORS.include?(e.class)
             remaining = rate_limit_error_remaining(e)
             ::Dependabot.logger.error("Repository is rate limited, attempting to retry in " \
-                                    "#{remaining}s")
+                                      "#{remaining}s")
           else
             ::Dependabot.logger.error("Error during file fetching; aborting: #{e.message}")
           end
@@ -80,10 +79,10 @@ module TingleSoftware
         puts "Found #{dependency_snapshot.dependencies.count(&:top_level?)} dependencies"
         dependency_snapshot.dependencies.select(&:top_level?).each { |d| puts " - #{d.name} (#{d.version})" }
         puts "Found #{dependency_snapshot.groups.count} groups"
-        dependency_snapshot.groups.select.each { |g|
+        dependency_snapshot.groups.select.each do |g|
           puts " - #{g.name}"
           g.dependencies.select(&:top_level?).each { |d| puts "   - #{d.name} (#{d.version})" }
-        }
+        end
         puts "Found #{dependency_snapshot.ungrouped_dependencies.count(&:top_level?)} ungrouped dependencies"
         dependency_snapshot.ungrouped_dependencies.select(&:top_level?).each { |d| puts " - #{d.name} (#{d.version})" }
 
@@ -104,7 +103,6 @@ module TingleSoftware
         # reported errors to the service, but we always consider the job as
         # successfully processed unless it actually raises.
         service.mark_job_as_processed(dependency_snapshot.base_commit_sha)
-
       end
 
       private

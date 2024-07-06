@@ -1,6 +1,8 @@
 # typed: strict
 # frozen_string_literal: true
 
+# rubocop:disable Style/GlobalVars
+
 $LOAD_PATH.unshift(__dir__ + "/../lib")
 
 # ensure logs are output immediately. Useful when running in certain hosts like ContainerGroups
@@ -53,9 +55,7 @@ Dependabot::SimpleInstrumentor.subscribe do |*args|
   end
 end
 
-unless ENV["DEPENDABOT_JOB_ID"].to_i.nonzero?
-  ENV["DEPENDABOT_JOB_ID"] = Time.now.to_i.to_s
-end
+ENV["DEPENDABOT_JOB_ID"] = Time.now.to_i.to_s unless ENV["DEPENDABOT_JOB_ID"].to_i.nonzero?
 
 unless ENV["DEPENDABOT_JOB_PATH"].to_s.strip.empty?
   ENV["DEPENDABOT_JOB_PATH"] = "/tmp/dependabot-job-#{ENV.fetch('DEPENDABOT_JOB_ID')}"
@@ -310,7 +310,6 @@ unless ENV["DEPENDABOT_ASSIGNEES"].to_s.strip.empty?
   $options[:assignees] = JSON.parse(ENV.fetch("DEPENDABOT_ASSIGNEES", nil))
 end
 
-
 # Parse the options e.g. goprivate=true,kubernetes_updates=true
 $options[:updater_options] = (ENV["DEPENDABOT_UPDATER_OPTIONS"] || "").split(",").to_h do |o|
   if o.include?("=") # key/value pair, e.g. goprivate=true
@@ -440,3 +439,5 @@ begin
 rescue Dependabot::RunFailure
   exit 1
 end
+
+# rubocop:enable Style/GlobalVars
