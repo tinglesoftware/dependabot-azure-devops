@@ -11,7 +11,7 @@ In this repository you'll find:
 1. Dependabot [updater](./updater) in Ruby. See [docs](./docs/updater.md).
 2. Dockerfile and build/image for running the updater via Docker [here](./updater/Dockerfile).
 3. Dependabot [server](./server/) in .NET/C#. See [docs](./docs/server.md).
-4. Azure DevOps [Extension](https://marketplace.visualstudio.com/items?itemName=tingle-software.dependabot) and [source](./extension).
+4. Azure DevOps [Extension](https://marketplace.visualstudio.com/items?itemName=tingle-software.dependabot) and [source](./extension). See [docs](./docs/extension.md).
 
 > The hosted version is available to sponsors (most, but not all). It includes hustle free runs where the infrastructure is maintained for you. Much like the GitHub hosted version. Alternatively, you can run and host your own [server](./docs/server.md). Once you sponsor, you can send out an email to an maintainer or wait till they reach out. This is meant to ease the burden until GitHub/Azure/Microsoft can get it working natively (which could also be never) and hopefully for free.
 
@@ -68,7 +68,14 @@ Security-only updates ia a mechanism to only create pull requests for dependenci
 
 A GitHub access token with `public_repo` access is required to perform the GitHub GraphQL for `securityVulnerabilities`.
 
-### Acknowledgements
+## Development Guide
+
+If you'd like to contribute to the project or just run it locally, view our development guides for:
+
+- [Azure DevOps extension](./docs/extension.md#development-guide)
+- [Dependabot updater](./docs/updater.md#development-guide)
+
+## Acknowledgements
 
 The work in this repository is based on inspired and occasionally guided by some predecessors in the same area:
 
@@ -78,6 +85,6 @@ The work in this repository is based on inspired and occasionally guided by some
 4. andrcun's work on GitLab: [code](https://gitlab.com/dependabot-gitlab/dependabot)
 5. WeWork's work for GitLab: [code](https://github.com/wemake-services/kira-dependencies)
 
-### Issues &amp; Comments
+## Issues &amp; Comments
 
 Please leave all comments, bugs, requests, and issues on the Issues page. We'll respond to your request ASAP!
