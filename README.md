@@ -68,7 +68,14 @@ Security-only updates ia a mechanism to only create pull requests for dependenci
 
 A GitHub access token with `public_repo` access is required to perform the GitHub GraphQL for `securityVulnerabilities`.
 
-### Acknowledgements
+## Development Guide
+
+If you'd like to contribute to the project or just run it locally, view our development guides for:
+
+- [Azure DevOps extension](./docs/extension.md#development-guide)
+- [Dependabot updater](./docs/updater.md#development-guide)
+
+## Acknowledgements
 
 The work in this repository is based on inspired and occasionally guided by some predecessors in the same area:
 
@@ -78,6 +85,6 @@ The work in this repository is based on inspired and occasionally guided by some
 4. andrcun's work on GitLab: [code](https://gitlab.com/dependabot-gitlab/dependabot)
 5. WeWork's work for GitLab: [code](https://github.com/wemake-services/kira-dependencies)
 
-### Issues &amp; Comments
+## Issues &amp; Comments
 
 Please leave all comments, bugs, requests, and issues on the Issues page. We'll respond to your request ASAP!
