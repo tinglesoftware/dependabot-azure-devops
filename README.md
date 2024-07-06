@@ -11,7 +11,7 @@ In this repository you'll find:
 1. Dependabot [updater](./updater) in Ruby. See [docs](./docs/updater.md).
 2. Dockerfile and build/image for running the updater via Docker [here](./updater/Dockerfile).
 3. Dependabot [server](./server/) in .NET/C#. See [docs](./docs/server.md).
-4. Azure DevOps [Extension](https://marketplace.visualstudio.com/items?itemName=tingle-software.dependabot) and [source](./extension).
+4. Azure DevOps [Extension](https://marketplace.visualstudio.com/items?itemName=tingle-software.dependabot) and [source](./extension). See [docs](./docs/extension.md).
 
 > The hosted version is available to sponsors (most, but not all). It includes hustle free runs where the infrastructure is maintained for you. Much like the GitHub hosted version. Alternatively, you can run and host your own [server](./docs/server.md). Once you sponsor, you can send out an email to an maintainer or wait till they reach out. This is meant to ease the burden until GitHub/Azure/Microsoft can get it working natively (which could also be never) and hopefully for free.
 
