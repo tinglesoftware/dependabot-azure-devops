@@ -161,7 +161,7 @@ unless ENV["GITHUB_ACCESS_TOKEN"].to_s.strip.empty?
     "password" => github_token
   })
   $vulnerabilities_fetcher =
-    Dependabot::Vulnerabilities::Fetcher.new($package_manager, github_token)
+    TingleSoftware::Dependabot::Vulnerabilities::Fetcher.new($package_manager, github_token)
 end
 # DEPENDABOT_EXTRA_CREDENTIALS, for example:
 # "[{\"type\":\"npm_registry\",\"registry\":\"registry.npmjs.org\",\"token\":\"123\"}]"
@@ -180,10 +180,10 @@ end
 unless ENV["DEPENDABOT_VERSIONING_STRATEGY"].to_s.strip.empty?
   # [Hash<String, Symbol>]
   VERSIONING_STRATEGIES = {
-    "lockfile-only" => RequirementsUpdateStrategy::LockfileOnly,
-    "widen" => RequirementsUpdateStrategy::WidenRanges,
-    "increase" => RequirementsUpdateStrategy::BumpVersions,
-    "increase-if-necessary" => RequirementsUpdateStrategy::BumpVersionsIfNecessary
+    "lockfile-only" => Dependabot::RequirementsUpdateStrategy::LockfileOnly,
+    "widen" => Dependabot::RequirementsUpdateStrategy::WidenRanges,
+    "increase" => Dependabot::RequirementsUpdateStrategy::BumpVersions,
+    "increase-if-necessary" => Dependabot::RequirementsUpdateStrategy::BumpVersionsIfNecessary
   }.freeze
   strategy_raw = ENV.fetch("DEPENDABOT_VERSIONING_STRATEGY", nil)
   $options[:requirements_update_strategy] = case strategy_raw
@@ -197,8 +197,8 @@ unless ENV["DEPENDABOT_VERSIONING_STRATEGY"].to_s.strip.empty?
   # https://github.com/dependabot/dependabot-core/blob/5926b243b2875ad0d8c0a52c09210c4f5f274c5e/composer/lib/dependabot/composer/update_checker/requirements_updater.rb#L23-L24
   if $package_manager == "npm_and_yarn" || $package_manager == "composer"
     strategy = $options[:requirements_update_strategy]
-    if strategy.nil? || strategy == RequirementsUpdateStrategy::LockfileOnly
-      $options[:requirements_update_strategy] = RequirementsUpdateStrategy::BumpVersions
+    if strategy.nil? || strategy == Dependabot::RequirementsUpdateStrategy::LockfileOnly
+      $options[:requirements_update_strategy] = Dependabot::RequirementsUpdateStrategy::BumpVersions
     end
   end
 
@@ -206,8 +206,8 @@ unless ENV["DEPENDABOT_VERSIONING_STRATEGY"].to_s.strip.empty?
   # https://github.com/dependabot/dependabot-core/blob/ca9f236591ba49fa6e2a8d5f06e538614033a628/pub/lib/dependabot/pub/update_checker.rb#L110
   if $package_manager == "pub"
     strategy = $options[:requirements_update_strategy]
-    if strategy == RequirementsUpdateStrategy::LockfileOnly
-      $options[:requirements_update_strategy] = RequirementsUpdateStrategy::BumpVersions
+    if strategy == Dependabot::RequirementsUpdateStrategy::LockfileOnly
+      $options[:requirements_update_strategy] = Dependabot::RequirementsUpdateStrategy::BumpVersions
     end
   end
 end
@@ -537,7 +537,7 @@ dependencies.select(&:top_level?).each { |d| puts " - #{d.name} (#{d.version})" 
 ################################################
 # Get active pull requests for this repository #
 ################################################
-azure_client = Dependabot::Clients::Azure.for_source(
+azure_client = TingleSoftware::Dependabot::Clients::Azure.for_source(
   source: $source,
   credentials: $options[:credentials]
 )

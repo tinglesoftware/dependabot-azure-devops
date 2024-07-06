@@ -21,7 +21,7 @@
     <PackageReference Include="Azure.Identity" Version="1.12.0" />
     <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.17.5" /> <!-- Allows for faster updates -->
     <PackageReference Include="Azure.Monitor.Query" Version="1.4.0" />
-    <PackageReference Include="Azure.ResourceManager.AppContainers" Version="1.1.1" />
+    <PackageReference Include="Azure.ResourceManager.AppContainers" Version="1.2.0" />
     <PackageReference Include="DistributedLock.FileSystem" Version="1.0.2" />
     <PackageReference Include="Macross.Json.Extensions" Version="3.0.0" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.22.0" />
@@ -32,20 +32,20 @@
     <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.6" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="8.0.6" />
-    <PackageReference Include="Microsoft.FeatureManagement.AspNetCore" Version="3.3.1" />
+    <PackageReference Include="Microsoft.FeatureManagement.AspNetCore" Version="3.4.0" />
     <PackageReference Include="System.Linq.Async" Version="6.0.1" />
     <PackageReference Include="Tingle.EventBus.Transports.Azure.ServiceBus" Version="0.22.0" />
     <PackageReference Include="Tingle.EventBus.Transports.InMemory" Version="0.22.0" />
-    <PackageReference Include="Tingle.Extensions.DataAnnotations" Version="4.11.0" />
-    <PackageReference Include="Tingle.Extensions.Primitives" Version="4.11.0" />
-    <PackageReference Include="Tingle.Extensions.Serilog" Version="4.11.0" />
+    <PackageReference Include="Tingle.Extensions.DataAnnotations" Version="4.11.1" />
+    <PackageReference Include="Tingle.Extensions.Primitives" Version="4.11.1" />
+    <PackageReference Include="Tingle.Extensions.Serilog" Version="4.11.1" />
     <PackageReference Include="Tingle.PeriodicTasks" Version="1.5.0" />
     <PackageReference Include="YamlDotNet" Version="15.3.0" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.6" PrivateAssets="All" />
-    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.20.1" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.0" PrivateAssets="All" />
   </ItemGroup>
 
 </Project>
