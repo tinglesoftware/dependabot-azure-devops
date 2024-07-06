@@ -2,6 +2,8 @@
 
 # rubocop:disable Style/GlobalVars
 
+$LOAD_PATH.unshift(__dir__ + "/../lib")
+
 require "json"
 require "logger"
 require "dependabot/logger"
@@ -40,8 +42,8 @@ require "dependabot/swift"
 require "dependabot/devcontainers"
 require "dependabot/terraform"
 
-require_relative "azure_helpers"
-require_relative "vulnerabilities"
+require "tinglesoftware/dependabot/clients/azure"
+require "tinglesoftware/dependabot/vulnerabilities"
 
 # These options try to follow the dry-run.rb script.
 # https://github.com/dependabot/dependabot-core/blob/main/bin/dry-run.rb
@@ -159,7 +161,7 @@ unless ENV["GITHUB_ACCESS_TOKEN"].to_s.strip.empty?
     "password" => github_token
   })
   $vulnerabilities_fetcher =
-    Dependabot::Vulnerabilities::Fetcher.new($package_manager, github_token)
+    TingleSoftware::Dependabot::Vulnerabilities::Fetcher.new($package_manager, github_token)
 end
 # DEPENDABOT_EXTRA_CREDENTIALS, for example:
 # "[{\"type\":\"npm_registry\",\"registry\":\"registry.npmjs.org\",\"token\":\"123\"}]"
@@ -535,7 +537,7 @@ dependencies.select(&:top_level?).each { |d| puts " - #{d.name} (#{d.version})" 
 ################################################
 # Get active pull requests for this repository #
 ################################################
-azure_client = Dependabot::Clients::Azure.for_source(
+azure_client = TingleSoftware::Dependabot::Clients::Azure.for_source(
   source: $source,
   credentials: $options[:credentials]
 )
