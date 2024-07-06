@@ -165,7 +165,7 @@ bundle install
 ```
 
 ## Building the Docker image
-Each package ecosystem must be built seperately; You only need to build images for the ecosystems that you plan on testing.
+Each package ecosystem must be built separately; You only need to build images for the ecosystems that you plan on testing.
 
 ```bash
 docker build \
