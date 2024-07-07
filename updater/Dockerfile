@@ -1,6 +1,9 @@
-# The docker images in https://github.com/dependabot/dependabot-core are no longer versioned like the ruby Gems
-#TODO: find out how to lock the base image version without the ruby Gem version
 ARG ECOSYSTEM
+
+# The Dependabot docker images in https://github.com/dependabot/dependabot-core are no longer versioned like the Ruby Gems.
+# In production, the build pipeline automatically updates the image tag to match the version in updater/Gemfile (see .github/workflows/updater.yml).
+# In local/dev,  the "latest" tag will be used by default. You can override this by specifying a dependabot-core release tag commit SHA as the image tag.
+#                e.g. for v0.264.0, use "ghcr.io/dependabot/dependabot-updater-$ECOSYSTEM:e8d8a1268ea61304e939ba9ab963e249cac5b241"
 FROM ghcr.io/dependabot/dependabot-updater-$ECOSYSTEM
 
 LABEL org.opencontainers.image.source="https://github.com/tinglesoftware/dependabot-azure-devops"

@@ -88,6 +88,13 @@ jobs:
       # remove this after at least one release tagged 'latest'
       continue-on-error: true
 
+    - name: Update Dockerfile with correct dependabot-updater image tag
+      run: |
+        tag_name=$(grep -oP "(?<=gem \"dependabot-omnibus\", \"~>).*(?=\")" updater/Gemfile)
+        tag_sha=$(curl "https://api.github.com/repos/dependabot/dependabot-core/tags" | jq -r "[.[]|select(.name==\"v$tag_name\")][0].commit.sha")
+        sed -i "s/dependabot\/dependabot-updater-\$ECOSYSTEM[:.a-z0-9]*/dependabot\/dependabot-updater-\$ECOSYSTEM:$tag_sha/g" updater/Dockerfile
+        echo "Dockerfile updated to use dependabot-updater image tag '$tag_sha' (v$tag_name)"
+
     - name: Build image
       run: |
         docker build \
