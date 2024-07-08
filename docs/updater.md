@@ -142,9 +142,11 @@ To run the script, some environment variables are required.
 |DEPENDABOT_EXCLUDE_REQUIREMENTS_TO_UNLOCK|**_Optional_**. Exclude certain dependency updates requirements. See list of allowed values [here](https://github.com/dependabot/dependabot-core/issues/600#issuecomment-407808103). Useful if you have lots of dependencies and the update script too slow. The values provided are space-separated. Example: `own all` to only use the `none` version requirement.|
 |DEPENDABOT_MILESTONE|**_Optional_**. The identifier of the work item to be linked to the Pull Requests that dependabot creates.|
 |DEPENDABOT_UPDATER_OPTIONS|**_Optional_**. Comma separated list of updater options; available options depend on PACKAGE_MANAGER. Example: `goprivate=true,kubernetes_updates=true`.|
+|DEPENDABOT_DEPENDENCY_GROUPS|**_Optional_**. The list of dependency group rules, in JSON format. For example: `[{"name":"microsoft","rules":{"patterns":["Microsoft.*"]}}]`|
 |DEPENDABOT_SKIP_PULL_REQUESTS|**_Optional_**. Determines whether to skip creation and updating of pull requests. When set to `true` the logic to update the dependencies is executed but the actual Pull Requests are not created/updated. This is useful for debugging. Defaults to `false`.|
 |DEPENDABOT_AUTHOR_EMAIL|**_Optional_**. The email address to use for the change commit author, can be used e.g. in private Azure DevOps Server deployments to associate the committer with an existing account, to provide a profile picture.|
 |DEPENDABOT_AUTHOR_NAME|**_Optional_**. The display name to use for the change commit author.|
+|DEPENDABOT_DEBUG|**_Optional_**. Determines if verbose log messages are logged. Useful for diagnosing issues. Defaults to `false`.|
 |AZURE_PROTOCOL|**_Optional_**. The transport protocol (`http` or `https`) used by your Azure DevOps installation. Defaults to `https`.|
 |AZURE_HOSTNAME|**_Optional_**. The hostname of the where the organization is hosted. Defaults to `dev.azure.com` but for older organizations this may have the format `xxx.visualstudio.com`. Check the url on the browser. For Azure DevOps Server, this may be the unexposed one e.g. `localhost` or one that you have exposed publicly via DNS.|
 |AZURE_PORT|**_Optional_**. The TCP port used by your Azure DevOps installation. Defaults to `80` or `443`, depending on the indicated protocol.|
