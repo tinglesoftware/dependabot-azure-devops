@@ -3,6 +3,10 @@
 
 require "json"
 require "dependabot/job"
+require "dependabot/source"
+require "dependabot/credential"
+
+require "tinglesoftware/dependabot/clients/azure"
 
 #
 # Parses environment variables into a Dependabot job object
@@ -17,7 +21,7 @@ module TingleSoftware
           commit_message_options: commit_message_options,
           credentials: credentials,
           dependencies: nil,
-          existing_pull_requests: [],
+          existing_pull_requests: existing_pull_requests,
           existing_group_pull_requests: [],
           experiments: {}, # experiments,
           ignore_conditions: ignore_conditions,
@@ -38,7 +42,7 @@ module TingleSoftware
           repo_private: nil
         }
         ::Dependabot.logger.debug("Parsed job options from environment: #{JSON.pretty_generate(options)}")
-        ::Dependabot::Job.new(options)
+        TingleSoftware::Dependabot::Job.new(options, azure_client)
       end
 
       def self.id
@@ -126,9 +130,13 @@ module TingleSoftware
         JSON.parse(ENV.fetch("DEPENDABOT_DEPENDENCY_GROUPS", "[]")).compact
       end
 
+      def self.provider
+        "azure"
+      end
+
       def self.source
         {
-          "provider" => "azure",
+          "provider" => provider,
           "hostname" => azure_hostname,
           "api-endpoint" => api_endpoint,
           "repo" => repo_name,
@@ -180,6 +188,37 @@ module TingleSoftware
 
       def self.azure_virtual_directory
         ENV.fetch("AZURE_VIRTUAL_DIRECTORY", "")
+      end
+
+      def self.azure_client
+        @azure_client ||= TingleSoftware::Dependabot::Clients::Azure.for_source(
+          source: ::Dependabot::Source.new(
+            provider: provider,
+            hostname: azure_hostname,
+            api_endpoint: api_endpoint,
+            repo: repo_name,
+            directory: directory,
+            branch: branch
+          ),
+          credentials: credentials.map { |c| ::Dependabot::Credential.new(c) }
+        )
+      end
+
+      def self.existing_pull_requests
+        user_id = azure_client.get_user_id
+        target_branch_name = branch || azure_client.fetch_default_branch(repo_name)
+        azure_client.pull_requests_active(user_id, target_branch_name).map do |pr|
+          title = pr["title"]
+          {
+            "id" => pr["pullRequestId"],
+            "title" => pr["title"],
+            "source-ref-name" => pr["sourceRefName"],
+            "dependency-name" => title.match(/bump (.*) from/i)&.captures&.first,
+            "dependency-version" => title.match(/to (.*)\b/i)&.captures&.first,
+            "directory" => directory,
+            "dependency-removed" => false
+          }
+        end
       end
     end
   end
