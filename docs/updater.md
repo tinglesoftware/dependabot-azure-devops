@@ -177,8 +177,8 @@ docker build \
     .
 ```
 
-In some scenarios, you may want to set `BASE_VERSION` to a specifc version instead of "latest".
-See [updater/Dockerfile](../updater/Dockerfile) for a more detailed explaination.
+In some scenarios, you may want to set `BASE_VERSION` to a specific version instead of "latest".
+See [updater/Dockerfile](../updater/Dockerfile) for a more detailed explanation.
 
 ## Running your code changes
 To test run your code changes, you'll first need to build the updater Docker image (see above), then run the updater Docker image in a container with all the required environment variables (see above).
