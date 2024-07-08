@@ -1,6 +1,8 @@
 # typed: strict
 # frozen_string_literal: true
 
+require "sorbet-runtime"
+
 require "dependabot/dependency_group"
 
 # This class implements our strategy for keeping track of and matching dependency
@@ -24,23 +26,6 @@ module Dependabot
 
     sig { params(job: Dependabot::Job).returns(Dependabot::DependencyGroupEngine) }
     def self.from_job_config(job:)
-      if job.security_updates_only? && job.source.directories && job.dependency_groups.empty?
-        # The indication that this should be a grouped update is:
-        # - We're using the DependencyGroupEngine which means this is a grouped update
-        # - This is a security update and there are multiple dependencies passed in
-        # Since there are no groups, the default behavior is to group all dependencies, so create a fake group.
-        job.dependency_groups << {
-          "name" => "#{job.package_manager} group",
-          "rules" => { "patterns" => ["*"] },
-          "applies-to" => "security-updates"
-        }
-
-        # This ensures refreshes work for these dynamic groups.
-        if job.updating_a_pull_request?
-          job.override_group_to_refresh_due_to_old_defaults(job.dependency_groups.first["name"])
-        end
-      end
-
       groups = job.dependency_groups.map do |group|
         Dependabot::DependencyGroup.new(name: group["name"], rules: group["rules"], applies_to: group["applies-to"])
       end
@@ -68,8 +53,6 @@ module Dependabot
 
     sig { params(dependencies: T::Array[Dependabot::Dependency]).void }
     def assign_to_groups!(dependencies:)
-      raise ConfigurationError, "dependency groups have already been configured!" if @groups_calculated
-
       if dependency_groups.any?
         dependencies.each do |dependency|
           matched_groups = @dependency_groups.each_with_object([]) do |group, matches|
@@ -83,11 +66,10 @@ module Dependabot
           @ungrouped_dependencies << dependency if matched_groups.empty?
         end
       else
-        @ungrouped_dependencies = dependencies
+        @ungrouped_dependencies += dependencies
       end
 
       validate_groups
-      @groups_calculated = true
     end
 
     private
@@ -96,7 +78,6 @@ module Dependabot
     def initialize(dependency_groups:)
       @dependency_groups = dependency_groups
       @ungrouped_dependencies = T.let([], T::Array[Dependabot::Dependency])
-      @groups_calculated = T.let(false, T::Boolean)
     end
 
     sig { void }
