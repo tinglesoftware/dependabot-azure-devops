@@ -3,6 +3,9 @@
 
 require "octokit"
 
+#
+# Fetches security vulnerabilities for a given dependency from GitHub's Security Advisory API
+#
 module TingleSoftware
   module Dependabot
     module Vulnerabilities

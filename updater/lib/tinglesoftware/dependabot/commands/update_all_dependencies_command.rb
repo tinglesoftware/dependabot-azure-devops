@@ -8,10 +8,11 @@ require "dependabot/updater"
 require "octokit"
 
 #
-# This command attempts to combine the "FileFetcherCommand" and "UpdateFilesCommand" in to a single command.
+# This command attempts to combine the "FileFetcherCommand" and "UpdateFilesCommand" in to a single command
+# that can be completed in a single job run, rather than multiple.
 #
-# Normally Dependabot chunks the dependency update job over multiple commands (fetch-files, update-files).
-# However, for Azure DevOps, we want to do everything in a single update job.
+# Normally Dependabot chunks the dependency update job over multiple jobs/commands (fetch-files, update-files).
+# However, for Azure DevOps, we want to do everything in a single job run.
 #
 module TingleSoftware
   module Dependabot

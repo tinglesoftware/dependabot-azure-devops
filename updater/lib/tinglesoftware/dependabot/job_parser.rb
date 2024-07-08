@@ -4,6 +4,9 @@
 require "json"
 require "dependabot/job"
 
+#
+# Parses environment variables into a Dependabot job object
+#
 module TingleSoftware
   module Dependabot
     class JobParser

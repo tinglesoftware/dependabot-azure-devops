@@ -3,9 +3,10 @@
 
 require "dependabot/api_client"
 
-# Mock client for the internal Dependabot Service's API
 #
-# This API is only available to Dependabot jobs being executed within the official
+# Custom API client that bridges the internal Dependabot Service API to Azure DevOps.
+#
+# This API is normally only available to Dependabot jobs being executed within the official
 # hosted infrastructure and is not available to external users.
 #
 module TingleSoftware

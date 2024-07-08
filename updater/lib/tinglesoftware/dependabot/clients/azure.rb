@@ -5,6 +5,9 @@ require "json"
 require "dependabot/shared_helpers"
 require "excon"
 
+#
+# Extended Azure [DevOps] client that provides additional helper methods not available in the base client
+#
 module TingleSoftware
   module Dependabot
     module Clients
