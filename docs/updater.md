@@ -172,9 +172,13 @@ docker build \
     -f updater/Dockerfile \
     --build-arg BUILDKIT_INLINE_CACHE=1 \
     --build-arg ECOSYSTEM=<your-ecosystem> \
+    --build-arg BASE_VERSION=latest \
     -t "ghcr.io/tinglesoftware/dependabot-updater-<your_ecosystem>:latest" \
     .
 ```
+
+In some scenarios, you may want to set `BASE_VERSION` to a specific version instead of "latest".
+See [updater/Dockerfile](../updater/Dockerfile) for a more detailed explanation.
 
 ## Running your code changes
 To test run your code changes, you'll first need to build the updater Docker image (see above), then run the updater Docker image in a container with all the required environment variables (see above).
