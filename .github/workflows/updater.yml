@@ -94,7 +94,7 @@ jobs:
         tag_name=$(grep -oP "(?<=gem \"dependabot-omnibus\", \"~>).*(?=\")" updater/Gemfile)
         tag_sha=$(curl --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' --url "https://api.github.com/repos/dependabot/dependabot-core/tags" | jq -r "[.[]|select(.name==\"v$tag_name\")][0].commit.sha")
         echo "Using dependabot-updater image tag '$tag_sha' (v$tag_name)"
-        echo "version={$tag_sha}" >> $GITHUB_OUTPUT
+        echo "version=$tag_sha" >> $GITHUB_OUTPUT
 
     - name: Build image
       run: |
