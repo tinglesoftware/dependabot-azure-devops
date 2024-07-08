@@ -88,12 +88,13 @@ jobs:
       # remove this after at least one release tagged 'latest'
       continue-on-error: true
 
-    - name: Update Dockerfile with correct dependabot-updater image tag
+    - name: Get dependabot-updater image tag version
+      id: docker-base-version
       run: |
         tag_name=$(grep -oP "(?<=gem \"dependabot-omnibus\", \"~>).*(?=\")" updater/Gemfile)
         tag_sha=$(curl --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' --url "https://api.github.com/repos/dependabot/dependabot-core/tags" | jq -r "[.[]|select(.name==\"v$tag_name\")][0].commit.sha")
-        sed -i "s/dependabot\/dependabot-updater-\$ECOSYSTEM[:.a-z0-9]*/dependabot\/dependabot-updater-\$ECOSYSTEM:$tag_sha/g" updater/Dockerfile
-        echo "Dockerfile updated to use dependabot-updater image tag '$tag_sha' (v$tag_name)"
+        echo "Using dependabot-updater image tag '$tag_sha' (v$tag_name)"
+        echo "version={$tag_sha}" >> $GITHUB_OUTPUT
 
     - name: Build image
       run: |
@@ -101,6 +102,7 @@ jobs:
         -f updater/Dockerfile \
         --build-arg BUILDKIT_INLINE_CACHE=1 \
         --build-arg ECOSYSTEM=${{ matrix.suite.ecosystem }} \
+        --build-arg BASE_VERSION=${{ steps.docker-base-version.outputs.version }} \
         --label com.github.image.run.id=${{ github.run_id }} \
         --label com.github.image.run.number=${{ github.run_number }} \
         --label com.github.image.job.id=${{ github.job }} \
