@@ -62,10 +62,6 @@ VCR.configure do |config|
   config.configure_rspec_metadata!
   config.allow_http_connections_when_no_cassette = false
 
-  config.filter_sensitive_data("<AZURE_ACCESS_TOKEN>") do
-    ENV.fetch("AZURE_ACCESS_TOKEN", nil)
-  end
-
   config.filter_sensitive_data("<AWS_ACCESS_KEY_ID>") do
     ENV.fetch("AWS_ACCESS_KEY_ID", nil)
   end
