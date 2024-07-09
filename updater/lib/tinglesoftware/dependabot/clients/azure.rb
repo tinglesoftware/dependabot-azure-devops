@@ -83,7 +83,7 @@ module TingleSoftware
             user: credentials&.fetch("username", nil),
             password: token,
             idempotent: true,
-            **SharedHelpers.excon_defaults(
+            **::Dependabot::SharedHelpers.excon_defaults(
               headers: auth_header
             )
           )
@@ -102,7 +102,7 @@ module TingleSoftware
             user: credentials&.fetch("username", nil),
             password: token,
             idempotent: true,
-            **SharedHelpers.excon_defaults(
+            **::Dependabot::SharedHelpers.excon_defaults(
               headers: auth_header.merge(
                 {
                   "Content-Type" => "application/json"
