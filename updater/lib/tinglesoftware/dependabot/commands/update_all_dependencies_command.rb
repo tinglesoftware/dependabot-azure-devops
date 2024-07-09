@@ -8,11 +8,11 @@ require "dependabot/updater"
 require "octokit"
 
 #
-# This command attempts to combine the "FileFetcherCommand" and "UpdateFilesCommand" in to a single command
-# that can be completed in a single job run, rather than multiple.
+# This command combine the dependabot-core "FileFetcherCommand" and "UpdateFilesCommand" in to a single command
+# that can be completed end-to-end in a single self-contained job/script, rather than over multiple jobs/scripts.
 #
-# Normally Dependabot chunks the dependency update job over multiple jobs/commands (fetch-files, update-files).
-# However, for Azure DevOps, we want to do everything in a single job run.
+# Normally Dependabot splits the dependency update process over multiple small job/commands (e.g. fetch-files,
+# update-files, create-pull-request). For Azure DevOps, we want to do everything in a single job.
 #
 module TingleSoftware
   module Dependabot
@@ -23,6 +23,8 @@ module TingleSoftware
         def initialize(job:)
           @job = job
           @service = ::Dependabot::Service.new(
+            # Use our custom API client rather than the internal Dependabot Service API.
+            # This allows us to perform pull request changes synchronously within the context of this job.
             client: TingleSoftware::Dependabot::ApiClients::AzureApiClient.new(job: job)
           )
         end
@@ -30,7 +32,7 @@ module TingleSoftware
         def perform_job # rubocop:disable Metrics/AbcSize
           @base_commit_sha = nil
 
-          # Clone the repo contents and find all files that may contain dependencies
+          # Clone the repo contents then find all files that could contain dependency references
           perform_file_fetch_and_find_dependency_files
 
           # Parse the dependency files and extract the full list of dependencies that need updating
@@ -51,7 +53,7 @@ module TingleSoftware
 
         private
 
-        # Copied from updater/lib/dependabot/file_fetcher_command.rb (perform_job)
+        # Logic copied from `updater/lib/dependabot/file_fetcher_command.rb`` (perform_job)
         def perform_file_fetch_and_find_dependency_files
           clone_repo_contents
           @base_commit_sha = file_fetcher.commit
@@ -70,20 +72,18 @@ module TingleSoftware
           @dependency_snapshot ||= perform_dependency_snapshot
         end
 
-        # Copied from updater/lib/dependabot/update_files_command.rb (perform_job)
+        # Logic copied from `updater/lib/dependabot/update_files_command.rb` (perform_job)
         def perform_dependency_snapshot
           ::Dependabot::DependencySnapshot.create_from_job_definition(
             job: job,
-            job_definition: JSON.parse(
-              JSON.dump(
-                base64_dependency_files: base64_dependency_files.map(&:to_h),
-                base_commit_sha: @base_commit_sha
-              )
-            )
+            job_definition: {
+              "base64_dependency_files" => base64_dependency_files.map(&:to_h),
+              "base_commit_sha" => @base_commit_sha
+            }
           )
         end
 
-        # Copied from updater/lib/dependabot/update_files_command.rb (perform_job)
+        # Logic copied from updater/lib/dependabot/update_files_command.rb (perform_job)
         def perform_dependency_update
           ::Dependabot::Updater.new(
             service: service,
@@ -93,8 +93,8 @@ module TingleSoftware
         end
 
         # =============================================================================================================
-        # The below is copied from lib/dependabot/file_fetcher_command.rb and lib/dependabot/update_files_command.rb
-        # Ideally we don't modify this code as we want it to be as close to the original dependabot updater as possible
+        # The below was copied from lib/dependabot/file_fetcher_command.rb and lib/dependabot/update_files_command.rb
+        # We want our update logic to match the dependabot-core logic as close as possible, so don't modify this code.
         # =============================================================================================================
 
         # A method that abstracts the file fetcher creation logic and applies the same settings across all instances

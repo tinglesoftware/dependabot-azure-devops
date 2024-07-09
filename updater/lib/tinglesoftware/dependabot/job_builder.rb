@@ -9,12 +9,12 @@ require "dependabot/credential"
 require "tinglesoftware/dependabot/clients/azure"
 
 #
-# Parses environment variables into a Dependabot job object
+# Parse Dependabot user configuration from environment variables and convert them in to a Dependabot job object.
 #
 module TingleSoftware
   module Dependabot
-    class JobParser
-      def self.job_from_env_vars
+    class JobBuilder
+      def self.from_env_vars
         options = {
           id: id,
           allowed_updates: allowed_updates,
@@ -22,13 +22,13 @@ module TingleSoftware
           credentials: credentials,
           dependencies: nil,
           existing_pull_requests: existing_pull_requests,
-          existing_group_pull_requests: [],
-          experiments: {}, # experiments,
+          existing_group_pull_requests: existing_group_pull_requests,
+          experiments: {}, # TODO: fix experiments,
           ignore_conditions: ignore_conditions,
           package_manager: package_manager,
           reject_external_code: false,
           repo_contents_path: repo_contents_path,
-          requirements_update_strategy: nil, # requirements_update_strategy,
+          requirements_update_strategy: nil, # TODO: fix requirements_update_strategy,
           lockfile_only: lockfile_only,
           security_advisories: [],
           security_updates_only: false,
@@ -40,19 +40,42 @@ module TingleSoftware
           dependency_groups: dependency_groups,
           dependency_group_to_refresh: nil,
           repo_private: nil
+          # TinglingSoftware::Dependabot::Job specific options
+          # ...
         }
         ::Dependabot.logger.debug("Parsed job options from environment: #{JSON.pretty_generate(options)}")
         TingleSoftware::Dependabot::Job.new(options, azure_client)
       end
+
+      # TODO: DEPENDABOT_REJECT_EXTERNAL_CODE
+      # TODO: DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT
+      # TODO: DEPENDABOT_BRANCH_NAME_SEPARATOR
+      # TODO: DEPENDABOT_MILESTONE
+      # TODO: DEPENDABOT_VENDOR
+      # TODO: DEPENDABOT_AUTHOR_EMAIL
+      # TODO: DEPENDABOT_AUTHOR_NAME
+      # TODO: DEPENDABOT_LABELS
+      # TODO: DEPENDABOT_REVIEWERS
+      # TODO: DEPENDABOT_ASSIGNEES
+      # TODO: DEPENDABOT_FAIL_ON_EXCEPTION
+      # TODO: DEPENDABOT_SKIP_PULL_REQUESTS
+      # TODO: DEPENDABOT_CLOSE_PULL_REQUESTS
+      # TODO: DEPENDABOT_EXCLUDE_REQUIREMENTS_TO_UNLOCK
+      # TODO: AZURE_SET_AUTO_COMPLETE
+      # TODO: AZURE_AUTO_APPROVE_PR
+      # TODO: AZURE_AUTO_APPROVE_USER_TOKEN
+      # TODO: AZURE_MERGE_STRATEGY
+      # TODO: DEPENDABOT_SECURITY_ADVISORIES_FILE
 
       def self.id
         ENV.fetch("DEPENDABOT_JOB_ID", Time.now.to_i.to_s)
       end
 
       def self.allowed_updates
-        conditions = JSON.parse(ENV.fetch("DEPENDABOT_ALLOW_CONDITIONS", "[]"), symbolize_names: true).compact
+        conditions = JSON.parse(ENV.fetch("DEPENDABOT_ALLOW_CONDITIONS", "[]")).compact
         return if conditions.count.nonzero?
 
+        # If no conditions are specified, default to updating all dependencies
         conditions << {
           "dependency-type" => "all"
         }
@@ -108,8 +131,24 @@ module TingleSoftware
         JSON.parse(ENV.fetch("DEPENDABOT_IGNORE_CONDITIONS", "[]"), symbolize_names: true).compact
       end
 
+      # GitHub native implementation modifies some of the names in the config file
+      # https://docs.github.com/en/github/administering-a-repository/configuration-options-for-dependency-updates#package-ecosystem
+      PACKAGE_ECOSYSTEM_MAPPING = {
+        "github-actions" => "github_actions",
+        "gitsubmodule" => "submodules",
+        "gomod" => "go_modules",
+        "mix" => "hex",
+        "npm" => "npm_and_yarn",
+        # Additional ones
+        "yarn" => "npm_and_yarn",
+        "pipenv" => "pip",
+        "pip-compile" => "pip",
+        "poetry" => "pip"
+      }.freeze
+
       def self.package_manager
-        ENV.fetch("DEPENDABOT_PACKAGE_MANAGER", nil)
+        pkg_mgr = ENV.fetch("DEPENDABOT_PACKAGE_MANAGER", "bundler")
+        PACKAGE_ECOSYSTEM_MAPPING.fetch(pkg_mgr, pkg_mgr)
       end
 
       def self.repo_contents_path
@@ -150,7 +189,7 @@ module TingleSoftware
       end
 
       def self.branch
-        ENV.fetch("DEPENDABOT_BRANCH", nil)
+        ENV.fetch("DEPENDABOT_TARGET_BRANCH", nil)
       end
 
       def self.api_endpoint
@@ -204,21 +243,33 @@ module TingleSoftware
         )
       end
 
-      def self.existing_pull_requests
+      def self.active_pull_requests_property_sets
+        @active_pull_requests_property_sets ||= fetch_active_pull_requests_property_sets
+      end
+
+      def self.fetch_active_pull_requests_property_sets
         user_id = azure_client.get_user_id
         target_branch_name = branch || azure_client.fetch_default_branch(repo_name)
         azure_client.pull_requests_active(user_id, target_branch_name).map do |pr|
-          title = pr["title"]
-          {
-            "id" => pr["pullRequestId"],
-            "title" => pr["title"],
-            "source-ref-name" => pr["sourceRefName"],
-            "dependency-name" => title.match(/bump (.*) from/i)&.captures&.first,
-            "dependency-version" => title.match(/to (.*)\b/i)&.captures&.first,
-            "directory" => directory,
-            "dependency-removed" => false
-          }
+          pull_request_id = pr["pullRequestId"].to_s
+            azure_client.pull_request_properties_list(pull_request_id).map do |k,v|
+              [ k, v["$value"] ]
+            end.to_h
         end
+      end
+
+      def self.existing_pull_requests
+        dependencies = active_pull_requests_property_sets.map do |props|
+          JSON.parse(props[ApiClients::AzureApiClient::PullRequest::Properties::UPDATED_DEPENDENCIES] || nil.to_json)
+        end&.compact
+        dependencies.select { |d| d.is_a?(Array) }
+      end
+
+      def self.existing_group_pull_requests
+        dependencies = active_pull_requests_property_sets.map do |props|
+          JSON.parse(props[ApiClients::AzureApiClient::PullRequest::Properties::UPDATED_DEPENDENCIES] || nil.to_json)
+        end&.compact
+        dependencies.select { |d| d.is_a?(Hash) }
       end
     end
   end

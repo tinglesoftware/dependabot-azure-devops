@@ -1,16 +1,19 @@
 # typed: strict
 # frozen_string_literal: true
 
+require "json"
 require "dependabot/api_client"
 require "dependabot/pull_request_creator"
 require "dependabot/pull_request_updater"
 require "dependabot/credential"
 
 #
-# Custom API client that bridges the internal Dependabot Service API to Azure DevOps.
+# Azure DevOps implementation of the [internal] Dependabot Service API client.
 #
-# This API is normally only available to Dependabot jobs being executed within the official
-# hosted infrastructure and is not available to external users.
+# This API is normally reserved for Dependabot internal use and is used to send job data to Dependabots [internal] APIs.
+# Actions like creating/updating/closing pull requests are deferred to this API to be actioned later asynchronously.
+# However, in Azure DevOps, we don't have a remote API to defer actions to, so we instead perform pull request changes
+# here synchronously. This keeps the entire end-to-end update process contained within a single self-contained job.
 #
 module TingleSoftware
   module Dependabot
@@ -19,174 +22,210 @@ module TingleSoftware
         extend T::Sig
         attr_reader :job
 
+        # The names of all custom properties use dto store dependabot metadata in Azure DevOps pull requests.
+        # https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-properties?view=azure-devops-rest-7.1
+        module PullRequest
+          module Properties
+            BASE_COMMIT_SHA = "dependabot.base_commit_sha"
+            UPDATED_DEPENDENCIES = "dependabot.updated_dependencies"
+          end
+        end
+
         def initialize(job:)
           @job = job
         end
 
         sig { params(dependency_change: ::Dependabot::DependencyChange, base_commit_sha: String).void }
         def create_pull_request(dependency_change, base_commit_sha)
-          conflict_pull_request_commit = nil
-          conflict_pull_request_id = nil
-          existing_pull_request = nil
-          job.existing_pull_requests.each do |pr|
-            pr_id = pr["id"]
-            title = pr["title"]
-            source_ref_name = pr["source-ref-name"]
-            dep = dependency_change.updated_dependencies.first
+          pr_creator = ::Dependabot::PullRequestCreator.new(
+            source: job.source,
+            base_commit: base_commit_sha,
+            dependencies: dependency_change.updated_dependencies,
+            files: dependency_change.updated_dependency_files,
+            credentials: job.credentials,
+            pr_message_header: job.pr_message_header,
+            pr_message_footer: job.pr_message_footer,
+            custom_labels: job.pr_custom_labels,
+            author_details: {
+              name: job.pr_author_name,
+              email: job.pr_author_email
+            },
+            signature_key: nil, # TODO: Add support for this?
+            commit_message_options: job.commit_message_options,
+            #vulnerabilities_fixed: T::Hash[String, String],
+            #reviewers: Reviewers,
+            #assignees: T.nilable(T.any(T::Array[String], T::Array[Integer])),
+            #milestone: T.nilable(T.any(T::Array[String], Integer)),
+            branch_name_separator: "/",
+            #branch_name_prefix: String,
+            label_language: true,
+            automerge_candidate: true,
+            github_redirection_service: ::Dependabot::PullRequestCreator::DEFAULT_GITHUB_REDIRECTION_SERVICE,
+            #custom_headers: T.nilable(T::Hash[String, String]),
+            #require_up_to_date_base: T::Boolean,
+            provider_metadata: {
+              #work_item: $options[:milestone]
+            },
+            message: dependency_change.pr_message,
+            dependency_group: dependency_change.dependency_group,
+          )
 
-            # Filter those containing "#{dep.display_name} from #{dep.version}"
-            # The format avoids taking PRS for dependencies named in a similar manner.
-            # For instance 'Tingle.EventBus' and 'Tingle.EventBus.Transports.Azure.ServiceBus'
-            #
-            # display_name is used instead of name because some titles do not have the full dependency name.
-            # For instance 'org.junit.jupiter:junit-jupiter' will only read 'junit-jupiter' in the title.
-            #
-            # Sample Titles:
-            # Bump Tingle.Extensions.Logging.LogAnalytics from 3.4.2-ci0005 to 3.4.2-ci0006
-            # Bump Tingle.EventBus from 0.4.2-ci0005 to 0.4.2-ci0006
-            # Bump Tingle.EventBus.Transports.Azure.ServiceBus from 0.4.2-ci0005 to 0.4.2-ci0006
-            # chore(deps): bump dotenv from 9.0.1 to 9.0.2 in /server
-            next unless title.include?(" #{dep.display_name} from #{dep.version} to ")
-
-            # In case the Pull Request title contains an explicit path, check that path
-            # to make sure it is the same Pull Request. For example:
-            # 'Bump hashicorp/azurerm from 3.1.0 to 3.12.3 in /projectA' denotes a different
-            # Pull Request from 'Bump hashicorp/azurerm from 3.1.0 to 3.12.3 in /projectB'
-            next if updated_files.first.directory != "/" && !title.end_with?(" in #{updated_files.first.directory}")
-
-            # If the title does not contain the updated version, we need to abandon the PR and delete
-            # it's branch, because there is a newer version available.
-            # Using the format " to #{updated_deps[0].version}" handles both root and nested updates.
-            # For example:
-            # Bump Tingle.EventBus from 0.4.2-ci0005 to 0.4.2-ci0006
-            # chore(deps): bump dotenv from 9.0.1 to 9.0.2 in /server
-            unless title.include?(" to #{updated_deps[0].version}")
-              # Abandon old version PR
-              job.azure_client.branch_delete(source_ref_name) # do this first to avoid hanging branches
-              job.azure_client.pull_request_abandon(pr_id)
-              puts "Abandoned Pull Request ##{pr_id}"
-              next
-            end
-
-            existing_pull_request = pr
-
-            # If the merge status of the current PR is not succeeded,
-            # we need to resolve the merge conflicts
-            next unless pr["mergeStatus"] != "succeeded"
-
-            # ignore pull request manually edited
-            next if job.azure_client.pull_request_commits(pr_id).length > 1
-
-            # keep pull request for updating later
-            conflict_pull_request_commit = pr["lastMergeSourceCommit"]["commitId"]
-            conflict_pull_request_id = pr_id
-            break
-          end
-
-          pull_request_id = nil
-          created_or_updated = false
-          if conflict_pull_request_commit && conflict_pull_request_id
-
-            ##############################################
-            # Update pull request with conflict resolved #
-            ##############################################
-            pr_updater = ::Dependabot::PullRequestUpdater.new(
-              source: $source,
-              base_commit: commit,
-              old_commit: conflict_pull_request_commit,
-              files: updated_files,
-              credentials: $options[:credentials],
-              pull_request_number: conflict_pull_request_id,
-              author_details: $options[:author_details]
-            )
-
-            puts "Submitting pull request (##{conflict_pull_request_id}) update for #{dep.name}."
-            pr_updater.update
-            pull_request = existing_pull_request
-            pull_request_id = conflict_pull_request_id
-
-            created_or_updated = true
-          elsif !existing_pull_request # Only create PR if there is none existing
-
-            ########################################
-            # Create a pull request for the update #
-            ########################################
-            pr_creator = ::Dependabot::PullRequestCreator.new(
-              source: job.source,
-              base_commit: base_commit_sha,
-              dependencies: dependency_change.updated_dependencies,
-              files: dependency_change.updated_dependency_files,
-              credentials: job.credentials,
-              author_details: {
-                email: ENV["DEPENDABOT_AUTHOR_EMAIL"] || "noreply@github.com",
-                name: ENV["DEPENDABOT_AUTHOR_NAME"] || "dependabot[bot]"
-              },
-              commit_message_options: job.commit_message_options,
-              custom_labels: [],
-              reviewers: [],
-              assignees: [],
-              milestone: [],
-              branch_name_separator: "/",
-              label_language: true,
-              automerge_candidate: true,
-              github_redirection_service: ::Dependabot::PullRequestCreator::DEFAULT_GITHUB_REDIRECTION_SERVICE,
-              provider_metadata: {
-                #work_item: $options[:milestone]
-              },
-              message: dependency_change.pr_message
-            )
-
-            puts "Submitting '#{dependency_change.pr_message.pr_name}' pull request for creation."
-            pull_request = pr_creator.create
-
-            if pull_request
-              req_status = pull_request&.status
-              if req_status == 201
-                pull_request = JSON[pull_request.body]
-                pull_request_id = pull_request["pullRequestId"]
-                puts "Created pull request for '#{dependency_change.pr_message.pr_name}'(##{pull_request_id})."
-              else
-                content = JSON[pull_request.body]
-                message = content["message"]
-                puts "Failed! PR already exists or an error has occurred."
-                # throw exception here because pull_request.create does not throw
-                raise StandardError, "Pull Request creation failed with status #{req_status}. Message: #{message}"
-              end
+          # Publish the pull request
+          ::Dependabot.logger.info("Submitting '#{dependency_change.pr_message.pr_name}' pull request for creation.")
+          pull_request = pr_creator.create
+          if pull_request
+            req_status = pull_request&.status
+            if req_status == 201
+              pull_request = JSON[pull_request.body]
+              pull_request_id = pull_request["pullRequestId"]
+              ::Dependabot.logger.info(
+                "Created pull request for '#{dependency_change.pr_message.pr_name}'(##{pull_request_id})."
+              )
             else
-              puts "Seems PR is already present."
+              content = JSON[pull_request.body]
+              message = content["message"]
+              ::Dependabot.logger.error("Failed! PR already exists or an error has occurred.")
+              # throw exception here because pull_request.create does not throw
+              raise StandardError, "Pull Request creation failed with status #{req_status}. Message: #{message}"
             end
-
-            created_or_updated = true
           else
-            pull_request = existing_pull_request # One already existed
-            pull_request_id = pull_request["pullRequestId"]
-            puts "Pull request for #{dep.version} already exists (##{pull_request_id}) and does not need updating."
+            ::Dependabot.logger.info("Seems PR is already present.")
           end
+
+          # Update the pull request property metadata with the updated dependencies info.
+          set_pull_request_property_metadata(pull_request_id, dependency_change, base_commit_sha)
+
+          # Apply auto-complete and auto-approve settings
+          set_pull_request_auto_complete(pull_request_id) if job.pr_auto_complete
+          set_pull_request_auto_approve(pull_request_id) if job.pr_auto_approve
         end
 
         sig { params(dependency_change: ::Dependabot::DependencyChange, base_commit_sha: String).void }
-        def update_pull_request(dependency_change, base_commit_sha) end
+        def update_pull_request(dependency_change, base_commit_sha)
+          raise "not yet implemented"
+        end
 
         sig { params(dependency_names: T.any(String, T::Array[String]), reason: T.any(String, Symbol)).void }
-        def close_pull_request(dependency_names, reason) end
+        def close_pull_request(dependency_names, reason)
+          raise "not yet implemented"
+          # job.azure_client.pull_request_comment(pr_id, reason)
+          # job.azure_client.branch_delete(source_ref_name) # do this first to avoid hanging branches
+          # job.azure_client.pull_request_abandon(pr_id)
+        end
 
         sig { params(error_type: T.any(String, Symbol), error_details: T.nilable(T::Hash[T.untyped, T.untyped])).void }
-        def record_update_job_error(error_type:, error_details:) end
+        def record_update_job_error(error_type:, error_details:)
+          raise "not yet implemented"
+        end
 
         sig { params(error_type: T.any(Symbol, String), error_details: T.nilable(T::Hash[T.untyped, T.untyped])).void }
-        def record_update_job_unknown_error(error_type:, error_details:) end
+        def record_update_job_unknown_error(error_type:, error_details:)
+          raise "not yet implemented"
+        end
 
         sig { params(base_commit_sha: String).void }
-        def mark_job_as_processed(base_commit_sha) end
+        def mark_job_as_processed(base_commit_sha)
+          raise "not yet implemented"
+        end
 
         sig { params(dependencies: T::Array[T::Hash[Symbol, T.untyped]], dependency_files: T::Array[String]).void }
-        def update_dependency_list(dependencies, dependency_files) end
+        def update_dependency_list(dependencies, dependency_files)
+          raise "not yet implemented"
+        end
 
         sig { params(ecosystem_versions: T::Hash[Symbol, T.untyped]).void }
-        def record_ecosystem_versions(ecosystem_versions) end
+        def record_ecosystem_versions(ecosystem_versions)
+          raise "not yet implemented"
+        end
 
         sig { params(metric: String, tags: T::Hash[String, String]).void }
-        def increment_metric(metric, tags:) end
+        def increment_metric(metric, tags:)
+          raise "not yet implemented"
+        end
+
+        private
+
+        def set_pull_request_auto_approve(pull_request_id, reviewer_token)
+          # Auto approve this Pull Request
+          if $options[:auto_approve_pr] && created_or_updated
+            puts "Auto Approving PR #{pull_request_id}"
+
+            job.azure_client.pull_request_approve(
+              # Adding argument names will fail! Maybe because there is no spec?
+              pull_request_id,
+              $options[:auto_approve_user_token]
+            )
+          end
+        end
+
+        def set_pull_request_auto_complete(pull_request_id)
+          # Set auto complete for this Pull Request
+          # Pull requests that pass all policies will be merged automatically.
+          # Optional policies can be ignored by passing their identifiers
+          #
+          # The merge commit message should contain the PR number and title for tracking.
+          # This is the default behaviour in Azure DevOps
+          # Example:
+          # Merged PR 24093: Bump Tingle.Extensions.Logging.LogAnalytics from 3.4.2-ci0005 to 3.4.2-ci0006
+          #
+          # Bumps [Tingle.Extensions.Logging.LogAnalytics](...) from 3.4.2-ci0005 to 3.4.2-ci0006
+          # - [Release notes](....)
+          # - [Changelog](....)
+          # - [Commits](....)
+          merge_commit_message = "Merged PR #{pull_request_id}: #{msg.pr_name}\n\n#{msg.commit_message}"
+          if $options[:set_auto_complete] && created_or_updated
+            auto_complete_user_id = pull_request["createdBy"]["id"]
+            puts "Setting auto complete on ##{pull_request_id}."
+            azure_client.autocomplete_pull_request(
+              # Adding argument names will fail! Maybe because there is no spec?
+              pull_request_id,
+              auto_complete_user_id,
+              merge_commit_message,
+              true, # delete_source_branch
+              true, # squash_merge
+              $options[:merge_strategy],
+              $options[:trans_work_items],
+              $options[:auto_complete_ignore_config_ids]
+            )
+          end
+        end
+
+        def set_pull_request_property_metadata(pull_request_id, dependency_change, base_commit_sha)
+          # Update the pull request property metadata with info about the updated dependencies.
+          # This is used in `job_builder.rb` to calculate "existing_pull_requests" in future jobs.
+          job.azure_client.pull_request_properties_update(
+            pull_request_id.to_s,
+            {
+              PullRequest::Properties::BASE_COMMIT_SHA => base_commit_sha.to_s,
+              PullRequest::Properties::UPDATED_DEPENDENCIES =>
+                pull_request_updated_dependencies_property_data(dependency_change).to_json
+            }
+          )
+        end
+
+        def pull_request_updated_dependencies_property_data(dependency_change)
+          if dependency_change.grouped_update?
+            {
+              "dependency-group-name" => dependency_change.dependency_group.name,
+              "dependencies" => dependency_change.updated_dependencies.map do |dep|
+                {
+                  "dependency-name" => dep.name,
+                  "dependency-version" => dep.version,
+                  "directory" => dep.directory,
+                  "dependency-removed" => dep.removed? ? true : nil
+                }.compact
+              end
+            }
+          else
+            dependency_change.updated_dependencies.map do |dep|
+              {
+                "dependency-name" => dep.name,
+                "dependency-version" => dep.version,
+                "dependency-removed" => dep.removed? ? true : nil
+              }.compact
+            end
+          end
+        end
       end
     end
   end

@@ -23,6 +23,7 @@ Dependabot::SimpleInstrumentor.subscribe do |*args|
   if name == "excon.request" || name == "excon.response"
     puts "🌍 #{name == 'excon.response' ? "<-- #{payload[:status]}" : "--> #{payload[:method].upcase}"}" \
          " #{Excon::Utils.request_uri(payload)}"
+    puts "🚨 #{payload[:body]}" if payload[:status] == 400 && payload[:body]
   end
 end
 
@@ -43,6 +44,7 @@ require "dependabot/go_modules"
 require "dependabot/npm_and_yarn"
 require "dependabot/bundler"
 require "dependabot/pub"
+# TODO: This causes build error?
 #require "dependabot/silent"
 require "dependabot/swift"
 require "dependabot/devcontainers"

@@ -6,14 +6,16 @@ require "dependabot/shared_helpers"
 require "excon"
 
 #
-# Extended Azure [DevOps] client that provides additional helper methods not available in the base client
+# Azure DevOps client that provides additional helper methods not available in the dependabot-core client.
 #
 module TingleSoftware
   module Dependabot
     module Clients
       class Azure < ::Dependabot::Clients::Azure
+        API_VERSION = "7.1"
+
         def pull_requests_active(user_id, default_branch)
-          # https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-requests/get-pull-requests?view=azure-devops-rest-6.0&tabs=HTTP
+          # https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-requests/get-pull-requests?view=azure-devops-rest-7.1
           response = get(source.api_endpoint +
             source.organization + "/" + source.project +
             "/_apis/git/repositories/" + source.unscoped_repo +
@@ -67,7 +69,7 @@ module TingleSoftware
         def pull_request_approve(pull_request_id, reviewer_token)
           user_id = get_user_id(reviewer_token)
 
-          # https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-reviewers/create-pull-request-reviewers?view=azure-devops-rest-6.0
+          # https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-reviewers/create-pull-request-reviewers?view=azure-devops-rest-7.1
           content = {
             # 10 - approved 5 - approved with suggestions 0 - no vote -5 - waiting for author -10 - rejected
             vote: 10,
@@ -80,13 +82,68 @@ module TingleSoftware
             "?api-version=7.1", content.to_json, reviewer_token)
         end
 
+        def pull_request_properties_list(pull_request_id)
+          # https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-properties/list?view=azure-devops-rest-7.1
+          response = get(
+            api_url("git/repositories/" + source.unscoped_repo + "/pullrequests/" + pull_request_id + "/properties")
+          )
+
+          JSON.parse(response.body).fetch("value")
+        end
+
+        def pull_request_properties_update(pull_request_id, properties)
+          content = properties.map do |key, value|
+            {
+              "op" => "replace", # update if exists; create if not exists
+              "path" => "/#{key}",
+              "value" => value.to_s
+            }
+          end
+
+          # https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-properties/update?view=azure-devops-rest-7.1
+          patch(
+            api_url("git/repositories/" + source.unscoped_repo + "/pullrequests/" + pull_request_id + "/properties"),
+            content.to_json
+          )
+        end
+
+        private
+
+        def api_url(path, version = API_VERSION)
+          source.api_endpoint + source.organization + "/" +
+            source.project + "/_apis/" + path + "?api-version=" + version
+        end
+
+        def patch(url, json)
+          response = Excon.patch(
+            url,
+            body: json,
+            user: credentials&.fetch("username", nil),
+            password: credentials&.fetch("password", nil),
+            idempotent: true,
+            **::Dependabot::SharedHelpers.excon_defaults(
+              headers: auth_header.merge(
+                {
+                  "Content-Type" => "application/json-patch+json"
+                }
+              )
+            )
+          )
+
+          raise Unauthorized if response&.status == 401
+          raise Forbidden if response&.status == 403
+          raise NotFound if response&.status == 404
+
+          response
+        end
+
         def get_with_token(url, token)
           response = Excon.get(
             url,
             user: credentials&.fetch("username", nil),
             password: token,
             idempotent: true,
-            **SharedHelpers.excon_defaults(
+            **::Dependabot::SharedHelpers.excon_defaults(
               headers: auth_header
             )
           )
@@ -105,7 +162,7 @@ module TingleSoftware
             user: credentials&.fetch("username", nil),
             password: token,
             idempotent: true,
-            **SharedHelpers.excon_defaults(
+            **::Dependabot::SharedHelpers.excon_defaults(
               headers: auth_header.merge(
                 {
                   "Content-Type" => "application/json"
