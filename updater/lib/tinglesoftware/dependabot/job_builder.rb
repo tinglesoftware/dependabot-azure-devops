@@ -31,10 +31,10 @@ module TingleSoftware
           repo_contents_path: repo_contents_path,
           requirements_update_strategy: nil, # TODO: Fix requirements_update_strategy,
           lockfile_only: lockfile_only,
-          security_advisories: [], # TODO: Implement this
-          security_updates_only: false, # TODO: Implement this
+          security_advisories: security_advisories,
+          security_updates_only: security_updates_only,
           source: source,
-          token: github_token,
+          token: github_access_token,
           update_subdependencies: true,
           updating_a_pull_request: false, # TODO: Implement this
           vendor_dependencies: false, # TODO: Implement this
@@ -58,11 +58,17 @@ module TingleSoftware
           pr_milestone: pr_milestone,
           pr_branch_name_separator: pr_branch_name_separator
         }
+        validate(options)
         ::Dependabot.logger.debug("Parsed job info: #{JSON.pretty_generate(options)}")
         TingleSoftware::Dependabot::Job.new(options, azure_client)
       end
 
-      # TODO: DEPENDABOT_SECURITY_ADVISORIES_FILE
+      def self.validate(options)
+        if options["security_updates_only"] && !options["token"]
+          raise StandardError, "Security only updates are enabled but a GitHub token is not supplied! Cannot proceed"
+        end
+      end
+
       # TODO: DEPENDABOT_VENDOR
       # TODO: DEPENDABOT_FAIL_ON_EXCEPTION
       # TODO: DEPENDABOT_SKIP_PULL_REQUESTS
@@ -74,7 +80,7 @@ module TingleSoftware
       end
 
       # TODO: Implement this
-      def open_pull_requests_limit
+      def self.open_pull_requests_limit
         ENV.fetch("DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT", "5").to_i
       end
 
@@ -92,7 +98,7 @@ module TingleSoftware
         JSON.parse(ENV.fetch("DEPENDABOT_COMMIT_MESSAGE_OPTIONS", "{}"), symbolize_names: true)
       end
 
-      def self.github_token
+      def self.github_access_token
         ENV.fetch("GITHUB_ACCESS_TOKEN", nil)
       end
 
@@ -106,12 +112,12 @@ module TingleSoftware
           },
           *JSON.parse(ENV.fetch("DEPENDABOT_EXTRA_CREDENTIALS", "[]"))
         ]
-        if github_token
+        if github_access_token
           creds << {
             "type" => "git_source",
             "host" => "github.com",
             "username" => "x-access-token",
-            "password" => github_token
+            "password" => github_access_token
           }
         end
 
@@ -315,6 +321,23 @@ module TingleSoftware
           JSON.parse(props[ApiClients::AzureApiClient::PullRequest::Properties::UPDATED_DEPENDENCIES] || nil.to_json)
         end&.compact
         dependencies.select { |d| d.is_a?(Hash) }
+      end
+
+      def self.security_updates_only
+        # If the pull request limit is set to zero, we assume that the user just wants security updates
+        return true if open_pull_requests_limit.zero?
+
+        ENV.fetch("DEPENDABOT_SECURITY_UPDATES_ONLY", nil) == "true"
+      end
+
+      def self.security_advisories
+        @security_advisories ||= load_security_advisories
+      end
+
+      def self.load_security_advisories
+        security_advisories_file_path = ENV.fetch("DEPENDABOT_SECURITY_ADVISORIES_FILE", nil)
+        return [] unless security_advisories_file_path && File.exist?(security_advisories_file_path)
+        JSON.parse(File.read(security_advisories_file_path))
       end
 
       def self.pr_author_name
