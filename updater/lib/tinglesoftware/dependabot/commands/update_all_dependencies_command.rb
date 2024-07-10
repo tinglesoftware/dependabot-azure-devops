@@ -37,11 +37,11 @@ module TingleSoftware
 
           # Parse the dependency files and extract the full list of dependencies that need updating
           # Output information about all the dependencies we found, for diagnostic purposes
-          ::Dependabot.logger.info("Found #{dependency_files.count} dependencies files")
+          ::Dependabot.logger.info("Found #{dependency_files.count} dependencies files:")
           dependency_files.select.each { |f| ::Dependabot.logger.info(" - #{f.directory}#{f.name}") }
-          ::Dependabot.logger.info("Found #{dependency_snapshot.dependencies.count(&:top_level?)} dependencies")
+          ::Dependabot.logger.info("Found #{dependency_snapshot.dependencies.count(&:top_level?)} dependencies:")
           dependency_snapshot.dependencies.select(&:top_level?).each { |d| ::Dependabot.logger.info(" - #{d.name} (#{d.version})") }
-          ::Dependabot.logger.info("Found #{dependency_snapshot.groups.count} dependency group(s)")
+          ::Dependabot.logger.info("Found #{dependency_snapshot.groups.count} dependency group(s):")
           dependency_snapshot.groups.select.each do |g|
             ::Dependabot.logger.info(" - #{g.name}")
             g.dependencies.select(&:top_level?).each { |d| ::Dependabot.logger.info("   - #{d.name} (#{d.version})") }

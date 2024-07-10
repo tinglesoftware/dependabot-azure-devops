@@ -50,21 +50,21 @@ module TingleSoftware
               name: job.pr_author_name,
               email: job.pr_author_email
             },
-            signature_key: nil, # TODO: Add support for this?
+            signature_key: job.pr_signature_key,
             commit_message_options: job.commit_message_options,
-            #vulnerabilities_fixed: T::Hash[String, String],
-            #reviewers: Reviewers,
-            #assignees: T.nilable(T.any(T::Array[String], T::Array[Integer])),
-            #milestone: T.nilable(T.any(T::Array[String], Integer)),
-            branch_name_separator: "/",
-            #branch_name_prefix: String,
+            # TODO: Implement this
+            # vulnerabilities_fixed: T::Hash[String, String],
+            reviewers: job.pr_reviewers,
+            assignees: job.pr_assignees,
+            milestone: job.pr_milestone,
+            branch_name_separator: job.pr_branch_name_separator,
             label_language: true,
             automerge_candidate: true,
             github_redirection_service: ::Dependabot::PullRequestCreator::DEFAULT_GITHUB_REDIRECTION_SERVICE,
-            #custom_headers: T.nilable(T::Hash[String, String]),
-            #require_up_to_date_base: T::Boolean,
+            # custom_headers: T.nilable(T::Hash[String, String]), # not used in the Azure client currently
+            # require_up_to_date_base: T::Boolean, # not used in the Azure client currently
             provider_metadata: {
-              #work_item: $options[:milestone]
+              work_item: job.pr_milestone
             },
             message: dependency_change.pr_message,
             dependency_group: dependency_change.dependency_group,
@@ -81,6 +81,14 @@ module TingleSoftware
               ::Dependabot.logger.info(
                 "Created pull request for '#{dependency_change.pr_message.pr_name}'(##{pull_request_id})."
               )
+
+              # Update the pull request property metadata with the updated dependencies info.
+              set_pull_request_property_metadata(pull_request, dependency_change, base_commit_sha)
+
+              # Apply auto-complete and auto-approve settings
+              set_pull_request_auto_complete(pull_request, dependency_change.pr_message) if job.azure_set_auto_complete
+              set_pull_request_auto_approve(pull_request) if job.azure_set_auto_approve
+
             else
               content = JSON[pull_request.body]
               message = content["message"]
@@ -91,13 +99,6 @@ module TingleSoftware
           else
             ::Dependabot.logger.info("Seems PR is already present.")
           end
-
-          # Update the pull request property metadata with the updated dependencies info.
-          set_pull_request_property_metadata(pull_request_id, dependency_change, base_commit_sha)
-
-          # Apply auto-complete and auto-approve settings
-          set_pull_request_auto_complete(pull_request_id) if job.pr_auto_complete
-          set_pull_request_auto_approve(pull_request_id) if job.pr_auto_approve
         end
 
         sig { params(dependency_change: ::Dependabot::DependencyChange, base_commit_sha: String).void }
@@ -108,6 +109,7 @@ module TingleSoftware
         sig { params(dependency_names: T.any(String, T::Array[String]), reason: T.any(String, Symbol)).void }
         def close_pull_request(dependency_names, reason)
           raise "not yet implemented"
+          # TODO: Implement this
           # job.azure_client.pull_request_comment(pr_id, reason)
           # job.azure_client.branch_delete(source_ref_name) # do this first to avoid hanging branches
           # job.azure_client.pull_request_abandon(pr_id)
@@ -115,51 +117,40 @@ module TingleSoftware
 
         sig { params(error_type: T.any(String, Symbol), error_details: T.nilable(T::Hash[T.untyped, T.untyped])).void }
         def record_update_job_error(error_type:, error_details:)
-          raise "not yet implemented"
+          # TODO: Implement this
+          # raise e if job.fail_on_exception
         end
 
         sig { params(error_type: T.any(Symbol, String), error_details: T.nilable(T::Hash[T.untyped, T.untyped])).void }
         def record_update_job_unknown_error(error_type:, error_details:)
-          raise "not yet implemented"
+          # TODO: Implement this
+          # raise e if job.fail_on_exception
         end
 
         sig { params(base_commit_sha: String).void }
         def mark_job_as_processed(base_commit_sha)
-          raise "not yet implemented"
+          # No implementation required for Azure DevOps
         end
 
         sig { params(dependencies: T::Array[T::Hash[Symbol, T.untyped]], dependency_files: T::Array[String]).void }
         def update_dependency_list(dependencies, dependency_files)
-          raise "not yet implemented"
+          # No implementation required for Azure DevOps
         end
 
         sig { params(ecosystem_versions: T::Hash[Symbol, T.untyped]).void }
         def record_ecosystem_versions(ecosystem_versions)
-          raise "not yet implemented"
+          # No implementation required for Azure DevOps
         end
 
         sig { params(metric: String, tags: T::Hash[String, String]).void }
         def increment_metric(metric, tags:)
-          raise "not yet implemented"
+          puts "📊 METRIC '#{metric}' #{JSON.pretty_generate(tags)}"
         end
 
         private
 
-        def set_pull_request_auto_approve(pull_request_id, reviewer_token)
-          # Auto approve this Pull Request
-          if $options[:auto_approve_pr] && created_or_updated
-            puts "Auto Approving PR #{pull_request_id}"
-
-            job.azure_client.pull_request_approve(
-              # Adding argument names will fail! Maybe because there is no spec?
-              pull_request_id,
-              $options[:auto_approve_user_token]
-            )
-          end
-        end
-
-        def set_pull_request_auto_complete(pull_request_id)
-          # Set auto complete for this Pull Request
+        def set_pull_request_auto_complete(pull_request, msg)
+          #
           # Pull requests that pass all policies will be merged automatically.
           # Optional policies can be ignored by passing their identifiers
           #
@@ -172,29 +163,40 @@ module TingleSoftware
           # - [Release notes](....)
           # - [Changelog](....)
           # - [Commits](....)
+          #
+          pull_request_id = pull_request["pullRequestId"]
           merge_commit_message = "Merged PR #{pull_request_id}: #{msg.pr_name}\n\n#{msg.commit_message}"
-          if $options[:set_auto_complete] && created_or_updated
-            auto_complete_user_id = pull_request["createdBy"]["id"]
-            puts "Setting auto complete on ##{pull_request_id}."
-            azure_client.autocomplete_pull_request(
-              # Adding argument names will fail! Maybe because there is no spec?
-              pull_request_id,
-              auto_complete_user_id,
-              merge_commit_message,
-              true, # delete_source_branch
-              true, # squash_merge
-              $options[:merge_strategy],
-              $options[:trans_work_items],
-              $options[:auto_complete_ignore_config_ids]
-            )
-          end
+          auto_complete_user_id = pull_request["createdBy"]["id"].to_s
+
+          ::Dependabot.logger.info("Setting auto complete on ##{pull_request_id}.")
+          job.azure_client.autocomplete_pull_request(
+            # Adding argument names will fail! Maybe because there is no spec?
+            pull_request_id.to_i,
+            auto_complete_user_id,
+            merge_commit_message,
+            true, # delete_source_branch
+            true, # squash_merge
+            job.azure_merge_strategy,
+            false, # trans_work_items
+            job.azure_auto_complete_ignore_config_ids
+          )
         end
 
-        def set_pull_request_property_metadata(pull_request_id, dependency_change, base_commit_sha)
+        def set_pull_request_auto_approve(pull_request, reviewer_token)
+          pull_request_id = pull_request["pullRequestId"]
+          ::Dependabot.logger.info("Auto Approving PR #{pull_request_id}")
+          job.azure_client.pull_request_approve(
+            # Adding argument names will fail! Maybe because there is no spec?
+            pull_request_id.to_i,
+            job.azure_auto_approve_user_token
+          )
+        end
+
+        def set_pull_request_property_metadata(pull_request, dependency_change, base_commit_sha)
           # Update the pull request property metadata with info about the updated dependencies.
           # This is used in `job_builder.rb` to calculate "existing_pull_requests" in future jobs.
           job.azure_client.pull_request_properties_update(
-            pull_request_id.to_s,
+            pull_request["pullRequestId"].to_s,
             {
               PullRequest::Properties::BASE_COMMIT_SHA => base_commit_sha.to_s,
               PullRequest::Properties::UPDATED_DEPENDENCIES =>

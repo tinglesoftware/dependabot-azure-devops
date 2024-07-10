@@ -8,13 +8,13 @@ $stdout.sync = true
 
 require "tinglesoftware/dependabot/setup"
 require "tinglesoftware/dependabot/job"
-require "tinglesoftware/dependabot/job_parser"
+require "tinglesoftware/dependabot/job_builder"
 require "tinglesoftware/dependabot/api_clients/azure_api_client"
 require "tinglesoftware/dependabot/commands/update_all_dependencies_command"
 
 begin
   TingleSoftware::Dependabot::Commands::UpdateAllDependenciesCommand.new(
-    job: TingleSoftware::Dependabot::JobParser.job_from_env_vars
+    job: TingleSoftware::Dependabot::JobBuilder.from_env_vars
   ).run
 rescue Dependabot::RunFailure
   exit 1

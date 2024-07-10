@@ -101,7 +101,7 @@ module TingleSoftware
           end
 
           # https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-properties/update?view=azure-devops-rest-7.1
-          patch(
+          patch_as_json_patch(
             api_url("git/repositories/" + source.unscoped_repo + "/pullrequests/" + pull_request_id + "/properties"),
             content.to_json
           )
@@ -114,7 +114,7 @@ module TingleSoftware
             source.project + "/_apis/" + path + "?api-version=" + version
         end
 
-        def patch(url, json)
+        def patch_as_json_patch(url, json)
           response = Excon.patch(
             url,
             body: json,
