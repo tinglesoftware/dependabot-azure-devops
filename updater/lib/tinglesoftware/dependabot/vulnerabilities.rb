@@ -75,12 +75,13 @@ module TingleSoftware
             patched_versions = [first_patched_version].compact.reject { |v| v.strip.empty? }
             {
               "dependency-name" => dependency_name,
-              "title" => node.dig(:advisory, :summary),
-              "description" => node.dig(:advisory, :description),
               "affected-versions" => affected_versions,
               "patched-versions" => patched_versions,
               "unaffected-versions" => [],
-              "url" => node.dig(:advisory, :permalink)
+              "title" => node.dig(:advisory, :summary),
+              "description" => node.dig(:advisory, :description),
+              "source-name" => "GitHub Advisory Database",
+              "source-url" => node.dig(:advisory, :permalink)
             }
           end
         end

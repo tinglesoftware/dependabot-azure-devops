@@ -78,7 +78,8 @@ module TingleSoftware
 
       def vulnerabilities_fixed_for(updated_dependencies)
         updated_dependencies.filter_map do |dep|
-          { dep.name => @security_advisories.select { |adv| adv["dependency-name"] == dep.name } }
+          { dep.name => @security_advisories.select { |adv| adv["dependency-name"] == dep.name }
+                                            .map { |adv| adv.transform_keys { |key| key.tr("-", "_") } } }
         end&.reduce(:merge)
       end
 
