@@ -41,33 +41,30 @@ module TingleSoftware
             source: job.source,
             base_commit: base_commit_sha,
             dependencies: dependency_change.updated_dependencies,
+            dependency_group: dependency_change.dependency_group,
             files: dependency_change.updated_dependency_files,
             credentials: job.credentials,
             pr_message_header: job.pr_message_header,
             pr_message_footer: job.pr_message_footer,
-            custom_labels: job.pr_custom_labels,
             author_details: {
               name: job.pr_author_name,
               email: job.pr_author_email
             },
             signature_key: job.pr_signature_key,
             commit_message_options: job.commit_message_options,
-            # TODO: Implement this
-            # vulnerabilities_fixed: T::Hash[String, String],
+            custom_labels: job.pr_custom_labels,
             reviewers: job.pr_reviewers,
             assignees: job.pr_assignees,
             milestone: job.pr_milestone,
+            vulnerabilities_fixed: job.vulnerabilities_fixed_for(dependency_change.updated_dependencies),
             branch_name_separator: job.pr_branch_name_separator,
+            branch_name_prefix: job.pr_branch_name_prefix,
             label_language: true,
             automerge_candidate: true,
             github_redirection_service: ::Dependabot::PullRequestCreator::DEFAULT_GITHUB_REDIRECTION_SERVICE,
-            # custom_headers: T.nilable(T::Hash[String, String]), # not used in the Azure client currently
-            # require_up_to_date_base: T::Boolean, # not used in the Azure client currently
             provider_metadata: {
               work_item: job.pr_milestone
-            },
-            message: dependency_change.pr_message,
-            dependency_group: dependency_change.dependency_group,
+            }
           )
 
           # Publish the pull request
@@ -78,15 +75,16 @@ module TingleSoftware
             if req_status == 201
               pull_request = JSON[pull_request.body]
               pull_request_id = pull_request["pullRequestId"]
+              pull_request_title = pull_request["title"]
               ::Dependabot.logger.info(
-                "Created pull request for '#{dependency_change.pr_message.pr_name}'(##{pull_request_id})."
+                "Created pull request for '#{pull_request_title}'(##{pull_request_id})."
               )
 
               # Update the pull request property metadata with the updated dependencies info.
               set_pull_request_property_metadata(pull_request, dependency_change, base_commit_sha)
 
               # Apply auto-complete and auto-approve settings
-              set_pull_request_auto_complete(pull_request, dependency_change.pr_message) if job.azure_set_auto_complete
+              set_pull_request_auto_complete(pull_request) if job.azure_set_auto_complete
               set_pull_request_auto_approve(pull_request) if job.azure_set_auto_approve
 
             else
@@ -149,7 +147,13 @@ module TingleSoftware
 
         private
 
-        def set_pull_request_auto_complete(pull_request, msg)
+        def set_pull_request_auto_complete(pull_request)
+          pull_request_id = pull_request["pullRequestId"]
+          pull_request_title = pull_request["title"]
+          pull_request_description = pull_request["description"]
+
+          auto_complete_user_id = pull_request["createdBy"]["id"].to_s
+
           #
           # Pull requests that pass all policies will be merged automatically.
           # Optional policies can be ignored by passing their identifiers
@@ -164,9 +168,14 @@ module TingleSoftware
           # - [Changelog](....)
           # - [Commits](....)
           #
-          pull_request_id = pull_request["pullRequestId"]
-          merge_commit_message = "Merged PR #{pull_request_id}: #{msg.pr_name}\n\n#{msg.commit_message}"
-          auto_complete_user_id = pull_request["createdBy"]["id"].to_s
+          # TODO: Figure out why request fails if commit message is 4000 characters long
+          merge_commit_message_max_length = ::Dependabot::PullRequestCreator::Azure::PR_DESCRIPTION_MAX_LENGTH - 300
+          merge_commit_message_encoding = ::Dependabot::PullRequestCreator::Azure::PR_DESCRIPTION_ENCODING
+          merge_commit_message = "Merged PR #{pull_request_id}: #{pull_request_title}\n\n#{pull_request_description}"
+                                 .force_encoding(merge_commit_message_encoding)
+          if merge_commit_message.length > merge_commit_message_max_length
+            merge_commit_message = merge_commit_message[0..merge_commit_message_max_length]
+          end
 
           ::Dependabot.logger.info("Setting auto complete on ##{pull_request_id}.")
           job.azure_client.autocomplete_pull_request(

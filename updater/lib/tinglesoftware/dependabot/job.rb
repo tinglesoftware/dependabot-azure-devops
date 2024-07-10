@@ -47,6 +47,8 @@ module TingleSoftware
 
       attr_reader :pr_branch_name_separator
 
+      attr_reader :pr_branch_name_prefix
+
       def initialize(attributes, azure_client)
         @azure_client = azure_client
         @azure_set_auto_complete = T.let(attributes.fetch(:azure_set_auto_complete), T::Boolean)
@@ -65,6 +67,7 @@ module TingleSoftware
         @pr_assignees = T.let(attributes.fetch(:pr_assignees, nil), T.nilable(T.any(T::Array[String], T::Array[Integer])))
         @pr_milestone = T.let(attributes.fetch(:pr_milestone, nil), T.nilable(Integer))
         @pr_branch_name_separator = T.let(attributes.fetch(:pr_branch_name_separator), String)
+        @pr_branch_name_prefix = T.let(attributes.fetch(:pr_branch_name_prefix), String)
 
         super(attributes)
       end
@@ -73,7 +76,12 @@ module TingleSoftware
         @vulnerabilities_fetcher ||= TingleSoftware::Dependabot::Vulnerabilities::Fetcher.new(package_manager, token) if token
       end
 
-      sig { params(dependency: ::Dependabot::Dependency).returns(T::Array[::Dependabot::SecurityAdvisory]) }
+      def vulnerabilities_fixed_for(updated_dependencies)
+        updated_dependencies.filter_map do |dep|
+          { dep.name => @security_advisories.select { |adv| adv["dependency-name"] == dep.name } }
+        end&.reduce(:merge)
+      end
+
       def security_advisories_for(dependency)
         # If configured, fetch security advisories from GitHub's Security Advisory API
         fetch_missing_advisories_for_dependency(dependency) if vulnerabilities_fetcher
@@ -82,24 +90,9 @@ module TingleSoftware
 
       def fetch_missing_advisories_for_dependency(dependency)
         ::Dependabot.logger.info("Checking if #{dependency.name} has any security advisories")
-        advisories = vulnerabilities_fetcher.fetch(dependency.name)
         @security_advisories.push(
-          *advisories.map do |advisory|
-            # Filter out nil (using .compact), white spaces and empty strings which is necessary for situations
-            # where the API response contains null that is converted to nil, or it is an empty
-            # string. For example, npm package named faker does not have patched version as of 2023-01-16
-            # See: https://github.com/advisories/GHSA-5w9c-rv96-fr7g for npm package
-            # This ideally fixes
-            # https://github.com/tinglesoftware/dependabot-azure-devops/issues/453#issuecomment-1383587644
-            {
-              "dependency-name" => dependency.name,
-              "patched-versions" => (advisory["patched-versions"] || []).compact.reject { |v| v.strip.empty? },
-              "unaffected-versions" => (advisory["unaffected-versions"] || []).compact.reject { |v| v.strip.empty? },
-              "affected-versions" => (advisory["affected-versions"] || []).compact.reject { |v| v.strip.empty? }
-            }
-          end
+          *vulnerabilities_fetcher.fetch(dependency.name)
         )
-        ::Dependabot.logger.debug("##{JSON.pretty_generate(@security_advisories)}")
       end
     end
   end

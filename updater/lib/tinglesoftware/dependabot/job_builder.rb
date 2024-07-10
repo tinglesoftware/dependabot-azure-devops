@@ -56,7 +56,8 @@ module TingleSoftware
           pr_reviewers: pr_reviewers,
           pr_assignees: pr_assignees,
           pr_milestone: pr_milestone,
-          pr_branch_name_separator: pr_branch_name_separator
+          pr_branch_name_separator: pr_branch_name_separator,
+          pr_branch_name_prefix: pr_branch_name_prefix
         }
         validate(options)
         ::Dependabot.logger.debug("Parsed job info: #{JSON.pretty_generate(options)}")
@@ -390,6 +391,10 @@ module TingleSoftware
 
       def self.pr_branch_name_separator
         ENV.fetch("DEPENDABOT_BRANCH_NAME_SEPARATOR", "/")
+      end
+
+      def self.pr_branch_name_prefix
+        ENV.fetch("DEPENDABOT_BRANCH_NAME_PREFIX", "dependabot")
       end
     end
   end

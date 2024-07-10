@@ -30,6 +30,11 @@ module TingleSoftware
             query($ecosystem: SecurityAdvisoryEcosystem, $package: String) {
               securityVulnerabilities(first: 100, ecosystem: $ecosystem, package: $package) {
                 nodes {
+                  advisory {
+                    summary,
+                    description,
+                    permalink
+                  }
                   firstPatchedVersion {
                     identifier
                   }
@@ -47,23 +52,37 @@ module TingleSoftware
         def fetch(dependency_name)
           [] unless @ecosystem
 
-          variables = { ecosystem: @ecosystem, package: dependency_name }
-          response = @client.post "/graphql", { query: GRAPHQL_QUERY, variables: variables }.to_json
+          response = @client.post "/graphql", {
+            query: GRAPHQL_QUERY,
+            variables: {
+              ecosystem: @ecosystem,
+              package: dependency_name
+            }
+          }.to_json
+
           raise(QueryError, response[:errors]&.map(&:message)&.join(", ")) if response[:errors]
 
-          vulnerabilities = []
           response.data[:securityVulnerabilities][:nodes].map do |node|
+            # Filter out nil (using .compact), white spaces and empty strings which is necessary for situations
+            # where the API response contains null that is converted to nil, or it is an empty
+            # string. For example, npm package named faker does not have patched version as of 2023-01-16
+            # See: https://github.com/advisories/GHSA-5w9c-rv96-fr7g for npm package
+            # This ideally fixes
+            # https://github.com/tinglesoftware/dependabot-azure-devops/issues/453#issuecomment-1383587644
             vulnerable_version_range = node[:vulnerableVersionRange]
+            affected_versions = [vulnerable_version_range].compact.reject { |v| v.strip.empty? }
             first_patched_version = node.dig :firstPatchedVersion, :identifier
-            vulnerabilities << {
+            patched_versions = [first_patched_version].compact.reject { |v| v.strip.empty? }
+            {
               "dependency-name" => dependency_name,
-              "affected-versions" => [vulnerable_version_range],
-              "patched-versions" => [first_patched_version],
-              "unaffected-versions" => []
+              "title" => node.dig(:advisory, :summary),
+              "description" => node.dig(:advisory, :description),
+              "affected-versions" => affected_versions,
+              "patched-versions" => patched_versions,
+              "unaffected-versions" => [],
+              "url" => node.dig(:advisory, :permalink)
             }
           end
-
-          vulnerabilities
         end
       end
     end
