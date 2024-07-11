@@ -1,6 +1,9 @@
 ---
+inherit_from: .rubocop_todo.yml
+
 require:
   - rubocop-performance
+  - rubocop-rspec
   - rubocop-sorbet
 
 AllCops:
@@ -11,7 +14,10 @@ AllCops:
     - "*/spec/fixtures/**/*"
     - "vendor/**/*"
     - "dry-run/**/*"
+    - "bundler/helpers/v1/patched_bundler"
+    - "bundler/helpers/spec_helpers/*"
   NewCops: enable
+  TargetRubyVersion: 3.1
   SuggestExtensions: false
 Gemspec/DeprecatedAttributeAssignment:
   Enabled: true
@@ -225,10 +231,12 @@ Performance/UnfreezeString:
   Enabled: true
 Performance/UriDefaultParser:
   Enabled: true
-Style/AccessorGrouping:
+RSpec/IndexedLet:
   Enabled: false
+Style/AccessorGrouping:
+  EnforcedStyle: 'separated'
 Style/ArgumentsForwarding:
-  Enabled: true
+  Enabled: false
 Style/ArrayCoercion:
   Enabled: false
 Style/BisectedAttrAccessor:
@@ -340,6 +348,9 @@ Sorbet/StrictSigil:
     - "**/spec/**/*"
 Sorbet/StrongSigil:
   Exclude:
+    - "**/spec/**/*"
+RSpec:
+  Include:
     - "**/spec/**/*"
 
 # TODO these were temporarily disabled during the Ruby 2.7 -> 3.1 upgrade
