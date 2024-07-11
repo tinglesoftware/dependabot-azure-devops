@@ -42,7 +42,6 @@ require "dependabot/swift"
 require "dependabot/devcontainers"
 require "dependabot/terraform"
 
-require "tinglesoftware/dependabot/setup"
 require "tinglesoftware/dependabot/clients/azure"
 require "tinglesoftware/dependabot/vulnerabilities"
 
