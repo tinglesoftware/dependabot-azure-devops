@@ -1,11 +1,16 @@
-# typed: strict
 # frozen_string_literal: true
 
 # rubocop:disable Style/GlobalVars
 
 $LOAD_PATH.unshift(__dir__ + "/../lib")
 
-# Ensure logs are output immediately. Useful when running in certain hosts like ContainerGroups
+require "json"
+require "logger"
+require "dependabot/logger"
+
+Dependabot.logger = Logger.new($stdout)
+
+# ensure logs are output immediately. Useful when running in certain hosts like ContainerGroups
 $stdout.sync = true
 
 require "dependabot/credential"
@@ -16,6 +21,26 @@ require "dependabot/file_updaters"
 require "dependabot/pull_request_creator"
 require "dependabot/pull_request_updater"
 require "dependabot/requirements_update_strategy"
+require "dependabot/simple_instrumentor"
+
+require "dependabot/bundler"
+require "dependabot/cargo"
+require "dependabot/composer"
+require "dependabot/docker"
+require "dependabot/elm"
+require "dependabot/git_submodules"
+require "dependabot/github_actions"
+require "dependabot/go_modules"
+require "dependabot/gradle"
+require "dependabot/hex"
+require "dependabot/maven"
+require "dependabot/npm_and_yarn"
+require "dependabot/nuget"
+require "dependabot/python"
+require "dependabot/pub"
+require "dependabot/swift"
+require "dependabot/devcontainers"
+require "dependabot/terraform"
 
 require "tinglesoftware/dependabot/setup"
 require "tinglesoftware/dependabot/clients/azure"
@@ -392,6 +417,16 @@ def show_diff(original_file, updated_file)
   puts "    ~~~"
   puts "    #{added_lines} insertions (+), #{removed_lines} deletions (-)"
   puts
+end
+
+Dependabot::SimpleInstrumentor.subscribe do |*args|
+  name = args.first
+
+  payload = args.last
+  if name == "excon.request" || name == "excon.response"
+    puts "🌍 #{name == 'excon.response' ? "<-- #{payload[:status]}" : "--> #{payload[:method].upcase}"}" \
+         " #{Excon::Utils.request_uri(payload)}"
+  end
 end
 
 # Parse the options e.g. goprivate=true,kubernetes_updates=true
