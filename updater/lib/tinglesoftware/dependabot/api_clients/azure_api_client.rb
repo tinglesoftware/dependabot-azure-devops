@@ -36,7 +36,7 @@ module TingleSoftware
         end
 
         sig { params(dependency_change: ::Dependabot::DependencyChange, base_commit_sha: String).void }
-        def create_pull_request(dependency_change, base_commit_sha)
+        def create_pull_request(dependency_change, base_commit_sha) # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
           pr_creator = ::Dependabot::PullRequestCreator.new(
             source: job.source,
             base_commit: base_commit_sha,
@@ -81,11 +81,11 @@ module TingleSoftware
               )
 
               # Update the pull request property metadata with the updated dependencies info.
-              set_pull_request_property_metadata(pull_request, dependency_change, base_commit_sha)
+              pull_request_replace_property_metadata(pull_request, dependency_change, base_commit_sha)
 
               # Apply auto-complete and auto-approve settings
-              set_pull_request_auto_complete(pull_request) if job.azure_set_auto_complete
-              set_pull_request_auto_approve(pull_request) if job.azure_set_auto_approve
+              pull_request_auto_complete(pull_request) if job.azure_set_auto_complete
+              pull_request_auto_approve(pull_request) if job.azure_set_auto_approve
 
             else
               content = JSON[pull_request.body]
@@ -147,7 +147,7 @@ module TingleSoftware
 
         private
 
-        def set_pull_request_auto_complete(pull_request)
+        def pull_request_auto_complete(pull_request)
           pull_request_id = pull_request["pullRequestId"]
           pull_request_title = pull_request["title"]
           pull_request_description = pull_request["description"]
@@ -191,7 +191,7 @@ module TingleSoftware
           )
         end
 
-        def set_pull_request_auto_approve(pull_request)
+        def pull_request_auto_approve(pull_request)
           pull_request_id = pull_request["pullRequestId"]
           ::Dependabot.logger.info("Auto Approving PR #{pull_request_id}")
           job.azure_client.pull_request_approve(
@@ -201,7 +201,7 @@ module TingleSoftware
           )
         end
 
-        def set_pull_request_property_metadata(pull_request, dependency_change, base_commit_sha)
+        def pull_request_replace_property_metadata(pull_request, dependency_change, base_commit_sha)
           # Update the pull request property metadata with info about the updated dependencies.
           # This is used in `job_builder.rb` to calculate "existing_pull_requests" in future jobs.
           job.azure_client.pull_request_properties_update(
