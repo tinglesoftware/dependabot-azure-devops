@@ -25,7 +25,6 @@ RSpec.describe Dependabot::Job do
         "provider" => "github",
         "repo" => "dependabot-fixtures/dependabot-test-ruby-package",
         "directory" => directory,
-        "directories" => directories,
         "api-endpoint" => "https://api.github.com/",
         "hostname" => "github.com",
         "branch" => nil
@@ -50,7 +49,6 @@ RSpec.describe Dependabot::Job do
   end
 
   let(:directory) { "/" }
-  let(:directories) { nil }
   let(:dependencies) { nil }
   let(:security_advisories) { [] }
   let(:package_manager) { "bundler" }
@@ -86,7 +84,7 @@ RSpec.describe Dependabot::Job do
     end
 
     it "correctly replaces the credentials with the credential-metadata" do
-      expect(new_update_job.credentials.length).to be(2)
+      expect(new_update_job.credentials.length).to eql(2)
 
       git_credential = new_update_job.credentials.find { |creds| creds["type"] == "git_source" }
       expect(git_credential["host"]).to eql("github.com")
@@ -115,28 +113,9 @@ RSpec.describe Dependabot::Job do
 
     context "when the directory is nil because it's a grouped security update" do
       let(:directory) { nil }
-      let(:directories) { %w(/hello /world) }
 
       it "doesn't raise an error" do
-        expect(job.source.directory).to be_nil
-      end
-    end
-
-    context "when neither directory nor directories are provided" do
-      let(:directory) { nil }
-      let(:directories) { nil }
-
-      it "raises a helpful error" do
-        expect { job.source.directory }.to raise_error
-      end
-    end
-
-    context "when both directory and directories are provided" do
-      let(:directory) { "hello" }
-      let(:directories) { %w(/hello /world) }
-
-      it "raises a helpful error" do
-        expect { job.source.directory }.to raise_error
+        expect(job.source.directory).to eq(nil)
       end
     end
   end
@@ -145,13 +124,12 @@ RSpec.describe Dependabot::Job do
     let(:lockfile_only) { true }
 
     it "infers a lockfile_only requirements_update_strategy" do
-      expect(job.requirements_update_strategy).to eq(Dependabot::RequirementsUpdateStrategy::LockfileOnly)
+      expect(subject.requirements_update_strategy).to eq("lockfile_only")
     end
   end
 
   describe "#allowed_update?" do
     subject { job.allowed_update?(dependency) }
-
     let(:dependency) do
       Dependabot::Dependency.new(
         name: dependency_name,
@@ -192,13 +170,11 @@ RSpec.describe Dependabot::Job do
           requirements: []
         )
       end
+      it { is_expected.to eq(false) }
 
-      it { is_expected.to be(false) }
-
-      context "when dealing with a security update" do
+      context "for a security update" do
         let(:security_updates_only) { true }
-
-        it { is_expected.to be(true) }
+        it { is_expected.to eq(true) }
       end
     end
 
@@ -207,15 +183,14 @@ RSpec.describe Dependabot::Job do
         [{ file: "Gemfile", requirement: "~> 1.8.0", groups: [], source: nil }]
       end
 
-      it { is_expected.to be(true) }
+      it { is_expected.to eq(true) }
     end
 
     context "with a sub-dependency" do
       let(:requirements) { [] }
+      it { is_expected.to eq(false) }
 
-      it { is_expected.to be(false) }
-
-      context "when insecure" do
+      context "that is insecure" do
         let(:security_advisories) do
           [
             {
@@ -227,16 +202,15 @@ RSpec.describe Dependabot::Job do
           ]
         end
 
-        it { is_expected.to be(true) }
+        it { is_expected.to eq(true) }
       end
     end
 
     context "when only security fixes are allowed" do
       let(:security_updates_only) { true }
+      it { is_expected.to eq(false) }
 
-      it { is_expected.to be(false) }
-
-      context "when dealing with a security fix" do
+      context "for a security fix" do
         let(:security_advisories) do
           [
             {
@@ -248,10 +222,10 @@ RSpec.describe Dependabot::Job do
           ]
         end
 
-        it { is_expected.to be(true) }
+        it { is_expected.to eq(true) }
       end
 
-      context "when dealing with a security fix that doesn't apply" do
+      context "for a security fix that doesn't apply" do
         let(:security_advisories) do
           [
             {
@@ -263,10 +237,10 @@ RSpec.describe Dependabot::Job do
           ]
         end
 
-        it { is_expected.to be(false) }
+        it { is_expected.to eq(false) }
       end
 
-      context "when dealing with a security fix that doesn't apply to some versions" do
+      context "for a security fix that doesn't apply to some versions" do
         let(:security_advisories) do
           [
             {
@@ -278,7 +252,7 @@ RSpec.describe Dependabot::Job do
           ]
         end
 
-        it "is allowed" do
+        it "should be allowed" do
           dependency.metadata[:all_versions] = [
             Dependabot::Dependency.new(
               name: dependency_name,
@@ -294,38 +268,33 @@ RSpec.describe Dependabot::Job do
             )
           ]
 
-          expect(job.allowed_update?(dependency)).to be(true)
+          is_expected.to eq(true)
         end
       end
     end
 
-    context "when a dependency whitelist that includes the dependency" do
+    context "and a dependency whitelist that includes the dependency" do
       let(:allowed_updates) { [{ "dependency-name" => "business" }] }
-
-      it { is_expected.to be(true) }
+      it { is_expected.to eq(true) }
 
       context "with a dependency whitelist that uses a wildcard" do
         let(:allowed_updates) { [{ "dependency-name" => "bus*" }] }
-
-        it { is_expected.to be(true) }
+        it { is_expected.to eq(true) }
       end
     end
 
-    context "when dependency whitelist that excludes the dependency" do
+    context "and a dependency whitelist that excludes the dependency" do
       let(:allowed_updates) { [{ "dependency-name" => "rails" }] }
+      it { is_expected.to eq(false) }
 
-      it { is_expected.to be(false) }
-
-      context "when matching with potential sloppiness about substrings" do
+      context "that would match if we were sloppy about substrings" do
         let(:allowed_updates) { [{ "dependency-name" => "bus" }] }
-
-        it { is_expected.to be(false) }
+        it { is_expected.to eq(false) }
       end
 
       context "with a dependency whitelist that uses a wildcard" do
         let(:allowed_updates) { [{ "dependency-name" => "b.ness*" }] }
-
-        it { is_expected.to be(false) }
+        it { is_expected.to eq(false) }
       end
 
       context "when security fixes are also allowed" do
@@ -336,9 +305,9 @@ RSpec.describe Dependabot::Job do
           ]
         end
 
-        it { is_expected.to be(false) }
+        it { is_expected.to eq(false) }
 
-        context "when dealing with a security fix" do
+        context "for a security fix" do
           let(:security_advisories) do
             [
               {
@@ -350,7 +319,7 @@ RSpec.describe Dependabot::Job do
             ]
           end
 
-          it { is_expected.to be(true) }
+          it { is_expected.to eq(true) }
         end
       end
     end
@@ -394,20 +363,19 @@ RSpec.describe Dependabot::Job do
       let(:allowed_updates) do
         [{ "dependency-type" => "production" }]
       end
-
-      it { is_expected.to be(false) }
+      it { is_expected.to eq(false) }
     end
   end
 
   describe "#security_updates_only?" do
     subject { job.security_updates_only? }
 
-    it { is_expected.to be(false) }
+    it { is_expected.to eq(false) }
 
     context "with security only allowed updates" do
       let(:security_updates_only) { true }
 
-      it { is_expected.to be(true) }
+      it { is_expected.to eq(true) }
     end
   end
 
@@ -425,8 +393,8 @@ RSpec.describe Dependabot::Job do
 
       it "registers the experiments with Dependabot::Experiments" do
         job
-        expect(Dependabot::Experiments).to be_enabled(:kebab_case)
-        expect(Dependabot::Experiments).not_to be_enabled(:simpe)
+        expect(Dependabot::Experiments.enabled?(:kebab_case)).to be_truthy
+        expect(Dependabot::Experiments.enabled?(:simpe)).to be_falsey
       end
     end
 
@@ -456,7 +424,7 @@ RSpec.describe Dependabot::Job do
       it "transforms the keys" do
         expect(job.commit_message_options[:prefix]).to eq("[dev]")
         expect(job.commit_message_options[:prefix_development]).to eq("[bump-dev]")
-        expect(job.commit_message_options[:include_scope]).to be(true)
+        expect(job.commit_message_options[:include_scope]).to eq(true)
       end
     end
 
@@ -501,25 +469,25 @@ RSpec.describe Dependabot::Job do
       ]
     end
 
-    it { is_expected.to be(true) }
+    it { is_expected.to eq(true) }
 
     context "when the update hasn't been patched" do
       let(:dependency_version) { "1.10.0" }
 
-      it { is_expected.to be(false) }
+      it { is_expected.to eq(false) }
     end
   end
 
   describe "#reject_external_code?" do
     it "defaults to false" do
-      expect(job.reject_external_code?).to be(false)
+      expect(job.reject_external_code?).to eq(false)
     end
 
     it "can be enabled by job attributes" do
       attrs = attributes
       attrs[:reject_external_code] = true
-      job = described_class.new(attrs)
-      expect(job.reject_external_code?).to be(true)
+      job = Dependabot::Job.new(attrs)
+      expect(job.reject_external_code?).to eq(true)
     end
   end
 end

@@ -3,9 +3,6 @@
 
 require "sorbet-runtime"
 
-require "dependabot/api_client"
-require "dependabot/service"
-
 module Dependabot
   module Sorbet
     module Runtime
@@ -18,14 +15,7 @@ module Dependabot
           error = InformationalError.new(opts[:pretty_message])
           error.set_backtrace(caller.dup)
 
-          api_client =
-            Dependabot::ApiClient.new(
-              Environment.api_url,
-              Environment.job_id,
-              Environment.job_token
-            )
-
-          Dependabot::Service.new(client: api_client).capture_exception(error: error)
+          ::Sentry.capture_exception(error)
         end
       end
     end

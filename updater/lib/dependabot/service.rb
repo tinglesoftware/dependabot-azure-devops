@@ -6,9 +6,7 @@ require "sorbet-runtime"
 require "terminal-table"
 
 require "dependabot/api_client"
-require "dependabot/errors"
 require "dependabot/opentelemetry"
-require "dependabot/experiments"
 
 # This class provides an output adapter for the Dependabot Service which manages
 # communication with the private API as well as consolidated error handling.
@@ -32,7 +30,6 @@ module Dependabot
       @client = client
       @pull_requests = T.let([], T::Array[T.untyped])
       @errors = T.let([], T::Array[T.untyped])
-      @threads = T.let([], T::Array[T.untyped])
     end
 
     def_delegators :client,
@@ -40,22 +37,9 @@ module Dependabot
                    :record_ecosystem_versions,
                    :increment_metric
 
-    sig { void }
-    def wait_for_calls_to_finish
-      return unless Experiments.enabled?("threaded_metadata")
-
-      @threads.each(&:join)
-    end
-
     sig { params(dependency_change: Dependabot::DependencyChange, base_commit_sha: String).void }
     def create_pull_request(dependency_change, base_commit_sha)
-      dependency_change.check_dependencies_have_previous_version if Experiments.enabled?("dependency_change_validation")
-
-      if Experiments.enabled?("threaded_metadata")
-        @threads << Thread.new { client.create_pull_request(dependency_change, base_commit_sha) }
-      else
-        client.create_pull_request(dependency_change, base_commit_sha)
-      end
+      client.create_pull_request(dependency_change, base_commit_sha)
       pull_requests << [dependency_change.humanized, :created]
     end
 
@@ -88,14 +72,14 @@ module Dependabot
 
     sig { params(dependency_snapshot: Dependabot::DependencySnapshot).void }
     def update_dependency_list(dependency_snapshot:)
-      dependency_payload = dependency_snapshot.all_dependencies.map do |dep|
+      dependency_payload = dependency_snapshot.dependencies.map do |dep|
         {
           name: dep.name,
           version: dep.version,
           requirements: dep.requirements
         }
       end
-      dependency_file_paths = dependency_snapshot.all_dependency_files.reject(&:support_file).map(&:path)
+      dependency_file_paths = dependency_snapshot.dependency_files.reject(&:support_file).map(&:path)
 
       client.update_dependency_list(dependency_payload, dependency_file_paths)
     end
@@ -111,27 +95,27 @@ module Dependabot
         job: T.untyped,
         dependency: T.nilable(Dependabot::Dependency),
         dependency_group: T.nilable(Dependabot::DependencyGroup),
-        tags: T::Hash[String, T.untyped]
+        tags: T::Hash[String, T.untyped],
+        extra: T::Hash[String, T.untyped]
       ).void
     end
-    def capture_exception(error:, job: nil, dependency: nil, dependency_group: nil, tags: {})
+    def capture_exception(error:, job: nil, dependency: nil, dependency_group: nil, tags: {}, extra: {})
       ::Dependabot::OpenTelemetry.record_exception(error: error, job: job, tags: tags)
-
-      # some GHES versions do not support reporting errors to the service
-      return unless Experiments.enabled?(:record_update_job_unknown_error)
-
-      error_details = {
-        ErrorAttributes::CLASS => error.class.to_s,
-        ErrorAttributes::MESSAGE => error.message,
-        ErrorAttributes::BACKTRACE => error.backtrace&.join("\n"),
-        ErrorAttributes::FINGERPRINT => error.respond_to?(:sentry_context) ? T.unsafe(error).sentry_context[:fingerprint] : nil, # rubocop:disable Layout/LineLength
-        ErrorAttributes::PACKAGE_MANAGER => job&.package_manager,
-        ErrorAttributes::JOB_ID => job&.id,
-        ErrorAttributes::DEPENDENCIES => dependency&.name || job&.dependencies,
-        ErrorAttributes::DEPENDENCY_GROUPS => dependency_group&.name || job&.dependency_groups,
-        ErrorAttributes::SECURITY_UPDATE => job&.security_updates_only?
-      }.compact
-      record_update_job_unknown_error(error_type: "unknown_error", error_details: error_details)
+      ::Sentry.capture_exception(
+        error,
+        tags: tags.merge({
+          "gh.dependabot_api.update_job.id": job&.id,
+          "gh.dependabot_api.update_config.package_manager": job&.package_manager,
+          "gh.repo.is_private": job&.repo_private?
+        }.compact),
+        extra: extra.merge({
+          dependency_name: dependency&.name,
+          dependency_group: dependency_group&.name
+        }.compact),
+        user: {
+          id: job&.repo_owner
+        }
+      )
     end
 
     sig { returns(T::Boolean) }

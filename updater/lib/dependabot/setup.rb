@@ -2,7 +2,6 @@
 # frozen_string_literal: true
 
 require "sentry-ruby"
-require "sorbet-runtime"
 
 require "dependabot/environment"
 require "dependabot/logger"
@@ -17,7 +16,6 @@ Dependabot.logger = Logger.new($stdout).tap do |logger|
 end
 
 Sentry.init do |config|
-  config.release = ENV.fetch("DEPENDABOT_UPDATER_VERSION")
   config.logger = Dependabot.logger
   config.project_root = File.expand_path("../../..", __dir__)
 

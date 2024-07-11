@@ -10,11 +10,8 @@ require "dependabot/dependency_snapshot"
 require "dependabot/errors"
 require "dependabot/pull_request_creator"
 require "dependabot/service"
-require "dependabot/experiments"
 
 RSpec.describe Dependabot::Service do
-  subject(:service) { described_class.new(client: mock_client) }
-
   let(:base_sha) { "mock-sha" }
 
   let(:mock_client) do
@@ -29,7 +26,9 @@ RSpec.describe Dependabot::Service do
     api_client
   end
 
-  shared_context "with a created pr" do
+  subject(:service) { described_class.new(client: mock_client) }
+
+  shared_context :a_pr_was_created do
     let(:source) do
       instance_double(Dependabot::Source, provider: "github", repo: "dependabot/dependabot-core", directory: "/")
     end
@@ -82,7 +81,7 @@ RSpec.describe Dependabot::Service do
 
     let(:dependency_files) do
       [
-        Dependabot::DependencyFile.new(name: "Gemfile", content: "some gems")
+        { name: "Gemfile", content: "some gems" }
       ]
     end
 
@@ -95,10 +94,12 @@ RSpec.describe Dependabot::Service do
             commit_message: "Commit message"
           )
         )
+
+      service.create_pull_request(dependency_change, base_sha)
     end
   end
 
-  shared_context "with an updated pr" do
+  shared_context :a_pr_was_updated do
     let(:source) do
       instance_double(Dependabot::Source, provider: "github", repo: "dependabot/dependabot-core", directory: "/")
     end
@@ -138,7 +139,7 @@ RSpec.describe Dependabot::Service do
 
     let(:dependency_files) do
       [
-        Dependabot::DependencyFile.new(name: "Gemfile", content: "some gems")
+        { name: "Gemfile", content: "some gems" }
       ]
     end
 
@@ -147,7 +148,7 @@ RSpec.describe Dependabot::Service do
     end
   end
 
-  shared_context "with an closd pr" do
+  shared_context :a_pr_was_closed do
     let(:dependency_name) { "dependabot-fortran" }
     let(:reason) { :dependency_removed }
 
@@ -156,7 +157,7 @@ RSpec.describe Dependabot::Service do
     end
   end
 
-  shared_context "with a reported error" do
+  shared_context :an_error_was_reported do
     before do
       service.record_update_job_error(
         error_type: :epoch_error,
@@ -167,7 +168,7 @@ RSpec.describe Dependabot::Service do
     end
   end
 
-  shared_context "with a reported dependency error" do
+  shared_context :a_dependency_error_was_reported do
     let(:dependency) do
       Dependabot::Dependency.new(
         name: "dependabot-cobol",
@@ -218,52 +219,21 @@ RSpec.describe Dependabot::Service do
   end
 
   describe "#create_pull_request" do
-    include_context "with a created pr"
-
-    before do
-      Dependabot::Experiments.register("dependency_change_validation", true)
-    end
+    include_context :a_pr_was_created
 
     it "delegates to @client" do
-      service.create_pull_request(dependency_change, base_sha)
-
       expect(mock_client)
         .to have_received(:create_pull_request).with(dependency_change, base_sha)
     end
 
     it "memoizes a shorthand summary of the PR" do
-      service.create_pull_request(dependency_change, base_sha)
-
       expect(service.pull_requests)
         .to eql([["dependabot-fortran ( from 1.7.0 to 1.8.0 ), dependabot-pascal ( from 2.7.0 to 2.8.0 )", :created]])
-    end
-
-    context "when the change is missing a previous version and there's no change in requirements" do
-      let(:dependencies) do
-        [
-          Dependabot::Dependency.new(
-            name: "dependabot-fortran",
-            package_manager: "bundler",
-            version: "1.8.0",
-            requirements: [
-              { file: "Gemfile", requirement: "~> 1.8.0", groups: [], source: nil }
-            ],
-            previous_requirements: [
-              { file: "Gemfile", requirement: "~> 1.8.0", groups: [], source: nil }
-            ]
-          )
-        ]
-      end
-
-      it "raises an InvalidUpdatedDependencies error" do
-        expect { service.create_pull_request(dependency_change, base_sha) }
-          .to raise_error(Dependabot::DependencyChange::InvalidUpdatedDependencies)
-      end
     end
   end
 
   describe "#update_pull_request" do
-    include_context "with an updated pr"
+    include_context :a_pr_was_updated
 
     it "delegates to @client" do
       expect(mock_client).to have_received(:update_pull_request).with(dependency_change, base_sha)
@@ -275,7 +245,7 @@ RSpec.describe Dependabot::Service do
   end
 
   describe "#close_pull_request" do
-    include_context "with an closd pr"
+    include_context :a_pr_was_closed
 
     it "delegates to @client" do
       expect(mock_client).to have_received(:close_pull_request).with(dependency_name, reason)
@@ -287,7 +257,7 @@ RSpec.describe Dependabot::Service do
   end
 
   describe "#record_update_job_error" do
-    include_context "with a reported error"
+    include_context :an_error_was_reported
 
     it "delegates to @client" do
       expect(mock_client).to have_received(:record_update_job_error).with(
@@ -307,87 +277,59 @@ RSpec.describe Dependabot::Service do
 
   describe "#capture_exception" do
     before do
-      allow(Dependabot::Experiments).to receive(:enabled?).with(:record_update_job_unknown_error).and_return(true)
-      allow(mock_client).to receive(:record_update_job_unknown_error)
+      allow(Sentry).to receive(:capture_exception)
     end
 
     let(:error) do
       Dependabot::DependabotError.new("Something went wrong")
     end
 
-    it "does not delegate to the service if the record_update_job_unknown_error experiment is disabled" do
-      allow(Dependabot::Experiments).to receive(:enabled?).with(:record_update_job_unknown_error).and_return(false)
+    it "delegates error capture to Sentry (Sentry), adding user info if any" do
+      service.capture_exception(error: error, tags: { foo: "bar" }, extra: { baz: "qux" })
 
-      service.capture_exception(error: error)
-
-      expect(mock_client)
-        .not_to have_received(:record_update_job_unknown_error)
-    end
-
-    it "delegates error capture to the service" do
-      service.capture_exception(error: error)
-
-      expect(mock_client)
-        .to have_received(:record_update_job_unknown_error)
-        .with(
-          error_type: "unknown_error",
-          error_details: hash_including(
-            Dependabot::ErrorAttributes::MESSAGE => "Something went wrong",
-            Dependabot::ErrorAttributes::CLASS => "Dependabot::DependabotError"
-          )
-        )
+      expect(Sentry).to have_received(:capture_exception)
+        .with(error,
+              tags: {
+                foo: "bar"
+              },
+              extra: {
+                baz: "qux"
+              },
+              user: {
+                id: nil
+              })
     end
 
     it "extracts information from a job if provided" do
       job = OpenStruct.new(id: 1234, package_manager: "bundler", repo_private?: false, repo_owner: "foo")
       service.capture_exception(error: error, job: job)
 
-      expect(mock_client)
-        .to have_received(:record_update_job_unknown_error)
-        .with(
-          error_type: "unknown_error",
-          error_details: hash_including(
-            Dependabot::ErrorAttributes::CLASS => "Dependabot::DependabotError",
-            Dependabot::ErrorAttributes::MESSAGE => "Something went wrong",
-            Dependabot::ErrorAttributes::JOB_ID => job.id,
-            Dependabot::ErrorAttributes::PACKAGE_MANAGER => job.package_manager
-          )
-        )
+      expect(Sentry).to have_received(:capture_exception)
+        .with(error,
+              tags: {
+                "gh.dependabot_api.update_job.id": 1234,
+                "gh.dependabot_api.update_config.package_manager": "bundler",
+                "gh.repo.is_private": false
+              },
+              extra: {},
+              user: {
+                id: "foo"
+              })
     end
 
     it "extracts information from a dependency if provided" do
       dependency = Dependabot::Dependency.new(name: "lodash", requirements: [], package_manager: "npm_and_yarn")
       service.capture_exception(error: error, dependency: dependency)
 
-      expect(mock_client)
-        .to have_received(:record_update_job_unknown_error)
-        .with(
-          error_type: "unknown_error",
-          error_details: hash_including(
-            Dependabot::ErrorAttributes::MESSAGE => "Something went wrong",
-            Dependabot::ErrorAttributes::CLASS => "Dependabot::DependabotError",
-            Dependabot::ErrorAttributes::DEPENDENCIES => "lodash"
-          )
-        )
-    end
-
-    it "extracts information from a security job if provided" do
-      job = OpenStruct.new(id: 1234, package_manager: "npm_and_yarn", repo_private?: false, repo_owner: "foo",
-                           security_updates_only?: true)
-      service.capture_exception(error: error, job: job)
-
-      expect(mock_client)
-        .to have_received(:record_update_job_unknown_error)
-        .with(
-          error_type: "unknown_error",
-          error_details: hash_including(
-            Dependabot::ErrorAttributes::CLASS => "Dependabot::DependabotError",
-            Dependabot::ErrorAttributes::MESSAGE => "Something went wrong",
-            Dependabot::ErrorAttributes::JOB_ID => job.id,
-            Dependabot::ErrorAttributes::PACKAGE_MANAGER => job.package_manager,
-            Dependabot::ErrorAttributes::SECURITY_UPDATE => true
-          )
-        )
+      expect(Sentry).to have_received(:capture_exception)
+        .with(error,
+              tags: {},
+              extra: {
+                dependency_name: "lodash"
+              },
+              user: {
+                id: nil
+              })
     end
 
     it "extracts information from a dependency_group if provided" do
@@ -395,23 +337,22 @@ RSpec.describe Dependabot::Service do
       allow(dependency_group).to receive(:is_a?).with(Dependabot::DependencyGroup).and_return(true)
       service.capture_exception(error: error, dependency_group: dependency_group)
 
-      expect(mock_client)
-        .to have_received(:record_update_job_unknown_error)
-        .with(
-          error_type: "unknown_error",
-          error_details: hash_including(
-            Dependabot::ErrorAttributes::MESSAGE => "Something went wrong",
-            Dependabot::ErrorAttributes::CLASS => "Dependabot::DependabotError",
-            Dependabot::ErrorAttributes::DEPENDENCY_GROUPS => "all-the-things"
-          )
-        )
+      expect(Sentry).to have_received(:capture_exception)
+        .with(error,
+              tags: {},
+              extra: {
+                dependency_group: "all-the-things"
+              },
+              user: {
+                id: nil
+              })
     end
   end
 
   describe "#update_dependency_list" do
     let(:dependency_snapshot) do
       dependency_snapshot = instance_double(Dependabot::DependencySnapshot,
-                                            all_dependencies: [
+                                            dependencies: [
                                               Dependabot::Dependency.new(
                                                 name: "dummy-pkg-a",
                                                 package_manager: "bundler",
@@ -431,7 +372,7 @@ RSpec.describe Dependabot::Service do
                                                 ]
                                               )
                                             ],
-                                            all_dependency_files: [
+                                            dependency_files: [
                                               Dependabot::DependencyFile.new(
                                                 name: "Gemfile",
                                                 content: fixture("bundler/original/Gemfile"),
@@ -534,11 +475,9 @@ RSpec.describe Dependabot::Service do
     end
 
     context "when a pr was created" do
-      include_context "with a created pr"
+      include_context :a_pr_was_created
 
       it "includes the summary of the created PR" do
-        service.create_pull_request(dependency_change, base_sha)
-
         expect(service.summary)
           .to include("created",
                       "dependabot-fortran ( from 1.7.0 to 1.8.0 ), dependabot-pascal ( from 2.7.0 to 2.8.0 )")
@@ -546,7 +485,7 @@ RSpec.describe Dependabot::Service do
     end
 
     context "when a pr was updated" do
-      include_context "with an updated pr"
+      include_context :a_pr_was_updated
 
       it "includes the summary of the updated PR" do
         expect(service.summary)
@@ -555,7 +494,7 @@ RSpec.describe Dependabot::Service do
     end
 
     context "when a pr was closed" do
-      include_context "with an closd pr"
+      include_context :a_pr_was_closed
 
       it "includes the summary of the closed PR" do
         expect(service.summary)
@@ -564,7 +503,7 @@ RSpec.describe Dependabot::Service do
     end
 
     context "when there was an error" do
-      include_context "with a reported error"
+      include_context :an_error_was_reported
 
       it "includes an error count" do
         expect(service.summary)
@@ -578,7 +517,7 @@ RSpec.describe Dependabot::Service do
     end
 
     context "when there was an dependency error" do
-      include_context "with a reported dependency error"
+      include_context :a_dependency_error_was_reported
 
       it "includes an error count" do
         expect(service.summary)
@@ -594,8 +533,8 @@ RSpec.describe Dependabot::Service do
     end
 
     context "when there was a mix of pr activity" do
-      include_context "with an updated pr"
-      include_context "with an closd pr"
+      include_context :a_pr_was_updated
+      include_context :a_pr_was_closed
 
       it "includes the summary of the updated PR" do
         expect(service.summary)
@@ -609,14 +548,10 @@ RSpec.describe Dependabot::Service do
     end
 
     context "when there was a mix of pr and error activity" do
-      include_context "with a created pr"
-      include_context "with an closd pr"
-      include_context "with a reported error"
-      include_context "with a reported dependency error"
-
-      before do
-        service.create_pull_request(dependency_change, base_sha)
-      end
+      include_context :a_pr_was_created
+      include_context :a_pr_was_closed
+      include_context :an_error_was_reported
+      include_context :a_dependency_error_was_reported
 
       it "includes the summary of the created PR" do
         expect(service.summary)
