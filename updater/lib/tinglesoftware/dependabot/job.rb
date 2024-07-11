@@ -23,28 +23,28 @@ module TingleSoftware
       def initialize(azure_client: nil)
         @azure_client = azure_client
         super(
-          id: fetch_id,
-          allowed_updates: fetch_allowed_updates,
-          commit_message_options: fetch_commit_message_options,
-          credentials: fetch_credentials,
+          id: _id,
+          allowed_updates: _allowed_updates,
+          commit_message_options: _commit_message_options,
+          credentials: _credentials,
           dependencies: nil, # TODO: Implement this
-          existing_pull_requests: fetch_existing_pull_requests,
-          existing_group_pull_requests: fetch_existing_group_pull_requests,
-          experiments: {}, # TODO: Fix experiments,
-          ignore_conditions: fetch_ignore_conditions,
-          package_manager: fetch_package_manager,
-          reject_external_code: fetch_reject_external_code,
-          repo_contents_path: fetch_repo_contents_path,
-          requirements_update_strategy: nil, # TODO: Fix requirements_update_strategy,
-          lockfile_only: fetch_lockfile_only,
+          existing_pull_requests: _existing_pull_requests,
+          existing_group_pull_requests: _existing_group_pull_requests,
+          experiments: _experiments,
+          ignore_conditions: _ignore_conditions,
+          package_manager: _package_manager,
+          reject_external_code: _reject_external_code,
+          repo_contents_path: _repo_contents_path,
+          requirements_update_strategy: _requirements_update_strategy,
+          lockfile_only: _lockfile_only,
           security_advisories: security_advisories,
           security_updates_only: security_updates_only,
-          source: fetch_source,
+          source: _source,
           token: github_access_token,
           update_subdependencies: true,
           updating_a_pull_request: false, # TODO: Implement this
           vendor_dependencies: false, # TODO: Implement this
-          dependency_groups: fetch_dependency_groups,
+          dependency_groups: _dependency_groups,
           dependency_group_to_refresh: nil # TODO: Implement this
         )
       end
@@ -84,11 +84,11 @@ module TingleSoftware
         )
       end
 
-      def fetch_id
+      def _id
         ENV.fetch("DEPENDABOT_JOB_ID", Time.now.to_i.to_s)
       end
 
-      def fetch_allowed_updates
+      def _allowed_updates
         conditions = JSON.parse(ENV.fetch("DEPENDABOT_ALLOW_CONDITIONS", "[]")).compact
         return conditions if conditions.count.nonzero?
 
@@ -98,11 +98,11 @@ module TingleSoftware
         }
       end
 
-      def fetch_commit_message_options
+      def _commit_message_options
         JSON.parse(ENV.fetch("DEPENDABOT_COMMIT_MESSAGE_OPTIONS", "{}"), symbolize_names: true)
       end
 
-      def fetch_credentials
+      def _credentials
         creds = [
           {
             "type" => "git_source",
@@ -124,27 +124,27 @@ module TingleSoftware
         creds.compact
       end
 
-      def fetch_experiments
+      def _experiments
         ENV.fetch("DEPENDABOT_UPDATER_OPTIONS", "").split(",").to_h do |o|
           if o.include?("=") # key/value pair, e.g. goprivate=true
             o.split("=", 2).map.with_index do |v, i|
               if i.zero?
-                v.strip.downcase.to_sym
+                v.strip.downcase
               else
                 v.strip
               end
             end
           else # just a key, e.g. "vendor"
-            [o.strip.downcase.to_sym, true]
+            [o.strip.downcase, true]
           end
         end
       end
 
-      def fetch_ignore_conditions
+      def _ignore_conditions
         JSON.parse(ENV.fetch("DEPENDABOT_IGNORE_CONDITIONS", "[]"), symbolize_names: true).compact
       end
 
-      def fetch_package_manager
+      def _package_manager
         # GitHub native implementation modifies some of the names in the config file
         # https://docs.github.com/en/github/administering-a-repository/configuration-options-for-dependency-updates#package-ecosystem
         pkg_mgr = ENV.fetch("DEPENDABOT_PACKAGE_MANAGER", "bundler")
@@ -162,46 +162,53 @@ module TingleSoftware
         }.freeze.fetch(pkg_mgr, pkg_mgr)
       end
 
-      def fetch_reject_external_code
+      def _reject_external_code
         ENV.fetch("DEPENDABOT_REJECT_EXTERNAL_CODE", nil) == "true"
       end
 
-      def fetch_repo_contents_path
+      def _repo_contents_path
         ENV.fetch("DEPENDABOT_REPO_CONTENTS_PATH", nil) ||
-          File.expand_path(File.join("tmp", azure_repository_path.split("/")))
-        # TODO: File.expand_path(File.join("job", id, "repo", azure_repository_path.split("/")))
+          File.expand_path(File.join("job", _id, "repo", azure_repository_path.split("/")))
       end
 
-      def fetch_requirements_update_strategy
-        ENV.fetch("DEPENDABOT_VERSIONING_STRATEGY", nil)
+      def _requirements_update_strategy
+        versioning_strategy = ENV.fetch("DEPENDABOT_VERSIONING_STRATEGY", nil)
+        return nil if versioning_strategy.nil? || versioning_strategy.empty? || versioning_strategy == "auto"
+
+        {
+          "lockfile-only" => ::Dependabot::RequirementsUpdateStrategy::LockfileOnly,
+          "widen" => ::Dependabot::RequirementsUpdateStrategy::WidenRanges,
+          "increase" => ::Dependabot::RequirementsUpdateStrategy::BumpVersions,
+          "increase-if-necessary" => ::Dependabot::RequirementsUpdateStrategy::BumpVersionsIfNecessary
+        }.freeze.fetch(versioning_strategy)
       end
 
-      def fetch_lockfile_only
+      def _lockfile_only
         ENV.fetch("DEPENDABOT_LOCKFILE_ONLY", nil) == "true"
       end
 
-      def fetch_dependency_groups
+      def _dependency_groups
         groups = JSON.parse(ENV.fetch("DEPENDABOT_DEPENDENCY_GROUPS", "[]")).compact
         return groups if groups.count.nonzero?
 
         nil
       end
 
-      def fetch_existing_pull_requests
+      def _existing_pull_requests
         dependencies = active_pull_requests_property_sets.filter_map do |props|
           JSON.parse(props[ApiClients::AzureApiClient::PullRequest::Properties::UPDATED_DEPENDENCIES] || nil.to_json)
         end
         dependencies.select { |d| d.is_a?(Array) }
       end
 
-      def fetch_existing_group_pull_requests
+      def _existing_group_pull_requests
         dependencies = active_pull_requests_property_sets.filter_map do |props|
           JSON.parse(props[ApiClients::AzureApiClient::PullRequest::Properties::UPDATED_DEPENDENCIES] || nil.to_json)
         end
         dependencies.select { |d| d.is_a?(Hash) }
       end
 
-      def fetch_source
+      def _source
         {
           "provider" => provider,
           "hostname" => azure_hostname,
@@ -238,7 +245,7 @@ module TingleSoftware
             directory: directory,
             branch: branch
           ),
-          credentials: fetch_credentials.map { |c| ::Dependabot::Credential.new(c) }
+          credentials: _credentials.map { |c| ::Dependabot::Credential.new(c) }
         )
       end
 

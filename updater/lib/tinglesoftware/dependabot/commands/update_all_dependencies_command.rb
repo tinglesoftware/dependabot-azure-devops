@@ -94,11 +94,6 @@ module TingleSoftware
           ).run
         end
 
-        # =============================================================================================================
-        # The below was copied from lib/dependabot/file_fetcher_command.rb and lib/dependabot/update_files_command.rb
-        # We want our update logic to match the dependabot-core logic as close as possible, so don't modify this code.
-        # =============================================================================================================
-
         # A method that abstracts the file fetcher creation logic and applies the same settings across all instances
         def create_file_fetcher(directory: nil)
           # Use the provided directory or fallback to job.source.directory if directory is nil.
@@ -107,10 +102,10 @@ module TingleSoftware
           args = {
             source: job.source.clone.tap { |s| s.directory = directory_to_use },
             credentials: job.credentials,
+            repo_contents_path: job.repo_contents_path,
             options: job.experiments
           }
 
-          args[:repo_contents_path] = ::Dependabot::Environment.repo_contents_path if job.clone? || already_cloned?
           ::Dependabot::FileFetchers.for_package_manager(job.package_manager).new(**args)
         end
 
@@ -167,13 +162,6 @@ module TingleSoftware
             base64_file.content = Base64.encode64(file.content) unless file.binary?
             base64_file
           end
-        end
-
-        def already_cloned?
-          return false unless ::Dependabot::Environment.repo_contents_path
-
-          # For testing, the source repo may already be mounted.
-          @already_cloned ||= File.directory?(File.join(Environment.repo_contents_path, ".git"))
         end
       end
     end
