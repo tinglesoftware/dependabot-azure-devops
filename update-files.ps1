@@ -14,7 +14,7 @@ $files = @(
     ".ruby-version"
     ".rubocop.yml"
     ".rubocop_todo.yml"
-    # "Rakefile"
+    "Rakefile"
     "updater/.rubocop.yml"
 
     # "updater/bin/fetch_files.rb"
@@ -60,7 +60,6 @@ $files = @(
 
     "updater/spec/dependabot/sentry/exception_sanitizer_processor_spec.rb"
     "updater/spec/dependabot/sentry/sentry_context_processor_spec.rb"
-    # "updater/spec/dependabot/updater/operations/group_update_all_versions_spec.rb"
     # "updater/spec/dependabot/updater/operations/refresh_group_update_pull_request_spec.rb"
     "updater/spec/dependabot/updater/dependency_group_change_batch_spec.rb"
     "updater/spec/dependabot/updater/error_handler_spec.rb"
@@ -74,7 +73,7 @@ $files = @(
     "updater/spec/dependabot/file_fetcher_command_spec.rb"
     "updater/spec/dependabot/job_spec.rb"
     "updater/spec/dependabot/service_spec.rb"
-    # "updater/spec/dependabot/update_files_command_spec.rb"
+    "updater/spec/dependabot/update_files_command_spec.rb"
     # "updater/spec/dependabot/updater_spec.rb"
 
     "updater/spec/fixtures/handle_error.json"
@@ -153,7 +152,7 @@ $files = @(
     "updater/spec/support/dependency_file_helpers.rb"
     "updater/spec/support/dummy_pkg_helpers.rb"
 
-    # "updater/spec/spec_helper.rb"
+    "updater/spec/spec_helper.rb"
 )
 
 # Download each file listed
