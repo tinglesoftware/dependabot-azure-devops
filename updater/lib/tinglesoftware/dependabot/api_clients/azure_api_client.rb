@@ -100,12 +100,12 @@ module TingleSoftware
         end
 
         sig { params(dependency_change: ::Dependabot::DependencyChange, base_commit_sha: String).void }
-        def update_pull_request(dependency_change, base_commit_sha)
+        def update_pull_request(_dependency_change, _base_commit_sha)
           raise "not yet implemented"
         end
 
         sig { params(dependency_names: T.any(String, T::Array[String]), reason: T.any(String, Symbol)).void }
-        def close_pull_request(dependency_names, reason)
+        def close_pull_request(_dependency_names, _reason)
           raise "not yet implemented"
           # TODO: Implement this
           # job.azure_client.pull_request_comment(pr_id, reason)
@@ -191,7 +191,7 @@ module TingleSoftware
           )
         end
 
-        def set_pull_request_auto_approve(pull_request, reviewer_token)
+        def set_pull_request_auto_approve(pull_request)
           pull_request_id = pull_request["pullRequestId"]
           ::Dependabot.logger.info("Auto Approving PR #{pull_request_id}")
           job.azure_client.pull_request_approve(

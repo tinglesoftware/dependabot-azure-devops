@@ -40,7 +40,9 @@ module TingleSoftware
           ::Dependabot.logger.info("Found #{dependency_files.count} dependencies files:")
           dependency_files.select.each { |f| ::Dependabot.logger.info(" - #{f.directory}#{f.name}") }
           ::Dependabot.logger.info("Found #{dependency_snapshot.dependencies.count(&:top_level?)} dependencies:")
-          dependency_snapshot.dependencies.select(&:top_level?).each { |d| ::Dependabot.logger.info(" - #{d.name} (#{d.version})") }
+          dependency_snapshot.dependencies.select(&:top_level?).each do |d|
+            ::Dependabot.logger.info(" - #{d.name} (#{d.version})")
+          end
           ::Dependabot.logger.info("Found #{dependency_snapshot.groups.count} dependency group(s):")
           dependency_snapshot.groups.select.each do |g|
             ::Dependabot.logger.info(" - #{g.name}")

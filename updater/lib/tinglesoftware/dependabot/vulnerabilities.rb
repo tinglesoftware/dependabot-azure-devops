@@ -4,7 +4,7 @@
 require "octokit"
 
 #
-# Fetches security vulnerability information from GitHub's Security Advisory API
+# Fetches security advisory information from GitHub's Security Advisory API
 #
 module TingleSoftware
   module Dependabot

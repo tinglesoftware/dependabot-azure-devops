@@ -65,9 +65,9 @@ module TingleSoftware
       end
 
       def self.validate(options)
-        if options["security_updates_only"] && !options["token"]
-          raise StandardError, "Security only updates are enabled but a GitHub token is not supplied! Cannot proceed"
-        end
+        return unless options["security_updates_only"] && !options["token"]
+
+        raise StandardError, "Security only updates are enabled but a GitHub token is not supplied! Cannot proceed"
       end
 
       # TODO: DEPENDABOT_VENDOR
@@ -172,7 +172,7 @@ module TingleSoftware
       def self.repo_contents_path
         ENV.fetch("DEPENDABOT_REPO_CONTENTS_PATH", nil) ||
           File.expand_path(File.join("tmp", repo_name.split("/")))
-          # File.expand_path(File.join("job", id, "repo", repo_name.split("/")))
+        # TODO: File.expand_path(File.join("job", id, "repo", repo_name.split("/")))
       end
 
       def self.requirements_update_strategy
@@ -304,23 +304,23 @@ module TingleSoftware
       def self.fetch_active_pull_requests_property_sets
         active_pull_requests.map do |pr|
           pull_request_id = pr["pullRequestId"].to_s
-          azure_client.pull_request_properties_list(pull_request_id).map do |k,v|
+          azure_client.pull_request_properties_list(pull_request_id).to_h do |k, v|
             [k, v["$value"]]
-          end.to_h
+          end
         end
       end
 
       def self.existing_pull_requests
-        dependencies = active_pull_requests_property_sets.map do |props|
+        dependencies = active_pull_requests_property_sets.filter_map do |props|
           JSON.parse(props[ApiClients::AzureApiClient::PullRequest::Properties::UPDATED_DEPENDENCIES] || nil.to_json)
-        end&.compact
+        end
         dependencies.select { |d| d.is_a?(Array) }
       end
 
       def self.existing_group_pull_requests
-        dependencies = active_pull_requests_property_sets.map do |props|
+        dependencies = active_pull_requests_property_sets.filter_map do |props|
           JSON.parse(props[ApiClients::AzureApiClient::PullRequest::Properties::UPDATED_DEPENDENCIES] || nil.to_json)
-        end&.compact
+        end
         dependencies.select { |d| d.is_a?(Hash) }
       end
 
@@ -338,6 +338,7 @@ module TingleSoftware
       def self.load_security_advisories
         security_advisories_file_path = ENV.fetch("DEPENDABOT_SECURITY_ADVISORIES_FILE", nil)
         return [] unless security_advisories_file_path && File.exist?(security_advisories_file_path)
+
         JSON.parse(File.read(security_advisories_file_path))
       end
 

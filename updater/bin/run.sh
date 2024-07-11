@@ -3,7 +3,7 @@ set -e
 
 command="$1"
 if [ -z "$command" ]; then
-  echo "usage: run [update_script]"
+  echo "usage: run [update_script|update_script_vnext]"
   exit 1
 fi
 

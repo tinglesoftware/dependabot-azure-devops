@@ -44,8 +44,6 @@ require "dependabot/go_modules"
 require "dependabot/npm_and_yarn"
 require "dependabot/bundler"
 require "dependabot/pub"
-# TODO: This causes build error?
-#require "dependabot/silent"
 require "dependabot/swift"
 require "dependabot/devcontainers"
 
