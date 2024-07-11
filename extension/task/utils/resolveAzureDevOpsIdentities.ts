@@ -137,13 +137,20 @@ async function querySubjectHosted(organization: string, email: string): Promise<
       }
     });
 
-    if (isSuccessStatusCode(response.status)) {
-      const descriptor: string = response.data.value[0]?.descriptor || "";
-      const id = decodeBase64(descriptor.substring(descriptor.indexOf(".") + 1))
-      return {
-        id: id,
-        displayName: response.data.value[0]?.displayName,
-        input: email}
+    tl.debug(`Got Http Response: ${response.status}`);
+
+    if(!isSuccessStatusCode(response.status) || response.data.value.length === 0) {
+        throw new Error(
+            'Failed to resolve given email in organization'
+        );
+    }
+
+    const descriptor: string = response.data.value[0]?.descriptor || "";
+    const id = decodeBase64(descriptor.substring(descriptor.indexOf(".") + 1))
+    return {
+      id: id,
+      displayName: response.data.value[0]?.displayName,
+      input: email
     }
   } catch (error) {
     const responseStatusCode = error?.response?.status;
