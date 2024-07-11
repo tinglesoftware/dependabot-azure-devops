@@ -16,8 +16,8 @@ $files = @(
     # "Rakefile"
     "updater/.rubocop.yml"
 
-    "updater/bin/fetch_files.rb"
-    "updater/bin/update_files.rb"
+    # "updater/bin/fetch_files.rb"
+    # "updater/bin/update_files.rb"
 
     "updater/config/.npmrc"
     "updater/config/.yarnrc"
