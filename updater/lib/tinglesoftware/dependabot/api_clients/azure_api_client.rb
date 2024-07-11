@@ -102,6 +102,7 @@ module TingleSoftware
         sig { params(dependency_change: ::Dependabot::DependencyChange, base_commit_sha: String).void }
         def update_pull_request(_dependency_change, _base_commit_sha)
           raise "not yet implemented"
+          # TODO: Implement this
         end
 
         sig { params(dependency_names: T.any(String, T::Array[String]), reason: T.any(String, Symbol)).void }
@@ -115,14 +116,12 @@ module TingleSoftware
 
         sig { params(error_type: T.any(String, Symbol), error_details: T.nilable(T::Hash[T.untyped, T.untyped])).void }
         def record_update_job_error(error_type:, error_details:)
-          # TODO: Implement this
-          # raise e if job.fail_on_exception
+          # No implementation required for Azure DevOps, errors are logged to output console
         end
 
         sig { params(error_type: T.any(Symbol, String), error_details: T.nilable(T::Hash[T.untyped, T.untyped])).void }
         def record_update_job_unknown_error(error_type:, error_details:)
-          # TODO: Implement this
-          # raise e if job.fail_on_exception
+          # No implementation required for Azure DevOps, errors are logged to output console
         end
 
         sig { params(base_commit_sha: String).void }

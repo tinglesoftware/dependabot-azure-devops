@@ -7,6 +7,8 @@ require "dependabot/dependency_snapshot"
 require "dependabot/updater"
 require "octokit"
 
+require "tinglesoftware/dependabot/api_clients/azure_api_client"
+
 #
 # This command combine the dependabot-core "FileFetcherCommand" and "UpdateFilesCommand" in to a single command
 # that can be completed end-to-end in a single self-contained job/script, rather than over multiple jobs/scripts.

@@ -8,7 +8,6 @@ $stdout.sync = true
 
 require "tinglesoftware/dependabot/setup"
 require "tinglesoftware/dependabot/job"
-require "tinglesoftware/dependabot/api_clients/azure_api_client"
 require "tinglesoftware/dependabot/commands/update_all_dependencies_command"
 
 begin

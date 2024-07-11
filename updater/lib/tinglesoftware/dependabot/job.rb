@@ -14,12 +14,6 @@ module TingleSoftware
     class Job < ::Dependabot::Job
       extend T::Sig
 
-      # TODO: DEPENDABOT_VENDOR
-      # TODO: DEPENDABOT_FAIL_ON_EXCEPTION
-      # TODO: DEPENDABOT_SKIP_PULL_REQUESTS
-      # TODO: DEPENDABOT_CLOSE_PULL_REQUESTS
-      # TODO: DEPENDABOT_EXCLUDE_REQUIREMENTS_TO_UNLOCK
-
       def initialize(azure_client: nil)
         @azure_client = azure_client
         super(
@@ -43,7 +37,7 @@ module TingleSoftware
           token: github_access_token,
           update_subdependencies: true,
           updating_a_pull_request: false, # TODO: Implement this
-          vendor_dependencies: false, # TODO: Implement this
+          vendor_dependencies: _vendor_dependencies,
           dependency_groups: _dependency_groups,
           dependency_group_to_refresh: nil # TODO: Implement this
         )
@@ -185,6 +179,10 @@ module TingleSoftware
 
       def _lockfile_only
         ENV.fetch("DEPENDABOT_LOCKFILE_ONLY", nil) == "true"
+      end
+
+      def _vendor_dependencies
+        ENV.fetch("DEPENDABOT_VENDOR_DEPENDENCIES", nil) == "true"
       end
 
       def _dependency_groups
@@ -368,11 +366,11 @@ module TingleSoftware
       end
 
       def pr_message_header
-        ENV.fetch("DEPENDABOT_MESSAGE_HEADER", nil)
+        ENV.fetch("DEPENDABOT_MESSAGE_HEADER", nil).dup.gsub! "\\n", "\n"
       end
 
       def pr_message_footer
-        ENV.fetch("DEPENDABOT_MESSAGE_FOOTER", nil)
+        ENV.fetch("DEPENDABOT_MESSAGE_FOOTER", nil).dup.gsub! "\\n", "\n"
       end
 
       def pr_custom_labels
@@ -409,6 +407,29 @@ module TingleSoftware
 
       def pr_branch_name_prefix
         ENV.fetch("DEPENDABOT_BRANCH_NAME_PREFIX", "dependabot")
+      end
+
+      def skip_pull_requests
+        # TODO: Implement this
+        ENV.fetch("DEPENDABOT_SKIP_PULL_REQUESTS", nil) == "true"
+      end
+
+      def close_pull_requests
+        # TODO: Implement this
+        ENV.fetch("DEPENDABOT_CLOSE_PULL_REQUESTS", nil) == "true"
+      end
+
+      def fail_on_exception
+        # TODO: Implement this
+        ENV.fetch("DEPENDABOT_FAIL_ON_EXCEPTION", nil) == "true"
+      end
+
+      def exclude_requirements_to_unlock
+        # See description of requirements here:
+        # https://github.com/dependabot/dependabot-core/issues/600#issuecomment-407808103
+        # https://github.com/wemake-services/kira-dependencies/pull/210
+        # TODO: Implement this
+        ENV.fetch("DEPENDABOT_EXCLUDE_REQUIREMENTS_TO_UNLOCK", "[]")&.split&.map(&:to_sym)
       end
     end
   end
