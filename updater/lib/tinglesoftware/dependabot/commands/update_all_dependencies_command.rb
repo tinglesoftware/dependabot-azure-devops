@@ -22,6 +22,11 @@ module TingleSoftware
       class UpdateAllDependenciesCommand < ::Dependabot::BaseCommand
         attr_reader :job
 
+        # BaseCommand does not implement this method, so we should expose
+        # the instance variable for error handling to avoid raising a
+        # NotImplementedError if it is referenced
+        attr_reader :base_commit_sha
+
         def initialize(job:)
           @job = job
           @service = ::Dependabot::Service.new(
