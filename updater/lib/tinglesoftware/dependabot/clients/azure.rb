@@ -107,6 +107,19 @@ module TingleSoftware
           )
         end
 
+        def pull_request_thread_with_comments(pull_request_id, type, comments, status)
+          content = {
+            comments: comments.map { |c| { commentType: type || "text", content: c } },
+            status: status || "active"
+          }
+
+          # https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-threads/create?view=azure-devops-rest-7.1
+          post(
+            api_url("git/repositories/" + source.unscoped_repo + "/pullrequests/" + pull_request_id + "/threads"),
+            content.to_json
+          )
+        end
+
         private
 
         def api_url(path, version = API_VERSION)

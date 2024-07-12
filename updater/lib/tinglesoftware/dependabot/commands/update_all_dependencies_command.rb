@@ -35,10 +35,10 @@ module TingleSoftware
           @base_commit_sha = nil
 
           # Clone the repo contents then find all files that could contain dependency references
-          perform_file_fetch_and_find_dependency_files
+          perform_clone_repo_and_find_dependency_files
 
           # Parse the dependency files and extract the full list of dependencies that need updating
-          # Output information about all the dependencies we found, for diagnostic purposes
+          # Output information about all the dependencies and pull requests we found, for diagnostic purposes
           ::Dependabot.logger.info("Found #{dependency_files.count} dependencies files:")
           dependency_files.select.each { |f| ::Dependabot.logger.info(" - #{f.directory}#{f.name}") }
           ::Dependabot.logger.info("Found #{dependency_snapshot.dependencies.count(&:top_level?)} dependencies:")
@@ -50,15 +50,21 @@ module TingleSoftware
             ::Dependabot.logger.info(" - #{g.name}")
             g.dependencies.select(&:top_level?).each { |d| ::Dependabot.logger.info("   - #{d.name} (#{d.version})") }
           end
+          ::Dependabot.logger.info("Found #{job.active_pull_requests.count} active pull requests(s):")
+          job.active_pull_requests.select.each do |pr|
+            ::Dependabot.logger.info(" - ##{pr['pullRequestId']}: #{pr['title']}")
+          end
 
-          # Perform the dependency update
-          perform_dependency_update
+          # Refresh all existing pull requests that are out of date or no longer required
+          perform_update_of_existing_pull_requests
+
+          # Create new pull requests for each dependency [group] that needs updating
+          perform_update_to_create_missing_pull_requests
         end
 
         private
 
-        # Logic copied from `updater/lib/dependabot/file_fetcher_command.rb`` (perform_job)
-        def perform_file_fetch_and_find_dependency_files
+        def perform_clone_repo_and_find_dependency_files
           clone_repo_contents
           @base_commit_sha = file_fetcher.commit
           raise "base commit SHA not found" unless @base_commit_sha
@@ -76,7 +82,6 @@ module TingleSoftware
           @dependency_snapshot ||= perform_dependency_snapshot
         end
 
-        # Logic copied from `updater/lib/dependabot/update_files_command.rb` (perform_job)
         def perform_dependency_snapshot
           ::Dependabot::DependencySnapshot.create_from_job_definition(
             job: job,
@@ -87,7 +92,31 @@ module TingleSoftware
           )
         end
 
-        # Logic copied from updater/lib/dependabot/update_files_command.rb (perform_job)
+        def perform_update_of_existing_pull_requests
+          job.active_pull_requests_with_properties.each do |pr|
+            deps = JSON.parse(
+              pr["properties"][ApiClients::AzureApiClient::PullRequest::Properties::UPDATED_DEPENDENCIES] || nil.to_json
+            )
+            ::Dependabot.logger.info(
+              "Checking if PR ##{pr['pullRequestId']} needs to be updated " \
+              "with dependencies #{JSON.pretty_generate(deps)}"
+            )
+            job.reset(
+              dependency_names_to_refresh:
+                (deps.is_a?(Array) ? deps : deps["dependencies"])&.map { |d| d["dependency-name"] },
+              dependency_group_name_to_refresh:
+              deps.is_a?(Hash) ? deps.fetch("dependency-group-name", nil) : nil
+            )
+            perform_dependency_update
+          end
+        end
+
+        def perform_update_to_create_missing_pull_requests
+          ::Dependabot.logger.info("Creating new PRs for dependencies that need updating")
+          job.reset
+          perform_dependency_update
+        end
+
         def perform_dependency_update
           ::Dependabot::Updater.new(
             service: service,

@@ -37,6 +37,8 @@ module TingleSoftware
 
         sig { params(dependency_change: ::Dependabot::DependencyChange, base_commit_sha: String).void }
         def create_pull_request(dependency_change, base_commit_sha) # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
+          return skip_pull_request("creation", dependency_change) if job.skip_pull_requests
+
           pr_creator = ::Dependabot::PullRequestCreator.new(
             source: job.source,
             base_commit: base_commit_sha,
@@ -87,6 +89,10 @@ module TingleSoftware
               pull_request_auto_complete(pull_request) if job.azure_set_auto_complete
               pull_request_auto_approve(pull_request) if job.azure_set_auto_approve
 
+              # Refresh active pull requests to include the new PR
+              # Required to ensure that the new PR is included in the next action (if any) and duplicates are avoided
+              job.refresh_active_pull_requests
+
             else
               content = JSON[pull_request.body]
               message = content["message"]
@@ -100,18 +106,88 @@ module TingleSoftware
         end
 
         sig { params(dependency_change: ::Dependabot::DependencyChange, base_commit_sha: String).void }
-        def update_pull_request(_dependency_change, _base_commit_sha)
-          raise "not yet implemented"
+        def update_pull_request(dependency_change, base_commit_sha)
+          return skip_pull_request("update", dependency_change) if job.skip_pull_requests
+
           # TODO: Implement this
+          # pr_updater = ::Dependabot::PullRequestUpdater.new(...)
+          # pull_request = pr_updater.update(...)
+          # if pull_request
+          #   pull_request_replace_property_metadata(pull_request, dependency_change, base_commit_sha)
+          #   pull_request_auto_complete(pull_request) if job.azure_set_auto_complete
+          #   pull_request_auto_approve(pull_request) if job.azure_set_auto_approve
+          #   job.refresh_active_pull_requests
+          # end
+          raise "not yet implemented"
         end
 
         sig { params(dependency_names: T.any(String, T::Array[String]), reason: T.any(String, Symbol)).void }
-        def close_pull_request(_dependency_names, _reason)
-          raise "not yet implemented"
-          # TODO: Implement this
-          # job.azure_client.pull_request_comment(pr_id, reason)
-          # job.azure_client.branch_delete(source_ref_name) # do this first to avoid hanging branches
-          # job.azure_client.pull_request_abandon(pr_id)
+        def close_pull_request(dependency_names, reason)
+          return skip_pull_request("close") if job.skip_pull_requests
+
+          # Find the pull request to close
+          pull_request = job.existing_pull_request_for_dependency_names(dependency_names)
+          pull_request_id = pull_request["pullRequestId"].to_s if pull_request
+          raise StandardError, "Unable to find pull request for #{dependency_names.join(',')}" unless pull_request_id
+
+          # Generate a user-friendly comment based on the reason for closing the PR
+          # The first dependency is the "lead" dependency in a multi-dependency update
+          lead_dep_name = dependency_names.first
+          reason_for_close_comment = {
+            :dependencies_changed => "The dependencies have changed",
+            :dependency_group_empty => "The dependency group is empty",
+            :dependency_removed => "Looks like #{lead_dep_name} was removed",
+            :up_to_date => "Looks like #{lead_dep_name} is up-to-date now",
+            :update_no_longer_possible => "#{lead_dep_name} can no longer be updated"
+            #:superseded => "Superseded by ##{new_pull_request_id}"
+          }.freeze.fetch(reason) + ", so this is no longer needed."
+
+          # Comment on the PR explaining why it was closed
+          if reason_for_close_comment && job.comment_pull_requests
+            begin
+              job.azure_client.pull_request_thread_with_comments(
+                pull_request_id, "system", [reason_for_close_comment], "fixed"
+              )
+            rescue => e
+              # It is not fatal if this fails, continue on...
+              ::Dependabot.logger.warn(
+                "Failed to comment on PR ##{pull_request_id} with close reason: #{e.message}"
+              )
+            end
+          end
+
+          return skip_pull_request("close") unless job.close_pull_requests
+
+          # Delete the source branch
+          # Do this first to avoid hanging branches
+          begin
+            pull_request_source_ref_name = pull_request["sourceRefName"]
+            job.azure_client.branch_delete(pull_request_source_ref_name)
+          rescue => e
+            # It is not fatal if this fails, continue on. May end up with hanging branches...
+            ::Dependabot.logger.warn(
+              "Failed to delete source branch for PR ##{pull_request_id}: #{e.message}"
+            )
+          end
+
+          # Close the pull request
+          job.azure_client.pull_request_abandon(pull_request_id)
+        end
+
+        sig { params(action: String, dependency_change: T.nilable(::Dependabot::DependencyChange)).void }
+        def skip_pull_request(action, dependency_change: nil)
+          ::Dependabot.logger.info("Skipping pull request #{action}, as it is disabled for this job.")
+          ::Dependabot.logger.info("Staged file changes were:") if dependency_change
+          dependency_change&.updated_dependency_files&.each do |updated_file|
+            case updated_file.operation
+            when ::Dependabot::DependencyFile::Operation::CREATE
+              ::Dependabot.logger.info(" 🟢 created '#{updated_file.name}' in '#{updated_file.directory}'")
+            when ::Dependabot::DependencyFile::Operation::UPDATE
+              ::Dependabot.logger.info(" 🟡 updated '#{updated_file.name}' in '#{updated_file.directory}'")
+            when ::Dependabot::DependencyFile::Operation::DELETE
+              ::Dependabot.logger.info(" 🔴 deleted '#{updated_file.name}' in '#{updated_file.directory}'")
+            end
+          end
         end
 
         sig { params(error_type: T.any(String, Symbol), error_details: T.nilable(T::Hash[T.untyped, T.untyped])).void }
@@ -141,7 +217,8 @@ module TingleSoftware
 
         sig { params(metric: String, tags: T::Hash[String, String]).void }
         def increment_metric(metric, tags:)
-          puts "📊 METRIC '#{metric}' #{JSON.pretty_generate(tags)}"
+          # Metrics are not required for Azure DevOps, just log it to output console for extra diagnostics
+          ::Dependabot.logger.info(" 📊 Job metric recorded for '#{metric}' #{JSON.pretty_generate(tags)}")
         end
 
         private

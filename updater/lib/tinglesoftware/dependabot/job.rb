@@ -14,14 +14,14 @@ module TingleSoftware
     class Job < ::Dependabot::Job
       extend T::Sig
 
-      def initialize(azure_client: nil)
+      def initialize(azure_client: nil, dependency_names_to_refresh: nil, dependency_group_name_to_refresh: nil)
         @azure_client = azure_client
         super(
           id: _id,
           allowed_updates: _allowed_updates,
           commit_message_options: _commit_message_options,
           credentials: _credentials,
-          dependencies: nil, # TODO: Implement this
+          dependencies: dependency_names_to_refresh,
           existing_pull_requests: _existing_pull_requests,
           existing_group_pull_requests: _existing_group_pull_requests,
           experiments: _experiments,
@@ -36,11 +36,17 @@ module TingleSoftware
           source: _source,
           token: github_access_token,
           update_subdependencies: true,
-          updating_a_pull_request: false, # TODO: Implement this
+          updating_a_pull_request: dependency_names_to_refresh || dependency_group_name_to_refresh ? true : false,
           vendor_dependencies: _vendor_dependencies,
           dependency_groups: _dependency_groups,
-          dependency_group_to_refresh: nil # TODO: Implement this
+          dependency_group_to_refresh: dependency_group_name_to_refresh
         )
+      end
+
+      def reset(dependency_names_to_refresh: nil, dependency_group_name_to_refresh: nil)
+        @dependencies = dependency_names_to_refresh
+        @dependency_group_to_refresh = dependency_group_name_to_refresh
+        @updating_a_pull_request = dependency_names_to_refresh || dependency_group_name_to_refresh ? true : false
       end
 
       def validate_job
@@ -193,17 +199,30 @@ module TingleSoftware
       end
 
       def _existing_pull_requests
-        dependencies = active_pull_requests_property_sets.filter_map do |props|
-          JSON.parse(props[ApiClients::AzureApiClient::PullRequest::Properties::UPDATED_DEPENDENCIES] || nil.to_json)
+        dependencies = active_pull_requests_with_properties.filter_map do |pr|
+          JSON.parse(
+            pr["properties"][ApiClients::AzureApiClient::PullRequest::Properties::UPDATED_DEPENDENCIES] || nil.to_json
+          )
         end
         dependencies.select { |d| d.is_a?(Array) }
       end
 
       def _existing_group_pull_requests
-        dependencies = active_pull_requests_property_sets.filter_map do |props|
-          JSON.parse(props[ApiClients::AzureApiClient::PullRequest::Properties::UPDATED_DEPENDENCIES] || nil.to_json)
+        dependencies = active_pull_requests_with_properties.filter_map do |pr|
+          JSON.parse(
+            pr["properties"][ApiClients::AzureApiClient::PullRequest::Properties::UPDATED_DEPENDENCIES] || nil.to_json
+          )
         end
         dependencies.select { |d| d.is_a?(Hash) }
+      end
+
+      def existing_pull_request_for_dependency_names(dependency_names)
+        active_pull_requests_with_properties.find do |pr|
+          deps = JSON.parse(
+            pr["properties"][ApiClients::AzureApiClient::PullRequest::Properties::UPDATED_DEPENDENCIES] || nil.to_json
+          )
+          dependency_names == (deps.is_a?(Array) ? deps : deps["dependencies"])&.map { |d| d["dependency-name"] }
+        end
       end
 
       def _source
@@ -317,27 +336,32 @@ module TingleSoftware
         azure_client.pull_requests_active(user_id, target_branch_name)
       end
 
-      def active_pull_requests_property_sets
-        @active_pull_requests_property_sets ||= fetch_active_pull_requests_property_sets
+      def active_pull_requests_with_properties
+        @active_pull_requests_with_properties ||= fetch_active_pull_requests_with_properties
       end
 
-      def fetch_active_pull_requests_property_sets
-        active_pull_requests.map do |pr|
+      def fetch_active_pull_requests_with_properties
+        active_pull_requests.each do |pr|
           pull_request_id = pr["pullRequestId"].to_s
-          azure_client.pull_request_properties_list(pull_request_id).to_h do |k, v|
+          pr["properties"] = azure_client.pull_request_properties_list(pull_request_id).to_h do |k, v|
             [k, v["$value"]]
           end
         end
       end
 
+      def refresh_active_pull_requests
+        @active_pull_requests = fetch_active_pull_requests
+        @active_pull_requests_with_properties = fetch_active_pull_requests_with_properties
+      end
+
       # TODO: Implement this
-      def open_pull_requests_limit
+      def active_pull_requests_limit
         ENV.fetch("DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT", "5").to_i
       end
 
       def security_updates_only
         # If the pull request limit is set to zero, we assume that the user just wants security updates
-        return true if open_pull_requests_limit.zero?
+        return true if active_pull_requests_limit.zero?
 
         ENV.fetch("DEPENDABOT_SECURITY_UPDATES_ONLY", nil) == "true"
       end
@@ -410,26 +434,20 @@ module TingleSoftware
       end
 
       def skip_pull_requests
-        # TODO: Implement this
         ENV.fetch("DEPENDABOT_SKIP_PULL_REQUESTS", nil) == "true"
       end
 
       def close_pull_requests
-        # TODO: Implement this
         ENV.fetch("DEPENDABOT_CLOSE_PULL_REQUESTS", nil) == "true"
+      end
+
+      def comment_pull_requests
+        ENV.fetch("DEPENDABOT_COMMENT_PULL_REQUESTS", nil) == "true"
       end
 
       def fail_on_exception
         # TODO: Implement this
-        ENV.fetch("DEPENDABOT_FAIL_ON_EXCEPTION", nil) == "true"
-      end
-
-      def exclude_requirements_to_unlock
-        # See description of requirements here:
-        # https://github.com/dependabot/dependabot-core/issues/600#issuecomment-407808103
-        # https://github.com/wemake-services/kira-dependencies/pull/210
-        # TODO: Implement this
-        ENV.fetch("DEPENDABOT_EXCLUDE_REQUIREMENTS_TO_UNLOCK", "[]")&.split&.map(&:to_sym)
+        ENV.fetch("DEPENDABOT_FAIL_ON_EXCEPTION", "true") == "true"
       end
     end
   end
