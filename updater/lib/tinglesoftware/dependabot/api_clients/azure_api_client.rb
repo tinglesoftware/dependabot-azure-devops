@@ -47,7 +47,7 @@ module TingleSoftware
             dependency_group: dependency_change.dependency_group,
             files: dependency_change.updated_dependency_files,
             credentials: job.credentials,
-            pr_message_header: job.pr_message_header,
+            pr_message_header: pull_request_header_with_compatibility_scores(dependency_change.updated_dependencies),
             pr_message_footer: job.pr_message_footer,
             author_details: {
               name: job.pr_author_name,
@@ -336,6 +336,24 @@ module TingleSoftware
                 pull_request_updated_dependencies_property_data(dependency_change).to_json
             }
           )
+        end
+
+        def pull_request_header_with_compatibility_scores(dependencies)
+          return job.pr_message_header unless dependencies.any? && job.pr_compatibility_scores_badges
+
+          # Compatibility score badges are intended for single dependency security updates, not group updates.
+          # https://docs.github.com/en/github/managing-security-vulnerabilities/about-dependabot-security-updates#about-compatibility-scores
+          # In group updates, the compatibility score is not very useful and can easily exceed the max message length,
+          # so we don't show it.
+          return job.pr_message_header if dependencies.length > 1
+
+          compatibility_score_badges = dependencies.map do |dep|
+            "[![Dependabot compatibility score](https://dependabot-badges.githubapp.com/badges/compatibility_score?" \
+              "dependency-name=#{dep.name}&package-manager=#{job.package_manager}&" \
+              "previous-version=#{dep.previous_version}&new-version=#{dep.version})]" \
+              "(https://docs.github.com/en/github/managing-security-vulnerabilities/about-dependabot-security-updates#about-compatibility-scores)"
+          end&.join(" ")
+          ((job.pr_message_header || "") + "\n\n" + compatibility_score_badges).strip
         end
 
         def pull_request_updated_dependencies_property_data(dependency_change)

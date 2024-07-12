@@ -399,6 +399,10 @@ module TingleSoftware
         ENV.fetch("DEPENDABOT_SIGNATURE_KEY", nil)
       end
 
+      def pr_compatibility_scores_badges
+        ENV.fetch("DEPENDABOT_COMPATIBILITY_SCORE_BADGES", nil) == "true"
+      end
+
       def pr_message_header
         ENV.fetch("DEPENDABOT_MESSAGE_HEADER", nil)&.dup&.gsub! "\\n", "\n"
       end
