@@ -105,7 +105,7 @@ module TingleSoftware
           dependency_names = dependency_change.updated_dependencies.map(&:name)
           pull_request = job.existing_pull_request_for_dependency_names(dependency_names)
           pull_request_id = pull_request["pullRequestId"].to_s if pull_request
-          pull_request_last_merge_commit = pr["lastMergeSourceCommit"]["commitId"] if pull_request
+          pull_request_last_merge_commit = pull_request["lastMergeSourceCommit"]["commitId"] if pull_request
           raise StandardError, "Unable to find pull request for #{dependency_names.join(',')}" unless pull_request_id
 
           # Ignore the pull request if it has been manually edited
@@ -117,13 +117,13 @@ module TingleSoftware
             return
           end
 
-          pr_updater = Dependabot::PullRequestUpdater.new(
+          pr_updater = ::Dependabot::PullRequestUpdater.new(
             source: job.source,
             base_commit: base_commit_sha,
             old_commit: pull_request_last_merge_commit,
             files: dependency_change.updated_dependency_files,
             credentials: job.credentials,
-            pull_request_number: conflict_pull_request_id,
+            pull_request_number: pull_request_id.to_i,
             author_details: {
               name: job.pr_author_name,
               email: job.pr_author_email
@@ -246,11 +246,12 @@ module TingleSoftware
           # The first dependency is the "lead" dependency in a multi-dependency update
           lead_dep_name = dependency_names.first
           reason_for_close_comment = {
-            dependencies_changed: "The dependencies have changed",
-            dependency_group_empty: "The dependency group is empty",
-            dependency_removed: "Looks like #{lead_dep_name} was removed",
+            dependencies_changed: "Looks like the dependencies have changed",
+            dependency_group_empty: "Looks like the dependencies in this group are now empty",
+            dependency_removed: "Looks like #{lead_dep_name} is no longer a dependency",
             up_to_date: "Looks like #{lead_dep_name} is up-to-date now",
-            update_no_longer_possible: "#{lead_dep_name} can no longer be updated"
+            update_no_longer_possible: "Looks like #{lead_dep_name} can no longer be updated"
+            # ??? => "Looks like these dependencies are updatable in another way, so this is no longer needed"
             # :superseded => "Superseded by ##{new_pull_request_id}"
           }.freeze.fetch(reason) + ", so this is no longer needed."
 

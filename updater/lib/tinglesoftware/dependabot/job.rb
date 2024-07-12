@@ -142,7 +142,7 @@ module TingleSoftware
       end
 
       def _ignore_conditions
-        JSON.parse(ENV.fetch("DEPENDABOT_IGNORE_CONDITIONS", "[]"), symbolize_names: true).compact
+        JSON.parse(ENV.fetch("DEPENDABOT_IGNORE_CONDITIONS", "[]")).compact
       end
 
       def _package_manager
