@@ -400,11 +400,11 @@ module TingleSoftware
       end
 
       def pr_message_header
-        ENV.fetch("DEPENDABOT_MESSAGE_HEADER", nil).dup.gsub! "\\n", "\n"
+        ENV.fetch("DEPENDABOT_MESSAGE_HEADER", nil)&.dup&.gsub! "\\n", "\n"
       end
 
       def pr_message_footer
-        ENV.fetch("DEPENDABOT_MESSAGE_FOOTER", nil).dup.gsub! "\\n", "\n"
+        ENV.fetch("DEPENDABOT_MESSAGE_FOOTER", nil)&.dup&.gsub! "\\n", "\n"
       end
 
       def pr_custom_labels
