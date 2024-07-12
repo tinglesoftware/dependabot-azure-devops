@@ -7,34 +7,34 @@ require "uri"
 require "json"
 require "rubygems/package"
 require "bundler"
-# require "./common/lib/dependabot"
+require "./common/lib/dependabot"
 require "yaml"
 
 # ./dependabot-core.gemspec is purposefully excluded from this list
 # because it's an empty gem as a placeholder to prevent namesquatting.
-# GEMSPECS = %w(
-#   common/dependabot-common.gemspec
-#   go_modules/dependabot-go_modules.gemspec
-#   terraform/dependabot-terraform.gemspec
-#   docker/dependabot-docker.gemspec
-#   git_submodules/dependabot-git_submodules.gemspec
-#   github_actions/dependabot-github_actions.gemspec
-#   nuget/dependabot-nuget.gemspec
-#   gradle/dependabot-gradle.gemspec
-#   maven/dependabot-maven.gemspec
-#   bundler/dependabot-bundler.gemspec
-#   elm/dependabot-elm.gemspec
-#   cargo/dependabot-cargo.gemspec
-#   npm_and_yarn/dependabot-npm_and_yarn.gemspec
-#   composer/dependabot-composer.gemspec
-#   hex/dependabot-hex.gemspec
-#   python/dependabot-python.gemspec
-#   pub/dependabot-pub.gemspec
-#   omnibus/dependabot-omnibus.gemspec
-#   silent/dependabot-silent.gemspec
-#   swift/dependabot-swift.gemspec
-#   devcontainers/dependabot-devcontainers.gemspec
-# ).freeze
+GEMSPECS = %w(
+  common/dependabot-common.gemspec
+  go_modules/dependabot-go_modules.gemspec
+  terraform/dependabot-terraform.gemspec
+  docker/dependabot-docker.gemspec
+  git_submodules/dependabot-git_submodules.gemspec
+  github_actions/dependabot-github_actions.gemspec
+  nuget/dependabot-nuget.gemspec
+  gradle/dependabot-gradle.gemspec
+  maven/dependabot-maven.gemspec
+  bundler/dependabot-bundler.gemspec
+  elm/dependabot-elm.gemspec
+  cargo/dependabot-cargo.gemspec
+  npm_and_yarn/dependabot-npm_and_yarn.gemspec
+  composer/dependabot-composer.gemspec
+  hex/dependabot-hex.gemspec
+  python/dependabot-python.gemspec
+  pub/dependabot-pub.gemspec
+  omnibus/dependabot-omnibus.gemspec
+  silent/dependabot-silent.gemspec
+  swift/dependabot-swift.gemspec
+  devcontainers/dependabot-devcontainers.gemspec
+).freeze
 
 def run_command(command)
   puts "> #{command}"
@@ -104,8 +104,8 @@ end
 namespace :rubocop do
   task :sort do
     File.write(
-      ".rubocop.yml",
-      YAML.load_file(".rubocop.yml").sort_by_key(true).to_yaml
+      "omnibus/.rubocop.yml",
+      YAML.load_file("omnibus/.rubocop.yml").sort_by_key(true).to_yaml
     )
   end
 end
