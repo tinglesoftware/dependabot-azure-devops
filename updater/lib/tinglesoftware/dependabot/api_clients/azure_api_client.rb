@@ -105,8 +105,8 @@ module TingleSoftware
           end
         end
 
-        sig { params(dependency_change: ::Dependabot::DependencyChange, base_commit_sha: String).void }
-        def update_pull_request(dependency_change, base_commit_sha)
+        sig { params(dependency_change: ::Dependabot::DependencyChange, _base_commit_sha: String).void }
+        def update_pull_request(dependency_change, _base_commit_sha)
           return skip_pull_request("update", dependency_change) if job.skip_pull_requests
 
           # TODO: Implement this
@@ -123,47 +123,24 @@ module TingleSoftware
 
         sig { params(dependency_names: T.any(String, T::Array[String]), reason: T.any(String, Symbol)).void }
         def close_pull_request(dependency_names, reason)
-          return skip_pull_request("close") if job.skip_pull_requests
+          return skip_pull_request("close", nil) if job.skip_pull_requests
 
           # Find the pull request to close
           pull_request = job.existing_pull_request_for_dependency_names(dependency_names)
           pull_request_id = pull_request["pullRequestId"].to_s if pull_request
           raise StandardError, "Unable to find pull request for #{dependency_names.join(',')}" unless pull_request_id
 
-          # Generate a user-friendly comment based on the reason for closing the PR
-          # The first dependency is the "lead" dependency in a multi-dependency update
-          lead_dep_name = dependency_names.first
-          reason_for_close_comment = {
-            :dependencies_changed => "The dependencies have changed",
-            :dependency_group_empty => "The dependency group is empty",
-            :dependency_removed => "Looks like #{lead_dep_name} was removed",
-            :up_to_date => "Looks like #{lead_dep_name} is up-to-date now",
-            :update_no_longer_possible => "#{lead_dep_name} can no longer be updated"
-            #:superseded => "Superseded by ##{new_pull_request_id}"
-          }.freeze.fetch(reason) + ", so this is no longer needed."
-
           # Comment on the PR explaining why it was closed
-          if reason_for_close_comment && job.comment_pull_requests
-            begin
-              job.azure_client.pull_request_thread_with_comments(
-                pull_request_id, "system", [reason_for_close_comment], "fixed"
-              )
-            rescue => e
-              # It is not fatal if this fails, continue on...
-              ::Dependabot.logger.warn(
-                "Failed to comment on PR ##{pull_request_id} with close reason: #{e.message}"
-              )
-            end
-          end
+          pull_request_comment_on_close_reason(pull_request, dependency_names, reason)
 
-          return skip_pull_request("close") unless job.close_pull_requests
+          return skip_pull_request("close", nil) unless job.close_pull_requests
 
           # Delete the source branch
           # Do this first to avoid hanging branches
           begin
             pull_request_source_ref_name = pull_request["sourceRefName"]
             job.azure_client.branch_delete(pull_request_source_ref_name)
-          rescue => e
+          rescue StandardError => e
             # It is not fatal if this fails, continue on. May end up with hanging branches...
             ::Dependabot.logger.warn(
               "Failed to delete source branch for PR ##{pull_request_id}: #{e.message}"
@@ -175,7 +152,7 @@ module TingleSoftware
         end
 
         sig { params(action: String, dependency_change: T.nilable(::Dependabot::DependencyChange)).void }
-        def skip_pull_request(action, dependency_change: nil)
+        def skip_pull_request(action, dependency_change)
           ::Dependabot.logger.info("Skipping pull request #{action}, as it is disabled for this job.")
           ::Dependabot.logger.info("Staged file changes were:") if dependency_change
           dependency_change&.updated_dependency_files&.each do |updated_file|
@@ -222,6 +199,37 @@ module TingleSoftware
         end
 
         private
+
+        def pull_request_comment_on_close_reason(pull_request, dependency_names, reason)
+          return unless job.comment_pull_requests
+
+          # Generate a user-friendly comment based on the reason for closing the PR
+          # The first dependency is the "lead" dependency in a multi-dependency update
+          lead_dep_name = dependency_names.first
+          reason_for_close_comment = {
+            dependencies_changed: "The dependencies have changed",
+            dependency_group_empty: "The dependency group is empty",
+            dependency_removed: "Looks like #{lead_dep_name} was removed",
+            up_to_date: "Looks like #{lead_dep_name} is up-to-date now",
+            update_no_longer_possible: "#{lead_dep_name} can no longer be updated"
+            # :superseded => "Superseded by ##{new_pull_request_id}"
+          }.freeze.fetch(reason) + ", so this is no longer needed."
+
+          return unless reason_for_close_comment
+
+          # Comment on the PR explaining why it was closed
+          pull_request_id = pull_request["pullRequestId"].to_s
+          begin
+            job.azure_client.pull_request_thread_with_comments(
+              pull_request_id, "system", [reason_for_close_comment], "fixed"
+            )
+          rescue StandardError => e
+            # It is not fatal if this fails, continue on...
+            ::Dependabot.logger.warn(
+              "Failed to comment on PR ##{pull_request_id} with close reason: #{e.message}"
+            )
+          end
+        end
 
         def pull_request_auto_complete(pull_request)
           pull_request_id = pull_request["pullRequestId"]

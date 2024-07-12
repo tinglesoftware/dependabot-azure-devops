@@ -98,8 +98,8 @@ module TingleSoftware
               pr["properties"][ApiClients::AzureApiClient::PullRequest::Properties::UPDATED_DEPENDENCIES] || nil.to_json
             )
             ::Dependabot.logger.info(
-              "Checking if PR ##{pr['pullRequestId']} needs to be updated " \
-              "with dependencies #{JSON.pretty_generate(deps)}"
+              "Checking if PR ##{pr['pullRequestId']} needs to be updated; " \
+              "it proposed updating #{JSON.pretty_generate(deps)}"
             )
             job.reset(
               dependency_names_to_refresh:
