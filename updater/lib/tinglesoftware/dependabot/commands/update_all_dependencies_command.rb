@@ -55,8 +55,8 @@ module TingleSoftware
             ::Dependabot.logger.info(" - #{g.name}")
             g.dependencies.select(&:top_level?).each { |d| ::Dependabot.logger.info("   - #{d.name} (#{d.version})") }
           end
-          ::Dependabot.logger.info("Found #{job.active_pull_requests.count} active pull requests(s):")
-          job.active_pull_requests.select.each do |pr|
+          ::Dependabot.logger.info("Found #{job.open_pull_requests.count} open pull requests(s):")
+          job.open_pull_requests.select.each do |pr|
             ::Dependabot.logger.info(" - ##{pr['pullRequestId']}: #{pr['title']}")
           end
 
@@ -98,7 +98,7 @@ module TingleSoftware
         end
 
         def perform_update_of_existing_pull_requests
-          job.active_pull_requests_with_properties.each do |pr|
+          job.open_pull_requests_with_properties.each do |pr|
             deps = JSON.parse(
               pr["properties"][ApiClients::AzureApiClient::PullRequest::Properties::UPDATED_DEPENDENCIES] || nil.to_json
             )

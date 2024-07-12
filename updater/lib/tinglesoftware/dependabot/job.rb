@@ -199,7 +199,7 @@ module TingleSoftware
       end
 
       def _existing_pull_requests
-        dependencies = active_pull_requests_with_properties.filter_map do |pr|
+        dependencies = open_pull_requests_with_properties.filter_map do |pr|
           JSON.parse(
             pr["properties"][ApiClients::AzureApiClient::PullRequest::Properties::UPDATED_DEPENDENCIES] || nil.to_json
           )
@@ -208,7 +208,7 @@ module TingleSoftware
       end
 
       def _existing_group_pull_requests
-        dependencies = active_pull_requests_with_properties.filter_map do |pr|
+        dependencies = open_pull_requests_with_properties.filter_map do |pr|
           JSON.parse(
             pr["properties"][ApiClients::AzureApiClient::PullRequest::Properties::UPDATED_DEPENDENCIES] || nil.to_json
           )
@@ -217,7 +217,7 @@ module TingleSoftware
       end
 
       def existing_pull_request_for_dependency_names(dependency_names)
-        active_pull_requests_with_properties.find do |pr|
+        open_pull_requests_with_properties.find do |pr|
           deps = JSON.parse(
             pr["properties"][ApiClients::AzureApiClient::PullRequest::Properties::UPDATED_DEPENDENCIES] || nil.to_json
           )
@@ -329,11 +329,11 @@ module TingleSoftware
         ENV.fetch("AZURE_MERGE_STRATEGY", "squash")
       end
 
-      def active_pull_requests
-        @active_pull_requests ||= fetch_active_pull_requests
+      def open_pull_requests
+        @open_pull_requests ||= fetch_open_pull_requests
       end
 
-      def fetch_active_pull_requests
+      def fetch_open_pull_requests
         ::Dependabot.logger.info(
           "Fetching pull request info for existing dependency updates."
         )
@@ -342,12 +342,12 @@ module TingleSoftware
         azure_client.pull_requests_active(user_id, target_branch_name)
       end
 
-      def active_pull_requests_with_properties
-        @active_pull_requests_with_properties ||= fetch_active_pull_requests_with_properties
+      def open_pull_requests_with_properties
+        @open_pull_requests_with_properties ||= fetch_open_pull_requests_with_properties
       end
 
-      def fetch_active_pull_requests_with_properties
-        active_pull_requests.each do |pr|
+      def fetch_open_pull_requests_with_properties
+        open_pull_requests.each do |pr|
           pull_request_id = pr["pullRequestId"].to_s
           pr["properties"] = azure_client.pull_request_properties_list(pull_request_id).to_h do |k, v|
             [k, v["$value"]]
@@ -355,19 +355,22 @@ module TingleSoftware
         end
       end
 
-      def refresh_active_pull_requests
-        @active_pull_requests = fetch_active_pull_requests
-        @active_pull_requests_with_properties = fetch_active_pull_requests_with_properties
+      def refresh_open_pull_requests
+        @open_pull_requests = fetch_open_pull_requests
+        @open_pull_requests_with_properties = fetch_open_pull_requests_with_properties
       end
 
-      # TODO: Implement this
-      def active_pull_requests_limit
+      def open_pull_requests_limit
         ENV.fetch("DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT", "5").to_i
+      end
+
+      def open_pull_request_limit_reached?
+        open_pull_requests_limit.nonzero? && open_pull_requests.count >= open_pull_requests_limit
       end
 
       def security_updates_only
         # If the pull request limit is set to zero, we assume that the user just wants security updates
-        return true if active_pull_requests_limit.zero?
+        return true if open_pull_requests_limit.zero?
 
         ENV.fetch("DEPENDABOT_SECURITY_UPDATES_ONLY", nil) == "true"
       end
@@ -451,8 +454,7 @@ module TingleSoftware
         ENV.fetch("DEPENDABOT_COMMENT_PULL_REQUESTS", nil) == "true"
       end
 
-      def fail_on_exception
-        # TODO: Implement this
+      def fail_on_exception?
         ENV.fetch("DEPENDABOT_FAIL_ON_EXCEPTION", "true") == "true"
       end
     end

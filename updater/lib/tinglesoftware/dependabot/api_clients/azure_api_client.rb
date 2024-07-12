@@ -37,6 +37,7 @@ module TingleSoftware
 
         sig { params(dependency_change: ::Dependabot::DependencyChange, base_commit_sha: String).void }
         def create_pull_request(dependency_change, base_commit_sha) # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
+          return open_limit_reached_for_pull_requests if job.open_pull_request_limit_reached?
           return skip_pull_request("creation", dependency_change) if job.skip_pull_requests
 
           pr_creator = ::Dependabot::PullRequestCreator.new(
@@ -69,8 +70,8 @@ module TingleSoftware
             }
           )
 
-          # Publish the pull request
-          ::Dependabot.logger.info("Submitting '#{dependency_change.pr_message.pr_name}' pull request for creation.")
+          # Create the pull request
+          ::Dependabot.logger.info("Creating pull request for '#{dependency_change.pr_message.pr_name}'.")
           pull_request = pr_creator.create
           if pull_request
             req_status = pull_request&.status
@@ -81,18 +82,6 @@ module TingleSoftware
               ::Dependabot.logger.info(
                 "Created pull request for '#{pull_request_title}'(##{pull_request_id})."
               )
-
-              # Update the pull request property metadata with the updated dependencies info.
-              pull_request_replace_property_metadata(pull_request, dependency_change, base_commit_sha)
-
-              # Apply auto-complete and auto-approve settings
-              pull_request_auto_complete(pull_request) if job.azure_set_auto_complete
-              pull_request_auto_approve(pull_request) if job.azure_set_auto_approve
-
-              # Refresh active pull requests to include the new PR
-              # Required to ensure that the new PR is included in the next action (if any) and duplicates are avoided
-              job.refresh_active_pull_requests
-
             else
               content = JSON[pull_request.body]
               message = content["message"]
@@ -103,22 +92,53 @@ module TingleSoftware
           else
             ::Dependabot.logger.info("Seems PR is already present.")
           end
+
+          # Update the pull request property metadata, auto-complete, auto-approve, and refresh active pull requests
+          pull_request_sync_state_data(pull_request, dependency_change, base_commit_sha) if pull_request_id
         end
 
-        sig { params(dependency_change: ::Dependabot::DependencyChange, _base_commit_sha: String).void }
-        def update_pull_request(dependency_change, _base_commit_sha)
+        sig { params(dependency_change: ::Dependabot::DependencyChange, base_commit_sha: String).void }
+        def update_pull_request(dependency_change, base_commit_sha)
           return skip_pull_request("update", dependency_change) if job.skip_pull_requests
 
-          # TODO: Implement this
-          # pr_updater = ::Dependabot::PullRequestUpdater.new(...)
-          # pull_request = pr_updater.update(...)
-          # if pull_request
-          #   pull_request_replace_property_metadata(pull_request, dependency_change, base_commit_sha)
-          #   pull_request_auto_complete(pull_request) if job.azure_set_auto_complete
-          #   pull_request_auto_approve(pull_request) if job.azure_set_auto_approve
-          #   job.refresh_active_pull_requests
-          # end
-          raise "not yet implemented"
+          # Find the pull request to update
+          dependency_names = dependency_change.updated_dependencies.map(&:name)
+          pull_request = job.existing_pull_request_for_dependency_names(dependency_names)
+          pull_request_id = pull_request["pullRequestId"].to_s if pull_request
+          pull_request_last_merge_commit = pr["lastMergeSourceCommit"]["commitId"] if pull_request
+          raise StandardError, "Unable to find pull request for #{dependency_names.join(',')}" unless pull_request_id
+
+          # Ignore the pull request if it has been manually edited
+          if job.azure_client.pull_request_commits(pull_request_id).length > 1
+            ::Dependabot.logger.info(
+              "Skipping pull request update for '#{dependency_change.pr_message.pr_name}' (##{pull_request_id}), " \
+              "as it has been manually edited."
+            )
+            return
+          end
+
+          pr_updater = Dependabot::PullRequestUpdater.new(
+            source: job.source,
+            base_commit: base_commit_sha,
+            old_commit: pull_request_last_merge_commit,
+            files: dependency_change.updated_dependency_files,
+            credentials: job.credentials,
+            pull_request_number: conflict_pull_request_id,
+            author_details: {
+              name: job.pr_author_name,
+              email: job.pr_author_email
+            },
+            signature_key: job.pr_signature_key
+          )
+
+          # Update the pull request
+          ::Dependabot.logger.info(
+            "Updating pull request for '#{dependency_change.pr_message.pr_name}' (##{pull_request_id})."
+          )
+          pr_updater.update
+
+          # Update the pull request property metadata, auto-complete, auto-approve, and refresh active pull requests
+          pull_request_sync_state_data(pull_request, dependency_change, base_commit_sha)
         end
 
         sig { params(dependency_names: T.any(String, T::Array[String]), reason: T.any(String, Symbol)).void }
@@ -167,14 +187,21 @@ module TingleSoftware
           end
         end
 
+        def open_limit_reached_for_pull_requests
+          ::Dependabot.logger.log(
+            "Skipping pull request creation, as the open pull request limit (#{job.open_pull_requests_limit}) " \
+            "has been reached."
+          )
+        end
+
         sig { params(error_type: T.any(String, Symbol), error_details: T.nilable(T::Hash[T.untyped, T.untyped])).void }
         def record_update_job_error(error_type:, error_details:)
-          # No implementation required for Azure DevOps, errors are logged to output console
+          # No implementation required for Azure DevOps, errors are dumped to output console already
         end
 
         sig { params(error_type: T.any(Symbol, String), error_details: T.nilable(T::Hash[T.untyped, T.untyped])).void }
         def record_update_job_unknown_error(error_type:, error_details:)
-          # No implementation required for Azure DevOps, errors are logged to output console
+          # No implementation required for Azure DevOps, errors are dumped to output console already
         end
 
         sig { params(base_commit_sha: String).void }
@@ -194,11 +221,23 @@ module TingleSoftware
 
         sig { params(metric: String, tags: T::Hash[String, String]).void }
         def increment_metric(metric, tags:)
-          # Metrics are not required for Azure DevOps, just log it to output console for extra diagnostics
-          ::Dependabot.logger.info(" 📊 Job metric recorded for '#{metric}' #{JSON.pretty_generate(tags)}")
+          # No implementation required for Azure DevOps
         end
 
         private
+
+        def pull_request_sync_state_data(pull_request, dependency_change, base_commit_sha)
+          # Update the pull request property metadata with the updated dependencies info.
+          pull_request_replace_property_metadata(pull_request, dependency_change, base_commit_sha)
+
+          # Apply auto-complete and auto-approve settings
+          pull_request_auto_complete(pull_request) if job.azure_set_auto_complete
+          pull_request_auto_approve(pull_request) if job.azure_set_auto_approve
+
+          # Refresh active pull requests to include the new PR
+          # Required to ensure that the new PR is included in the next action (if any) and duplicates are avoided
+          job.refresh_open_pull_requests
+        end
 
         def pull_request_comment_on_close_reason(pull_request, dependency_names, reason)
           return unless job.comment_pull_requests
