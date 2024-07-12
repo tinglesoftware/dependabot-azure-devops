@@ -98,7 +98,7 @@ module TingleSoftware
         end
 
         sig { params(dependency_change: ::Dependabot::DependencyChange, base_commit_sha: String).void }
-        def update_pull_request(dependency_change, base_commit_sha)
+        def update_pull_request(dependency_change, base_commit_sha) # rubocop:disable Metrics/AbcSize
           return skip_pull_request("update", dependency_change) if job.skip_pull_requests
 
           # Find the pull request to update

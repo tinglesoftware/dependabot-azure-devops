@@ -11,7 +11,8 @@ require "tinglesoftware/dependabot/vulnerabilities"
 #
 module TingleSoftware
   module Dependabot
-    class Job < ::Dependabot::Job
+    # TODO: Clean up this class and reduce length
+    class Job < ::Dependabot::Job # rubocop:disable Metrics/ClassLength
       extend T::Sig
 
       def initialize(azure_client: nil, dependency_names_to_refresh: nil, dependency_group_name_to_refresh: nil)
