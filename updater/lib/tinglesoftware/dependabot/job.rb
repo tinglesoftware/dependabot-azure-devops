@@ -46,16 +46,18 @@ module TingleSoftware
         )
       end
 
-      def do_pull_request_update(dependency_names: nil, dependency_group_name: nil)
+      def for_pull_request_update(dependency_names: nil, dependency_group_name: nil)
         @updating_a_pull_request = true
         @dependencies = dependency_names
         @dependency_group_to_refresh = dependency_group_name
+        self
       end
 
-      def do_all_updates
+      def for_all_updates
         @updating_a_pull_request = false
         @dependencies = []
         @dependency_group_to_refresh = nil
+        self
       end
 
       def validate_job

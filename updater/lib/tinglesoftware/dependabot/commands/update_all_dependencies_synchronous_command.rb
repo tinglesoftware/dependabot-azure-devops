@@ -102,28 +102,29 @@ module TingleSoftware
             )
             dependency_names = (deps.is_a?(Array) ? deps : deps["dependencies"])&.map { |d| d["dependency-name"] } || []
             dependency_group_name = deps.is_a?(Hash) ? deps.fetch("dependency-group-name", nil) : nil
-            job.do_pull_request_update(
-              dependency_names: dependency_names,
-              dependency_group_name: dependency_group_name
+            job.for_pull_request_update(
+              dependency_names: dependency_snapshot.dependencies
+                .select { |d| dependency_names.include?(d.name) }
+                .select { |d| job.allowed_update?(d) }
+                .map(&:name)
             )
-            run_update
+            run_updates_for(
+              job.clone.for_pull_request_update(
+                dependency_names: dependency_names,
+                dependency_group_name: dependency_group_name
+              )
+            )
           end
         end
 
         def update_all_dependencies
           ::Dependabot.logger.info("Checking if any dependencies need a new pull request created")
-          job.do_all_updates
-          run_update
+          run_updates_for(
+            job.for_all_updates
+          )
         end
 
-        def run_update
-          deps = dependency_snapshot.allowed_dependencies.map(&:name)
-          if deps.any?
-            ::Dependabot.logger.info("The following dependencies are allowed for this update operation:")
-            deps.each do |d|
-              ::Dependabot.logger.info(" - #{d}")
-            end
-          end
+        def run_updates_for(job)
           ::Dependabot::Updater.new(
             service: service,
             job: job,
