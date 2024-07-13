@@ -233,7 +233,7 @@ module TingleSoftware
           "api-endpoint" => azure_api_endpoint,
           "repo" => azure_repository_path,
           "directory" => (directories.any? ? nil : directory),
-          "directories" => directories,
+          "directories" => (directories.any? ? directories : nil),
           "branch" => branch
         }
       end
@@ -243,7 +243,7 @@ module TingleSoftware
       end
 
       def directories
-        JSON.parse(ENV.fetch("DEPENDABOT_DIRECTORIES", nil.to_json))&.compact
+        JSON.parse(ENV.fetch("DEPENDABOT_DIRECTORIES", nil.to_json))&.compact || []
       end
 
       def branch
@@ -265,8 +265,8 @@ module TingleSoftware
             hostname: azure_hostname,
             api_endpoint: azure_api_endpoint,
             repo: azure_repository_path,
-            directory: directory,
-            directories: (directories.any? ? nil : directory),
+            directory: (directories.any? ? nil : directory),
+            directories: (directories.any? ? directories : nil),
             branch: branch
           ),
           credentials: _credentials.map { |c| ::Dependabot::Credential.new(c) }
