@@ -67,8 +67,7 @@ module TingleSoftware
             # where the API response contains null that is converted to nil, or it is an empty
             # string. For example, npm package named faker does not have patched version as of 2023-01-16
             # See: https://github.com/advisories/GHSA-5w9c-rv96-fr7g for npm package
-            # This ideally fixes
-            # https://github.com/tinglesoftware/dependabot-azure-devops/issues/453#issuecomment-1383587644
+            # Fixes: https://github.com/tinglesoftware/dependabot-azure-devops/issues/453#issuecomment-1383587644
             vulnerable_version_range = node[:vulnerableVersionRange]
             affected_versions = [vulnerable_version_range].compact.reject { |v| v.strip.empty? }
             first_patched_version = node.dig :firstPatchedVersion, :identifier

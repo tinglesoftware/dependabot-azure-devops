@@ -6,23 +6,25 @@ require "tinglesoftware/dependabot/clients/azure"
 require "tinglesoftware/dependabot/vulnerabilities"
 
 #
-# Represents a Dependabot job; A single unit of work that Dependabot can perform (e.g. "update all dependencies").
-# This class contains all the user configuration needed to perform the job, extracted from environment variables.
+# Represents a Dependabot job; A single unit of work that Dependabot can be performed (e.g. "update all dependencies").
+# This class contains all the user configuration needed to perform a job, parsed from environment variables.
 #
 module TingleSoftware
   module Dependabot
     # TODO: Clean up this class and reduce length
+    # TODO: Test all environment variables
     class Job < ::Dependabot::Job # rubocop:disable Metrics/ClassLength
       extend T::Sig
 
-      def initialize(azure_client: nil, dependency_names_to_refresh: nil, dependency_group_name_to_refresh: nil)
+      def initialize(azure_client: nil)
         @azure_client = azure_client
+        @pr_milestone = _pr_milestone
         super(
           id: _id,
           allowed_updates: _allowed_updates,
           commit_message_options: _commit_message_options,
           credentials: _credentials,
-          dependencies: dependency_names_to_refresh,
+          dependencies: [],
           existing_pull_requests: _existing_pull_requests,
           existing_group_pull_requests: _existing_group_pull_requests,
           experiments: _experiments,
@@ -37,17 +39,23 @@ module TingleSoftware
           source: _source,
           token: github_access_token,
           update_subdependencies: true,
-          updating_a_pull_request: dependency_names_to_refresh || dependency_group_name_to_refresh ? true : false,
+          updating_a_pull_request: false,
           vendor_dependencies: _vendor_dependencies,
           dependency_groups: _dependency_groups,
-          dependency_group_to_refresh: dependency_group_name_to_refresh
+          dependency_group_to_refresh: nil
         )
       end
 
-      def reset(dependency_names_to_refresh: nil, dependency_group_name_to_refresh: nil)
-        @dependencies = dependency_names_to_refresh
-        @dependency_group_to_refresh = dependency_group_name_to_refresh
-        @updating_a_pull_request = dependency_names_to_refresh || dependency_group_name_to_refresh ? true : false
+      def do_pull_request_update(dependency_names: nil, dependency_group_name: nil)
+        @updating_a_pull_request = true
+        @dependencies = dependency_names
+        @dependency_group_to_refresh = dependency_group_name
+      end
+
+      def do_all_updates
+        @updating_a_pull_request = false
+        @dependencies = []
+        @dependency_group_to_refresh = nil
       end
 
       def validate_job
@@ -79,7 +87,11 @@ module TingleSoftware
       end
 
       def fetch_missing_advisories_for_dependency(dependency)
-        ::Dependabot.logger.info("Checking if #{dependency.name} has any security advisories")
+        @fetched_advisories_for_deps ||= []
+        return if @fetched_advisories_for_deps.any?(dependency.name)
+
+        # Cache the dependency name to avoid fetching the same advisories multiple times
+        @fetched_advisories_for_deps.push(dependency.name)
         @security_advisories.push(
           *vulnerabilities_fetcher.fetch(dependency.name)
         )
@@ -105,15 +117,26 @@ module TingleSoftware
 
       def _credentials
         creds = [
+          # Access to DevOps source repositories
           {
             "type" => "git_source",
             "host" => azure_hostname,
             "username" => ENV.fetch("AZURE_ACCESS_USERNAME", nil) || "x-access-token",
             "password" => ENV.fetch("AZURE_ACCESS_TOKEN", nil)
           },
+          # Access to DevOps private package artifact feeds
+          # https://github.com/dependabot/cli/blob/8793545f7b5dbf946aaee9372ffc12318573da81/cmd/dependabot/internal/cmd/update.go#L363C1-L382C3
+          {
+            "type" => "git_source",
+            "host" => "pkgs.dev.azure.com",
+            "username" => ENV.fetch("AZURE_ACCESS_USERNAME", nil) || "x-access-token",
+            "password" => ENV.fetch("AZURE_ACCESS_TOKEN", nil)
+          },
+          # Access to other user-specified sources
           *JSON.parse(ENV.fetch("DEPENDABOT_EXTRA_CREDENTIALS", "[]"))
         ]
         if github_access_token
+          # Access to GitHub source repositories and GitHub Advisory API
           creds << {
             "type" => "git_source",
             "host" => "github.com",
@@ -121,7 +144,6 @@ module TingleSoftware
             "password" => github_access_token
           }
         end
-
         creds.compact
       end
 
@@ -177,10 +199,10 @@ module TingleSoftware
         return nil if versioning_strategy.nil? || versioning_strategy.empty? || versioning_strategy == "auto"
 
         {
-          "lockfile-only" => ::Dependabot::RequirementsUpdateStrategy::LockfileOnly,
-          "widen" => ::Dependabot::RequirementsUpdateStrategy::WidenRanges,
-          "increase" => ::Dependabot::RequirementsUpdateStrategy::BumpVersions,
-          "increase-if-necessary" => ::Dependabot::RequirementsUpdateStrategy::BumpVersionsIfNecessary
+          "increase" => "bump_versions",
+          "increase-if-necessary" => "bump_versions_if_necessary",
+          "lockfile-only" => "lockfile_only",
+          "widen" => "widen_ranges"
         }.freeze.fetch(versioning_strategy)
       end
 
@@ -415,28 +437,29 @@ module TingleSoftware
         labels = JSON.parse(ENV.fetch("DEPENDABOT_LABELS", "[]")).compact
         return labels if labels.count.nonzero?
 
-        nil # nil instead of empty array to ensure default labels are passed
+        nil # use nil instead of empty array to ensure default labels are passed
       end
 
       def pr_reviewers
         reviewers = JSON.parse(ENV.fetch("DEPENDABOT_REVIEWERS", "[]")).compact
         return reviewers if reviewers.count.nonzero?
 
-        nil # nil instead of empty array to avoid API rejection
+        nil # use nil instead of empty array to avoid API rejection
       end
 
       def pr_assignees
         assignees = JSON.parse(ENV.fetch("DEPENDABOT_ASSIGNEES", "[]")).compact
         return assignees if assignees.count.nonzero?
 
-        nil # nil instead of empty array to avoid API rejection
+        nil # use nil instead of empty array to avoid API rejection
       end
 
-      def pr_milestone
+      attr_reader :pr_milestone
+      def _pr_milestone
         milestone = ENV.fetch("DEPENDABOT_MILESTONE", nil).to_i
         return milestone if milestone.nonzero?
 
-        nil
+        nil # use nil instead of zero
       end
 
       def pr_branch_name_separator

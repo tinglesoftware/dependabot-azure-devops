@@ -15,6 +15,13 @@ require "dependabot/credential"
 # However, in Azure DevOps, we don't have a remote API to defer actions to, so we instead perform pull request changes
 # here synchronously. This keeps the entire end-to-end update process contained within a single self-contained job.
 #
+# In the future, it might be possible to write an implementation of this client that uses the TingleSoftware "server"
+# project to defer actions to, like how GitHub Dependabot works; or the updater Docker image could contain a simple
+# web server to receive and process requests, like how Dependabot CLI works (see below).
+# https://github.com/dependabot/cli/blob/8793545f7b5dbf946aaee9372ffc12318573da81/internal/server/api.go
+#
+# Blah blah blah... keep everything in a single job for now...
+#
 module TingleSoftware
   module Dependabot
     module ApiClients
@@ -22,7 +29,7 @@ module TingleSoftware
         extend T::Sig
         attr_reader :job
 
-        # The names of all custom properties use dto store dependabot metadata in Azure DevOps pull requests.
+        # Custom properties used to store dependabot metadata in Azure DevOps pull requests.
         # https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-properties?view=azure-devops-rest-7.1
         module PullRequest
           module Properties
@@ -40,7 +47,12 @@ module TingleSoftware
           return open_limit_reached_for_pull_requests if job.open_pull_request_limit_reached?
           return skip_pull_request("creation", dependency_change) if job.skip_pull_requests
 
-          pr_creator = ::Dependabot::PullRequestCreator.new(
+          ::Dependabot.logger.info(
+            "Creating pull request for '#{dependency_change.pr_message.pr_name}'."
+          )
+
+          # Create the pull request
+          pull_request = ::Dependabot::PullRequestCreator.new(
             source: job.source,
             base_commit: base_commit_sha,
             dependencies: dependency_change.updated_dependencies,
@@ -68,11 +80,9 @@ module TingleSoftware
             provider_metadata: {
               work_item: job.pr_milestone
             }
-          )
+          ).create
 
-          # Create the pull request
-          ::Dependabot.logger.info("Creating pull request for '#{dependency_change.pr_message.pr_name}'.")
-          pull_request = pr_creator.create
+          # Parse the response and log the result
           if pull_request
             req_status = pull_request&.status
             if req_status == 201
@@ -117,7 +127,14 @@ module TingleSoftware
             return
           end
 
-          pr_updater = ::Dependabot::PullRequestUpdater.new(
+          ::Dependabot.logger.info(
+            "Updating pull request for '#{dependency_change.pr_message.pr_name}' (##{pull_request_id})."
+          )
+
+          # TODO: Don't update if no actual change
+
+          # Update the pull request
+          ::Dependabot::PullRequestUpdater.new(
             source: job.source,
             base_commit: base_commit_sha,
             old_commit: pull_request_last_merge_commit,
@@ -129,13 +146,7 @@ module TingleSoftware
               email: job.pr_author_email
             },
             signature_key: job.pr_signature_key
-          )
-
-          # Update the pull request
-          ::Dependabot.logger.info(
-            "Updating pull request for '#{dependency_change.pr_message.pr_name}' (##{pull_request_id})."
-          )
-          pr_updater.update
+          ).update
 
           # Update the pull request property metadata, auto-complete, auto-approve, and refresh active pull requests
           pull_request_sync_state_data(pull_request, dependency_change, base_commit_sha)
@@ -161,7 +172,8 @@ module TingleSoftware
             pull_request_source_ref_name = pull_request["sourceRefName"]
             job.azure_client.branch_delete(pull_request_source_ref_name)
           rescue StandardError => e
-            # It is not fatal if this fails, continue on. May end up with hanging branches...
+            # This has most likely happened because the branch has already been deleted or our access token does
+            # not have permission to manage brances. Deleting the branch is not critical to the process, so continue on
             ::Dependabot.logger.warn(
               "Failed to delete source branch for PR ##{pull_request_id}: #{e.message}"
             )
@@ -251,8 +263,8 @@ module TingleSoftware
             dependency_removed: "Looks like #{lead_dep_name} is no longer a dependency",
             up_to_date: "Looks like #{lead_dep_name} is up-to-date now",
             update_no_longer_possible: "Looks like #{lead_dep_name} can no longer be updated"
-            # ??? => "Looks like these dependencies are updatable in another way, so this is no longer needed"
-            # :superseded => "Superseded by ##{new_pull_request_id}"
+            # TODO: ??? => "Looks like these dependencies are updatable in another way, so this is no longer needed"
+            # TODO: :superseded => "Superseded by ##{new_pull_request_id}"
           }.freeze.fetch(reason) + ", so this is no longer needed."
 
           return unless reason_for_close_comment
@@ -264,7 +276,8 @@ module TingleSoftware
               pull_request_id, "system", [reason_for_close_comment], "fixed"
             )
           rescue StandardError => e
-            # It is not fatal if this fails, continue on...
+            # This has most likely happened because our access token does not have permission to comment on PRs
+            # Commenting on the PR is not critical to the process, so continue on
             ::Dependabot.logger.warn(
               "Failed to comment on PR ##{pull_request_id} with close reason: #{e.message}"
             )
@@ -327,7 +340,7 @@ module TingleSoftware
 
         def pull_request_replace_property_metadata(pull_request, dependency_change, base_commit_sha)
           # Update the pull request property metadata with info about the updated dependencies.
-          # This is used in `job_builder.rb` to calculate "existing_pull_requests" in future jobs.
+          # This is used in `job.rb` to calculate "existing_pull_requests" in future jobs.
           job.azure_client.pull_request_properties_update(
             pull_request["pullRequestId"].to_s,
             {
@@ -336,24 +349,6 @@ module TingleSoftware
                 pull_request_updated_dependencies_property_data(dependency_change).to_json
             }
           )
-        end
-
-        def pull_request_header_with_compatibility_scores(dependencies)
-          return job.pr_message_header unless dependencies.any? && job.pr_compatibility_scores_badges
-
-          # Compatibility score badges are intended for single dependency security updates, not group updates.
-          # https://docs.github.com/en/github/managing-security-vulnerabilities/about-dependabot-security-updates#about-compatibility-scores
-          # In group updates, the compatibility score is not very useful and can easily exceed the max message length,
-          # so we don't show it.
-          return job.pr_message_header if dependencies.length > 1
-
-          compatibility_score_badges = dependencies.map do |dep|
-            "[![Dependabot compatibility score](https://dependabot-badges.githubapp.com/badges/compatibility_score?" \
-              "dependency-name=#{dep.name}&package-manager=#{job.package_manager}&" \
-              "previous-version=#{dep.previous_version}&new-version=#{dep.version})]" \
-              "(https://docs.github.com/en/github/managing-security-vulnerabilities/about-dependabot-security-updates#about-compatibility-scores)"
-          end&.join(" ")
-          ((job.pr_message_header || "") + "\n\n" + compatibility_score_badges).strip
         end
 
         def pull_request_updated_dependencies_property_data(dependency_change)
@@ -378,6 +373,24 @@ module TingleSoftware
               }.compact
             end
           end
+        end
+
+        def pull_request_header_with_compatibility_scores(dependencies)
+          return job.pr_message_header unless dependencies.any? && job.pr_compatibility_scores_badges
+
+          # Compatibility score badges are intended for single dependency security updates, not group updates.
+          # https://docs.github.com/en/github/managing-security-vulnerabilities/about-dependabot-security-updates#about-compatibility-scores
+          # In group updates, the compatibility score is not very useful and can easily exceed the max message length,
+          # so we don't show it.
+          return job.pr_message_header if dependencies.length > 1
+
+          compatibility_score_badges = dependencies.map do |dep|
+            "[![Dependabot compatibility score](https://dependabot-badges.githubapp.com/badges/compatibility_score?" \
+              "dependency-name=#{dep.name}&package-manager=#{job.package_manager}&" \
+              "previous-version=#{dep.previous_version}&new-version=#{dep.version})]" \
+              "(https://docs.github.com/en/github/managing-security-vulnerabilities/about-dependabot-security-updates#about-compatibility-scores)"
+          end&.join(" ")
+          ((job.pr_message_header || "") + "\n\n" + compatibility_score_badges).strip
         end
       end
     end
