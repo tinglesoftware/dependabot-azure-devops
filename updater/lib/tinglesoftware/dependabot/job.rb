@@ -12,6 +12,7 @@ require "tinglesoftware/dependabot/vulnerabilities"
 module TingleSoftware
   module Dependabot
     # TODO: Clean up this class and reduce length
+    # TODO: Clean up rubocop offenses
     # TODO: Test all environment variables
     class Job < ::Dependabot::Job # rubocop:disable Metrics/ClassLength
       extend T::Sig

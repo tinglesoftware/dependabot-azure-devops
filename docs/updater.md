@@ -24,7 +24,6 @@ Next create and run a container from the image:
 docker run --rm -t \
            -e GITHUB_ACCESS_TOKEN=<your-github-token-here> \
            -e DEPENDABOT_JOB_ID=<any-unique-number-here> \
-           -e DEPENDABOT_JOB_PATH=<any-unique-directory-path-here> \
            -e DEPENDABOT_PACKAGE_MANAGER=<your-package-manager-here> \
            -e DEPENDABOT_DIRECTORY=/ \
            -e DEPENDABOT_TARGET_BRANCH=<your-target-branch> \
@@ -57,7 +56,6 @@ An example, for Azure DevOps Services:
 docker run --rm -t \
            -e GITHUB_ACCESS_TOKEN=ijkl..mnop \
            -e DEPENDABOT_JOB_ID=1 \
-           -e DEPENDABOT_JOB_PATH=/tmp/dependabot-job-1 \
            -e DEPENDABOT_PACKAGE_MANAGER=nuget \
            -e DEPENDABOT_DIRECTORY=/ \
            -e DEPENDABOT_TARGET_BRANCH=main \
@@ -87,7 +85,6 @@ An example, for Azure DevOps Server:
 docker run --rm -t \
            -e GITHUB_ACCESS_TOKEN=ijkl..mnop \
            -e DEPENDABOT_JOB_ID=1 \
-           -e DEPENDABOT_JOB_PATH=/tmp/dependabot-job-1 \
            -e DEPENDABOT_PACKAGE_MANAGER=nuget \
            -e DEPENDABOT_DIRECTORY=/ \
            -e DEPENDABOT_TARGET_BRANCH=main \

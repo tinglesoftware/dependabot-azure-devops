@@ -173,7 +173,7 @@ module TingleSoftware
             job.azure_client.branch_delete(pull_request_source_ref_name)
           rescue StandardError => e
             # This has most likely happened because the branch has already been deleted or our access token does
-            # not have permission to manage brances. Deleting the branch is not critical to the process, so continue on
+            # not have permission to manage branches. Deleting the branch is not critical to the process, so continue on
             ::Dependabot.logger.warn(
               "Failed to delete source branch for PR ##{pull_request_id}: #{e.message}"
             )

@@ -72,7 +72,7 @@ module TingleSoftware
             ::Dependabot.logger.info(" - #{d.name} (#{d.version}) #{job.vulnerable?(d) ? '(VULNERABLE!)' : ''}")
           end
           ::Dependabot.logger.info(
-            "Found #{dependency_snapshot.dependencies.reject(&:top_level?).count} transitive dependencies:"
+            "Found #{dependency_snapshot.dependencies.count { |d| !d.top_level? }} transitive dependencies:"
           )
           dependency_snapshot.dependencies.reject(&:top_level?).each do |d|
             ::Dependabot.logger.info(" - #{d.name} (#{d.version}) #{job.vulnerable?(d) ? '(VULNERABLE!)' : ''}")
@@ -92,7 +92,7 @@ module TingleSoftware
           end
         end
 
-        def update_all_existing_pull_requests
+        def update_all_existing_pull_requests # rubocop:disable Metrics/PerceivedComplexity
           job.open_pull_requests_with_properties.each do |pr|
             ::Dependabot.logger.info(
               "Checking if PR ##{pr['pullRequestId']}: #{pr['title']} needs to be updated"
