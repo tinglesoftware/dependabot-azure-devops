@@ -113,25 +113,37 @@ module TingleSoftware
 
           # Find the pull request to update
           dependency_names = dependency_change.updated_dependencies.map(&:name)
-          pull_request = job.existing_pull_request_for_dependency_names(dependency_names)
+          dependency_group_name = dependencies_changed.group_name if dependency_change.grouped_update?
+          pull_request = job.existing_pull_request_with_updated_dependencies(
+            pull_request_updated_dependencies_property_data(dependency_change)
+          )
           pull_request_id = pull_request["pullRequestId"].to_s if pull_request
+          pull_request_merge_status = pull_request["mergeStatus"] if pull_request
           pull_request_last_merge_commit = pull_request["lastMergeSourceCommit"]["commitId"] if pull_request
-          raise StandardError, "Unable to find pull request for #{dependency_names.join(',')}" unless pull_request_id
+          raise StandardError, "Unable to find pull request for #{dependency_group_name || dependency_names.join(',')}" unless pull_request_id
+
+          # Ignore pull requests that don't have conflicts. If there is no conflict, we don't need to update anything
+          if pull_request_merge_status != "conflicts"
+            ::Dependabot.logger.info(
+              "Skipping pull request update for '#{dependency_change.pr_message.pr_name}' (##{pull_request_id}), " \
+              "as there are no merge conflicts to resolve (i.e. nothing actually needs updating)."
+            )
+            return
+          end
 
           # Ignore the pull request if it has been manually edited
           if job.azure_client.pull_request_commits(pull_request_id).length > 1
             ::Dependabot.logger.info(
               "Skipping pull request update for '#{dependency_change.pr_message.pr_name}' (##{pull_request_id}), " \
-              "as it has been manually edited."
+              "as it has been manually edited. It is assumed that somebody else is working on it already."
             )
             return
           end
 
           ::Dependabot.logger.info(
-            "Updating pull request for '#{dependency_change.pr_message.pr_name}' (##{pull_request_id})."
+            "Updating pull request for '#{dependency_change.pr_message.pr_name}' (##{pull_request_id}) " \
+            "to resolve merge conflict(s)."
           )
-
-          # TODO: Don't update if no actual change
 
           # Update the pull request
           ::Dependabot::PullRequestUpdater.new(
@@ -376,7 +388,7 @@ module TingleSoftware
         end
 
         def pull_request_header_with_compatibility_scores(dependencies)
-          return job.pr_message_header unless dependencies.any? && job.pr_compatibility_scores_badges
+          return job.pr_message_header unless dependencies.any? && job.pr_compatibility_scores_badge
 
           # Compatibility score badges are intended for single dependency security updates, not group updates.
           # https://docs.github.com/en/github/managing-security-vulnerabilities/about-dependabot-security-updates#about-compatibility-scores

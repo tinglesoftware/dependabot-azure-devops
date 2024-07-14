@@ -14,6 +14,7 @@ module TingleSoftware
     # TODO: Clean up this class and reduce length
     # TODO: Clean up rubocop offenses
     # TODO: Test all environment variables
+    # TODO: Review all logger info/debug statements
     class Job < ::Dependabot::Job # rubocop:disable Metrics/ClassLength
       extend T::Sig
 
@@ -115,7 +116,7 @@ module TingleSoftware
       end
 
       def _commit_message_options
-        JSON.parse(ENV.fetch("DEPENDABOT_COMMIT_MESSAGE_OPTIONS", "{}"), symbolize_names: true)
+        JSON.parse(ENV.fetch("DEPENDABOT_COMMIT_MESSAGE_OPTIONS", "{}"))
       end
 
       def _credentials
@@ -240,6 +241,15 @@ module TingleSoftware
           )
         end
         dependencies.select { |d| d.is_a?(Hash) }
+      end
+
+      def existing_pull_request_with_updated_dependencies(updated_dependencies)
+        open_pull_requests_with_properties.find do |pr|
+          deps = JSON.parse(
+            pr["properties"][ApiClients::AzureApiClient::PullRequest::Properties::UPDATED_DEPENDENCIES] || nil.to_json
+          )
+          deps == updated_dependencies
+        end
       end
 
       def existing_pull_request_for_dependency_names(dependency_names)
@@ -424,8 +434,8 @@ module TingleSoftware
         ENV.fetch("DEPENDABOT_SIGNATURE_KEY", nil)
       end
 
-      def pr_compatibility_scores_badges
-        ENV.fetch("DEPENDABOT_COMPATIBILITY_SCORE_BADGES", nil) == "true"
+      def pr_compatibility_scores_badge
+        ENV.fetch("DEPENDABOT_COMPATIBILITY_SCORE_BADGE", nil) == "true"
       end
 
       def pr_message_header

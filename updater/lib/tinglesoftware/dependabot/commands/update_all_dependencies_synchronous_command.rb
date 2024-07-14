@@ -92,6 +92,7 @@ module TingleSoftware
           end
         end
 
+        # TODO: Updating a group PR is attempting to superceed with a new PR, but we should be updating the existing one
         def update_all_existing_pull_requests # rubocop:disable Metrics/PerceivedComplexity
           job.open_pull_requests_with_properties.each do |pr|
             ::Dependabot.logger.info(
@@ -100,9 +101,10 @@ module TingleSoftware
             deps = JSON.parse(
               pr["properties"][ApiClients::AzureApiClient::PullRequest::Properties::UPDATED_DEPENDENCIES] || nil.to_json
             )
-            dependency_names = (deps.is_a?(Array) ? deps : deps["dependencies"])&.map { |d| d["dependency-name"] } || []
             dependency_group_name = deps.is_a?(Hash) ? deps.fetch("dependency-group-name", nil) : nil
+            dependency_names = (deps.is_a?(Array) ? deps : deps["dependencies"])&.map { |d| d["dependency-name"] } || []
             job.for_pull_request_update(
+              dependency_group_name: dependency_group_name,
               dependency_names: dependency_snapshot.dependencies
                 .select { |d| dependency_names.include?(d.name) }
                 .select { |d| job.allowed_update?(d) }
@@ -110,8 +112,8 @@ module TingleSoftware
             )
             run_updates_for(
               job.clone.for_pull_request_update(
-                dependency_names: dependency_names,
-                dependency_group_name: dependency_group_name
+                dependency_group_name: dependency_group_name,
+                dependency_names: dependency_names
               )
             )
           end

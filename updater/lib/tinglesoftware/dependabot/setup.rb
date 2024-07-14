@@ -21,9 +21,10 @@ Dependabot::SimpleInstrumentor.subscribe do |*args|
   name = args.first
   payload = args.last
   if name == "excon.request" || name == "excon.response"
+    error_codes = [400, 500].freeze
     puts "🌍 #{name == 'excon.response' ? "<-- #{payload[:status]}" : "--> #{payload[:method].upcase}"}" \
          " #{Excon::Utils.request_uri(payload)}"
-    puts "🚨 #{payload[:body]}" if payload[:status] == 400 && payload[:body]
+    puts "🚨 #{payload[:body]}" if payload[:body] && error_codes.include?(payload[:status])
   end
 end
 
