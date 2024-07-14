@@ -40,8 +40,6 @@ module TingleSoftware
         end
 
         def perform_job
-          @base_commit_sha = nil
-
           # Clone the repo contents then find all files that could contain dependency references
           clone_repo_and_snapshot_dependency_files
           log_what_we_found
@@ -55,16 +53,26 @@ module TingleSoftware
 
         private
 
-        def log_what_we_found # rubocop:disable Metrics/AbcSize, Metrics/PerceivedComplexity
-          ::Dependabot.logger.info("Repository scan completed for '#{job.source.url}' at commit '#{@base_commit_sha}'")
+        def log_what_we_found
+          ::Dependabot.logger.info(
+            "Repository scan completed for '#{job.source.url}' at commit '#{@base_commit_sha}'"
+          )
+          log_found_dependency_files
+          log_found_dependencies
+          log_found_dependency_groups
+          log_found_open_pull_requests
+        end
 
-          # Dependency reference files
-          ::Dependabot.logger.info("Found #{dependency_files.count} #{job.package_manager} dependency reference files:")
+        def log_found_dependency_files
+          ::Dependabot.logger.info(
+            "Found #{dependency_files.count} #{job.package_manager} dependency reference files:"
+          )
           dependency_files.select.each do |f|
             ::Dependabot.logger.info(" - #{f.directory}#{File::SEPARATOR}#{f.name}")
           end
+        end
 
-          ## Dependencies
+        def log_found_dependencies
           ::Dependabot.logger.info(
             "Found #{dependency_snapshot.dependencies.count(&:top_level?)} top-level dependencies:"
           )
@@ -77,32 +85,35 @@ module TingleSoftware
           dependency_snapshot.dependencies.reject(&:top_level?).each do |d|
             ::Dependabot.logger.info(" - #{d.name} (#{d.version}) #{job.vulnerable?(d) ? '(VULNERABLE!)' : ''}")
           end
+        end
 
-          ## Dependency groups
-          ::Dependabot.logger.info("Found #{dependency_snapshot.groups.count} dependency group(s):")
+        def log_found_dependency_groups
+          ::Dependabot.logger.info(
+            "Found #{dependency_snapshot.groups.count} dependency group(s):"
+          )
           dependency_snapshot.groups.select.each do |g|
             ::Dependabot.logger.info(" - #{g.name}")
             g.dependencies.each { |d| ::Dependabot.logger.info("   - #{d.name} (#{d.version})") }
           end
+        end
 
-          # Open pull requests
+        def log_found_open_pull_requests
           ::Dependabot.logger.info("Found #{job.open_pull_requests.count} open pull requests(s):")
           job.open_pull_requests.select.each do |pr|
             ::Dependabot.logger.info(" - ##{pr['pullRequestId']}: #{pr['title']}")
           end
         end
 
-        # TODO: Updating a group PR is attempting to superceed with a new PR, but we should be updating the existing one
-        def update_all_existing_pull_requests # rubocop:disable Metrics/PerceivedComplexity
-          job.open_pull_requests_with_properties.each do |pr|
+        def update_all_existing_pull_requests
+          job.open_pull_requests.each do |pr|
             ::Dependabot.logger.info(
               "Checking if PR ##{pr['pullRequestId']}: #{pr['title']} needs to be updated"
             )
-            deps = JSON.parse(
-              pr["properties"][ApiClients::AzureApiClient::PullRequest::Properties::UPDATED_DEPENDENCIES] || nil.to_json
-            )
+            deps = pr["updated_dependencies"]
             dependency_group_name = deps.is_a?(Hash) ? deps.fetch("dependency-group-name", nil) : nil
             dependency_names = (deps.is_a?(Array) ? deps : deps["dependencies"])&.map { |d| d["dependency-name"] } || []
+
+            # Refocus our job towards updating this single PR, using the CURRENT snapshot of the dependecneis
             job.for_pull_request_update(
               dependency_group_name: dependency_group_name,
               dependency_names: dependency_snapshot.dependencies
@@ -110,6 +121,13 @@ module TingleSoftware
                 .select { |d| job.allowed_update?(d) }
                 .map(&:name)
             )
+
+            # TODO: Fix bug when updating a group PR; the updater is attempting to superceed with a new PR,
+            #       but we should be updating the existing one. Need to look at refresh_group_update_pull_request.rb
+
+            # Run the update on the PR using a clone our job with the OLD snapshot of the dependencies that existed
+            # at the time the PR created. This is important for Dependabot to be able to determine if the PR is still
+            # relevent or not.
             run_updates_for(
               job.clone.for_pull_request_update(
                 dependency_group_name: dependency_group_name,

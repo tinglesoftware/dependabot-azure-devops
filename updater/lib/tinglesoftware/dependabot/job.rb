@@ -11,16 +11,11 @@ require "tinglesoftware/dependabot/vulnerabilities"
 #
 module TingleSoftware
   module Dependabot
-    # TODO: Clean up this class and reduce length
-    # TODO: Clean up rubocop offenses
-    # TODO: Test all environment variables
-    # TODO: Review all logger info/debug statements
     class Job < ::Dependabot::Job # rubocop:disable Metrics/ClassLength
       extend T::Sig
 
       def initialize(azure_client: nil)
         @azure_client = azure_client
-        @pr_milestone = _pr_milestone
         super(
           id: _id,
           allowed_updates: _allowed_updates,
@@ -172,9 +167,10 @@ module TingleSoftware
       end
 
       def _package_manager
+        pkg_mgr = ENV.fetch("DEPENDABOT_PACKAGE_MANAGER", "bundler")
+
         # GitHub native implementation modifies some of the names in the config file
         # https://docs.github.com/en/github/administering-a-repository/configuration-options-for-dependency-updates#package-ecosystem
-        pkg_mgr = ENV.fetch("DEPENDABOT_PACKAGE_MANAGER", "bundler")
         {
           "github-actions" => "github_actions",
           "gitsubmodule" => "submodules",
@@ -202,12 +198,14 @@ module TingleSoftware
         versioning_strategy = ENV.fetch("DEPENDABOT_VERSIONING_STRATEGY", nil)
         return nil if versioning_strategy.nil? || versioning_strategy.empty? || versioning_strategy == "auto"
 
+        # GitHub native implementation modifies some of the names in the config file
+        # https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#versioning-strategy
         {
           "increase" => "bump_versions",
           "increase-if-necessary" => "bump_versions_if_necessary",
           "lockfile-only" => "lockfile_only",
           "widen" => "widen_ranges"
-        }.freeze.fetch(versioning_strategy)
+        }.freeze.fetch(versioning_strategy, versioning_strategy)
       end
 
       def _lockfile_only
@@ -223,42 +221,6 @@ module TingleSoftware
         return groups if groups.count.nonzero?
 
         nil
-      end
-
-      def _existing_pull_requests
-        dependencies = open_pull_requests_with_properties.filter_map do |pr|
-          JSON.parse(
-            pr["properties"][ApiClients::AzureApiClient::PullRequest::Properties::UPDATED_DEPENDENCIES] || nil.to_json
-          )
-        end
-        dependencies.select { |d| d.is_a?(Array) }
-      end
-
-      def _existing_group_pull_requests
-        dependencies = open_pull_requests_with_properties.filter_map do |pr|
-          JSON.parse(
-            pr["properties"][ApiClients::AzureApiClient::PullRequest::Properties::UPDATED_DEPENDENCIES] || nil.to_json
-          )
-        end
-        dependencies.select { |d| d.is_a?(Hash) }
-      end
-
-      def existing_pull_request_with_updated_dependencies(updated_dependencies)
-        open_pull_requests_with_properties.find do |pr|
-          deps = JSON.parse(
-            pr["properties"][ApiClients::AzureApiClient::PullRequest::Properties::UPDATED_DEPENDENCIES] || nil.to_json
-          )
-          deps == updated_dependencies
-        end
-      end
-
-      def existing_pull_request_for_dependency_names(dependency_names)
-        open_pull_requests_with_properties.find do |pr|
-          deps = JSON.parse(
-            pr["properties"][ApiClients::AzureApiClient::PullRequest::Properties::UPDATED_DEPENDENCIES] || nil.to_json
-          )
-          dependency_names == (deps.is_a?(Array) ? deps : deps["dependencies"])&.map { |d| d["dependency-name"] }
-        end
       end
 
       def _source
@@ -365,6 +327,31 @@ module TingleSoftware
         ENV.fetch("AZURE_MERGE_STRATEGY", "squash")
       end
 
+      def _existing_pull_requests
+        open_pull_requests.filter_map { |pr| pr["updated_dependencies"] }.select { |d| d.is_a?(Array) }
+      end
+
+      def _existing_group_pull_requests
+        open_pull_requests.filter_map { |pr| pr["updated_dependencies"] }.select { |d| d.is_a?(Hash) }
+      end
+
+      def existing_pull_request_with_updated_dependencies(updated_dependencies)
+        open_pull_requests.find do |pr|
+          pr["updated_dependencies"] == updated_dependencies
+        end
+      end
+
+      def existing_pull_request_for_dependency_names(dependency_names)
+        open_pull_requests.find do |pr|
+          deps = pr["updated_dependencies"]
+          dependency_names == (deps.is_a?(Array) ? deps : deps["dependencies"])&.map { |d| d["dependency-name"] }
+        end
+      end
+
+      def refresh_open_pull_requests
+        @open_pull_requests = fetch_open_pull_requests
+      end
+
       def open_pull_requests
         @open_pull_requests ||= fetch_open_pull_requests
       end
@@ -375,25 +362,16 @@ module TingleSoftware
         )
         user_id = azure_client.get_user_id
         target_branch_name = branch || azure_client.fetch_default_branch(azure_repository_path)
-        azure_client.pull_requests_active(user_id, target_branch_name)
-      end
-
-      def open_pull_requests_with_properties
-        @open_pull_requests_with_properties ||= fetch_open_pull_requests_with_properties
-      end
-
-      def fetch_open_pull_requests_with_properties
-        open_pull_requests.each do |pr|
+        azure_client.pull_requests_active_for_user_and_targeting_branch(user_id, target_branch_name).map do |pr|
           pull_request_id = pr["pullRequestId"].to_s
-          pr["properties"] = azure_client.pull_request_properties_list(pull_request_id).to_h do |k, v|
-            [k, v["$value"]]
-          end
+          pr["properties"] = azure_client.pull_request_properties_list(pull_request_id).to_h { |k, v| [k, v["$value"]] }
+          pr["base_commit_sha"] =
+            pr["properties"][ApiClients::AzureApiClient::PullRequest::Properties::BASE_COMMIT_SHA]
+          pr["updated_dependencies"] = JSON.parse(
+            pr["properties"][ApiClients::AzureApiClient::PullRequest::Properties::UPDATED_DEPENDENCIES] || nil.to_json
+          )
+          pr
         end
-      end
-
-      def refresh_open_pull_requests
-        @open_pull_requests = fetch_open_pull_requests
-        @open_pull_requests_with_properties = fetch_open_pull_requests_with_properties
       end
 
       def open_pull_requests_limit
@@ -419,7 +397,9 @@ module TingleSoftware
         security_advisories_file_path = ENV.fetch("DEPENDABOT_SECURITY_ADVISORIES_FILE", nil)
         return [] unless security_advisories_file_path && File.exist?(security_advisories_file_path)
 
-        JSON.parse(File.read(security_advisories_file_path))
+        JSON.parse(
+          File.read(security_advisories_file_path)
+        )
       end
 
       def pr_author_name
@@ -467,8 +447,7 @@ module TingleSoftware
         nil # use nil instead of empty array to avoid API rejection
       end
 
-      attr_reader :pr_milestone
-      def _pr_milestone
+      def pr_milestone
         milestone = ENV.fetch("DEPENDABOT_MILESTONE", nil).to_i
         return milestone if milestone.nonzero?
 
@@ -495,7 +474,7 @@ module TingleSoftware
         ENV.fetch("DEPENDABOT_COMMENT_PULL_REQUESTS", nil) == "true"
       end
 
-      def fail_on_exception?
+      def fail_on_exception
         ENV.fetch("DEPENDABOT_FAIL_ON_EXCEPTION", "true") == "true"
       end
     end

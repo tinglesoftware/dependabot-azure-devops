@@ -16,11 +16,9 @@ require "dependabot/credential"
 # here synchronously. This keeps the entire end-to-end update process contained within a single self-contained job.
 #
 # In the future, it might be possible to write an implementation of this client that uses the TingleSoftware "server"
-# project to defer actions to, like how GitHub Dependabot works; or the updater Docker image could contain a simple
-# web server to receive and process requests, like how Dependabot CLI works (see below).
+# project to defer actions to, like how GitHub Dependabot works; or the updater Docker image could host a simple
+# web server on localhost to receive and process requests, like how Dependabot CLI works (see below).
 # https://github.com/dependabot/cli/blob/8793545f7b5dbf946aaee9372ffc12318573da81/internal/server/api.go
-#
-# Blah blah blah... keep everything in a single job for now...
 #
 module TingleSoftware
   module Dependabot
@@ -30,7 +28,7 @@ module TingleSoftware
         attr_reader :job
 
         # Custom properties used to store dependabot metadata in Azure DevOps pull requests.
-        # https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-properties?view=azure-devops-rest-7.1
+        # https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-properties
         module PullRequest
           module Properties
             BASE_COMMIT_SHA = "dependabot.base_commit_sha"
@@ -90,7 +88,7 @@ module TingleSoftware
               pull_request_id = pull_request["pullRequestId"]
               pull_request_title = pull_request["title"]
               ::Dependabot.logger.info(
-                "Created pull request for '#{pull_request_title}'(##{pull_request_id})."
+                "Created PR ##{pull_request_id}: #{pull_request_title}"
               )
             else
               content = JSON[pull_request.body]
@@ -100,33 +98,34 @@ module TingleSoftware
               raise StandardError, "Pull Request creation failed with status #{req_status}. Message: #{message}"
             end
           else
-            ::Dependabot.logger.info("Seems PR is already present.")
+            ::Dependabot.logger.warn("Seems PR is already present.")
           end
 
           # Update the pull request property metadata, auto-complete, auto-approve, and refresh active pull requests
-          pull_request_sync_state_data(pull_request, dependency_change, base_commit_sha) if pull_request_id
+          pull_request_sync_state_data(pull_request, dependency_change, base_commit_sha, true) if pull_request_id
         end
 
         sig { params(dependency_change: ::Dependabot::DependencyChange, base_commit_sha: String).void }
-        def update_pull_request(dependency_change, base_commit_sha) # rubocop:disable Metrics/AbcSize
+        def update_pull_request(dependency_change, base_commit_sha) # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
           return skip_pull_request("update", dependency_change) if job.skip_pull_requests
 
           # Find the pull request to update
-          dependency_names = dependency_change.updated_dependencies.map(&:name)
+          dependency_names = dependency_change.updated_dependencies.map(&:name).join(",")
           dependency_group_name = dependencies_changed.group_name if dependency_change.grouped_update?
           pull_request = job.existing_pull_request_with_updated_dependencies(
             pull_request_updated_dependencies_property_data(dependency_change)
           )
           pull_request_id = pull_request["pullRequestId"].to_s if pull_request
-          pull_request_merge_status = pull_request["mergeStatus"] if pull_request
-          pull_request_last_merge_commit = pull_request["lastMergeSourceCommit"]["commitId"] if pull_request
-          raise StandardError, "Unable to find pull request for #{dependency_group_name || dependency_names.join(',')}" unless pull_request_id
+          pull_request_title = pull_request["title"].to_s if pull_request
+          unless pull_request_id
+            raise StandardError, "Unable to find pull request for #{dependency_group_name || dependency_names}"
+          end
 
           # Ignore pull requests that don't have conflicts. If there is no conflict, we don't need to update anything
-          if pull_request_merge_status != "conflicts"
+          if pull_request["mergeStatus"] != "conflicts"
             ::Dependabot.logger.info(
-              "Skipping pull request update for '#{dependency_change.pr_message.pr_name}' (##{pull_request_id}), " \
-              "as there are no merge conflicts to resolve (i.e. nothing actually needs updating)."
+              "Skipping pull request update for PR ##{pull_request_id}: #{pull_request_title}, " \
+              "there are no merge conflicts to resolve (i.e. nothing actually needs updating)."
             )
             return
           end
@@ -134,22 +133,22 @@ module TingleSoftware
           # Ignore the pull request if it has been manually edited
           if job.azure_client.pull_request_commits(pull_request_id).length > 1
             ::Dependabot.logger.info(
-              "Skipping pull request update for '#{dependency_change.pr_message.pr_name}' (##{pull_request_id}), " \
-              "as it has been manually edited. It is assumed that somebody else is working on it already."
+              "Skipping pull request update for PR ##{pull_request_id}: #{pull_request_title}, " \
+              "it has been manually edited. It is assumed that somebody else is working on it already."
             )
             return
           end
 
           ::Dependabot.logger.info(
-            "Updating pull request for '#{dependency_change.pr_message.pr_name}' (##{pull_request_id}) " \
-            "to resolve merge conflict(s)."
+            "Updating pull request for PR ##{pull_request_id}: #{pull_request_title}, " \
+            "resolving merge conflict(s)."
           )
 
           # Update the pull request
           ::Dependabot::PullRequestUpdater.new(
             source: job.source,
             base_commit: base_commit_sha,
-            old_commit: pull_request_last_merge_commit,
+            old_commit: pull_request["lastMergeSourceCommit"]["commitId"],
             files: dependency_change.updated_dependency_files,
             credentials: job.credentials,
             pull_request_number: pull_request_id.to_i,
@@ -161,7 +160,7 @@ module TingleSoftware
           ).update
 
           # Update the pull request property metadata, auto-complete, auto-approve, and refresh active pull requests
-          pull_request_sync_state_data(pull_request, dependency_change, base_commit_sha)
+          pull_request_sync_state_data(pull_request, dependency_change, base_commit_sha, false)
         end
 
         sig { params(dependency_names: T.any(String, T::Array[String]), reason: T.any(String, Symbol)).void }
@@ -174,7 +173,7 @@ module TingleSoftware
           raise StandardError, "Unable to find pull request for #{dependency_names.join(',')}" unless pull_request_id
 
           # Comment on the PR explaining why it was closed
-          pull_request_comment_on_close_reason(pull_request, dependency_names, reason)
+          pull_request_add_comment_with_close_reason(pull_request, dependency_names, reason)
 
           return skip_pull_request("close", nil) unless job.close_pull_requests
 
@@ -187,7 +186,7 @@ module TingleSoftware
             # This has most likely happened because the branch has already been deleted or our access token does
             # not have permission to manage branches. Deleting the branch is not critical to the process, so continue on
             ::Dependabot.logger.warn(
-              "Failed to delete source branch for PR ##{pull_request_id}: #{e.message}"
+              "Failed to delete source branch for PR ##{pull_request_id}. The error was: #{e.message}"
             )
           end
 
@@ -197,23 +196,23 @@ module TingleSoftware
 
         sig { params(action: String, dependency_change: T.nilable(::Dependabot::DependencyChange)).void }
         def skip_pull_request(action, dependency_change)
-          ::Dependabot.logger.info("Skipping pull request #{action}, as it is disabled for this job.")
-          ::Dependabot.logger.info("Staged file changes were:") if dependency_change
+          ::Dependabot.logger.info("Skipping pull request #{action} as it is disabled for this job.")
+          ::Dependabot.logger.debug("Staged file changes were:") if dependency_change
           dependency_change&.updated_dependency_files&.each do |updated_file|
             case updated_file.operation
             when ::Dependabot::DependencyFile::Operation::CREATE
-              ::Dependabot.logger.info(" 🟢 created '#{updated_file.name}' in '#{updated_file.directory}'")
+              ::Dependabot.logger.debug(" 🟢 created '#{updated_file.name}' in '#{updated_file.directory}'")
             when ::Dependabot::DependencyFile::Operation::UPDATE
-              ::Dependabot.logger.info(" 🟡 updated '#{updated_file.name}' in '#{updated_file.directory}'")
+              ::Dependabot.logger.debug(" 🟡 updated '#{updated_file.name}' in '#{updated_file.directory}'")
             when ::Dependabot::DependencyFile::Operation::DELETE
-              ::Dependabot.logger.info(" 🔴 deleted '#{updated_file.name}' in '#{updated_file.directory}'")
+              ::Dependabot.logger.debug(" 🔴 deleted '#{updated_file.name}' in '#{updated_file.directory}'")
             end
           end
         end
 
         def open_limit_reached_for_pull_requests
           ::Dependabot.logger.log(
-            "Skipping pull request creation, as the open pull request limit (#{job.open_pull_requests_limit}) " \
+            "Skipping pull request creation as the open pull request limit (#{job.open_pull_requests_limit}) " \
             "has been reached."
           )
         end
@@ -250,8 +249,8 @@ module TingleSoftware
 
         private
 
-        def pull_request_sync_state_data(pull_request, dependency_change, base_commit_sha)
-          # Update the pull request property metadata with the updated dependencies info.
+        def pull_request_sync_state_data(pull_request, dependency_change, base_commit_sha, is_new_pr)
+          # Update the pull request properties with our dependabot metadata
           pull_request_replace_property_metadata(pull_request, dependency_change, base_commit_sha)
 
           # Apply auto-complete and auto-approve settings
@@ -260,10 +259,10 @@ module TingleSoftware
 
           # Refresh active pull requests to include the new PR
           # Required to ensure that the new PR is included in the next action (if any) and duplicates are avoided
-          job.refresh_open_pull_requests
+          job.refresh_open_pull_requests if is_new_pr
         end
 
-        def pull_request_comment_on_close_reason(pull_request, dependency_names, reason)
+        def pull_request_add_comment_with_close_reason(pull_request, dependency_names, reason)
           return unless job.comment_pull_requests
 
           # Generate a user-friendly comment based on the reason for closing the PR
@@ -275,8 +274,8 @@ module TingleSoftware
             dependency_removed: "Looks like #{lead_dep_name} is no longer a dependency",
             up_to_date: "Looks like #{lead_dep_name} is up-to-date now",
             update_no_longer_possible: "Looks like #{lead_dep_name} can no longer be updated"
-            # TODO: ??? => "Looks like these dependencies are updatable in another way, so this is no longer needed"
-            # TODO: :superseded => "Superseded by ##{new_pull_request_id}"
+            # TODO: => "Looks like these dependencies are updatable in another way, so this is no longer needed"
+            # TODO: => "Superseded by ##{new_pull_request_id}"
           }.freeze.fetch(reason) + ", so this is no longer needed."
 
           return unless reason_for_close_comment
@@ -291,7 +290,7 @@ module TingleSoftware
             # This has most likely happened because our access token does not have permission to comment on PRs
             # Commenting on the PR is not critical to the process, so continue on
             ::Dependabot.logger.warn(
-              "Failed to comment on PR ##{pull_request_id} with close reason: #{e.message}"
+              "Failed to comment on PR ##{pull_request_id} with close reason. The error was: #{e.message}"
             )
           end
         end
@@ -326,7 +325,7 @@ module TingleSoftware
             merge_commit_message = merge_commit_message[0..merge_commit_message_max_length]
           end
 
-          ::Dependabot.logger.info("Setting auto complete on ##{pull_request_id}.")
+          ::Dependabot.logger.info("Setting auto complete on PR ##{pull_request_id}.")
           job.azure_client.autocomplete_pull_request(
             # Adding argument names will fail! Maybe because there is no spec?
             pull_request_id.to_i,
@@ -342,7 +341,7 @@ module TingleSoftware
 
         def pull_request_auto_approve(pull_request)
           pull_request_id = pull_request["pullRequestId"]
-          ::Dependabot.logger.info("Auto Approving PR #{pull_request_id}")
+          ::Dependabot.logger.info("Setting auto aproval on PR ##{pull_request_id}")
           job.azure_client.pull_request_approve(
             # Adding argument names will fail! Maybe because there is no spec?
             pull_request_id.to_i,
@@ -353,10 +352,13 @@ module TingleSoftware
         def pull_request_replace_property_metadata(pull_request, dependency_change, base_commit_sha)
           # Update the pull request property metadata with info about the updated dependencies.
           # This is used in `job.rb` to calculate "existing_pull_requests" in future jobs.
+          pull_request_id = pull_request["pullRequestId"]
+          ::Dependabot.logger.info("Setting Dependabot metadata properties for PR ##{pull_request_id}")
           job.azure_client.pull_request_properties_update(
-            pull_request["pullRequestId"].to_s,
+            pull_request_id.to_s,
             {
-              PullRequest::Properties::BASE_COMMIT_SHA => base_commit_sha.to_s,
+              PullRequest::Properties::BASE_COMMIT_SHA =>
+                base_commit_sha.to_s,
               PullRequest::Properties::UPDATED_DEPENDENCIES =>
                 pull_request_updated_dependencies_property_data(dependency_change).to_json
             }
@@ -364,26 +366,21 @@ module TingleSoftware
         end
 
         def pull_request_updated_dependencies_property_data(dependency_change)
+          updated_dependencies = dependency_change.updated_dependencies.map do |dep|
+            {
+              "dependency-name" => dep.name,
+              "dependency-version" => dep.version,
+              "directory" => dependency_change.grouped_update? ? dep.directory : nil,
+              "dependency-removed" => dep.removed? ? true : nil
+            }.compact
+          end
           if dependency_change.grouped_update?
             {
               "dependency-group-name" => dependency_change.dependency_group.name,
-              "dependencies" => dependency_change.updated_dependencies.map do |dep|
-                {
-                  "dependency-name" => dep.name,
-                  "dependency-version" => dep.version,
-                  "directory" => dep.directory,
-                  "dependency-removed" => dep.removed? ? true : nil
-                }.compact
-              end
+              "dependencies" => updated_dependencies.compact
             }
           else
-            dependency_change.updated_dependencies.map do |dep|
-              {
-                "dependency-name" => dep.name,
-                "dependency-version" => dep.version,
-                "dependency-removed" => dep.removed? ? true : nil
-              }.compact
-            end
+            updated_dependencies
           end
         end
 
@@ -402,6 +399,7 @@ module TingleSoftware
               "previous-version=#{dep.previous_version}&new-version=#{dep.version})]" \
               "(https://docs.github.com/en/github/managing-security-vulnerabilities/about-dependabot-security-updates#about-compatibility-scores)"
           end&.join(" ")
+
           ((job.pr_message_header || "") + "\n\n" + compatibility_score_badges).strip
         end
       end
