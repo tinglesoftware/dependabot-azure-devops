@@ -122,12 +122,12 @@ module TingleSoftware
                 .map(&:name)
             )
 
-            # TODO: Fix bug when updating a group PR; the updater is attempting to superceed with a new PR,
+            # TODO: Bug when updating a group PR; the updater is attempting to supersede with a new PR,
             #       but we should be updating the existing one. Need to look at refresh_group_update_pull_request.rb
 
             # Run the update on the PR using a clone our job with the OLD snapshot of the dependencies that existed
             # at the time the PR created. This is important for Dependabot to be able to determine if the PR is still
-            # relevent or not.
+            # relevant or not.
             run_updates_for(
               job.clone.for_pull_request_update(
                 dependency_group_name: dependency_group_name,

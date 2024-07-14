@@ -341,7 +341,7 @@ module TingleSoftware
 
         def pull_request_auto_approve(pull_request)
           pull_request_id = pull_request["pullRequestId"]
-          ::Dependabot.logger.info("Setting auto aproval on PR ##{pull_request_id}")
+          ::Dependabot.logger.info("Setting auto approval on PR ##{pull_request_id}")
           job.azure_client.pull_request_approve(
             # Adding argument names will fail! Maybe because there is no spec?
             pull_request_id.to_i,
