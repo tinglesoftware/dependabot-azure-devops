@@ -235,7 +235,9 @@ TYPE_HANDLERS = {
 
 def allow_conditions_for(dep)
   # Find where the name matches then get the type e.g. production, direct, etc
-  found = $options[:allow_conditions].find { |al| dep.name.match?(al["dependency-name"]) }
+  found = $options[:allow_conditions].find do |al|
+    Dependabot::Config::UpdateConfig.wildcard_match?(al["dependency-name"] || "*", dep.name)
+  end
   found ? found["dependency-type"] : "all" # when not specified, allow all types
 end
 
