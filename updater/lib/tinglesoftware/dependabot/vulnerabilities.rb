@@ -42,7 +42,7 @@ module TingleSoftware
         end
 
         def fetch(dependency_name)
-          [] unless @ecosystem
+          return [] unless @ecosystem
 
           variables = { ecosystem: @ecosystem, package: dependency_name }
           response = @client.post "/graphql", { query: GRAPHQL_QUERY, variables: variables }.to_json
