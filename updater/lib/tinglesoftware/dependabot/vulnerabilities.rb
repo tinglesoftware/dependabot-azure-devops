@@ -50,7 +50,7 @@ module TingleSoftware
         end
 
         def fetch(dependency_name)
-          [] unless @ecosystem
+          return [] unless @ecosystem
 
           response = @client.post "/graphql", {
             query: GRAPHQL_QUERY,
