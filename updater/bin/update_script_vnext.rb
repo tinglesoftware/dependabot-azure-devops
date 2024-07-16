@@ -15,7 +15,14 @@ ENV["UPDATER_DETERMINISTIC"] = "true" # The list of dependencies to update will 
 
 begin
   TingleSoftware::Dependabot::Commands::UpdateAllDependenciesSynchronousCommand.new(
-    job: TingleSoftware::Dependabot::Job.new
+    job: TingleSoftware::Dependabot::Job.new(
+      # Override Dependabot updater options (feature flags) required by this job
+      experiments: {
+        # Required for correctly detecting existing PRs when refreshing group dependency updates.
+        # Without this, Dependabot::DependencyGroup.matches_existing_pr? will always return false for group updates.
+        "dependency_has_directory" => true
+      }
+    )
   ).run
 rescue ::Dependabot::RunFailure
   exit 1

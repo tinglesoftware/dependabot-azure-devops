@@ -107,7 +107,7 @@ module TingleSoftware
 
           # Find the pull request to update
           dependency_names = dependency_change.updated_dependencies.map(&:name).join(",")
-          dependency_group_name = dependencies_changed.group_name if dependency_change.grouped_update?
+          dependency_group_name = dependency_change.dependency_group.name if dependency_change.grouped_update?
           pull_request = job.existing_pull_request_with_updated_dependencies(
             pull_request_updated_dependencies_property_data(dependency_change)
           )

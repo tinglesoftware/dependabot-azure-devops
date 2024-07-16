@@ -14,7 +14,7 @@ module TingleSoftware
     class Job < ::Dependabot::Job # rubocop:disable Metrics/ClassLength
       extend T::Sig
 
-      def initialize(azure_client: nil)
+      def initialize(azure_client: nil, experiments: nil)
         @azure_client = azure_client
         super(
           id: _id,
@@ -24,7 +24,7 @@ module TingleSoftware
           dependencies: [],
           existing_pull_requests: _existing_pull_requests,
           existing_group_pull_requests: _existing_group_pull_requests,
-          experiments: _experiments,
+          experiments: _experiments.merge(experiments || {}),
           ignore_conditions: _ignore_conditions,
           package_manager: _package_manager,
           reject_external_code: _reject_external_code,
