@@ -175,16 +175,7 @@ module TingleSoftware
 
           # Delete the source branch
           # Do this first to avoid hanging branches
-          begin
-            pull_request_source_ref_name = pull_request["sourceRefName"]
-            job.azure_client.branch_delete(pull_request_source_ref_name)
-          rescue StandardError => e
-            # This has most likely happened because the branch has already been deleted or our access token does
-            # not have permission to manage branches. Deleting the branch is not critical to the process, so continue on
-            ::Dependabot.logger.warn(
-              "Failed to delete source branch for PR ##{pull_request_id}. The error was: #{e.message}"
-            )
-          end
+          pull_request_delete_source_branch(pull_request)
 
           # Close the pull request
           job.azure_client.pull_request_abandon(pull_request_id)
@@ -281,14 +272,24 @@ module TingleSoftware
           job.azure_client.pull_request_thread_with_comments(
             pull_request_id, "system", [reason_for_close_comment], "fixed"
           )
-
           rescue StandardError => e
             # This has most likely happened because our access token does not have permission to comment on PRs
             # Commenting on the PR is not critical to the process, so continue on
             ::Dependabot.logger.warn(
               "Failed to comment on PR ##{pull_request_id} with close reason. The error was: #{e.message}"
             )
-          end
+        end
+
+        def pull_request_delete_source_branch(pull_request)
+          pull_request_id = pull_request["pullRequestId"]
+          pull_request_source_ref_name = pull_request["sourceRefName"]
+          job.azure_client.branch_delete(pull_request_source_ref_name)
+          rescue StandardError => e
+            # This has most likely happened because the branch has already been deleted or our access token does
+            # not have permission to manage branches. Deleting the branch is not critical to the process, so continue on
+            ::Dependabot.logger.warn(
+              "Failed to delete source branch for PR ##{pull_request_id}. The error was: #{e.message}"
+            )
         end
 
         def pull_request_auto_complete(pull_request)
@@ -343,14 +344,12 @@ module TingleSoftware
             false, # trans_work_items
             job.azure_auto_complete_ignore_config_ids
           )
-
           rescue StandardError => e
             # This has most likely happened because merge_commit_message exceeded 4000 characters (see comments above)
             # Auto-completing the PR is not critical to the process, so continue on
             ::Dependabot.logger.warn(
               "Failed to set auto-complete status for PR ##{pull_request_id}. The error was: #{e.message}"
             )
-          end
         end
 
         def pull_request_auto_approve(pull_request)
@@ -361,14 +360,12 @@ module TingleSoftware
             pull_request_id.to_i,
             job.azure_auto_approve_user_token
           )
-
           rescue StandardError => e
             # This has most likely happened because the auto-approve user token is invalid
             # Auto-approving the PR is not critical to the process, so continue on
             ::Dependabot.logger.warn(
               "Failed to set auto-approve status for PR ##{pull_request_id}. The error was: #{e.message}"
             )
-          end
         end
 
         def pull_request_replace_property_metadata(pull_request, dependency_change, base_commit_sha)
