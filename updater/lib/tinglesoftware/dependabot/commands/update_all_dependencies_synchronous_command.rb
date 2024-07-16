@@ -140,8 +140,14 @@ module TingleSoftware
         def update_all_dependencies
           ::Dependabot.logger.info("Checking if any dependencies need a new pull request created")
           run_updates_for(
-            job.for_all_updates
+            job.for_all_updates(
+              dependency_names: job.security_updates_only? ? dependencies_allowed_to_update.map(&:name) : nil
+            )
           )
+        end
+
+        def dependencies_allowed_to_update
+          dependency_snapshot.dependencies.select { |d| job.allowed_update?(d) }
         end
 
         def run_updates_for(job)

@@ -50,9 +50,9 @@ module TingleSoftware
         self
       end
 
-      def for_all_updates
+      def for_all_updates(dependency_names: nil)
         @updating_a_pull_request = false
-        @dependencies = []
+        @dependencies = dependency_names || []
         @dependency_group_to_refresh = nil
         self
       end
