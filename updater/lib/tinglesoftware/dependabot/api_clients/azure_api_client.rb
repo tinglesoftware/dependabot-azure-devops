@@ -12,13 +12,9 @@ require "dependabot/credential"
 #
 # This API is normally reserved for Dependabot internal use and is used to send job data to Dependabots [internal] APIs.
 # Actions like creating/updating/closing pull requests are deferred to this API to be actioned later asynchronously.
-# However, in Azure DevOps, we don't have a remote API to defer actions to, so we instead perform pull request changes
-# here synchronously. This keeps the entire end-to-end update process contained within a single self-contained job.
-#
-# In the future, it might be possible to write an implementation of this client that uses the TingleSoftware "server"
-# project to defer actions to, like how GitHub Dependabot works; or the updater Docker image could host a simple
-# web server on localhost to receive and process requests, like how Dependabot CLI works (see below).
-# https://github.com/dependabot/cli/blob/8793545f7b5dbf946aaee9372ffc12318573da81/internal/server/api.go
+# However, in Azure DevOps, we (normally) run inside a pipeline agent and don't have a remote API to defer actions to,
+# so we instead perform pull request changes here synchronously. This keeps the entire end-to-end update process
+# contained within a single self-contained job.
 #
 module TingleSoftware
   module Dependabot
@@ -274,18 +270,18 @@ module TingleSoftware
             dependency_removed: "Looks like #{lead_dep_name} is no longer a dependency",
             up_to_date: "Looks like #{lead_dep_name} is up-to-date now",
             update_no_longer_possible: "Looks like #{lead_dep_name} can no longer be updated"
-            # TODO: => "Looks like these dependencies are updatable in another way, so this is no longer needed"
-            # TODO: => "Superseded by ##{new_pull_request_id}"
+            # ??? => "Looks like these dependencies are updatable in another way, so this is no longer needed"
+            # ??? => "Superseded by ##{new_pull_request_id}"
           }.freeze.fetch(reason) + ", so this is no longer needed."
 
           return unless reason_for_close_comment
 
           # Comment on the PR explaining why it was closed
           pull_request_id = pull_request["pullRequestId"].to_s
-          begin
-            job.azure_client.pull_request_thread_with_comments(
-              pull_request_id, "system", [reason_for_close_comment], "fixed"
-            )
+          job.azure_client.pull_request_thread_with_comments(
+            pull_request_id, "system", [reason_for_close_comment], "fixed"
+          )
+
           rescue StandardError => e
             # This has most likely happened because our access token does not have permission to comment on PRs
             # Commenting on the PR is not critical to the process, so continue on
@@ -309,18 +305,28 @@ module TingleSoftware
           # The merge commit message should contain the PR number and title for tracking.
           # This is the default behaviour in Azure DevOps
           # Example:
-          # Merged PR 24093: Bump Tingle.Extensions.Logging.LogAnalytics from 3.4.2-ci0005 to 3.4.2-ci0006
+          #   Merged PR 24093: Bump Tingle.Extensions.Logging.LogAnalytics from 3.4.2-ci0005 to 3.4.2-ci0006
           #
-          # Bumps [Tingle.Extensions.Logging.LogAnalytics](...) from 3.4.2-ci0005 to 3.4.2-ci0006
-          # - [Release notes](....)
-          # - [Changelog](....)
-          # - [Commits](....)
+          #   Bumps [Tingle.Extensions.Logging.LogAnalytics](...) from 3.4.2-ci0005 to 3.4.2-ci0006
+          #   - [Release notes](....)
+          #   - [Changelog](....)
+          #   - [Commits](....)
           #
-          # TODO: Figure out why request fails if commit message is 4000 characters long
-          merge_commit_message_max_length = ::Dependabot::PullRequestCreator::Azure::PR_DESCRIPTION_MAX_LENGTH - 300
+          # There appears to be a DevOps bug when setting "completeOptions" with a "mergeCommitMessage" that is
+          # truncated to 4000 characters. The error message is:
+          #   Invalid argument value.
+          #   Parameter name: Completion options have exceeded the maximum encoded length (4184/4000)
+          #
+          # Most users seem to agree that the effective limit is about 3500 characters.
+          # https://developercommunity.visualstudio.com/t/raise-the-character-limit-for-pull-request-descrip/365708
+          #
+          # Until this is fixed, we hard cap the max length to 3500 characters
+          #
+          merge_commit_message_max_length = 3500 # ::Dependabot::PullRequestCreator::Azure::PR_DESCRIPTION_MAX_LENGTH
           merge_commit_message_encoding = ::Dependabot::PullRequestCreator::Azure::PR_DESCRIPTION_ENCODING
           merge_commit_message = "Merged PR #{pull_request_id}: #{pull_request_title}\n\n#{pull_request_description}"
                                  .force_encoding(merge_commit_message_encoding)
+
           if merge_commit_message.length > merge_commit_message_max_length
             merge_commit_message = merge_commit_message[0..merge_commit_message_max_length]
           end
@@ -337,6 +343,14 @@ module TingleSoftware
             false, # trans_work_items
             job.azure_auto_complete_ignore_config_ids
           )
+
+          rescue StandardError => e
+            # This has most likely happened because merge_commit_message exceeded 4000 characters (see comments above)
+            # Auto-completing the PR is not critical to the process, so continue on
+            ::Dependabot.logger.warn(
+              "Failed to set auto-complete status for PR ##{pull_request_id}. The error was: #{e.message}"
+            )
+          end
         end
 
         def pull_request_auto_approve(pull_request)
@@ -347,6 +361,14 @@ module TingleSoftware
             pull_request_id.to_i,
             job.azure_auto_approve_user_token
           )
+
+          rescue StandardError => e
+            # This has most likely happened because the auto-approve user token is invalid
+            # Auto-approving the PR is not critical to the process, so continue on
+            ::Dependabot.logger.warn(
+              "Failed to set auto-approve status for PR ##{pull_request_id}. The error was: #{e.message}"
+            )
+          end
         end
 
         def pull_request_replace_property_metadata(pull_request, dependency_change, base_commit_sha)
