@@ -47,6 +47,11 @@ async function run() {
       dockerRunner.arg(["--rm"]); // remove after execution
       dockerRunner.arg(["-i"]); // attach pseudo tty
 
+      // Set the job id, if one is provided
+      if (variables.jobId) {
+        dockerRunner.arg(["-e", `JOB_ID=${variables.jobId}`]);
+      }
+
       // Set the github token, if one is provided
       if (variables.githubAccessToken) {
         dockerRunner.arg(["-e", `GITHUB_ACCESS_TOKEN=${variables.githubAccessToken}`]);
@@ -83,6 +88,11 @@ async function run() {
         dockerRunner.arg(["-e", `DEPENDABOT_MILESTONE=${update.milestone}`]);
       }
 
+      // Set the PR branch prefix
+      if (variables.branchNamePrefix) {
+        dockerRunner.arg(["-e", `DEPENDABOT_BRANCH_NAME_PREFIX=${variables.branchNamePrefix}`]);
+      }
+
       // Set the PR branch separator
       if (update.branchNameSeparator) {
         dockerRunner.arg(["-e", `DEPENDABOT_BRANCH_NAME_SEPARATOR=${update.branchNameSeparator}`]);
@@ -111,6 +121,26 @@ async function run() {
         dockerRunner.arg(["-e", `DEPENDABOT_IGNORE_CONDITIONS=${ignore}`]);
       }
 
+      let prNamePrefixStyle = variables.prNamePrefixStyle;
+      if (prNamePrefixStyle) {
+        dockerRunner.arg(["-e", `DEPENDABOT_PR_NAME_PREFIX_STYLE=${prNamePrefixStyle}`]);
+      }
+
+      let prMessageHeader = variables.prMessageHeader;
+      if (prMessageHeader) {
+        dockerRunner.arg(["-e", `DEPENDABOT_MESSAGE_HEADER=${prMessageHeader}`]);
+      }
+
+      let prMessageFooter = variables.prMessageFooter;
+      if (prMessageFooter) {
+        dockerRunner.arg(["-e", `DEPENDABOT_MESSAGE_FOOTER=${prMessageFooter}`]);
+      }
+
+      let prCompatibilityScoreBadge = variables.prCompatibilityScoreBadge;
+      if (prCompatibilityScoreBadge) {
+        dockerRunner.arg(["-e", `DEPENDABOT_COMPATIBILITY_SCORE_BADGE=true`]);
+      }
+      
       // Set the commit message options
       let commitMessage = update.commitMessage;
       if (commitMessage) {
@@ -164,6 +194,11 @@ async function run() {
         dockerRunner.arg(["-e", 'DEPENDABOT_SKIP_PULL_REQUESTS=true']);
       }
 
+      // Set skip pull requests if true
+      if (variables.commentPullRequests === true) {
+        dockerRunner.arg(["-e", 'DEPENDABOT_COMMENT_PULL_REQUESTS=true']);
+      }
+
       // Set abandon Unwanted pull requests if true
       if (variables.abandonUnwantedPullRequests === true) {
         dockerRunner.arg(["-e", 'DEPENDABOT_CLOSE_PULL_REQUESTS=true']);
@@ -174,6 +209,11 @@ async function run() {
         const containerPath = "/mnt/security_advisories.json"
         dockerRunner.arg(['--mount', `type=bind,source=${variables.securityAdvisoriesFile},target=${containerPath}`]);
         dockerRunner.arg(["-e", `DEPENDABOT_SECURITY_ADVISORIES_FILE=${containerPath}`]);
+      }
+
+      let securityUpdatesOnly = variables.securityUpdatesOnly;
+      if (securityUpdatesOnly) {
+        dockerRunner.arg(["-e", `DEPENDABOT_SECURITY_UPDATES_ONLY=true`]);
       }
 
       /*
@@ -230,6 +270,11 @@ async function run() {
         }
       }
 
+      // Set debug
+      if (variables.debug === true) {
+        dockerRunner.arg(["-e", 'DEPENDABOT_DEBUG=true']);
+      }
+
       // Add in extra environment variables
       variables.extraEnvironmentVariables.forEach(extraEnvVar => {
         dockerRunner.arg(["-e", extraEnvVar]);
@@ -247,7 +292,7 @@ async function run() {
       dockerRunner.arg(dockerImage);
 
       // set the script to be run
-      dockerRunner.arg('update_script');
+      dockerRunner.arg(variables.command);
 
       // Now execute using docker
       await dockerRunner.exec();

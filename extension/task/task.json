@@ -11,8 +11,8 @@
   "author": "Tingle Software",
   "demands": ["docker"],
   "version": {
-    "Major": 1,
-    "Minor": 5,
+    "Major": 2,
+    "Minor": 0,
     "Patch": 0
   },
   "instanceNameFormat": "Dependabot",
@@ -20,12 +20,17 @@
   "groups": [
     {
       "name": "security_updates",
-      "displayName": "Security advisories, vulnerabilities, and updates.",
+      "displayName": "Security advisories and vulnerabilities",
       "isExpanded": false
     },
     {
-      "name": "approval_completion",
-      "displayName": "Auto Approval and Auto Completion or PRs",
+      "name": "pull_requests",
+      "displayName": "Pull request options",
+      "isExpanded": false
+    },
+    {
+      "name": "devops",
+      "displayName": "Azure DevOps authentication",
       "isExpanded": false
     },
     {
@@ -41,6 +46,28 @@
   ],
   "inputs": [
     {
+      "name": "command",
+      "type": "pickList",
+      "label": "Command",
+      "options": {
+        "update_script": "Update dependencies",
+        "update_script_vnext": "Update dependencies (vNext)",
+        "custom": "Custom"
+      },
+      "defaultValue": "update_script",
+      "required": true,
+      "helpMarkDown": "The Dependabot command to run. Select 'Custom' to use a command not listed here."
+    },
+    {
+      "name": "customCommand",
+      "type": "string",
+      "label": "Custom Command",
+      "defaultValue": "",
+      "required": false,
+      "helpMarkDown": "The custom command to run. This is only used when the command is set to 'Custom'.",
+      "visibleRule": "command=custom"
+    },
+    {
       "name": "useConfigFile",
       "type": "boolean",
       "label": "Use Dependabot YAML file",
@@ -52,35 +79,84 @@
     {
       "name": "failOnException",
       "type": "boolean",
-      "label": "Determines if the execution should fail when an exception occurs. Defaults to `true`",
+      "groupName": "advanced",
+      "label": "Fail task when an update exception occurs.",
       "defaultValue": true,
       "required": false,
-      "helpMarkDown": "When set to true, a failure in updating a single dependency will cause the container execution to fail thereby causing the task to fail. This is important when you want a single failure to prevent trying to update other dependencies."
+      "helpMarkDown": "When set to `true`, a failure in updating a single dependency will cause the container execution to fail thereby causing the task to fail. This is important when you want a single failure to prevent trying to update other dependencies."
     },
+
     {
       "name": "skipPullRequests",
       "type": "boolean",
-      "groupName": "advanced",
-      "label": "Whether to skip creation and updating of pull requests.",
+      "groupName": "pull_requests",
+      "label": "Skip creation and updating of pull requests.",
       "defaultValue": false,
       "required": false,
       "helpMarkDown": "When set to `true` the logic to update the dependencies is executed but the actual Pull Requests are not created/updated. Defaults to `false`."
     },
     {
+      "name": "commentPullRequests",
+      "type": "boolean",
+      "groupName": "pull_requests",
+      "label": "Comment on abandoned pull requests with close reason.",
+      "defaultValue": false,
+      "required": false,
+      "helpMarkDown": "When set to `true` a comment will be added to abandoned pull requests explanating why it was closed. Defaults to `false`.",
+      "visibleRule": "command!=update_script"
+    },
+    {
       "name": "abandonUnwantedPullRequests",
       "type": "boolean",
-      "groupName": "advanced",
-      "label": "Whether to abandon unwanted pull requests.",
+      "groupName": "pull_requests",
+      "label": "Abandon unwanted pull requests.",
       "defaultValue": false,
       "required": false,
       "helpMarkDown": "When set to `true` pull requests that are no longer needed are closed at the tail end of the execution. Defaults to `false`."
     },
-
+    {
+      "name": "branchNamePrefix",
+      "type": "string",
+      "groupName": "pull_requests",
+      "label": "Git branch name prefix",
+      "defaultValue": "",
+      "required": false,
+      "helpMarkDown": "The prefix used for Git branch names. Defaults to 'dependabot'.",
+      "visibleRule": "command!=update_script"
+    },
+    {
+      "name": "prMessageHeader",
+      "type": "multiLine",
+      "groupName": "pull_requests",
+      "label": "Pull request description header",
+      "required": false,
+      "helpMarkDown": "Additional pull request description text to shown before the dependency change info.",
+      "visibleRule": "command!=update_script"
+    },
+    {
+      "name": "prMessageFooter",
+      "type": "multiLine",
+      "groupName": "pull_requests",
+      "label": "Pull request description footer",
+      "required": false,
+      "helpMarkDown": "Additional pull request description text to shown after the dependency change info. This text will not be truncated, even when the dependency change info exceeds the PR maximum description length.",
+      "visibleRule": "command!=update_script"
+    },
+    {
+      "name": "prCompatibilityScoreBadge",
+      "type": "boolean",
+      "groupName": "pull_requests",
+      "label": "Show update compatibility score badges in pull request description",
+      "defaultValue": false,
+      "required": false,
+      "helpMarkDown": "Determines if compatibility score badges are shown in the pull request description for single dependency updates (but not group updates). This feature uses public information from GitHub and enabling it does not send any private information about your repository to GitHub other than the dependency name and version number(s) required to calculate to the compatibility score.",
+      "visibleRule": "command!=update_script"
+    },
     {
       "name": "setAutoComplete",
       "type": "boolean",
-      "groupName": "approval_completion",
-      "label": "Determines if the pull requests that dependabot creates should have auto complete set.",
+      "groupName": "pull_requests",
+      "label": "Auto-complete pull requests when all policies pass",
       "defaultValue": false,
       "required": false,
       "helpMarkDown": "When set to `true`, pull requests that pass all policies will be merged automatically. Defaults to `false`."
@@ -88,7 +164,7 @@
     {
       "name": "mergeStrategy",
       "type": "pickList",
-      "groupName": "approval_completion",
+      "groupName": "pull_requests",
       "label": "Merge Strategy",
       "defaultValue": "squash",
       "required": true,
@@ -104,17 +180,18 @@
     {
       "name": "autoCompleteIgnoreConfigIds",
       "type": "string",
-      "groupName": "approval_completion",
+      "groupName": "pull_requests",
       "label": "Semicolon delimited list of any policy configuration IDs which auto-complete should not wait for.",
       "defaultValue": "",
       "required": false,
-      "helpMarkDown": "A semicolon (`;`) delimited list of any policy configuration IDs which auto-complete should not wait for. Only applies to optional policies (isBlocking == false). Auto-complete always waits for required policies (isBlocking == true)."
+      "helpMarkDown": "A semicolon (`;`) delimited list of any policy configuration IDs which auto-complete should not wait for. Only applies to optional policies (isBlocking == false). Auto-complete always waits for required policies (isBlocking == true).",
+      "visibleRule": "setAutoComplete=true"
     },
     {
       "name": "autoApprove",
       "type": "boolean",
-      "groupName": "approval_completion",
-      "label": "Determines if the pull requests that dependabot creates should be automatically approved.",
+      "groupName": "pull_requests",
+      "label": "Auto-approve pull requests",
       "defaultValue": false,
       "required": false,
       "helpMarkDown": "When set to `true`, pull requests will automatically be approved by the specified user. Defaults to `false`."
@@ -122,7 +199,7 @@
     {
       "name": "autoApproveUserToken",
       "type": "string",
-      "groupName": "approval_completion",
+      "groupName": "pull_requests",
       "label": "A personal access token of the user that should approve the PR.",
       "defaultValue": "",
       "required": false,
@@ -150,6 +227,16 @@
     },
 
     {
+      "name": "securityUpdatesOnly",
+      "type": "boolean",
+      "groupName": "security_updates",
+      "label": "Perform security updates only.",
+      "defaultValue": "false",
+      "required": false,
+      "helpMarkDown": "If `true`, only security updates will be processed. Defaults to `false`.",
+      "visibleRule": "command!=update_script"
+    },
+    {
       "name": "securityAdvisoriesFile",
       "type": "string",
       "label": "Path for the file containing security advisories in JSON format.",
@@ -161,7 +248,7 @@
     {
       "name": "azureDevOpsServiceConnection",
       "type": "connectedService:Externaltfs",
-      "groupName": "advanced",
+      "groupName": "devops",
       "label": "Azure DevOps Service Connection to use.",
       "required": false,
       "helpMarkDown": "Specify a service connection to use, if you want to use a different service principal than the default to create your PRs."
@@ -169,7 +256,7 @@
     {
       "name": "azureDevOpsAccessToken",
       "type": "string",
-      "groupName": "advanced",
+      "groupName": "devops",
       "label": "Azure DevOps Personal Access Token.",
       "required": false,
       "helpMarkDown": "The Personal Access Token for accessing Azure DevOps repositories. Supply a value here to avoid using permissions for the Build Service either because you cannot change its permissions or because you prefer that the Pull Requests be done by a different user. Use this in place of `azureDevOpsServiceConnection` such as when it is not possible to create a service connection."
@@ -195,9 +282,9 @@
       "name": "updaterOptions",
       "type": "string",
       "groupName": "advanced",
-      "label": "Comma separated list of updater options.",
+      "label": "Dependabot experiments (updater options).",
       "required": false,
-      "helpMarkDown": "Set a list of updater options in CSV format. Available options depend on the ecosystem. Example: `goprivate=true,kubernetes_updates=true`."
+      "helpMarkDown": "Set a list of Dependabot experiments (updater options) in CSV format. Available options depend on the ecosystem. Example: `goprivate=true,kubernetes_updates=true`."
     },
     {
       "name": "excludeRequirementsToUnlock",
@@ -205,7 +292,8 @@
       "groupName": "advanced",
       "label": "Space-separated list of dependency updates requirements to be excluded.",
       "required": false,
-      "helpMarkDown": "Exclude certain dependency updates requirements. See list of allowed values [here](https://github.com/dependabot/dependabot-core/issues/600#issuecomment-407808103). Useful if you have lots of dependencies and the update script too slow. The values provided are space-separated. Example: `own all` to only use the `none` version requirement."
+      "helpMarkDown": "Exclude certain dependency updates requirements. See list of allowed values [here](https://github.com/dependabot/dependabot-core/issues/600#issuecomment-407808103). Useful if you have lots of dependencies and the update script too slow. The values provided are space-separated. Example: `own all` to only use the `none` version requirement.",
+      "visibleRule": "command!=update_script_vnext"
     },
     {
       "name": "dockerImageTag",
@@ -232,6 +320,15 @@
       "defaultValue": "false",
       "required": false,
       "helpMarkDown": "Ensure that the host ssh socket is forwarded to the container to authenticate with ssh"
+    },
+    {
+      "name": "debug",
+      "type": "boolean",
+      "groupName": "advanced",
+      "label": "Show debug log messages",
+      "defaultValue": "false",
+      "required": false,
+      "helpMarkDown": "Determines if verbose log messages are logged. Useful for diagnosing issues. Defaults to `false`."
     }
   ],
   "dataSourceBindings": [],
