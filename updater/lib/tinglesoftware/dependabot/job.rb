@@ -74,18 +74,31 @@ module TingleSoftware
 
       def vulnerabilities_fixed_for(updated_dependencies)
         updated_dependencies.filter_map do |dep|
-          { dep.name => @security_advisories.select { |adv| adv["dependency-name"] == dep.name }
-                                            .map { |adv| adv.transform_keys { |key| key.tr("-", "_") } } }
+          {
+            dep.name => @security_advisories.select { |adv| adv["dependency-name"] == dep.name }
+                                            .select { |adv| self.class.security_advisory_fixed_by?(dep, adv) }
+                                            .map { |adv| adv.transform_keys { |key| key.tr("-", "_") } }
+          }
         end&.reduce(:merge)
+      end
+
+      def self.security_advisory_fixed_by?(dep, adv)
+        ::Dependabot::SecurityAdvisory.new(
+          dependency_name: dep.name,
+          package_manager: dep.package_manager,
+          vulnerable_versions: adv["affected-versions"] || [],
+          safe_versions: (adv["patched-versions"] || []) +
+                        (adv["unaffected-versions"] || [])
+        ).fixed_by?(dep)
       end
 
       def security_advisories_for(dependency)
         # If configured, fetch security advisories from GitHub's Security Advisory API
-        fetch_missing_advisories_for_dependency(dependency) if vulnerabilities_fetcher
+        fetch_missing_advisories_for(dependency) if vulnerabilities_fetcher
         super
       end
 
-      def fetch_missing_advisories_for_dependency(dependency)
+      def fetch_missing_advisories_for(dependency)
         @fetched_advisories_for_deps ||= []
         return if @fetched_advisories_for_deps.any?(dependency.name)
 
