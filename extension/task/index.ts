@@ -63,9 +63,12 @@ async function run() {
       dockerRunner.arg(["-e", `DEPENDABOT_PACKAGE_MANAGER=${update.packageEcosystem}`]);
       dockerRunner.arg(["-e", `DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT=${update.openPullRequestsLimit}`]); // always has a value
 
-      // Set the directory
+      // Set the directory or directories
       if (update.directory) {
         dockerRunner.arg(["-e", `DEPENDABOT_DIRECTORY=${update.directory}`]);
+      }
+      if (update.directories && update.directories.length > 0) {
+        dockerRunner.arg(["-e", `DEPENDABOT_DIRECTORIES=${JSON.stringify(update.directories)}`]);
       }
 
       // Set the target branch
@@ -119,6 +122,12 @@ async function run() {
       let ignore = update.ignore;
       if (ignore) {
         dockerRunner.arg(["-e", `DEPENDABOT_IGNORE_CONDITIONS=${ignore}`]);
+      }
+
+      // Set the dependency groups
+      let groups = update.groups;
+      if (groups) {
+        dockerRunner.arg(["-e", `DEPENDABOT_DEPENDENCY_GROUPS=${groups}`]);
       }
 
       let prNamePrefixStyle = variables.prNamePrefixStyle;

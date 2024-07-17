@@ -26,8 +26,19 @@ export interface IDependabotUpdate {
   packageEcosystem: string;
   /**
    * Location of package manifests.
+   * https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#directory
    * */
   directory: string;
+  /**
+   * Locations of package manifests.
+   * https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#directories
+   * */
+  directories?: string[];
+  /**
+   * Dependency group rules
+   * https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#groups
+   * */
+  groups?: string;
   /**
    * Customize which updates are allowed.
    */

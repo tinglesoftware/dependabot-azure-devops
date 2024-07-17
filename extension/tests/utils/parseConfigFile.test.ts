@@ -8,11 +8,12 @@ describe("Parse configuration file", () => {
   it("Parsing works as expected", () => {
     let config: any = load(fs.readFileSync('tests/utils/dependabot.yml', "utf-8"));
     let updates = parseUpdates(config);
-    expect(updates.length).toBe(2);
+    expect(updates.length).toBe(3);
 
     // first
     const first = updates[0];
     expect(first.directory).toBe('/');
+    expect(first.directories).toEqual([]);
     expect(first.packageEcosystem).toBe('docker');
     expect(first.insecureExternalCodeExecution).toBe(undefined);
     expect(first.registries).toEqual([]);
@@ -20,9 +21,17 @@ describe("Parse configuration file", () => {
     // second
     const second = updates[1];
     expect(second.directory).toBe('/client');
+    expect(second.directories).toEqual([]);
     expect(second.packageEcosystem).toBe('npm');
     expect(second.insecureExternalCodeExecution).toBe('deny');
     expect(second.registries).toEqual(['reg1', 'reg2']);
+
+    // third
+    const third = updates[2];
+    expect(third.directory).toBe(undefined);
+    expect(third.directories).toEqual(['/src/client', '/src/server']);
+    expect(third.packageEcosystem).toBe('nuget');
+    expect(third.groups).toBe('{\"microsoft\":{\"patterns\":[\"microsoft*\"],\"update-types\":[\"minor\",\"patch\"]}}');
   });
 });
 
