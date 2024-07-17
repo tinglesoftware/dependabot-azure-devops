@@ -49,7 +49,7 @@ async function run() {
 
       // Set the job id, if one is provided
       if (variables.jobId) {
-        dockerRunner.arg(["-e", `JOB_ID=${variables.jobId}`]);
+        dockerRunner.arg(["-e", `DEPENDABOT_JOB_ID=${variables.jobId}`]);
       }
 
       // Set the github token, if one is provided
