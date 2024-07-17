@@ -230,7 +230,12 @@ module TingleSoftware
       end
 
       def _dependency_groups
-        groups = JSON.parse(ENV.fetch("DEPENDABOT_DEPENDENCY_GROUPS", "[]")).compact
+        groups = JSON.parse(ENV.fetch("DEPENDABOT_DEPENDENCY_GROUPS", "{}")).map do |k, v|
+          {
+            "name" => k,
+            "rules" => v
+          }
+        end
         return groups if groups.count.nonzero?
 
         nil
