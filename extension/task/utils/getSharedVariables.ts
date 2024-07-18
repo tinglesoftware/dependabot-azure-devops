@@ -134,7 +134,7 @@ export default function getSharedVariables(): ISharedVariables {
     tl.getInput("excludeRequirementsToUnlock") || "";
   let updaterOptions = tl.getInput("updaterOptions");
 
-  let debug = tl.getBoolInput("debug", false);
+  let debug: boolean = tl.getVariable("System.Debug")?.localeCompare("true") === 0;
 
   // Get the target identifiers
   let targetUpdateIds = tl
