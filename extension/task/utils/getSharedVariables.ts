@@ -159,8 +159,8 @@ export default function getSharedVariables(): ISharedVariables {
   let dockerImageTag: string = getDockerImageTag();
 
   let command: string = tl.getBoolInput("useUpdateScriptvNext", false)
-    ? "update-script"
-    : "update-script-vnext";
+    ? "update-script-vnext"
+    : "update-script";
 
   return {
     organizationUrl: formattedOrganizationUrl,
