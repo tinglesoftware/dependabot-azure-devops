@@ -61,8 +61,6 @@ export interface ISharedVariables {
   targetUpdateIds: number[];
 
   securityAdvisoriesFile: string | undefined;
-  /** Determines whether to only process security updates  */
-  securityUpdatesOnly: boolean;
 
   /** Determines whether to skip creating/updating pull requests */
   skipPullRequests: boolean;
@@ -147,7 +145,6 @@ export default function getSharedVariables(): ISharedVariables {
   let securityAdvisoriesFile: string | undefined = tl.getInput(
     "securityAdvisoriesFile"
   );
-  let securityUpdatesOnly: boolean = tl.getBoolInput("securityUpdatesOnly", false);
   let skipPullRequests: boolean = tl.getBoolInput("skipPullRequests", false);
   let commentPullRequests: boolean = tl.getBoolInput("commentPullRequests", false);
   let abandonUnwantedPullRequests: boolean = tl.getBoolInput("abandonUnwantedPullRequests", true);
@@ -202,7 +199,6 @@ export default function getSharedVariables(): ISharedVariables {
 
     targetUpdateIds,
     securityAdvisoriesFile,
-    securityUpdatesOnly,
 
     skipPullRequests,
     commentPullRequests,

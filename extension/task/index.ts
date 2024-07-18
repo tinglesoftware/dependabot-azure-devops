@@ -200,11 +200,6 @@ async function run() {
         dockerRunner.arg(["-e", `DEPENDABOT_SECURITY_ADVISORIES_FILE=${containerPath}`]);
       }
 
-      let securityUpdatesOnly = variables.securityUpdatesOnly;
-      if (securityUpdatesOnly) {
-        dockerRunner.arg(["-e", `DEPENDABOT_SECURITY_UPDATES_ONLY=true`]);
-      }
-
       /*
        * Set env variables in the runner for Azure
        */
