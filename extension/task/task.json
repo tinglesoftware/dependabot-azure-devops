@@ -11,8 +11,8 @@
   "author": "Tingle Software",
   "demands": ["docker"],
   "version": {
-    "Major": 2,
-    "Minor": 0,
+    "Major": 1,
+    "Minor": 6,
     "Patch": 0
   },
   "instanceNameFormat": "Dependabot",
