@@ -7,9 +7,6 @@ import getDockerImageTag from "./getDockerImageTag";
 import getGithubAccessToken from "./getGithubAccessToken";
 
 export interface ISharedVariables {
-  /** Job ID */
-  jobId: string;
-
   /** URL of the organization. This may lack the project name */
   organizationUrl: URL;
 
@@ -88,8 +85,6 @@ export interface ISharedVariables {
  * @returns shared variables
  */
 export default function getSharedVariables(): ISharedVariables {
-  let jobId = tl.getInput("jobId", false);
-
   let organizationUrl = tl.getVariable("System.TeamFoundationCollectionUri");
   //convert url string into a valid JS URL object
   let formattedOrganizationUrl = new URL(organizationUrl);
@@ -168,8 +163,6 @@ export default function getSharedVariables(): ISharedVariables {
     : "update-script-vnext";
 
   return {
-    jobId,
-
     organizationUrl: formattedOrganizationUrl,
     protocol,
     hostname,

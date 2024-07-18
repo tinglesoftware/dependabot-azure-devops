@@ -47,11 +47,6 @@ async function run() {
       dockerRunner.arg(["--rm"]); // remove after execution
       dockerRunner.arg(["-i"]); // attach pseudo tty
 
-      // Set the job id, if one is provided
-      if (variables.jobId) {
-        dockerRunner.arg(["-e", `DEPENDABOT_JOB_ID=${variables.jobId}`]);
-      }
-
       // Set the github token, if one is provided
       if (variables.githubAccessToken) {
         dockerRunner.arg(["-e", `GITHUB_ACCESS_TOKEN=${variables.githubAccessToken}`]);
@@ -89,11 +84,6 @@ async function run() {
       // Set the milestone, if provided
       if (update.milestone) {
         dockerRunner.arg(["-e", `DEPENDABOT_MILESTONE=${update.milestone}`]);
-      }
-
-      // Set the PR branch prefix
-      if (variables.branchNamePrefix) {
-        dockerRunner.arg(["-e", `DEPENDABOT_BRANCH_NAME_PREFIX=${variables.branchNamePrefix}`]);
       }
 
       // Set the PR branch separator
