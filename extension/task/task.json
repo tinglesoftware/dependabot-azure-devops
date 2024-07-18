@@ -46,27 +46,15 @@
   ],
   "inputs": [
     {
-      "name": "command",
-      "type": "pickList",
-      "label": "Command",
-      "options": {
-        "update_script": "Update dependencies",
-        "update_script_vnext": "Update dependencies (vNext)",
-        "custom": "Custom"
-      },
-      "defaultValue": "update_script",
-      "required": true,
-      "helpMarkDown": "The Dependabot command to run. Select 'Custom' to use a command not listed here."
-    },
-    {
-      "name": "customCommand",
-      "type": "string",
-      "label": "Custom Command",
-      "defaultValue": "",
+      "name": "useUpdateScriptvNext",
+      "type": "boolean",
+      "groupName": "advanced",
+      "label": "Use latest update script (vNext) (Experimental)",
+      "defaultValue": "false",
       "required": false,
-      "helpMarkDown": "The custom command to run. This is only used when the command is set to 'Custom'.",
-      "visibleRule": "command=custom"
+      "helpMarkDown": "Determines if the task will the newer 'vNext' update script instead of the default update script. This Defaults to `false`. See the [vNext update script documentation]() for more information."
     },
+  
     {
       "name": "useConfigFile",
       "type": "boolean",
@@ -102,8 +90,7 @@
       "label": "Comment on abandoned pull requests with close reason.",
       "defaultValue": false,
       "required": false,
-      "helpMarkDown": "When set to `true` a comment will be added to abandoned pull requests explanating why it was closed. Defaults to `false`.",
-      "visibleRule": "command!=update_script"
+      "helpMarkDown": "When set to `true` a comment will be added to abandoned pull requests explanating why it was closed. Defaults to `false`."
     },
     {
       "name": "abandonUnwantedPullRequests",
@@ -121,8 +108,7 @@
       "label": "Git branch name prefix",
       "defaultValue": "",
       "required": false,
-      "helpMarkDown": "The prefix used for Git branch names. Defaults to 'dependabot'.",
-      "visibleRule": "command!=update_script"
+      "helpMarkDown": "The prefix used for Git branch names. Defaults to 'dependabot'."
     },
     {
       "name": "prMessageHeader",
@@ -130,8 +116,7 @@
       "groupName": "pull_requests",
       "label": "Pull request description header",
       "required": false,
-      "helpMarkDown": "Additional pull request description text to shown before the dependency change info.",
-      "visibleRule": "command!=update_script"
+      "helpMarkDown": "Additional pull request description text to shown before the dependency change info."
     },
     {
       "name": "prMessageFooter",
@@ -139,8 +124,7 @@
       "groupName": "pull_requests",
       "label": "Pull request description footer",
       "required": false,
-      "helpMarkDown": "Additional pull request description text to shown after the dependency change info. This text will not be truncated, even when the dependency change info exceeds the PR maximum description length.",
-      "visibleRule": "command!=update_script"
+      "helpMarkDown": "Additional pull request description text to shown after the dependency change info. This text will not be truncated, even when the dependency change info exceeds the PR maximum description length."
     },
     {
       "name": "prCompatibilityScoreBadge",
@@ -149,8 +133,7 @@
       "label": "Show update compatibility score badges in pull request description",
       "defaultValue": false,
       "required": false,
-      "helpMarkDown": "Determines if compatibility score badges are shown in the pull request description for single dependency updates (but not group updates). This feature uses public information from GitHub and enabling it does not send any private information about your repository to GitHub other than the dependency name and version number(s) required to calculate to the compatibility score.",
-      "visibleRule": "command!=update_script"
+      "helpMarkDown": "Determines if compatibility score badges are shown in the pull request description for single dependency updates (but not group updates). This feature uses public information from GitHub and enabling it does not send any private information about your repository to GitHub other than the dependency name and version number(s) required to calculate to the compatibility score."
     },
     {
       "name": "setAutoComplete",
@@ -233,8 +216,7 @@
       "label": "Perform security updates only.",
       "defaultValue": "false",
       "required": false,
-      "helpMarkDown": "If `true`, only security updates will be processed. Defaults to `false`.",
-      "visibleRule": "command!=update_script"
+      "helpMarkDown": "If `true`, only security updates will be processed. Defaults to `false`."
     },
     {
       "name": "securityAdvisoriesFile",
@@ -292,8 +274,7 @@
       "groupName": "advanced",
       "label": "Space-separated list of dependency updates requirements to be excluded.",
       "required": false,
-      "helpMarkDown": "Exclude certain dependency updates requirements. See list of allowed values [here](https://github.com/dependabot/dependabot-core/issues/600#issuecomment-407808103). Useful if you have lots of dependencies and the update script too slow. The values provided are space-separated. Example: `own all` to only use the `none` version requirement.",
-      "visibleRule": "command!=update_script_vnext"
+      "helpMarkDown": "Exclude certain dependency updates requirements. See list of allowed values [here](https://github.com/dependabot/dependabot-core/issues/600#issuecomment-407808103). Useful if you have lots of dependencies and the update script too slow. The values provided are space-separated. Example: `own all` to only use the `none` version requirement."
     },
     {
       "name": "dockerImageTag",

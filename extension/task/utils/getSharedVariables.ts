@@ -183,17 +183,9 @@ export default function getSharedVariables(): ISharedVariables {
   // Prepare variables for the docker image to use
   let dockerImageTag: string = getDockerImageTag();
 
-  let command: string = tl.getInput("command", true);
-  if (command === "custom") {
-    command = tl.getInput("customCommand", false);
-    if (!command) {
-      tl.setResult(
-        tl.TaskResult.Failed,
-        "Custom command is required when command is set to custom"
-      );
-      throw new Error("Custom command is required when command is set to custom");
-    }
-  }
+  let command: string = tl.getBoolInput("useUpdateScriptvNext", false)
+    ? "update-script"
+    : "update-script-vnext";
 
   return {
     jobId,
