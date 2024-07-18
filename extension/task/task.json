@@ -52,7 +52,7 @@
       "label": "Use latest update script (vNext) (Experimental)",
       "defaultValue": "false",
       "required": false,
-      "helpMarkDown": "Determines if the task will the newer 'vNext' update script instead of the default update script. This Defaults to `false`. See the [vNext update script documentation]() for more information."
+      "helpMarkDown": "Determines if the task will the newer 'vNext' update script instead of the default update script. This Defaults to `false`. See the [vNext update script documentation](https://github.com/tinglesoftware/dependabot-azure-devops/pull/1186) for more information."
     },
   
     {
@@ -175,15 +175,6 @@
       "helpMarkDown": "The raw Personal Access Token for accessing GitHub repositories. Use this in place of `gitHubConnection` such as when it is not possible to create a service connection."
     },
 
-    {
-      "name": "securityUpdatesOnly",
-      "type": "boolean",
-      "groupName": "security_updates",
-      "label": "Perform security updates only.",
-      "defaultValue": "false",
-      "required": false,
-      "helpMarkDown": "If `true`, only security updates will be processed. Defaults to `false`."
-    },
     {
       "name": "securityAdvisoriesFile",
       "type": "string",
