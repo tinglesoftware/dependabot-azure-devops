@@ -51,21 +51,32 @@ export interface ISharedVariables {
   excludeRequirementsToUnlock: string;
   updaterOptions: string;
 
+  /** Determines if verbose log messages are logged */
+  debug: boolean;
+  
   /** List of update identifiers to run */
   targetUpdateIds: number[];
 
   securityAdvisoriesFile: string | undefined;
+
   /** Determines whether to skip creating/updating pull requests */
   skipPullRequests: boolean;
+  /** Determines whether to comment on pull requests which an explanation of the reason for closing */
+  commentPullRequests: boolean;
   /** Determines whether to abandon unwanted pull requests */
   abandonUnwantedPullRequests: boolean;
+
   /** List of extra environment variables */
   extraEnvironmentVariables: string[];
+
   /** Flag used to forward the host ssh socket */
   forwardHostSshSocket: boolean;
 
   /** Tag of the docker image to be pulled */
   dockerImageTag: string;
+
+  /** Dependabot command to run */
+  command: string;
 }
 
 /**
@@ -74,7 +85,6 @@ export interface ISharedVariables {
  * @returns shared variables
  */
 export default function getSharedVariables(): ISharedVariables {
-  // Prepare shared variables
   let organizationUrl = tl.getVariable("System.TeamFoundationCollectionUri");
   //convert url string into a valid JS URL object
   let formattedOrganizationUrl = new URL(organizationUrl);
@@ -119,6 +129,8 @@ export default function getSharedVariables(): ISharedVariables {
     tl.getInput("excludeRequirementsToUnlock") || "";
   let updaterOptions = tl.getInput("updaterOptions");
 
+  let debug: boolean = tl.getVariable("System.Debug")?.localeCompare("true") === 0;
+
   // Get the target identifiers
   let targetUpdateIds = tl
     .getDelimitedInput("targetUpdateIds", ";", false)
@@ -129,12 +141,15 @@ export default function getSharedVariables(): ISharedVariables {
     "securityAdvisoriesFile"
   );
   let skipPullRequests: boolean = tl.getBoolInput("skipPullRequests", false);
+  let commentPullRequests: boolean = tl.getBoolInput("commentPullRequests", false);
   let abandonUnwantedPullRequests: boolean = tl.getBoolInput("abandonUnwantedPullRequests", true);
+
   let extraEnvironmentVariables = tl.getDelimitedInput(
     "extraEnvironmentVariables",
     ";",
     false
   );
+
   let forwardHostSshSocket: boolean = tl.getBoolInput(
     "forwardHostSshSocket",
     false
@@ -143,9 +158,12 @@ export default function getSharedVariables(): ISharedVariables {
   // Prepare variables for the docker image to use
   let dockerImageTag: string = getDockerImageTag();
 
+  let command: string = tl.getBoolInput("useUpdateScriptvNext", false)
+    ? "update_script_vnext"
+    : "update_script";
+
   return {
     organizationUrl: formattedOrganizationUrl,
-
     protocol,
     hostname,
     port,
@@ -169,14 +187,22 @@ export default function getSharedVariables(): ISharedVariables {
     failOnException,
     excludeRequirementsToUnlock,
     updaterOptions,
+    
+    debug,
 
     targetUpdateIds,
     securityAdvisoriesFile,
+
     skipPullRequests,
+    commentPullRequests,
     abandonUnwantedPullRequests,
+    
     extraEnvironmentVariables,
+
     forwardHostSshSocket,
 
     dockerImageTag,
+
+    command
   };
 }

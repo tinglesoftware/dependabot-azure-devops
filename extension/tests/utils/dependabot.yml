@@ -24,6 +24,17 @@ updates:
       update-types: ['version-update:semver-major']
     - dependency-name: '@types/react-dom'
       update-types: ['version-update:semver-major']
+  - package-ecosystem: 'nuget'
+    directories:
+      - '/src/client'
+      - '/src/server'
+    groups:
+      microsoft:
+        patterns:
+        - "microsoft*"
+        update-types:
+        - "minor"
+        - "patch"
 registries:
   reg1:
     type: nuget-feed

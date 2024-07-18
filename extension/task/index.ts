@@ -58,9 +58,12 @@ async function run() {
       dockerRunner.arg(["-e", `DEPENDABOT_PACKAGE_MANAGER=${update.packageEcosystem}`]);
       dockerRunner.arg(["-e", `DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT=${update.openPullRequestsLimit}`]); // always has a value
 
-      // Set the directory
+      // Set the directory or directories
       if (update.directory) {
         dockerRunner.arg(["-e", `DEPENDABOT_DIRECTORY=${update.directory}`]);
+      }
+      if (update.directories && update.directories.length > 0) {
+        dockerRunner.arg(["-e", `DEPENDABOT_DIRECTORIES=${JSON.stringify(update.directories)}`]);
       }
 
       // Set the target branch
@@ -109,6 +112,12 @@ async function run() {
       let ignore = update.ignore;
       if (ignore) {
         dockerRunner.arg(["-e", `DEPENDABOT_IGNORE_CONDITIONS=${ignore}`]);
+      }
+
+      // Set the dependency groups
+      let groups = update.groups;
+      if (groups) {
+        dockerRunner.arg(["-e", `DEPENDABOT_DEPENDENCY_GROUPS=${groups}`]);
       }
 
       // Set the commit message options
@@ -162,6 +171,11 @@ async function run() {
       // Set skip pull requests if true
       if (variables.skipPullRequests === true) {
         dockerRunner.arg(["-e", 'DEPENDABOT_SKIP_PULL_REQUESTS=true']);
+      }
+
+      // Set skip pull requests if true
+      if (variables.commentPullRequests === true) {
+        dockerRunner.arg(["-e", 'DEPENDABOT_COMMENT_PULL_REQUESTS=true']);
       }
 
       // Set abandon Unwanted pull requests if true
@@ -230,6 +244,11 @@ async function run() {
         }
       }
 
+      // Set debug
+      if (variables.debug === true) {
+        dockerRunner.arg(["-e", 'DEPENDABOT_DEBUG=true']);
+      }
+
       // Add in extra environment variables
       variables.extraEnvironmentVariables.forEach(extraEnvVar => {
         dockerRunner.arg(["-e", extraEnvVar]);
@@ -247,7 +266,7 @@ async function run() {
       dockerRunner.arg(dockerImage);
 
       // set the script to be run
-      dockerRunner.arg('update_script');
+      dockerRunner.arg(variables.command);
 
       // Now execute using docker
       await dockerRunner.exec();

@@ -226,7 +226,7 @@ module TingleSoftware
       end
 
       def _vendor_dependencies
-        ENV.fetch("DEPENDABOT_VENDOR_DEPENDENCIES", nil) == "true"
+        ENV.fetch("DEPENDABOT_VENDOR", nil) == "true"
       end
 
       def _dependency_groups
@@ -402,9 +402,10 @@ module TingleSoftware
 
       def security_updates_only
         # If the pull request limit is set to zero, we assume that the user just wants security updates
+        # https://docs.github.com/en/code-security/dependabot/dependabot-security-updates/configuring-dependabot-security-updates#overriding-the-default-behavior-with-a-configuration-file
         return true if open_pull_requests_limit.zero?
 
-        ENV.fetch("DEPENDABOT_SECURITY_UPDATES_ONLY", nil) == "true"
+        false
       end
 
       def security_advisories
