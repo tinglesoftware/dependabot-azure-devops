@@ -130,26 +130,6 @@ async function run() {
         dockerRunner.arg(["-e", `DEPENDABOT_DEPENDENCY_GROUPS=${groups}`]);
       }
 
-      let prNamePrefixStyle = variables.prNamePrefixStyle;
-      if (prNamePrefixStyle) {
-        dockerRunner.arg(["-e", `DEPENDABOT_PR_NAME_PREFIX_STYLE=${prNamePrefixStyle}`]);
-      }
-
-      let prMessageHeader = variables.prMessageHeader;
-      if (prMessageHeader) {
-        dockerRunner.arg(["-e", `DEPENDABOT_MESSAGE_HEADER=${prMessageHeader}`]);
-      }
-
-      let prMessageFooter = variables.prMessageFooter;
-      if (prMessageFooter) {
-        dockerRunner.arg(["-e", `DEPENDABOT_MESSAGE_FOOTER=${prMessageFooter}`]);
-      }
-
-      let prCompatibilityScoreBadge = variables.prCompatibilityScoreBadge;
-      if (prCompatibilityScoreBadge) {
-        dockerRunner.arg(["-e", `DEPENDABOT_COMPATIBILITY_SCORE_BADGE=true`]);
-      }
-      
       // Set the commit message options
       let commitMessage = update.commitMessage;
       if (commitMessage) {

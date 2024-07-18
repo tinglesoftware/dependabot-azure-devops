@@ -102,40 +102,6 @@
       "helpMarkDown": "When set to `true` pull requests that are no longer needed are closed at the tail end of the execution. Defaults to `false`."
     },
     {
-      "name": "branchNamePrefix",
-      "type": "string",
-      "groupName": "pull_requests",
-      "label": "Git branch name prefix",
-      "defaultValue": "",
-      "required": false,
-      "helpMarkDown": "The prefix used for Git branch names. Defaults to 'dependabot'."
-    },
-    {
-      "name": "prMessageHeader",
-      "type": "multiLine",
-      "groupName": "pull_requests",
-      "label": "Pull request description header",
-      "required": false,
-      "helpMarkDown": "Additional pull request description text to shown before the dependency change info."
-    },
-    {
-      "name": "prMessageFooter",
-      "type": "multiLine",
-      "groupName": "pull_requests",
-      "label": "Pull request description footer",
-      "required": false,
-      "helpMarkDown": "Additional pull request description text to shown after the dependency change info. This text will not be truncated, even when the dependency change info exceeds the PR maximum description length."
-    },
-    {
-      "name": "prCompatibilityScoreBadge",
-      "type": "boolean",
-      "groupName": "pull_requests",
-      "label": "Show update compatibility score badges in pull request description",
-      "defaultValue": false,
-      "required": false,
-      "helpMarkDown": "Determines if compatibility score badges are shown in the pull request description for single dependency updates (but not group updates). This feature uses public information from GitHub and enabling it does not send any private information about your repository to GitHub other than the dependency name and version number(s) required to calculate to the compatibility score."
-    },
-    {
       "name": "setAutoComplete",
       "type": "boolean",
       "groupName": "pull_requests",
