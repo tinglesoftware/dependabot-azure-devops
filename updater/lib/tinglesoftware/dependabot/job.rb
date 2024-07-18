@@ -226,7 +226,7 @@ module TingleSoftware
       end
 
       def _vendor_dependencies
-        ENV.fetch("DEPENDABOT_VENDOR_DEPENDENCIES", nil) == "true"
+        ENV.fetch("DEPENDABOT_VENDOR", nil) == "true"
       end
 
       def _dependency_groups
