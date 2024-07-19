@@ -380,14 +380,21 @@ module TingleSoftware
         )
         user_id = azure_client.get_user_id
         target_branch_name = branch || azure_client.fetch_default_branch(azure_repository_path)
-        azure_client.pull_requests_active_for_user_and_targeting_branch(user_id, target_branch_name).map do |pr|
+        azure_client.pull_requests_active_for_user_and_targeting_branch(user_id, target_branch_name).filter_map do |pr|
           pull_request_id = pr["pullRequestId"].to_s
           pr["properties"] = azure_client.pull_request_properties_list(pull_request_id).to_h { |k, v| [k, v["$value"]] }
+          pr["package_manager"] =
+            pr["properties"][ApiClients::AzureApiClient::PullRequest::Properties::PACKAGE_MANAGER]
           pr["base_commit_sha"] =
             pr["properties"][ApiClients::AzureApiClient::PullRequest::Properties::BASE_COMMIT_SHA]
           pr["updated_dependencies"] = JSON.parse(
             pr["properties"][ApiClients::AzureApiClient::PullRequest::Properties::UPDATED_DEPENDENCIES] || nil.to_json
           )
+
+          # Ignore PRs that are for different package managers
+          # This avoids us trying to update a NuGet dependency in a NPM update job, for example
+          next unless pr["package_manager"] == _package_manager
+
           pr
         end
       end
