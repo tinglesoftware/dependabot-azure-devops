@@ -230,14 +230,10 @@ module TingleSoftware
       end
 
       def _dependency_groups
-        groups = [JSON.parse(ENV.fetch("DEPENDABOT_DEPENDENCY_GROUPS", "[]"))].flatten.filter_map do |group|
-          return nil if group.keys.empty?
-
-          # Dependabot.yml config differs from the dependency group model, so we need to remap them
-          # https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#groups
+        groups = JSON.parse(ENV.fetch("DEPENDABOT_DEPENDENCY_GROUPS", "{}")).map do |k, v|
           {
-            "name" => group.keys.first.to_s,
-            "rules" => group.values.first
+            "name" => k,
+            "rules" => v
           }
         end
         return groups if groups.count.nonzero?
