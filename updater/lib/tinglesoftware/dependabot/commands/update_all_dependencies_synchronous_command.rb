@@ -104,12 +104,23 @@ module TingleSoftware
           end
         end
 
-        def update_all_existing_pull_requests
+        def update_all_existing_pull_requests # rubocop:disable Metrics/AbcSize, Metrics/PerceivedComplexity
           job.open_pull_requests.each do |pr|
             ::Dependabot.logger.info(
               "Checking if PR ##{pr['pullRequestId']}: #{pr['title']} needs to be updated"
             )
+
             deps = pr["updated_dependencies"]
+            if deps.nil?
+              # If the PR does not have a updated dependencies property, it was created using 1.29 or earlier.
+              # Because of the more complex nature of the new dependency snapshotting, we cannot update these PRs.
+              ::Dependabot.logger.warn(
+                "PR ##{pr['pullRequestId']}: #{pr['title']} was created using an older version of Dependabot, " \
+                "it must be updated manually or closed."
+              )
+              next
+            end
+
             dependency_group_name = deps.is_a?(Hash) ? deps.fetch("dependency-group-name", nil) : nil
             dependency_names = (deps.is_a?(Array) ? deps : deps["dependencies"])&.map { |d| d["dependency-name"] } || []
 
