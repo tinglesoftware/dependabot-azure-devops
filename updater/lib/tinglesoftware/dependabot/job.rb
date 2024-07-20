@@ -370,7 +370,7 @@ module TingleSoftware
                           # If we are updating an existing group PR, we must only return PRs that match the group name
                           # of the current job. This is because "refresh_group_update_pull_request.rb" will mark all
                           # dependencies of all other group PRs as "handled" to prevent multiple PRs from being reated
-                          # during the refresh. However, when we operate in the "do everthing in a single job" mode,
+                          # during the refresh. However, when we operate in the "do everything in a single job" mode,
                           # this has the side effect of causing Dependabot to think the other group PRs have already
                           # been handled; it then closes them with "update_no_longer_possible". We don't want this.
                           .select { |d| update_group_name.nil? || d["dependency-group-name"] == update_group_name }
