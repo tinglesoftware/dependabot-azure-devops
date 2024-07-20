@@ -43,17 +43,30 @@ module TingleSoftware
         )
       end
 
-      def for_pull_request_update(dependency_names: nil, dependency_group_name: nil)
-        @updating_a_pull_request = true
-        @dependencies = dependency_names
-        @dependency_group_to_refresh = dependency_group_name
-        self
-      end
-
+      #
+      # Reconfigure the job to update all dependencies.
+      # The job will focus on creating new pull requests for all discovered dependencies.
+      # This is the default configuration when a job is created.
+      #
       def for_all_updates(dependency_names: nil)
         @updating_a_pull_request = false
         @dependencies = dependency_names || []
         @dependency_group_to_refresh = nil
+        @existing_pull_requests = _existing_pull_requests
+        @existing_group_pull_requests = _existing_group_pull_requests
+        self
+      end
+
+      #
+      # Reconfigure the job to update a single pull request.
+      # The job will focus on updating or closing any existing pull request with the given dependencies or group name.
+      #
+      def for_pull_request_update(dependency_names: nil, dependency_group_name: nil)
+        @updating_a_pull_request = true
+        @dependencies = dependency_names
+        @dependency_group_to_refresh = dependency_group_name
+        @existing_pull_requests = _existing_pull_requests
+        @existing_group_pull_requests = _existing_group_pull_requests
         self
       end
 
@@ -346,11 +359,21 @@ module TingleSoftware
       end
 
       def _existing_pull_requests
-        open_pull_requests.filter_map { |pr| pr["updated_dependencies"] }.select { |d| d.is_a?(Array) }
+        open_pull_requests.filter_map { |pr| pr["updated_dependencies"] }
+                          .select { |d| d.is_a?(Array) }
       end
 
       def _existing_group_pull_requests
-        open_pull_requests.filter_map { |pr| pr["updated_dependencies"] }.select { |d| d.is_a?(Hash) }
+        update_group_name = dependency_group_to_refresh
+        open_pull_requests.filter_map { |pr| pr["updated_dependencies"] }
+                          .select { |d| d.is_a?(Hash) }
+                          # If we are updating an existing group PR, we must only return PRs that match the group name
+                          # of the current job. This is because "refresh_group_update_pull_request.rb" will mark all
+                          # dependencies of all other group PRs as "handled" to prevent multiple PRs from being reated
+                          # during the refresh. However, when we operate in the "do everthing in a single job" mode,
+                          # this has the side effect of causing Dependabot to think the other group PRs have already
+                          # been handled; it then closes them with "update_no_longer_possible". We don't want this.
+                          .select { |d| update_group_name.nil? || d["dependency-group-name"] == update_group_name }
       end
 
       def existing_pull_request_with_updated_dependencies(updated_dependencies)
