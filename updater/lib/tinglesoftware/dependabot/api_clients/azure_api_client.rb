@@ -27,6 +27,7 @@ module TingleSoftware
         # https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-properties
         module PullRequest
           module Properties
+            PACKAGE_MANAGER = "dependabot.package_manager"
             BASE_COMMIT_SHA = "dependabot.base_commit_sha"
             UPDATED_DEPENDENCIES = "dependabot.updated_dependencies"
           end
@@ -238,7 +239,7 @@ module TingleSoftware
 
         def pull_request_sync_state_data(pull_request, dependency_change, base_commit_sha, is_new_pr)
           # Update the pull request properties with our dependabot metadata
-          pull_request_replace_property_metadata(pull_request, dependency_change, base_commit_sha)
+          pull_request_replace_property_metadata(pull_request, job.package_manager, dependency_change, base_commit_sha)
 
           # Apply auto-complete and auto-approve settings
           pull_request_auto_complete(pull_request) if job.azure_set_auto_complete
@@ -368,7 +369,7 @@ module TingleSoftware
             )
         end
 
-        def pull_request_replace_property_metadata(pull_request, dependency_change, base_commit_sha)
+        def pull_request_replace_property_metadata(pull_request, package_manager, dependency_change, base_commit_sha)
           # Update the pull request property metadata with info about the updated dependencies.
           # This is used in `job.rb` to calculate "existing_pull_requests" in future jobs.
           pull_request_id = pull_request["pullRequestId"]
@@ -376,6 +377,8 @@ module TingleSoftware
           job.azure_client.pull_request_properties_update(
             pull_request_id.to_s,
             {
+              PullRequest::Properties::PACKAGE_MANAGER =>
+                package_manager,
               PullRequest::Properties::BASE_COMMIT_SHA =>
                 base_commit_sha.to_s,
               PullRequest::Properties::UPDATED_DEPENDENCIES =>
