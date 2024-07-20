@@ -362,8 +362,6 @@ module TingleSoftware
       def existing_pull_request_for_dependency_names(dependency_names)
         open_pull_requests.find do |pr|
           deps = pr["updated_dependencies"]
-          next if deps.nil? # Ignore PRs with no updated dependency info as we can't be sure what they are updating
-
           dependency_names == (deps.is_a?(Array) ? deps : deps["dependencies"])&.map { |d| d["dependency-name"] }
         end
       end
