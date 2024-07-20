@@ -104,12 +104,15 @@ module TingleSoftware
           end
         end
 
-        def update_all_existing_pull_requests
+        def update_all_existing_pull_requests # rubocop:disable Metrics/PerceivedComplexity
           job.open_pull_requests.each do |pr|
             ::Dependabot.logger.info(
               "Checking if PR ##{pr['pullRequestId']}: #{pr['title']} needs to be updated"
             )
+
             deps = pr["updated_dependencies"]
+            next if deps.nil? # Ignore PRs with no updated dependency info as we can't be sure what they are updating
+
             dependency_group_name = deps.is_a?(Hash) ? deps.fetch("dependency-group-name", nil) : nil
             dependency_names = (deps.is_a?(Array) ? deps : deps["dependencies"])&.map { |d| d["dependency-name"] } || []
 
