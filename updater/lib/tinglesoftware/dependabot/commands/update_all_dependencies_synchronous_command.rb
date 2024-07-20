@@ -104,7 +104,7 @@ module TingleSoftware
           end
         end
 
-        def update_all_existing_pull_requests # rubocop:disable Metrics/AbcSize, Metrics/PerceivedComplexity
+        def update_all_existing_pull_requests # rubocop:disable Metrics/PerceivedComplexity
           job.open_pull_requests.each do |pr|
             ::Dependabot.logger.info(
               "Checking if PR ##{pr['pullRequestId']}: #{pr['title']} needs to be updated"
