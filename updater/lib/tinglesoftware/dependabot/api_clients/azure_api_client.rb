@@ -232,6 +232,13 @@ module TingleSoftware
           )
         end
 
+        def log_open_limit_reached_for_pull_requests
+          ::Dependabot.logger.log(
+            "Skipping pull request creation as the open pull request limit (#{job.open_pull_requests_limit}) " \
+            "has been reached."
+          )
+        end
+
         sig { params(error_type: T.any(String, Symbol), error_details: T.nilable(T::Hash[T.untyped, T.untyped])).void }
         def record_update_job_error(error_type:, error_details:)
           # No implementation required for Azure DevOps, errors are dumped to output console already
