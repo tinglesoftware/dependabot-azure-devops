@@ -505,6 +505,10 @@ module TingleSoftware
       def fail_on_exception
         ENV.fetch("DEPENDABOT_FAIL_ON_EXCEPTION", "true") == "true"
       end
+
+      def debug_enabled?
+        ENV.fetch("DEPENDABOT_DEBUG", nil) == "true"
+      end
     end
   end
 end
