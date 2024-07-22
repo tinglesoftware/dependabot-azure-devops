@@ -35,7 +35,10 @@ module TingleSoftware
           @service = ::Dependabot::Service.new(
             # Use the Azure DevOps API client rather than the (default) Dependabot Service API.
             # This allows us to perform pull request changes synchronously to within the context of this job.
-            client: TingleSoftware::Dependabot::ApiClients::AzureApiClient.new(job: job)
+            client: TingleSoftware::Dependabot::ApiClients::AzureApiClient.new(
+              job: job,
+              dependency_snapshot_resolver: proc { @dependency_snapshot }
+            )
           )
         end
 
