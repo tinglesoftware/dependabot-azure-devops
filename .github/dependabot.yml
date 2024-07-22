@@ -48,12 +48,17 @@ updates:
     open-pull-requests-limit: 10
     groups:
       azure:
-        patterns: ['Azure.*']
+        patterns:
+          - 'Azure.*'
+          - 'Microsoft.Azure.*'
+          - 'Microsoft.Extensions.Configuration.AzureAppConfiguration'
       event-bus:
         patterns: ["Tingle.EventBus*"]
       microsoft:
         patterns: ["Microsoft*"]
         exclude-patterns:
+          - 'Microsoft.Azure.*'
+          - 'Microsoft.Extensions.Configuration.AzureAppConfiguration'
           - "Microsoft.VisualStudio.Azure.Containers.Tools.Targets"
       system:
         patterns: ["System*"]

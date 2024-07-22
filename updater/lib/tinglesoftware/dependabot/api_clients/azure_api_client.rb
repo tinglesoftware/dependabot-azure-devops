@@ -33,8 +33,9 @@ module TingleSoftware
           end
         end
 
-        def initialize(job:)
+        def initialize(job:, dependency_snapshot_resolver:)
           @job = job
+          @dependency_snapshot_resolver = dependency_snapshot_resolver
         end
 
         sig { params(dependency_change: ::Dependabot::DependencyChange, base_commit_sha: String).void }
@@ -185,23 +186,49 @@ module TingleSoftware
         sig { params(action: String, dependency_change: T.nilable(::Dependabot::DependencyChange)).void }
         def log_skipped_pull_request(action, dependency_change)
           ::Dependabot.logger.info("Skipping pull request #{action} as it is disabled for this job.")
+          return unless job.debug_enabled?
+
           ::Dependabot.logger.debug("Staged file changes were:") if dependency_change
+          dependency_snapshot = @dependency_snapshot_resolver.call
           dependency_change&.updated_dependency_files&.each do |updated_file|
-            case updated_file.operation
-            when ::Dependabot::DependencyFile::Operation::CREATE
-              ::Dependabot.logger.debug(" 🟢 created '#{updated_file.name}' in '#{updated_file.directory}'")
-            when ::Dependabot::DependencyFile::Operation::UPDATE
-              ::Dependabot.logger.debug(" 🟡 updated '#{updated_file.name}' in '#{updated_file.directory}'")
-            when ::Dependabot::DependencyFile::Operation::DELETE
-              ::Dependabot.logger.debug(" 🔴 deleted '#{updated_file.name}' in '#{updated_file.directory}'")
-            end
+            log_file_diff(
+              dependency_snapshot.dependency_files.find { |f| f.name == updated_file.name },
+              updated_file
+            )
           end
         end
 
-        def log_open_limit_reached_for_pull_requests
-          ::Dependabot.logger.info(
-            "Skipping pull request creation as the open pull request limit (#{job.open_pull_requests_limit}) " \
-            "has been reached."
+        def log_file_diff(original_file, updated_file)
+          return unless original_file
+          return if original_file.content == updated_file.content
+
+          summary = case updated_file.operation
+                    when ::Dependabot::DependencyFile::Operation::CREATE
+                      " + Created '#{updated_file.name}' in '#{updated_file.directory}'"
+                    when ::Dependabot::DependencyFile::Operation::UPDATE
+                      " ± Updated '#{updated_file.name}' in '#{updated_file.directory}'"
+                    when ::Dependabot::DependencyFile::Operation::DELETE
+                      " - Deleted '#{updated_file.name}' in '#{updated_file.directory}'"
+                    end
+
+          original_tmp_file = Tempfile.new("original")
+          original_tmp_file.write(original_file.content)
+          original_tmp_file.close
+
+          updated_tmp_file = Tempfile.new("updated")
+          updated_tmp_file.write(updated_file.content)
+          updated_tmp_file.close
+
+          diff = `diff -u #{original_tmp_file.path} #{updated_tmp_file.path}`.lines
+          added_lines = diff.count { |line| line.start_with?("+") }
+          removed_lines = diff.count { |line| line.start_with?("-") }
+
+          ::Dependabot.logger.debug(
+            summary + "\n" \
+                      "~~~\n" \
+                      "#{diff.join}\n" \
+                      "~~~\n" \
+                      "#{added_lines} insertions (+), #{removed_lines} deletions (-)"
           )
         end
 
