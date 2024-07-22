@@ -40,8 +40,8 @@ module TingleSoftware
 
         sig { params(dependency_change: ::Dependabot::DependencyChange, base_commit_sha: String).void }
         def create_pull_request(dependency_change, base_commit_sha) # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
-          return open_limit_reached_for_pull_requests if job.open_pull_request_limit_reached?
-          return skip_pull_request("creation", dependency_change) if job.skip_pull_requests
+          return log_skipped_pull_request("creation", dependency_change) if job.skip_pull_requests
+          return log_open_limit_reached_for_pull_requests if job.open_pull_request_limit_reached?
 
           ::Dependabot.logger.info(
             "Creating pull request for '#{dependency_change.pr_message.pr_name}'."
@@ -105,7 +105,7 @@ module TingleSoftware
 
         sig { params(dependency_change: ::Dependabot::DependencyChange, base_commit_sha: String).void }
         def update_pull_request(dependency_change, base_commit_sha) # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
-          return skip_pull_request("update", dependency_change) if job.skip_pull_requests
+          return log_skipped_pull_request("update", dependency_change) if job.skip_pull_requests
 
           # Find the pull request to update
           dependency_names = dependency_change.updated_dependencies.map(&:name).join(",")
@@ -163,7 +163,7 @@ module TingleSoftware
 
         sig { params(dependency_names: T.any(String, T::Array[String]), reason: T.any(String, Symbol)).void }
         def close_pull_request(dependency_names, reason)
-          return skip_pull_request("close", nil) if job.skip_pull_requests
+          return log_skipped_pull_request("close", nil) if job.skip_pull_requests
 
           # Find the pull request to close
           pull_request = job.existing_pull_request_for_dependency_names(dependency_names)
@@ -173,7 +173,7 @@ module TingleSoftware
           # Comment on the PR explaining why it was closed
           pull_request_add_comment_with_close_reason(pull_request, dependency_names, reason)
 
-          return skip_pull_request("close", nil) unless job.close_pull_requests
+          return log_skipped_pull_request("close", nil) unless job.close_pull_requests
 
           # Delete the source branch
           # Do this first to avoid hanging branches
@@ -184,7 +184,7 @@ module TingleSoftware
         end
 
         sig { params(action: String, dependency_change: T.nilable(::Dependabot::DependencyChange)).void }
-        def skip_pull_request(action, dependency_change)
+        def log_skipped_pull_request(action, dependency_change)
           ::Dependabot.logger.info("Skipping pull request #{action} as it is disabled for this job.")
           return unless job.debug_enabled?
 
@@ -232,8 +232,8 @@ module TingleSoftware
           )
         end
 
-        def open_limit_reached_for_pull_requests
-          ::Dependabot.logger.log(
+        def log_open_limit_reached_for_pull_requests
+          ::Dependabot.logger.info(
             "Skipping pull request creation as the open pull request limit (#{job.open_pull_requests_limit}) " \
             "has been reached."
           )
