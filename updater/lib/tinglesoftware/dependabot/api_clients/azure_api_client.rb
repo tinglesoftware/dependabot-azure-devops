@@ -233,7 +233,7 @@ module TingleSoftware
         end
 
         def log_open_limit_reached_for_pull_requests
-          ::Dependabot.logger.log(
+          ::Dependabot.logger.info(
             "Skipping pull request creation as the open pull request limit (#{job.open_pull_requests_limit}) " \
             "has been reached."
           )
