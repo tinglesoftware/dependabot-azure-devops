@@ -46,7 +46,7 @@ require "dependabot/terraform"
 require "tinglesoftware/dependabot/clients/azure"
 require "tinglesoftware/dependabot/vulnerabilities"
 
-require "tinglesoftware/nuget/credentials_provider"
+require "tinglesoftware/azure/artifacts_credential_provider"
 
 # These options try to follow the dry-run.rb script.
 # https://github.com/dependabot/dependabot-core/blob/main/bin/dry-run.rb

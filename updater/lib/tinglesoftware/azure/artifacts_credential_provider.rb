@@ -4,25 +4,29 @@
 require "dependabot/shared_helpers"
 
 #
-# This module automatically installs the NuGet credential provider if any of the "extra credentials" are NuGet feeds.
-# Without it, private Azure DevOps NuGet feeds fail to auth and users have to deal with complicated workarounds.
+# This module auto installs the Azure Artifacts Credential Provider if any Azure DevOps NuGet feeds are configured.
+# Without it, users have to deal with complicated workarounds to get authentication to work with Dependabot updates.
 # See: https://github.com/tinglesoftware/dependabot-azure-devops/pull/1233 for more info.
 #
 
 # TODO: Remove this once https://github.com/dependabot/dependabot-core/pull/8927 is resolved or auth works natively.
 
 module TingleSoftware
-  module NuGet
-    module CredentialsProvider
+  module Azure
+    module ArtifactsCredentialProvider
       def self.install_if_nuget_feeds_are_configured
         credentials = JSON.parse(ENV.fetch("DEPENDABOT_EXTRA_CREDENTIALS", "[]"))
-        private_nuget_feeds = credentials.select { |cred| cred["type"] == "nuget_feed" }
-        return if private_nuget_feeds.empty?
+        private_ado_nuget_feeds = credentials.select do |cred|
+          cred["type"] == "nuget_feed" && cred["url"].include?("dev.azure.com")
+        end
 
+        return if private_ado_nuget_feeds.empty?
+
+        # Configure NuGet feed authentication
         ENV.store(
           "VSS_NUGET_EXTERNAL_FEED_ENDPOINTS",
           JSON.dump({
-            "endpointCredentials" => private_nuget_feeds.map do |cred|
+            "endpointCredentials" => private_ado_nuget_feeds.map do |cred|
               {
                 "endpoint" => cred["url"],
                 "username" => "unused",
@@ -32,6 +36,7 @@ module TingleSoftware
           })
         )
 
+        # Install cred provider from https://github.com/microsoft/artifacts-credprovider
         puts ::Dependabot::SharedHelpers.run_shell_command(
           "sh -c \"$(curl -fsSL https://aka.ms/install-artifacts-credprovider.sh)\"", allow_unsafe_shell_command: true
         )
@@ -40,4 +45,4 @@ module TingleSoftware
   end
 end
 
-TingleSoftware::NuGet::CredentialsProvider.install_if_nuget_feeds_are_configured
+TingleSoftware::Azure::ArtifactsCredentialProvider.install_if_nuget_feeds_are_configured
