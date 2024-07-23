@@ -3,6 +3,14 @@
 
 require "dependabot/shared_helpers"
 
+#
+# This module automatically installs the NuGet credential provider if any of the "extra credentials" are NuGet feeds.
+# Without it, private Azure DevOps NuGet feeds fail to auth and users have to deal with complicated workarounds.
+# See: https://github.com/tinglesoftware/dependabot-azure-devops/pull/1233 for more info.
+#
+
+# TODO: Remove this once https://github.com/dependabot/dependabot-core/pull/8927 is resolved or auth works natively.
+
 module TingleSoftware
   module NuGet
     module CredentialsProvider
@@ -32,7 +40,4 @@ module TingleSoftware
   end
 end
 
-# Automatically install the NuGet credential provider if any of the "extra credentials" are NuGet feeds.
-# Without it, private Azure DevOps NuGet feeds fail to auth and users have to deal with complicated workarounds.
-# TODO: Remove this entire file once https://github.com/dependabot/dependabot-core/pull/8927 is resolved.
 TingleSoftware::NuGet::CredentialsProvider.install_if_nuget_feeds_are_configured
