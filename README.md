@@ -41,13 +41,19 @@ registries:
   my-analyzers:
     type: nuget-feed
     url: https://dev.azure.com/organization2/_packaging/my-analyzers/nuget/v3/index.json
-    token: PAT:${{ANOTHER_PAT}}
+    token: PAT:${{MY_OTHER_PAT}}
   artifactory:
     type: nuget-feed
     url: https://artifactory.com/api/nuget/v3/myfeed
-    token: PAT:${{DEPENDABOT_ARTIFACTORY_PAT}}
+    token: PAT:${{MY_ARTIFACTORY_PAT}}
+  telerik:
+    type: nuget-feed
+    url: https://nuget.telerik.com/v3/index.json
+    username: ${{MY_TELERIK_USERNAME}}
+    password: ${{MY_TELERIK_PASSWORD}}
+    token: ${{MY_TELERIK_USERNAME}}:${{MY_TELERIK_PASSWORD}}
 updates:
-...
+  ...
 ```
 
 Note:
@@ -55,7 +61,7 @@ Note:
 1. `${{VARIABLE_NAME}}` notation is used liked described [here](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/managing-encrypted-secrets-for-dependabot)
 BUT the values will be used from Environment Variables in the pipeline/environment. Template variables are not supported for this replacement. Replacement only works for values considered secret in the registries section i.e. `password`, `token`, and `key`
 
-2. When using a token the notation should be `PAT:${{VARIABLE_NAME}}`. Otherwise the wrong authentication mechanism is used by dependabot, see [here](https://github.com/tinglesoftware/dependabot-azure-devops/issues/50).
+2. When using a token, the notation should be `PAT:${{VARIABLE_NAME}}` for Azure DevOps feeds ([see why here](https://github.com/tinglesoftware/dependabot-azure-devops/issues/50)). For third-party NuGet servers that require basic auth, the notation should be `${{USERNAME}}:${{PASSWORD}}` ([see why here](https://github.com/tinglesoftware/dependabot-azure-devops/issues/1232#issuecomment-2247616424)).
 
 When working with Azure Artifacts, some extra permission steps need to be done:
 
