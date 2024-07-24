@@ -39,7 +39,7 @@ module TingleSoftware
 
         # Install cred provider from https://github.com/microsoft/artifacts-credprovider
         puts ::Dependabot::SharedHelpers.run_shell_command(
-          "sh -c \"$(curl -fsSL https://aka.ms/install-artifacts-credprovider.sh)\"", allow_unsafe_shell_command: true
+          %(sh -c "$(curl -fsSL https://aka.ms/install-artifacts-credprovider.sh)"), allow_unsafe_shell_command: true
         )
       end
     end
