@@ -59,14 +59,17 @@ updates:
 Note:
 
 1. `${{VARIABLE_NAME}}` notation is used liked described [here](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/managing-encrypted-secrets-for-dependabot)
-BUT the values will be used from Environment Variables in the pipeline/environment. Template variables are not supported for this replacement. Replacement only works for values considered secret in the registries section i.e. `password`, `token`, and `key`
+BUT the values will be used from Environment Variables in the pipeline/environment. Template variables are not supported for this replacement. Replacement only works for values considered secret in the registries section i.e. `username`, `password`, `token`, and `key`
 
-2. When using a token, the notation should be `PAT:${{VARIABLE_NAME}}` for Azure DevOps feeds ([see why here](https://github.com/tinglesoftware/dependabot-azure-devops/issues/50)). For third-party NuGet servers that require basic auth, the notation should be `${{USERNAME}}:${{PASSWORD}}` ([see why here](https://github.com/tinglesoftware/dependabot-azure-devops/issues/1232#issuecomment-2247616424)).
+2. When using an Azure DevOps Artifact feed, only the `token` property is required. The token notation should be `PAT:${{VARIABLE_NAME}}` otherwise the wrong authentication mechanism is used by Dependabot, see [here](https://github.com/tinglesoftware/dependabot-azure-devops/issues/50) for more details. 
+When working with Azure DevOps Artifacts, some extra permission steps need to be done:
 
-When working with Azure Artifacts, some extra permission steps need to be done:
+    1. The PAT should have *Packaging Read* permission.
+    2. The user owning the PAT must be granted permissions to access the feed either directly or via a group. An easy way for this is to give `Contributor` permissions the `[{project_name}]\Contributors` group under the `Feed Settings -> Permissions` page. The page has the url format: `https://dev.azure.com/{organization}/{project}/_packaging?_a=settings&feed={feed-name}&view=permissions`.
 
-1. The PAT should have *Packaging Read* permission.
-2. The user owning the PAT must be granted permissions to access the feed either directly or via a group. An easy way for this is to give `Contributor` permissions the `[{project_name}]\Contributors` group under the `Feed Settings -> Permissions` page. The page has the url format: `https://dev.azure.com/{organization}/{project}/_packaging?_a=settings&feed={feed-name}&view=permissions`.
+3. When using a NuGet package server secured with basic auth, the `username`, `password`, and `token` properties are all required. The token notation should be `${{USERNAME}}:${{PASSWORD}}`, see [here](https://github.com/tinglesoftware/dependabot-azure-devops/issues/1232#issuecomment-2247616424) for more details.
+
+
 
 ## Security Advisories, Vulnerabilities, and Updates
 
