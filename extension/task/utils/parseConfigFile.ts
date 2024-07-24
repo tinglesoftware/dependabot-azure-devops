@@ -285,7 +285,7 @@ function parseRegistries(config: any): Record<string, IDependabotRegistry> {
     }
 
     // parse username, password, key, and token while replacing tokens where necessary
-    parsed.username = registryConfig["username"];
+    parsed.username = convertPlaceholder(registryConfig["username"]);
     parsed.password = convertPlaceholder(registryConfig["password"]);
     parsed.key = convertPlaceholder(registryConfig["key"]);
     parsed.token = convertPlaceholder(registryConfig["token"]);
