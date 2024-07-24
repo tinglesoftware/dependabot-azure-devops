@@ -33,7 +33,7 @@ module TingleSoftware
                 "endpoint" => cred["url"],
                 # Use username/password auth if provided, otherwise fallback to token auth.
                 # This provides maximum compatibility with Azure DevOps, DevOps Server, and other third-party feeds.
-                # When using DevOps PATs, the token is split into username/password parts; Username is not signficant.
+                # When using DevOps PATs, the token is split into username/password parts; Username is not significant.
                 # e.g. "PAT:12345" --> { "username": "PAT", "password": "12345" }
                 #      ":12345"    --> { "username": "", "password": "12345" }
                 "username" => cred["username"] || cred["token"]&.split(":")&.first,
