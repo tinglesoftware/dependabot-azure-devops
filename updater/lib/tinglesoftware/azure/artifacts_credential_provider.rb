@@ -14,10 +14,12 @@ require "dependabot/shared_helpers"
 module TingleSoftware
   module Azure
     module ArtifactsCredentialProvider
+      ADO_PKG_FEED_HOSTS = %w(dev.azure.com pkgs.dev.azure.com).freeze
+
       def self.install_if_nuget_feeds_are_configured
         credentials = JSON.parse(ENV.fetch("DEPENDABOT_EXTRA_CREDENTIALS", "[]"))
         private_ado_nuget_feeds = credentials.select do |cred|
-          cred["type"] == "nuget_feed" && cred["url"].include?("dev.azure.com")
+          cred["type"] == "nuget_feed" && ADO_PKG_FEED_HOSTS.include?(URI(cred["url"]).host)
         end
 
         return if private_ado_nuget_feeds.empty?
