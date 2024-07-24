@@ -29,8 +29,9 @@ module TingleSoftware
             "endpointCredentials" => private_ado_nuget_feeds.map do |cred|
               {
                 "endpoint" => cred["url"],
-                "username" => "unused",
-                "password" => cred["token"].delete_prefix("PAT:") # Credentials provider expects the raw token
+                # Use username/password auth if provided, otherwise assume PAT token auth.
+                "username" => cred["username"] || "unused",
+                "password" => cred["password"] || cred["token"].split(":").last # Strip any "PAT:" or ":" prefixes
               }
             end
           })
