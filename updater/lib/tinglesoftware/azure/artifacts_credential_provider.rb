@@ -45,8 +45,7 @@ module TingleSoftware
       end
 
       def self.private_nuget_feeds
-        credentials = JSON.parse(ENV.fetch("DEPENDABOT_EXTRA_CREDENTIALS", "[]"))
-        credentials.select do |cred|
+        JSON.parse(ENV.fetch("DEPENDABOT_EXTRA_CREDENTIALS", "[]")).select do |cred|
           cred["type"] == "nuget_feed" && (cred["username"] || cred["password"] || cred["token"])
         end
       end
