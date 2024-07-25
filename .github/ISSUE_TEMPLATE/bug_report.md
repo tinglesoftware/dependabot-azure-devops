@@ -11,7 +11,7 @@ assignees: ''
 A clear and concise description of what the bug is.
 
 **Categorization**
-- [ ] This is not a permissions issue (We cannot solve permission issues)
+- [ ] This is not a permissions issue (Seek help at https://github.com/tinglesoftware/dependabot-azure-devops/discussions/1245)
 
 **Repository**
 URL: e.g. https://dev.azure.com/tingle/dependabot/_git/repro-684
