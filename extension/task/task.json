@@ -4,7 +4,9 @@
   "name": "dependabot",
   "friendlyName": "Dependabot",
   "description": "Automatically update dependencies and vulnerabilities in your code",
-  "helpMarkDown": "For help please visit https://github.com/tinglesoftware/dependabot-azure-devops",
+  "helpMarkDown": "For help please visit https://github.com/tinglesoftware/dependabot-azure-devops/issues",
+  "helpUrl": "https://github.com/tinglesoftware/dependabot-azure-devops/issues",
+  "releaseNotes": "https://github.com/tinglesoftware/dependabot-azure-devops/releases",
   "category": "Utility",
   "visibility": ["Build", "Release"],
   "runsOn": ["Agent", "DeploymentGroup"],
@@ -54,7 +56,6 @@
       "required": false,
       "helpMarkDown": "Determines if the task will use the newest 'vNext' update script instead of the default update script. This Defaults to `false`. See the [vNext update script documentation](https://github.com/tinglesoftware/dependabot-azure-devops/pull/1186) for more information."
     },
-  
     {
       "name": "useConfigFile",
       "type": "boolean",
