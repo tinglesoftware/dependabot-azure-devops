@@ -16,12 +16,7 @@ require "dependabot/shared_helpers"
 module TingleSoftware
   module Azure
     module ArtifactsCredentialProvider
-      def self.install_if_nuget_feeds_are_configured
-        credentials = JSON.parse(ENV.fetch("DEPENDABOT_EXTRA_CREDENTIALS", "[]"))
-        private_nuget_feeds = credentials.select do |cred|
-          cred["type"] == "nuget_feed"
-        end
-
+      def self.install_if_private_nuget_feeds_are_configured
         return if private_nuget_feeds.empty?
 
         # Configure NuGet feed authentication
@@ -48,8 +43,15 @@ module TingleSoftware
           %(sh -c "$(curl -fsSL https://aka.ms/install-artifacts-credprovider.sh)"), allow_unsafe_shell_command: true
         )
       end
+
+      def self.private_nuget_feeds
+        credentials = JSON.parse(ENV.fetch("DEPENDABOT_EXTRA_CREDENTIALS", "[]"))
+        credentials.select do |cred|
+          cred["type"] == "nuget_feed" && (cred["username"] || cred["password"] || cred["token"])
+        end
+      end
     end
   end
 end
 
-TingleSoftware::Azure::ArtifactsCredentialProvider.install_if_nuget_feeds_are_configured
+TingleSoftware::Azure::ArtifactsCredentialProvider.install_if_private_nuget_feeds_are_configured
