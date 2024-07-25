@@ -56,14 +56,6 @@
       "required": false,
       "helpMarkDown": "Determines if the task will use the newest 'vNext' update script instead of the default update script. This Defaults to `false`. See the [vNext update script documentation](https://github.com/tinglesoftware/dependabot-azure-devops/pull/1186) for more information."
     },
-    {
-      "name": "useConfigFile",
-      "type": "boolean",
-      "label": "Use Dependabot YAML file",
-      "defaultValue": "true",
-      "required": false,
-      "helpMarkDown": "Determines if the task will pick config values specified from the yaml file located at `.azuredevops/dependabot.yml` or `.github/dependabot.yml`"
-    },
 
     {
       "name": "failOnException",
