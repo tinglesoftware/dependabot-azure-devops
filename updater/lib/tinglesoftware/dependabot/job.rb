@@ -149,14 +149,6 @@ module TingleSoftware
             "username" => ENV.fetch("AZURE_ACCESS_USERNAME", nil) || "x-access-token",
             "password" => ENV.fetch("AZURE_ACCESS_TOKEN", nil)
           },
-          # Access to DevOps private package artifact feeds
-          # https://github.com/dependabot/cli/blob/8793545f7b5dbf946aaee9372ffc12318573da81/cmd/dependabot/internal/cmd/update.go#L363C1-L382C3
-          {
-            "type" => "git_source",
-            "host" => "pkgs.dev.azure.com",
-            "username" => ENV.fetch("AZURE_ACCESS_USERNAME", nil) || "x-access-token",
-            "password" => ENV.fetch("AZURE_ACCESS_TOKEN", nil)
-          },
           # Access to other user-specified sources
           *JSON.parse(ENV.fetch("DEPENDABOT_EXTRA_CREDENTIALS", "[]"))
         ]
