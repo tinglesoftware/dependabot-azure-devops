@@ -31,6 +31,7 @@ async function run() {
     // For each update run docker container
     for (const update of updates) {
       // Prepare the docker task
+      // tl.which throws an error if the tool is not found
       let dockerRunner: ToolRunner = tl.tool(tl.which("docker", true));
       dockerRunner.arg(["run"]); // run command
       dockerRunner.arg(["--rm"]); // remove after execution

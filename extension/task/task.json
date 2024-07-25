@@ -11,7 +11,7 @@
   "visibility": ["Build", "Release"],
   "runsOn": ["Agent", "DeploymentGroup"],
   "author": "Tingle Software",
-  "demands": ["docker"],
+  "demands": [],
   "version": {
     "Major": 1,
     "Minor": 6,
