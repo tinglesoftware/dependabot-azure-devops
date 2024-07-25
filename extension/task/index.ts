@@ -7,17 +7,6 @@ import { resolveAzureDevOpsIdentities } from "./utils/resolveAzureDevOpsIdentiti
 
 async function run() {
   try {
-    let useConfigFile: boolean = tl.getBoolInput("useConfigFile", true);
-    if (!useConfigFile) {
-      throw new Error(
-        `
-        Using explicit inputs is no longer supported.
-        Migrate to using a config file at .azuredevops/dependabot.yml or .github/dependabot.yml.
-        See https://github.com/tinglesoftware/dependabot-azure-devops/tree/main/extension#usage for more information.
-        `
-      );
-    }
-
     // Checking if docker is installed
     tl.debug("Checking for docker install ...");
     tl.which("docker", true);
