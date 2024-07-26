@@ -55,7 +55,7 @@ module Dependabot
         credentials.each_with_index.filter_map do |c, i|
           # Ignore package sources that have a key (name), as these are already defined in the user's nuget.config file.
           # Ensures that package source ordering and package source mappings in the user's nuget.config are respected.
-          next unless c["url"]
+          next if c["key"]
 
           "<add key=\"nuget_source_#{i + 1}\" value=\"#{c['url']}\" />"
         end
