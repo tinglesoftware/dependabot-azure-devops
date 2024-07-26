@@ -57,8 +57,7 @@ module Dependabot
           # Ensures that package source ordering and package source mappings in the user's nuget.config are respected.
           .reject { |c| c["key"] }
           .each_with_index.filter_map do |c, i|
-            source_key = c["key"] || "nuget_source_#{i + 1}"
-            "<add key=\"#{source_key}\" value=\"#{c['url']}\" />"
+            "<add key=\"nuget_source_#{i + 1}\" value=\"#{c['url']}\" />"
           end
       end
 
