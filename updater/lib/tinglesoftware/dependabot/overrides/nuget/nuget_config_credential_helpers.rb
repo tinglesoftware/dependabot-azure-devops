@@ -49,8 +49,6 @@ module Dependabot
             </configuration>
           NUGET_XML
         )
-
-        puts File.read(user_nuget_config_path)
       end
 
       def self.package_sources_xml_lines(credentials)
