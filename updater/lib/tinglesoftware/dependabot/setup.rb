@@ -49,4 +49,5 @@ require "dependabot/swift"
 require "dependabot/devcontainers"
 
 # Overrides for dependabot core functionality that are currently not extensible
+require "tinglesoftware/dependabot/overrides/nuget/nuget_config_credential_helpers"
 require "tinglesoftware/dependabot/overrides/pull_request_creator/pr_name_prefixer"
