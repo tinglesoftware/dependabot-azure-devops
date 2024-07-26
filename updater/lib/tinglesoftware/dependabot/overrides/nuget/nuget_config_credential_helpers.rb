@@ -52,38 +52,39 @@ module Dependabot
       end
 
       def self.package_sources_xml_lines(credentials)
-        credentials
-          # Reject package sources that have a key (name), as these are already defined in the user's nuget.config file.
+        credentials.each_with_index.filter_map do |c, i|
+          # Ignore package sources that have a key (name), as these are already defined in the user's nuget.config file.
           # Ensures that package source ordering and package source mappings in the user's nuget.config are respected.
-          .reject { |c| c["key"] }
-          .each_with_index.filter_map do |c, i|
-            "<add key=\"nuget_source_#{i + 1}\" value=\"#{c['url']}\" />"
-          end
+          next unless c["url"]
+
+          "<add key=\"nuget_source_#{i + 1}\" value=\"#{c['url']}\" />"
+        end
       end
 
       def self.package_source_credentials_xml_lines(credentials) # rubocop:disable Metrics/PerceivedComplexity
-        credentials
-          .select { |c| c["token"] || c["username"] || c["password"] }
-          .each_with_index.flat_map do |c, i|
-            # Use the package source key (name) if provided, otherwise fallback to a auto-generated key.
-            # We want preserve the package source key (name) if it is already defined in the user's nuget.config file.
-            # This ensures that package source mappings in the user's nuget.config are respected.
-            source_key = c["key"] || "nuget_source_#{i + 1}"
-            # Use username/password auth if provided, otherwise fallback to token auth.
-            # This provides maximum compatibility with Azure DevOps, DevOps Server, and other third-party feeds.
-            # When using DevOps PATs, the token is split into username/password parts; Username is not significant.
-            # e.g. token "PAT:12345" --> { "username": "PAT", "password": "12345" }
-            #            ":12345"    --> { "username": "", "password": "12345" }
-            #            "12345"     --> { "username": "12345", "password": "12345" }
-            source_username = c["username"] || c["token"]&.split(":")&.first
-            source_password = c["password"] || c["token"]&.split(":")&.last
-            [
-              "<#{source_key}>",
-              "  <add key=\"Username\" value=\"#{source_username}\" />",
-              "  <add key=\"ClearTextPassword\" value=\"#{source_password}\" />",
-              "</#{source_key}>"
-            ]
-          end
+        credentials.each_with_index.flat_map do |c, i|
+          # Ignore public package sources, no credentials required
+          next unless c["token"] || c["username"] || c["password"]
+
+          # Use the package source key (name) if provided, otherwise fallback to a auto-generated key.
+          # We want preserve the package source key (name) if it is already defined in the user's nuget.config file.
+          # This ensures that package source mappings in the user's nuget.config are respected.
+          source_key = c["key"] || "nuget_source_#{i + 1}"
+          # Use username/password auth if provided, otherwise fallback to token auth.
+          # This provides maximum compatibility with Azure DevOps, DevOps Server, and other third-party feeds.
+          # When using DevOps PATs, the token is split into username/password parts; Username is not significant.
+          # e.g. token "PAT:12345" --> { "username": "PAT", "password": "12345" }
+          #            ":12345"    --> { "username": "", "password": "12345" }
+          #            "12345"     --> { "username": "12345", "password": "12345" }
+          source_username = c["username"] || c["token"]&.split(":")&.first
+          source_password = c["password"] || c["token"]&.split(":")&.last
+          [
+            "<#{source_key}>",
+            "  <add key=\"Username\" value=\"#{source_username}\" />",
+            "  <add key=\"ClearTextPassword\" value=\"#{source_password}\" />",
+            "</#{source_key}>"
+          ]
+        end
       end
     end
   end
