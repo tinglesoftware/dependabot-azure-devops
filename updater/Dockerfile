@@ -1,5 +1,6 @@
 ARG ECOSYSTEM
 ARG BASE_VERSION=latest
+ARG DEPENDABOT_UPDATER_VERSION=unknown
 
 # The Dependabot docker images in https://github.com/dependabot/dependabot-core are no longer versioned like the Ruby Gems; instead they are versioned by the commit SHA of the release tag.
 # In production, the build pipeline automatically calculates BASE_VERSION to match the dependabot-omnibus version set in updater/Gemfile (see .github/workflows/updater.yml).
@@ -24,6 +25,9 @@ RUN bundle config set --local path 'vendor' && \
 # Add project
 COPY --chown=dependabot:dependabot LICENSE $DEPENDABOT_HOME
 COPY --chown=dependabot:dependabot updater $DEPENDABOT_HOME/dependabot-updater
+
+# Add ENV
+ENV DEPENDABOT_UPDATER_VERSION=$DEPENDABOT_UPDATER_VERSION
 
 # ENTRYPOINT IS USED instead of CMD so as to avoid adding
 # 'bin/run.sh' before the file name when running the image

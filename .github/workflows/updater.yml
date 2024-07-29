@@ -106,6 +106,7 @@ jobs:
         --build-arg BUILDKIT_INLINE_CACHE=1 \
         --build-arg ECOSYSTEM=${{ matrix.suite.ecosystem }} \
         --build-arg BASE_VERSION=${{ steps.docker-base-version.outputs.version }} \
+        --build-arg DEPENDABOT_UPDATER_VERSION=${{ steps.gitversion.outputs.nuGetVersionV2 }} \
         --label com.github.image.run.id=${{ github.run_id }} \
         --label com.github.image.run.number=${{ github.run_number }} \
         --label com.github.image.job.id=${{ github.job }} \
