@@ -75,9 +75,14 @@ module Dependabot
           # When using DevOps PATs, the token is split into username/password parts; Username is not significant.
           # e.g. token "PAT:12345" --> { "username": "PAT", "password": "12345" }
           #            ":12345"    --> { "username": "", "password": "12345" }
-          #            "12345"     --> { "username": "12345", "password": "12345" }
+          #            "12345"     --> { "username": "12345", "password": "12345" } # username gets redacted to "user"
           source_username = c["username"] || c["token"]&.split(":")&.first
           source_password = c["password"] || c["token"]&.split(":")&.last
+          # NuGet.exe will log the username in plain text to the console, which is not great for security!
+          # If the username and password are the same value, we can assume that "token" auth is being used and that the
+          # username is not significant, so redact it to something generic to avoid leaking sensitive information.
+          # e.g. { "username": "12345", "password": "12345" } --> { "username": "user", "password": "12345" }
+          source_username = "user" if source_username == source_password
           [
             "<#{source_key}>",
             "  <add key=\"Username\" value=\"#{source_username}\" />",
