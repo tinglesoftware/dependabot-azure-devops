@@ -8,6 +8,7 @@ require "dependabot"
 require "dependabot/logger"
 require "dependabot/logger/formats"
 require "dependabot/simple_instrumentor"
+require "dependabot/opentelemetry"
 require "dependabot/environment"
 
 ENV["DEPENDABOT_JOB_ID"] = Time.now.to_i.to_s unless ENV["DEPENDABOT_JOB_ID"]
@@ -27,6 +28,8 @@ Dependabot::SimpleInstrumentor.subscribe do |*args|
     puts "🚨 #{payload[:body]}" if payload[:body] && error_codes.include?(payload[:status])
   end
 end
+
+Dependabot::OpenTelemetry.configure
 
 # Ecosystems
 require "dependabot/python"
