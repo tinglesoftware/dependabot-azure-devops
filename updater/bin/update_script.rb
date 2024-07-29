@@ -46,7 +46,10 @@ require "dependabot/terraform"
 require "tinglesoftware/dependabot/clients/azure"
 require "tinglesoftware/dependabot/vulnerabilities"
 
+# Fixes for NuGet feed auth issues
+# TODO: Remove this once https://github.com/dependabot/dependabot-core/pull/8927 is resolved or auth works natively.
 require "tinglesoftware/azure/artifacts_credential_provider"
+require "tinglesoftware/dependabot/overrides/nuget/nuget_config_credential_helpers"
 
 # These options try to follow the dry-run.rb script.
 # https://github.com/dependabot/dependabot-core/blob/main/bin/dry-run.rb
