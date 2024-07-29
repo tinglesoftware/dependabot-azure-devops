@@ -70,6 +70,40 @@ When working with Azure DevOps Artifacts, some extra permission steps need to be
 3. When using a NuGet package server secured with basic auth, the `username`, `password`, and `token` properties are all required. The token notation should be `${{USERNAME}}:${{PASSWORD}}`, see [here](https://github.com/tinglesoftware/dependabot-azure-devops/issues/1232#issuecomment-2247616424) for more details.
 
 
+4. When your project contains a `nuget.config` file with custom package source configuration, the `key` property is required for each nuget-feed registry. The key must match between `dependabot.yml` and `nuget.config` otherwise the package source will be duplicated, package source mappings will be ignored, and auth errors will occur during dependency discovery.
+
+   If your `nuget.config` looks like this:
+     ```xml
+      <?xml version="1.0" encoding="utf-8"?>
+      <configuration>
+        <packageSources>
+          <clear />
+          <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
+          <add key="my-organisation1-nuget" value="https://dev.azure.com/my-organization/_packaging/my-nuget-feed/nuget/v3/index.json" />
+        </packageSources>
+        <packageSourceMapping>
+          <packageSource key="nuget.org">
+            <package pattern="*" />
+          </packageSource>
+          <packageSource key="my-organisation-nuget">
+            <package pattern="Organisation.*" />
+          </packageSource>
+        </packageSourceMapping>
+      </configuration>
+      ```
+
+    Then your `dependabot.yml` registry should look like this:
+
+    ```yml
+    version: 2
+    registries:
+      my-org:
+        type: nuget-feed
+        key: my-organisation1-nuget
+        url: https://dev.azure.com/my-organization/_packaging/my-nuget-feed/nuget/v3/index.json
+        token: PAT:${{MY_DEPENDABOT_ADO_PAT}}
+    ```
+    
 
 ## Security Advisories, Vulnerabilities, and Updates
 

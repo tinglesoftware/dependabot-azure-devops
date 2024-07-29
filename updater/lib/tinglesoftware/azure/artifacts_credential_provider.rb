@@ -5,11 +5,15 @@ require "dependabot/shared_helpers"
 
 #
 # This module auto installs the Azure Artifacts Credential Provider if any NuGet feeds are configured.
-# Without it, package feed authentication is not passed down to the native helper tools (i.e. NuGet, MSBuild, dotnet).
+# Without it, package feed authentication is not passed down to the native helper tools (i.e. dotnet).
 # See: https://github.com/tinglesoftware/dependabot-azure-devops/pull/1233 for more info.
+#
+# This module primarily fixes auth in .NET [Core] projects; .NET Framework project auth is handled by nuget.config.
+# See: tinglesoftware/dependabot/overrides/nuget/nuget_config_credential_helpers.rb for more info.
 #
 # This credential provider is required for ALL private NuGet feeds, even if they are not hosted in Azure DevOps.
 # See README.md (Credentials for private registries and feeds) for more details.
+#
 
 # TODO: Remove this once https://github.com/dependabot/dependabot-core/pull/8927 is resolved or auth works natively.
 
@@ -29,8 +33,9 @@ module TingleSoftware
                 # Use username/password auth if provided, otherwise fallback to token auth.
                 # This provides maximum compatibility with Azure DevOps, DevOps Server, and other third-party feeds.
                 # When using DevOps PATs, the token is split into username/password parts; Username is not significant.
-                # e.g. "PAT:12345" --> { "username": "PAT", "password": "12345" }
-                #      ":12345"    --> { "username": "", "password": "12345" }
+                # e.g. token "PAT:12345" --> { "username": "PAT", "password": "12345" }
+                #            ":12345"    --> { "username": "", "password": "12345" }
+                #            "12345"     --> { "username": "12345", "password": "12345" }
                 "username" => cred["username"] || cred["token"]&.split(":")&.first,
                 "password" => cred["password"] || cred["token"]&.split(":")&.last
               }
