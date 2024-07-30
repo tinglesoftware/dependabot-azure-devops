@@ -10,8 +10,6 @@ require "tinglesoftware/dependabot/setup"
 require "tinglesoftware/dependabot/job"
 require "tinglesoftware/dependabot/commands/update_all_dependencies_synchronous_command"
 
-require "tinglesoftware/azure/artifacts_credential_provider"
-
 ENV["UPDATER_ONE_CONTAINER"] = "true" # The full end-to-end update will happen in a single container
 ENV["UPDATER_DETERMINISTIC"] = "true" # The list of dependencies to update will be consistent across multiple runs
 
