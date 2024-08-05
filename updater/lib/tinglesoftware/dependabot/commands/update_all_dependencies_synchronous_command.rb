@@ -60,36 +60,32 @@ module TingleSoftware
           ::Dependabot.logger.info(
             "Repository scan completed for '#{job.source.url}' at commit '#{@base_commit_sha}'"
           )
-          (job.source.directories || [job.source.directory]).each do |dir|
-            dependency_snapshot.current_directory = dir
-            log_snapshot_dependency_files(dir)
-            log_snapshot_dependencies
-            log_snapshot_dependency_groups
-            dependency_snapshot.current_directory = ""
-          end
+          log_snapshot_dependency_files
+          log_snapshot_dependencies
+          log_snapshot_dependency_groups
           log_open_pull_requests
         end
 
-        def log_snapshot_dependency_files(dir)
+        def log_snapshot_dependency_files
           ::Dependabot.logger.info(
-            "Found directory '#{dir}' with #{dependency_snapshot.dependency_files.count} dependency files:"
+            "Found #{dependency_snapshot.all_dependency_files.count} dependency files:"
           )
-          dependency_snapshot.dependency_files.select.each do |f|
-            ::Dependabot.logger.info(" - #{f.directory}#{f.name}")
+          dependency_snapshot.all_dependency_files.select.each do |f|
+            ::Dependabot.logger.info(" - #{f.directory}#{File::SEPARATOR}#{f.name}")
           end
         end
 
         def log_snapshot_dependencies
           ::Dependabot.logger.info(
-            "Found #{dependency_snapshot.dependencies.count(&:top_level?)} top-level dependencies:"
+            "Found #{dependency_snapshot.all_dependencies.count(&:top_level?)} top-level dependencies:"
           )
-          dependency_snapshot.dependencies.select(&:top_level?).each do |d|
+          dependency_snapshot.all_dependencies.select(&:top_level?).each do |d|
             ::Dependabot.logger.info(" - #{d.name} (#{d.version}) #{job.vulnerable?(d) ? '(VULNERABLE!)' : ''}")
           end
           ::Dependabot.logger.info(
-            "Found #{dependency_snapshot.dependencies.count { |d| !d.top_level? }} transitive dependencies:"
+            "Found #{dependency_snapshot.all_dependencies.count { |d| !d.top_level? }} transitive dependencies:"
           )
-          dependency_snapshot.dependencies.reject(&:top_level?).each do |d|
+          dependency_snapshot.all_dependencies.reject(&:top_level?).each do |d|
             ::Dependabot.logger.info(" - #{d.name} (#{d.version}) #{job.vulnerable?(d) ? '(VULNERABLE!)' : ''}")
           end
         end
@@ -130,7 +126,7 @@ module TingleSoftware
             # Refocus our job towards updating this single PR, using the CURRENT snapshot of the dependecneis
             job.for_pull_request_update(
               dependency_group_name: dependency_group_name,
-              dependency_names: dependency_snapshot.dependencies
+              dependency_names: dependency_snapshot.all_dependencies
                 .select { |d| dependency_names.include?(d.name) }
                 .select { |d| job.allowed_update?(d) }
                 .map(&:name)
@@ -158,7 +154,7 @@ module TingleSoftware
         end
 
         def dependencies_allowed_to_update
-          dependency_snapshot.dependencies.select { |d| job.allowed_update?(d) }
+          dependency_snapshot.all_dependencies.select { |d| job.allowed_update?(d) }
         end
 
         def run_updates_for(job)
