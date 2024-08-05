@@ -4,6 +4,8 @@
 require "base64"
 require "dependabot/base_command"
 require "dependabot/dependency_snapshot"
+require "dependabot/errors"
+require "dependabot/opentelemetry"
 require "dependabot/updater"
 require "octokit"
 
@@ -43,15 +45,19 @@ module TingleSoftware
         end
 
         def perform_job
-          # Clone the repo contents then find all files that could contain dependency references
-          clone_repo_and_snapshot_dependency_files
-          log_what_we_found
+          ::Dependabot::OpenTelemetry.tracer.in_span("update_all_dependencies_synchronous", kind: :internal) do |span|
+            span.set_attribute(::Dependabot::OpenTelemetry::Attributes::JOB_ID, job_id.to_s)
 
-          # Update/close any existing pull requests that are out of date or no longer required
-          update_all_existing_pull_requests
+            # Clone the repo contents then find all files that could contain dependency references
+            clone_repo_and_snapshot_dependency_files
+            log_what_we_found
 
-          # Create new pull requests any dependency [groups] that still need updating (i.e. not in an open PR already)
-          update_all_dependencies
+            # Update/close any existing pull requests that are out of date or no longer required
+            update_all_existing_pull_requests
+
+            # Create new pull requests any dependency [groups] that still need updating (i.e. not in an open PR already)
+            update_all_dependencies
+          end
         end
 
         private
