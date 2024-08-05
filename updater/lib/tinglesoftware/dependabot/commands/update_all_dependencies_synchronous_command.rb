@@ -239,7 +239,7 @@ module TingleSoftware
 
             begin
               files = ff.files
-            rescue Dependabot::DependencyFileNotFound
+            rescue ::Dependabot::DependencyFileNotFound
               # skip directories that don't contain manifests if globbing is used
               next if has_glob
 
@@ -250,7 +250,7 @@ module TingleSoftware
           end.compact
 
           if @dependency_files_for_multi_directories.empty?
-            raise Dependabot::DependencyFileNotFound, job.source.directories.join(", ")
+            raise ::Dependabot::DependencyFileNotFound, job.source.directories.join(", ")
           end
 
           @dependency_files_for_multi_directories
