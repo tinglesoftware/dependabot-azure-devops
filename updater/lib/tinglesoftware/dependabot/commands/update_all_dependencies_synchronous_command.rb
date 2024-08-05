@@ -60,22 +60,26 @@ module TingleSoftware
           ::Dependabot.logger.info(
             "Repository scan completed for '#{job.source.url}' at commit '#{@base_commit_sha}'"
           )
-          log_found_dependency_files
-          log_found_dependencies
-          log_found_dependency_groups
-          log_found_open_pull_requests
+          (job.source.directories || [job.source.directory]).each do |dir|
+            dependency_snapshot.current_directory = dir
+            log_snapshot_dependency_files(dir)
+            log_snapshot_dependencies
+            log_snapshot_dependency_groups
+            dependency_snapshot.current_directory = ""
+          end
+          log_open_pull_requests
         end
 
-        def log_found_dependency_files
+        def log_snapshot_dependency_files(dir)
           ::Dependabot.logger.info(
-            "Found #{dependency_files.count} #{job.package_manager} dependency reference files:"
+            "Found directory '#{dir}' with #{dependency_snapshot.dependency_files.count} dependency files:"
           )
-          dependency_files.select.each do |f|
-            ::Dependabot.logger.info(" - #{f.directory}#{File::SEPARATOR}#{f.name}")
+          dependency_snapshot.dependency_files.select.each do |f|
+            ::Dependabot.logger.info(" - #{f.directory}#{f.name}")
           end
         end
 
-        def log_found_dependencies
+        def log_snapshot_dependencies
           ::Dependabot.logger.info(
             "Found #{dependency_snapshot.dependencies.count(&:top_level?)} top-level dependencies:"
           )
@@ -90,7 +94,9 @@ module TingleSoftware
           end
         end
 
-        def log_found_dependency_groups
+        def log_snapshot_dependency_groups
+          return unless dependency_snapshot.groups.any?
+
           ::Dependabot.logger.info(
             "Found #{dependency_snapshot.groups.count} dependency group(s):"
           )
@@ -100,7 +106,9 @@ module TingleSoftware
           end
         end
 
-        def log_found_open_pull_requests
+        def log_open_pull_requests
+          return unless job.open_pull_requests.any?
+
           ::Dependabot.logger.info("Found #{job.open_pull_requests.count} open pull requests(s):")
           job.open_pull_requests.select.each do |pr|
             ::Dependabot.logger.info(" - ##{pr['pullRequestId']}: #{pr['title']}")
@@ -216,19 +224,52 @@ module TingleSoftware
           ::Dependabot::FileFetchers.for_package_manager(job.package_manager).new(**args)
         end
 
-        def dependency_files
-          @dependency_files ||= (job.source.directories || [job.source.directory]).flat_map do |dir|
-            ::Dependabot.logger.info(
-              "Searching for #{job.package_manager} dependency reference files in '#{dir}', this can take a while..."
-            )
+        def dependency_files_for_multi_directories
+          return @dependency_files_for_multi_directories if defined?(@dependency_files_for_multi_directories)
+
+          has_glob = T.let(false, T::Boolean)
+          directories = Dir.chdir(job.repo_contents_path) do
+            job.source.directories.map do |dir|
+              next dir unless glob?(dir)
+
+              has_glob = true
+              dir = dir.delete_prefix("/")
+              Dir.glob(dir, File::FNM_DOTMATCH).select { |d| File.directory?(d) }.map { |d| "/#{d}" }
+            end.flatten
+          end.uniq
+
+          @dependency_files_for_multi_directories = directories.flat_map do |dir|
             ff = with_retries { file_fetcher_for_directory(dir) }
-            files = ff.files
+
+            begin
+              files = ff.files
+            rescue Dependabot::DependencyFileNotFound
+              # skip directories that don't contain manifests if globbing is used
+              next if has_glob
+
+              raise
+            end
+
             files
+          end.compact
+
+          if @dependency_files_for_multi_directories.empty?
+            raise Dependabot::DependencyFileNotFound, job.source.directories.join(", ")
           end
+
+          @dependency_files_for_multi_directories
+        end
+
+        def dependency_files
+          return @dependency_files if defined?(@dependency_files)
+
+          @dependency_files = with_retries { file_fetcher.files }
+          @dependency_files
         end
 
         def base64_dependency_files
-          dependency_files.map do |file|
+          files = job.source.directories ? dependency_files_for_multi_directories : dependency_files
+          files.map do |file|
             base64_file = file.dup
             base64_file.content = Base64.encode64(file.content) unless file.binary?
             base64_file
@@ -244,6 +285,11 @@ module TingleSoftware
             retry if retries <= max_retries
             raise
           end
+        end
+
+        def glob?(directory)
+          # We could tighten this up, but it's probably close enough.
+          directory.include?("*") || directory.include?("?") || (directory.include?("[") && directory.include?("]"))
         end
       end
     end
