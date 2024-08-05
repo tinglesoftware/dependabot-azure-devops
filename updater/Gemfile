@@ -36,7 +36,7 @@ group :test do
   gem "rspec-sorbet", "~> 1.9.2"
   gem "rubocop", "~> 1.65.1"
   gem "rubocop-performance", "~> 1.21.0"
-  gem "rubocop-rspec", "~> 2.29.1"
+  gem "rubocop-rspec", "~> 3.0.3"
   gem "rubocop-sorbet", "~> 0.8.1"
   gem "simplecov", "~> 0.22.0"
   gem "turbo_tests", "~> 2.2.0"
