@@ -60,22 +60,22 @@ module TingleSoftware
           ::Dependabot.logger.info(
             "Repository scan completed for '#{job.source.url}' at commit '#{@base_commit_sha}'"
           )
-          log_snapshot_dependency_files
-          log_snapshot_dependencies
-          log_snapshot_dependency_groups
-          log_open_pull_requests
+          log_found_dependency_files
+          log_found_dependencies
+          log_found_dependency_groups
+          log_found_open_pull_requests
         end
 
-        def log_snapshot_dependency_files
+        def log_found_dependency_files
           ::Dependabot.logger.info(
-            "Found #{dependency_snapshot.all_dependency_files.count} dependency files:"
+            "Found #{dependency_snapshot.all_dependency_files.count} #{job.package_manager} dependency reference files:"
           )
           dependency_snapshot.all_dependency_files.select.each do |f|
             ::Dependabot.logger.info(" - #{f.directory}#{File::SEPARATOR}#{f.name}")
           end
         end
 
-        def log_snapshot_dependencies
+        def log_found_dependencies
           ::Dependabot.logger.info(
             "Found #{dependency_snapshot.all_dependencies.count(&:top_level?)} top-level dependencies:"
           )
@@ -90,7 +90,7 @@ module TingleSoftware
           end
         end
 
-        def log_snapshot_dependency_groups
+        def log_found_dependency_groups
           return unless dependency_snapshot.groups.any?
 
           ::Dependabot.logger.info(
@@ -102,7 +102,7 @@ module TingleSoftware
           end
         end
 
-        def log_open_pull_requests
+        def log_found_open_pull_requests
           return unless job.open_pull_requests.any?
 
           ::Dependabot.logger.info("Found #{job.open_pull_requests.count} open pull requests(s):")
