@@ -8,7 +8,7 @@ source "https://rubygems.org"
 # They are so many, our reference won't be found for it to be updated.
 # Hence adding the branch.
 
-gem "dependabot-omnibus", "~>0.267.0"
+gem "dependabot-omnibus", "~>0.268.0"
 # gem "dependabot-omnibus", github: "dependabot/dependabot-core", branch: "main"
 # gem "dependabot-omnibus", github: "dependabot/dependabot-core", tag: "v0.232.0"
 # gem "dependabot-omnibus", github: "dependabot/dependabot-core", ref: "ffde6f6"
@@ -34,7 +34,7 @@ group :test do
   gem "rspec", "~> 3.12"
   gem "rspec-its", "~> 1.3"
   gem "rspec-sorbet", "~> 1.9.2"
-  gem "rubocop", "~> 1.63.2"
+  gem "rubocop", "~> 1.65.1"
   gem "rubocop-performance", "~> 1.21.0"
   gem "rubocop-rspec", "~> 2.29.1"
   gem "rubocop-sorbet", "~> 0.8.1"
