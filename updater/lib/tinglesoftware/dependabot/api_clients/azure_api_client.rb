@@ -426,8 +426,8 @@ module TingleSoftware
             {
               "dependency-name" => dep.name,
               "dependency-version" => dep.version,
-              "directory" => dependency_change.grouped_update? ? dep.directory : nil,
-              "dependency-removed" => dep.removed? ? true : nil
+              "dependency-removed" => dep.removed? ? true : nil,
+              "directory" => dep.directory
             }.compact
           end
           if dependency_change.grouped_update?
