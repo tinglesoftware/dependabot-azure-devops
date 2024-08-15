@@ -14,10 +14,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.Configure<HostOptions>(options => options.ShutdownTimeout = TimeSpan.FromSeconds(30)); /* default is 5 seconds */
 
-// Add Azure AppConfiguration
-builder.Configuration.AddStandardAzureAppConfiguration(builder.Environment);
-builder.Services.AddAzureAppConfiguration();
-builder.Services.AddSingleton<IStartupFilter, AzureAppConfigurationStartupFilter>(); // Use IStartupFilter to setup AppConfiguration middleware correctly
 
 // Add Serilog
 builder.Services.AddSerilog(builder =>
