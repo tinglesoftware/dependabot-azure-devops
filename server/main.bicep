@@ -91,19 +91,6 @@ resource serviceBusNamespace 'Microsoft.ServiceBus/namespaces@2021-11-01' = {
   resource authorizationRule 'AuthorizationRules' existing = { name: 'RootManageSharedAccessKey' }
 }
 
-/* AppConfiguration */
-resource appConfiguration 'Microsoft.AppConfiguration/configurationStores@2023-03-01' = {
-  name: name
-  location: location
-  properties: { softDeleteRetentionInDays: 0 /* Free does not support this */ }
-  sku: { name: 'free' }
-  identity: {
-    type: 'UserAssigned'
-    userAssignedIdentities: {
-      '${managedIdentity.id}': {/*ttk bug*/ }
-    }
-  }
-}
 
 /* Storage Account */
 resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = {
@@ -278,7 +265,6 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
 
             { name: 'PROJECT_SETUPS', secretRef: 'project-setups' }
 
-            { name: 'AzureAppConfig__Endpoint', value: appConfiguration.properties.endpoint }
             { name: 'AzureAppConfig__Label', value: 'Production' }
 
             { name: 'ApplicationInsights__ConnectionString', secretRef: 'connection-strings-application-insights' }
