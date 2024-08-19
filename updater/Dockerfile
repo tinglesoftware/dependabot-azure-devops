@@ -28,6 +28,7 @@ COPY --chown=dependabot:dependabot updater $DEPENDABOT_HOME/dependabot-updater
 
 # Add ENV
 ENV DEPENDABOT_UPDATER_VERSION=$DEPENDABOT_UPDATER_VERSION
+ENV OTEL_ENABLED=true
 
 # ENTRYPOINT IS USED instead of CMD so as to avoid adding
 # 'bin/run.sh' before the file name when running the image
