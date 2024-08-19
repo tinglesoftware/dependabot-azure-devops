@@ -39,7 +39,7 @@
     <PackageReference Include="Tingle.Extensions.DataAnnotations" Version="4.13.0" />
     <PackageReference Include="Tingle.Extensions.Primitives" Version="4.13.0" />
     <PackageReference Include="Tingle.Extensions.Serilog" Version="4.13.0" />
-    <PackageReference Include="Tingle.PeriodicTasks" Version="1.5.0" />
+    <PackageReference Include="Tingle.PeriodicTasks" Version="1.5.1" />
     <PackageReference Include="YamlDotNet" Version="16.0.0" />
   </ItemGroup>
 
