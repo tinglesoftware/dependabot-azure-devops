@@ -75,6 +75,10 @@ export interface ISharedVariables {
   /** Tag of the docker image to be pulled */
   dockerImageTag: string;
 
+  /** Custom path to the configuration file */
+  configFilePath: string;
+  configFilePathOverridden: boolean
+
   /** Dependabot command to run */
   command: string;
 }
@@ -162,6 +166,8 @@ export default function getSharedVariables(): ISharedVariables {
     ? "update_script_vnext"
     : "update_script";
 
+  let configFilePath: string = tl.getInput("configFilePath");
+  let configFilePathOverridden: boolean = typeof configFilePath === "string";
   return {
     organizationUrl: formattedOrganizationUrl,
     protocol,
@@ -203,6 +209,9 @@ export default function getSharedVariables(): ISharedVariables {
 
     dockerImageTag,
 
-    command
+    command,
+
+    configFilePath,
+    configFilePathOverridden
   };
 }
