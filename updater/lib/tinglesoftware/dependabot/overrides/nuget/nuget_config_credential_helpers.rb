@@ -20,7 +20,7 @@
 # See README.md (Credentials for private registries and feeds) for more details.
 #
 
-# TODO: Remove this once https://github.com/dependabot/dependabot-core/pull/8927 is resolved or auth works natively.
+# TODO: Remove this once auth can be moved out to the "proxy" component, like dependabot-cli does
 
 module Dependabot
   module Nuget
