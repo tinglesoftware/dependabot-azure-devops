@@ -52,7 +52,6 @@
       "type": "string",
       "groupName": "advanced",
       "label": "Overrides the default path to the configuration file",
-      "defaultValue": "false",
       "required": false,
       "helpMarkDown": "When set, provided path will used to find configuration yaml file instead of the default ones."
     },
