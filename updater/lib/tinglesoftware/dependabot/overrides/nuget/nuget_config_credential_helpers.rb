@@ -74,15 +74,12 @@ module Dependabot
           # This provides maximum compatibility with Azure DevOps, DevOps Server, and other third-party feeds.
           # When using DevOps PATs, the token is split into username/password parts; Username is not significant.
           # e.g. token "PAT:12345" --> { "username": "PAT", "password": "12345" }
-          #            ":12345"    --> { "username": "", "password": "12345" }
-          #            "12345"     --> { "username": "12345", "password": "12345" } # username gets redacted to "user"
-          source_username = c["username"] || c["token"]&.split(":")&.first
-          source_password = c["password"] || c["token"]&.split(":")&.last
-          # NuGet.exe will log the username in plain text to the console, which is not great for security!
-          # If the username and password are the same value, we can assume that "token" auth is being used and that the
-          # username is not significant, so redact it to something generic to avoid leaking sensitive information.
-          # e.g. { "username": "12345", "password": "12345" } --> { "username": "user", "password": "12345" }
-          source_username = "user" if source_username == source_password
+          #            ":12345"    --> { "username": "unused", "password": "12345" }
+          #            "12345"     --> { "username": "unused", "password": "12345" }
+          #            ""          --> { "username": "unused", "password": "" }
+          source_token_parts = c["token"]&.split(":", 2)&.reject(&:empty?) || []
+          source_username = c["username"] || source_token_parts.length > 1 ? source_token_parts.first : "unused"
+          source_password = c["password"] || source_token_parts.last
           [
             "<#{source_key}>",
             "  <add key=\"Username\" value=\"#{source_username}\" />",

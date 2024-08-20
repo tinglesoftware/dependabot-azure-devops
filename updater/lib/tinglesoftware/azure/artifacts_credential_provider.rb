@@ -24,6 +24,7 @@ module TingleSoftware
         return if private_nuget_feeds.empty?
 
         # Configure NuGet feed authentication
+        token_parts = cred["token"]&.split(":", 2)&.reject(&:empty?) || []
         ENV.store(
           "VSS_NUGET_EXTERNAL_FEED_ENDPOINTS",
           JSON.dump({
@@ -34,10 +35,11 @@ module TingleSoftware
                 # This provides maximum compatibility with Azure DevOps, DevOps Server, and other third-party feeds.
                 # When using DevOps PATs, the token is split into username/password parts; Username is not significant.
                 # e.g. token "PAT:12345" --> { "username": "PAT", "password": "12345" }
-                #            ":12345"    --> { "username": "", "password": "12345" }
-                #            "12345"     --> { "username": "12345", "password": "12345" }
-                "username" => cred["username"] || cred["token"]&.split(":")&.first,
-                "password" => cred["password"] || cred["token"]&.split(":")&.last
+                #            ":12345"    --> { "username": "unused", "password": "12345" }
+                #            "12345"     --> { "username": "unused", "password": "12345" }
+                #            ""          --> { "username": "unused", "password": "" }
+                "username" => cred["username"] || token_parts.length > 1 ? token_parts.first : "unused",
+                "password" => cred["password"] || token_parts.last
               }
             end
           })
