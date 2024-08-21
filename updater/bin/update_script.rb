@@ -50,6 +50,7 @@ require "tinglesoftware/dependabot/vulnerabilities"
 # TODO: Remove this once https://github.com/dependabot/dependabot-core/pull/8927 is resolved or auth works natively.
 require "tinglesoftware/azure/artifacts_credential_provider"
 require "tinglesoftware/dependabot/overrides/nuget/nuget_config_credential_helpers"
+require "tinglesoftware/dependabot/overrides/npm_and_yarn/update_checker/npmrc_builder"
 
 # These options try to follow the dry-run.rb script.
 # https://github.com/dependabot/dependabot-core/blob/main/bin/dry-run.rb
