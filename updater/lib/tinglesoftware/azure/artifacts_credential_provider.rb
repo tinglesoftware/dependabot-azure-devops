@@ -24,11 +24,11 @@ module TingleSoftware
         return if private_nuget_feeds.empty?
 
         # Configure NuGet feed authentication
-        token_parts = cred["token"]&.split(":", 2)&.reject(&:empty?) || []
         ENV.store(
           "VSS_NUGET_EXTERNAL_FEED_ENDPOINTS",
           JSON.dump({
             "endpointCredentials" => private_nuget_feeds.map do |cred|
+              token_parts = cred["token"]&.split(":", 2)&.reject(&:empty?) || []
               {
                 "endpoint" => cred["url"],
                 # Use username/password auth if provided, otherwise fallback to token auth.
