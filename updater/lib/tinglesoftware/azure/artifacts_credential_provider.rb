@@ -15,7 +15,7 @@ require "dependabot/shared_helpers"
 # See README.md (Credentials for private registries and feeds) for more details.
 #
 
-# TODO: Remove this once https://github.com/dependabot/dependabot-core/pull/8927 is resolved or auth works natively.
+# TODO: Remove this once auth can be moved out to the "proxy" component, like dependabot-cli does
 
 module TingleSoftware
   module Azure
@@ -28,16 +28,18 @@ module TingleSoftware
           "VSS_NUGET_EXTERNAL_FEED_ENDPOINTS",
           JSON.dump({
             "endpointCredentials" => private_nuget_feeds.map do |cred|
+              token_parts = cred["token"]&.split(":", 2)&.reject(&:empty?) || []
               {
                 "endpoint" => cred["url"],
                 # Use username/password auth if provided, otherwise fallback to token auth.
                 # This provides maximum compatibility with Azure DevOps, DevOps Server, and other third-party feeds.
                 # When using DevOps PATs, the token is split into username/password parts; Username is not significant.
                 # e.g. token "PAT:12345" --> { "username": "PAT", "password": "12345" }
-                #            ":12345"    --> { "username": "", "password": "12345" }
-                #            "12345"     --> { "username": "12345", "password": "12345" }
-                "username" => cred["username"] || cred["token"]&.split(":")&.first,
-                "password" => cred["password"] || cred["token"]&.split(":")&.last
+                #            ":12345"    --> { "username": "unused", "password": "12345" }
+                #            "12345"     --> { "username": "unused", "password": "12345" }
+                #            ""          --> { "username": "unused", "password": "" }
+                "username" => cred["username"] || token_parts.length > 1 ? token_parts.first : "unused",
+                "password" => cred["password"] || token_parts.last
               }
             end
           })

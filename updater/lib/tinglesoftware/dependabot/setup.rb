@@ -67,7 +67,7 @@ require "dependabot/devcontainers"
 # Overrides for dependabot core functionality that are currently not extensible
 require "tinglesoftware/dependabot/overrides/pull_request_creator/pr_name_prefixer"
 
-# Fixes for NuGet feed auth issues
-# TODO: Remove this once https://github.com/dependabot/dependabot-core/pull/8927 is resolved or auth works natively.
+# Overrides to fix various authentication related issues with private feeds
+# TODO: Remove these workarounds once auth can be moved out to the "proxy" component, like dependabot-cli does
 require "tinglesoftware/dependabot/overrides/nuget/nuget_config_credential_helpers"
 require "tinglesoftware/azure/artifacts_credential_provider"

@@ -46,8 +46,8 @@ require "dependabot/terraform"
 require "tinglesoftware/dependabot/clients/azure"
 require "tinglesoftware/dependabot/vulnerabilities"
 
-# Fixes for NuGet feed auth issues
-# TODO: Remove this once https://github.com/dependabot/dependabot-core/pull/8927 is resolved or auth works natively.
+# Overrides to fix various authentication related issues with private feeds
+# TODO: Remove these workarounds once auth can be moved out to the "proxy" component, like dependabot-cli does
 require "tinglesoftware/azure/artifacts_credential_provider"
 require "tinglesoftware/dependabot/overrides/nuget/nuget_config_credential_helpers"
 
