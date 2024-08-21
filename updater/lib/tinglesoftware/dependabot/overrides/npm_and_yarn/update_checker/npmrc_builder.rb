@@ -29,9 +29,11 @@ module Dependabot
           # but we do not want to add one if it already exists
           registry_with_trailing_slash = registry.sub(%r{\/?$}, "/")
 
+          # ============================================================================================
           # Remove any protocol prefix from the registry
           # This is required for Azure DevOps, auth fails if "https://" is included in the registry URL
           registry_with_trailing_slash = registry_with_trailing_slash.sub(%r{^https?://}, "")
+          # ============================================================================================
 
           "//#{registry_with_trailing_slash}:#{auth}"
         end
