@@ -1,4 +1,4 @@
-import { getVariable } from "azure-pipelines-task-lib/task";
+import { getVariable } from 'azure-pipelines-task-lib/task';
 
 function convertPlaceholder(input: string): string {
   var matches: RegExpExecArray[] = extractPlaceholder(input);
@@ -13,7 +13,7 @@ function convertPlaceholder(input: string): string {
 }
 
 function extractPlaceholder(input: string) {
-  const regexp: RegExp = new RegExp("\\${{\\s*([a-zA-Z_]+[a-zA-Z0-9_-]*)\\s*}}", 'g');
+  const regexp: RegExp = new RegExp('\\${{\\s*([a-zA-Z_]+[a-zA-Z0-9_-]*)\\s*}}', 'g');
 
   return matchAll(input, regexp);
 }

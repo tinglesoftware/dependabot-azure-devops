@@ -27,3 +27,4 @@ local/**.sh
 .DS_Store
 *git.store
 .idea
+node_modules/

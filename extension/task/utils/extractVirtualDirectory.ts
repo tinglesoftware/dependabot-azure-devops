@@ -11,7 +11,7 @@
 export default function extractVirtualDirectory(organizationUrl: URL): string {
   // extract the pathname from the url then split
   //pathname takes the shape '/tfs/x/'
-  let path = organizationUrl.pathname.split("/");
+  let path = organizationUrl.pathname.split('/');
 
   // Virtual Directories are sometimes used in on-premises
   // URLs typically are like this: https://server.domain.com/tfs/x/
@@ -19,5 +19,5 @@ export default function extractVirtualDirectory(organizationUrl: URL): string {
   if (path.length == 4) {
     return path[1];
   }
-  return "";
+  return '';
 }

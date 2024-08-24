@@ -1,0 +1,33 @@
+# dependencies
+node_modules
+package-lock.json
+pnpm-lock.yaml
+
+# outputs
+bin
+obj
+dist
+out
+.turbo
+.vercel
+.next
+.markdownlayer
+.react-email
+
+# special files
+.config/dotnet-tools.json
+.github/ISSUE_TEMPLATE/**
+.vscode/settings.json
+README.md
+docs/**/*.md
+.rubocop*.yml
+advisories-example.json
+updater/spec/fixtures/**
+server/main.json
+
+updater/.bundle/**
+updater/tmp/**
+updater/job/**
+
+# JSON array formatting by Visual Studio is different from prettier
+server/Tingle.Dependabot/appsettings.json
