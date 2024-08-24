@@ -101,7 +101,8 @@ public class UpdateRunnerTests
         Assert.Equal("composer_repository", Assert.Contains("type", credential));
         Assert.Equal("https://repo.packagist.com/example-company/", Assert.Contains("url", credential));
         Assert.DoesNotContain("registry", credential);
-        Assert.DoesNotContain("host", credential);
+        Assert.DoesNotContain("index-url", credential);
+        Assert.Equal("repo.packagist.com", Assert.Contains("host", credential));
         Assert.DoesNotContain("key", credential);
         Assert.DoesNotContain("token", credential);
         Assert.DoesNotContain("organization", credential);
@@ -117,6 +118,7 @@ public class UpdateRunnerTests
         Assert.Equal("docker_registry", Assert.Contains("type", credential));
         Assert.DoesNotContain("url", credential);
         Assert.Equal("registry.hub.docker.com", Assert.Contains("registry", credential));
+        Assert.DoesNotContain("index-url", credential);
         Assert.DoesNotContain("host", credential);
         Assert.DoesNotContain("key", credential);
         Assert.DoesNotContain("token", credential);
@@ -133,6 +135,7 @@ public class UpdateRunnerTests
         Assert.Equal("git", Assert.Contains("type", credential));
         Assert.Equal("https://github.com", Assert.Contains("url", credential));
         Assert.DoesNotContain("registry", credential);
+        Assert.DoesNotContain("index-url", credential);
         Assert.DoesNotContain("host", credential);
         Assert.DoesNotContain("key", credential);
         Assert.DoesNotContain("token", credential);
@@ -149,6 +152,7 @@ public class UpdateRunnerTests
         Assert.Equal("hex_organization", Assert.Contains("type", credential));
         Assert.DoesNotContain("url", credential);
         Assert.DoesNotContain("registry", credential);
+        Assert.DoesNotContain("index-url", credential);
         Assert.DoesNotContain("host", credential);
         Assert.Equal("key_1234567890", Assert.Contains("key", credential));
         Assert.DoesNotContain("token", credential);
@@ -165,6 +169,7 @@ public class UpdateRunnerTests
         Assert.Equal("hex_repository", Assert.Contains("type", credential));
         Assert.Equal("https://private-repo.example.com", Assert.Contains("url", credential));
         Assert.DoesNotContain("registry", credential);
+        Assert.DoesNotContain("index-url", credential);
         Assert.DoesNotContain("host", credential);
         Assert.DoesNotContain("key", credential);
         Assert.DoesNotContain("token", credential);
@@ -181,6 +186,7 @@ public class UpdateRunnerTests
         Assert.Equal("maven_repository", Assert.Contains("type", credential));
         Assert.Equal("https://artifactory.example.com", Assert.Contains("url", credential));
         Assert.DoesNotContain("registry", credential);
+        Assert.DoesNotContain("index-url", credential);
         Assert.DoesNotContain("host", credential);
         Assert.DoesNotContain("key", credential);
         Assert.DoesNotContain("token", credential);
@@ -197,6 +203,7 @@ public class UpdateRunnerTests
         Assert.Equal("npm_registry", Assert.Contains("type", credential));
         Assert.DoesNotContain("url", credential);
         Assert.Equal("npm.pkg.github.com", Assert.Contains("registry", credential));
+        Assert.DoesNotContain("index-url", credential);
         Assert.DoesNotContain("host", credential);
         Assert.DoesNotContain("key", credential);
         Assert.Equal("tkn_1234567890", Assert.Contains("token", credential));
@@ -213,6 +220,7 @@ public class UpdateRunnerTests
         Assert.Equal("nuget_feed", Assert.Contains("type", credential));
         Assert.Equal("https://pkgs.dev.azure.com/contoso/_packaging/My_Feed/nuget/v3/index.json", Assert.Contains("url", credential));
         Assert.DoesNotContain("registry", credential);
+        Assert.DoesNotContain("index-url", credential);
         Assert.DoesNotContain("host", credential);
         Assert.DoesNotContain("key", credential);
         Assert.DoesNotContain("token", credential);
@@ -227,8 +235,9 @@ public class UpdateRunnerTests
         // python-index
         credential = credentials[8];
         Assert.Equal("python_index", Assert.Contains("type", credential));
-        Assert.Equal("https://pkgs.dev.azure.com/octocat/_packaging/my-feed/pypi/example", Assert.Contains("url", credential));
+        Assert.DoesNotContain("url", credential);
         Assert.DoesNotContain("registry", credential);
+        Assert.Equal("https://pkgs.dev.azure.com/octocat/_packaging/my-feed/pypi/example", Assert.Contains("index-url", credential));
         Assert.DoesNotContain("host", credential);
         Assert.DoesNotContain("key", credential);
         Assert.DoesNotContain("token", credential);
@@ -236,6 +245,7 @@ public class UpdateRunnerTests
         Assert.DoesNotContain("repo", credential);
         Assert.DoesNotContain("auth-key", credential);
         Assert.DoesNotContain("public-key-fingerprint", credential);
+        Assert.Equal("https://pkgs.dev.azure.com/octocat/_packaging/my-feed/pypi/example", Assert.Contains("index-url", credential));
         Assert.Equal("octocat@example.com", Assert.Contains("username", credential));
         Assert.Equal("pwd_1234567890", Assert.Contains("password", credential));
         Assert.Equal("true", Assert.Contains("replaces-base", credential));
@@ -245,6 +255,7 @@ public class UpdateRunnerTests
         Assert.Equal("rubygems_server", Assert.Contains("type", credential));
         Assert.Equal("https://rubygems.pkg.github.com/octocat/github_api", Assert.Contains("url", credential));
         Assert.DoesNotContain("registry", credential);
+        Assert.DoesNotContain("index-url", credential);
         Assert.DoesNotContain("host", credential);
         Assert.DoesNotContain("key", credential);
         Assert.Equal("tkn_1234567890", Assert.Contains("token", credential));
@@ -261,6 +272,7 @@ public class UpdateRunnerTests
         Assert.Equal("terraform_registry", Assert.Contains("type", credential));
         Assert.DoesNotContain("url", credential);
         Assert.DoesNotContain("registry", credential);
+        Assert.DoesNotContain("index-url", credential);
         Assert.Equal("terraform.example.com", Assert.Contains("host", credential));
         Assert.DoesNotContain("key", credential);
         Assert.Equal("tkn_1234567890", Assert.Contains("token", credential));

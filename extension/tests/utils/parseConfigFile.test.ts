@@ -46,7 +46,7 @@ describe('Parse registries', () => {
     expect(registry.url).toBe('https://repo.packagist.com/example-company/');
     expect(registry['index-url']).toBe(undefined);
     expect(registry.registry).toBe(undefined);
-    expect(registry.host).toBe(undefined);
+    expect(registry.host).toBe('repo.packagist.com');
     expect(registry.key).toBe(undefined);
     expect(registry.token).toBe(undefined);
     expect(registry.organization).toBe(undefined);

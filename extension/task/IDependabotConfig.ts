@@ -115,7 +115,7 @@ export interface IDependabotRegistry {
    * It should not have the scheme.
    */
   'registry'?: string | null | undefined;
-  /** The hostname for 'terraform_registry' types */
+  /** The hostname for `terraform_registry` and `composer_repository` types */
   'host'?: string | null | undefined;
 
   /** The username to access the registry */

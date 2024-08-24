@@ -4,6 +4,7 @@ import { getVariable } from 'azure-pipelines-task-lib/task';
 import * as fs from 'fs';
 import { load } from 'js-yaml';
 import * as path from 'path';
+import { URL } from 'url';
 import { IDependabotConfig, IDependabotRegistry, IDependabotUpdate } from '../IDependabotConfig';
 import { convertPlaceholder } from './convertPlaceholder';
 import { ISharedVariables } from './getSharedVariables';
@@ -266,19 +267,36 @@ function parseRegistries(config: any): Record<string, IDependabotRegistry> {
       throw new Error(`The value 'url' in dependency registry config '${registryConfigKey}' is missing`);
     }
     if (url) {
-      // Some credentials do not use the 'url' property in the Ruby updater.
-      // npm_registry and docker_registry use 'registry' which should be stripped off the scheme.
-      // terraform_registry uses 'host' which is the hostname from the given URL.
+      /*
+       * Some credentials do not use the 'url' property in the Ruby updater.
+       * The 'host' and 'registry' properties are derived from the given URL.
+       * The 'registry' property is derived from the 'url' by stripping off the scheme.
+       * The 'host' property is derived from the hostname of the 'url'.
+       *
+       * 'npm_registry' and 'docker_registry' use 'registry' only.
+       * 'terraform_registry' uses 'host' only.
+       * 'composer_repository' uses both 'url' and 'host'.
+       * 'python_index' uses 'index-url' instead of 'url'.
+       */
 
-      if (type === 'docker_registry' || type === 'npm_registry') {
-        parsed.registry = url.replace('https://', '').replace('http://', '');
-      } else if (type === 'terraform_registry') {
-        parsed.host = new URL(url).hostname;
-      } else if (type === 'python_index') {
-        parsed['index-url'] = url;
-      } else {
-        parsed.url = url;
+      if (URL.canParse(url)) {
+        const parsedUrl = new URL(url);
+
+        const addRegistry = type === 'docker_registry' || type === 'npm_registry';
+        if (addRegistry) parsed.registry = url.replace('https://', '').replace('http://', '');
+
+        const addHost = type === 'terraform_registry' || type === 'composer_repository';
+        if (addHost) parsed.host = parsedUrl.hostname;
       }
+
+      if (type === 'python_index') parsed['index-url'] = url;
+
+      const skipUrl =
+        type === 'docker_registry' ||
+        type === 'npm_registry' ||
+        type === 'terraform_registry' ||
+        type === 'python_index';
+      if (!skipUrl) parsed.url = url;
     }
   });
   return registries;

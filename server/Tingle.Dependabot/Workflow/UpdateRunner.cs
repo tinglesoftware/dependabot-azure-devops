@@ -384,18 +384,17 @@ internal partial class UpdateRunner
         return credentials.Select(cred =>
         {
             var values = new Dictionary<string, string> { ["type"] = cred["type"], };
-            cred.TryGetValue("host", out var host);
 
-            // pull host from registry if available
-            if (string.IsNullOrWhiteSpace(host))
+            // if no host, pull host from url, index-url, or registry if available
+            if (!cred.TryGetValue("host", out var host) || string.IsNullOrWhiteSpace(host))
             {
-                host = cred.TryGetValue("registry", out var registry) && Uri.TryCreate($"https://{registry}", UriKind.Absolute, out var u) ? u.Host : host;
-            }
+                if (cred.TryGetValue("url", out var url) || cred.TryGetValue("index-url", out url)) { }
+                else if (cred.TryGetValue("registry", out var registry)) url = $"https://{registry}";
 
-            // pull host from registry if url
-            if (string.IsNullOrWhiteSpace(host))
-            {
-                host = cred.TryGetValue("url", out var url) && Uri.TryCreate(url, UriKind.Absolute, out var u) ? u.Host : host;
+                if (url is not null && Uri.TryCreate(url, UriKind.Absolute, out var u))
+                {
+                    host = u.Host;
+                }
             }
 
             values.AddIfNotDefault("host", host);
@@ -427,23 +426,31 @@ internal partial class UpdateRunner
             values.AddIfNotDefault("token", ConvertPlaceholder(v.Token, secrets));
             values.AddIfNotDefault("replaces-base", v.ReplacesBase is true ? "true" : null);
 
-            // Some credentials do not use the 'url' property in the Ruby updater.
-            // npm_registry and docker_registry use 'registry' which should be stripped off the scheme.
-            // terraform_registry uses 'host' which is the hostname from the given URL.
+            /*
+             * Some credentials do not use the 'url' property in the Ruby updater.
+             * The 'host' and 'registry' properties are derived from the given URL.
+             * The 'registry' property is derived from the 'url' by stripping off the scheme.
+             * The 'host' property is derived from the hostname of the 'url'.
+             *
+             * 'npm_registry' and 'docker_registry' use 'registry' only.
+             * 'terraform_registry' uses 'host' only.
+             * 'composer_repository' uses both 'url' and 'host'.
+             * 'python_index' uses 'index-url' instead of 'url'.
+            */
 
-            if (type == "docker_registry" || type == "npm_registry")
+            if (Uri.TryCreate(v.Url, UriKind.Absolute, out var url))
             {
-                values.Add("registry", v.Url!.Replace("https://", "").Replace("http://", ""));
+                var addRegistry = type is "docker_registry" or "npm_registry";
+                if (addRegistry) values.Add("registry", $"{url.Host}{url.PathAndQuery}".TrimEnd('/'));
+
+                var addHost = type is "terraform_registry" or "composer_repository";
+                if (addHost) values.Add("host", url.Host);
             }
-            else if (type == "terraform_registry")
-            {
-                values.Add("host", new Uri(v.Url!).Host);
-            }
-            else
-            {
-                values.AddIfNotDefault("url", v.Url!);
-            }
-            var useRegistryProperty = type.Contains("npm") || type.Contains("docker");
+
+            if (type is "python_index") values.AddIfNotDefault("index-url", v.Url);
+
+            var skipUrl = type is "docker_registry" or "npm_registry" or "terraform_registry" or "python_index";
+            if (!skipUrl) values.AddIfNotDefault("url", v.Url);
 
             return values;
         }).ToList();
