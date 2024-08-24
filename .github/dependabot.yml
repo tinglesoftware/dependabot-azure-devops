@@ -5,26 +5,23 @@
 
 version: 2
 updates:
-  - package-ecosystem: "github-actions" # See documentation for possible values
-    directory: "/" # Location of package manifests
+  - package-ecosystem: "github-actions"
+    directory: "/"
     schedule:
       interval: "weekly"
       time: "02:00"
-    open-pull-requests-limit: 10
 
-  - package-ecosystem: "devcontainers" # See documentation for possible values
-    directory: "/" # Location of package manifests
+  - package-ecosystem: "devcontainers"
+    directory: "/"
     schedule:
       interval: "weekly"
       time: "02:00"
-    open-pull-requests-limit: 10
 
-  - package-ecosystem: "bundler" # See documentation for possible values
-    directory: "/updater" # Location of package manifests
+  - package-ecosystem: "bundler"
+    directory: "/updater"
     schedule:
       interval: "weekly"
       time: "02:00"
-    open-pull-requests-limit: 10
     groups:
       opentelemetry:
         patterns: ["opentelemetry-*"]
@@ -33,15 +30,14 @@ updates:
       sentry:
         patterns: ["sentry-*"]
 
-  - package-ecosystem: "docker" # See documentation for possible values
-    directory: "/updater" # Location of package manifests
+  - package-ecosystem: "docker"
+    directories: ['**/*']
     schedule:
       interval: "weekly"
       time: "02:00"
-    open-pull-requests-limit: 10
 
-  - package-ecosystem: "nuget" # See documentation for possible values
-    directory: "/" # Location of package manifests
+  - package-ecosystem: "nuget"
+    directory: "/"
     schedule:
       interval: "weekly"
       time: "02:00"
@@ -69,12 +65,11 @@ updates:
       xunit:
         patterns: ["Xunit*"]
 
-  - package-ecosystem: "npm" # See documentation for possible values
-    directory: "/extension" # Location of package manifests
+  - package-ecosystem: "npm"
+    directory: "/extension"
     schedule:
       interval: "weekly"
       time: "02:00"
-    open-pull-requests-limit: 10
     groups:
       jest:
         patterns: ["*jest*"]
