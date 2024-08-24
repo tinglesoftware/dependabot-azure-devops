@@ -1,51 +1,51 @@
 {
-    "manifestVersion": 1,
-    "id": "dependabot",
-    "name": "Dependabot",
-    "version": "0.1.0",
-    "publisher": "tingle-software",
-    "public": false,
-    "targets": [
-        {
-            "id": "Microsoft.VisualStudio.Services"
-        }
-    ],
-    "description": "Automatically update dependencies and vulnerabilities in your code",
-    "categories": [
-        "Azure Pipelines"
-    ],
-    "icons": {
-        "default": "images/icon.png"
+  "manifestVersion": 1,
+  "id": "dependabot",
+  "name": "Dependabot",
+  "version": "0.1.0",
+  "publisher": "tingle-software",
+  "public": false,
+  "targets": [
+    {
+      "id": "Microsoft.VisualStudio.Services"
+    }
+  ],
+  "description": "Automatically update dependencies and vulnerabilities in your code",
+  "categories": ["Azure Pipelines"],
+  "icons": {
+    "default": "images/icon.png"
+  },
+  "links": {
+    "support": {
+      "uri": "https://github.com/tinglesoftware/dependabot-azure-devops/issues"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "uri": "https://github.com/tinglesoftware/dependabot-azure-devops"
+  },
+  "content": {
+    "details": {
+      "path": "README.md"
+    }
+  },
+  "files": [
+    {
+      "path": "task"
     },
-    "links": {
-        "support": { "uri": "https://github.com/tinglesoftware/dependabot-azure-devops/issues" }
-    },
-    "repository": {
-        "type": "git",
-        "uri": "https://github.com/tinglesoftware/dependabot-azure-devops"
-    },
-    "content": {
-        "details": { "path": "README.md" }
-    },
-    "files": [
-        {
-            "path": "task"
-        },
-        {
-            "path": "images",
-            "addressable": true
-        }
-    ],
-    "contributions": [
-        {
-            "id": "dependabot",
-            "type": "ms.vss-distributed-task.task",
-            "targets": [
-                "ms.vss-distributed-task.tasks"
-            ],
-            "properties": {
-                "name": "task"
-            }
-        }
-    ]
+    {
+      "path": "images",
+      "addressable": true
+    }
+  ],
+  "contributions": [
+    {
+      "id": "dependabot",
+      "type": "ms.vss-distributed-task.task",
+      "targets": ["ms.vss-distributed-task.tasks"],
+      "properties": {
+        "name": "task"
+      }
+    }
+  ]
 }

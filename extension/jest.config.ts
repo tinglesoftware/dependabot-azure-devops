@@ -1,4 +1,4 @@
-import type { Config } from "@jest/types";
+import type { Config } from '@jest/types';
 
 // Sync object
 const config: Config.InitialOptions = {
@@ -6,9 +6,9 @@ const config: Config.InitialOptions = {
   // transform: {
   //   "^.+\\.test.tsx?$": "ts-jest",
   // },
-  testEnvironment: "node",
-  preset: "ts-jest",
-  rootDir: "./tests",
+  testEnvironment: 'node',
+  preset: 'ts-jest',
+  rootDir: './tests',
 };
 
 export default config;

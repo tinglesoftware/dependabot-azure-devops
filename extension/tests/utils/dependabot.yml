@@ -12,18 +12,18 @@ updates:
     directory: '/client' # Location of package manifests
     open-pull-requests-limit: 10
     registries:
-    - reg1
-    - reg2
+      - reg1
+      - reg2
     insecure-external-code-execution: 'deny'
     ignore:
-    - dependency-name: 'react'
-      update-types: ['version-update:semver-major']
-    - dependency-name: 'react-dom'
-      update-types: ['version-update:semver-major']
-    - dependency-name: '@types/react'
-      update-types: ['version-update:semver-major']
-    - dependency-name: '@types/react-dom'
-      update-types: ['version-update:semver-major']
+      - dependency-name: 'react'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'react-dom'
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@types/react'
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@types/react-dom'
+        update-types: ['version-update:semver-major']
   - package-ecosystem: 'nuget'
     directories:
       - '/src/client'
@@ -31,10 +31,10 @@ updates:
     groups:
       microsoft:
         patterns:
-        - "microsoft*"
+          - 'microsoft*'
         update-types:
-        - "minor"
-        - "patch"
+          - 'minor'
+          - 'patch'
 registries:
   reg1:
     type: nuget-feed

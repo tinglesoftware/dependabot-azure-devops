@@ -1,0 +1,13 @@
+{
+  "name": "dependabot-azure-devops",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "prettier": "3.3.3",
+    "prettier-plugin-organize-imports": "4.0.0"
+  }
+}

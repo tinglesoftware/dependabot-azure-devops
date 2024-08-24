@@ -1,24 +1,24 @@
-import extractHostname from "../../task/utils/extractHostname";
+import extractHostname from '../../task/utils/extractHostname';
 
-describe("Extract hostname", () => {
-  it("Should convert old *.visualstudio.com hostname to dev.azure.com", () => {
-    var url = new URL("https://contoso.visualstudio.com");
+describe('Extract hostname', () => {
+  it('Should convert old *.visualstudio.com hostname to dev.azure.com', () => {
+    var url = new URL('https://contoso.visualstudio.com');
     var hostname = extractHostname(url);
 
-    expect(hostname).toBe("dev.azure.com");
+    expect(hostname).toBe('dev.azure.com');
   });
 
-  it("Should retain the hostname", () => {
-    var url = new URL("https://dev.azure.com/Core/contoso");
+  it('Should retain the hostname', () => {
+    var url = new URL('https://dev.azure.com/Core/contoso');
     var hostname = extractHostname(url);
 
-    expect(hostname).toBe("dev.azure.com");
+    expect(hostname).toBe('dev.azure.com');
   });
 
-  it("Should retain localhost hostname", () => {
-    var url = new URL("https://localhost:8080/contoso");
+  it('Should retain localhost hostname', () => {
+    var url = new URL('https://localhost:8080/contoso');
     var hostname = extractHostname(url);
 
-    expect(hostname).toBe("localhost");
+    expect(hostname).toBe('localhost');
   });
 });

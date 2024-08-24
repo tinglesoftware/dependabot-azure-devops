@@ -6,7 +6,7 @@
  * @returns organization name
  */
 export default function extractOrganization(organizationUrl: string): string {
-  let parts = organizationUrl.split("/");
+  let parts = organizationUrl.split('/');
 
   // Check for on-premise style: https://server.domain.com/tfs/x/
   if (parts.length === 6) {
@@ -24,7 +24,7 @@ export default function extractOrganization(organizationUrl: string): string {
     let part = parts[2];
 
     // Return organization part (x).
-    return part.split(".")[0];
+    return part.split('.')[0];
   }
 
   throw new Error(`Error parsing organization from organization url: '${organizationUrl}'.`);
