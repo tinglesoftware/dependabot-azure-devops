@@ -23,7 +23,8 @@ module TingleSoftware
           "pip" => "PIP",
           "pub" => "PUB",
           "bundler" => "RUBYGEMS",
-          "cargo" => "RUST"
+          "cargo" => "RUST",
+          "swift" => "SWIFT"
         }.freeze
 
         GRAPHQL_QUERY = <<-GRAPHQL
