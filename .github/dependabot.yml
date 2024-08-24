@@ -51,7 +51,11 @@ updates:
       event-bus:
         patterns: ['Tingle.EventBus*']
       microsoft:
-        patterns: ['Microsoft*']
+        patterns:
+          - 'Microsoft.AspNetCore.*'
+          - 'Microsoft.EntityFrameworkCore.*'
+          - 'Microsoft.Extensions.*'
+          - 'dotnet-ef'
         exclude-patterns:
           - 'Microsoft.Azure.*'
           - 'Microsoft.Extensions.Configuration.AzureAppConfiguration'
