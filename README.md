@@ -19,7 +19,7 @@ In this repository you'll find:
 
 Similar to the GitHub native version where you add a `.azuredevops/dependabot.yml` or `.github/dependabot.yml` file, this repository adds support for the same official [configuration options](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file) via a file located at `.azuredevops/dependabot.yml` or `.github/dependabot.yml`. This support is only available in the Azure DevOps extension and the [managed version](https://managd.dev). However, the extension does not currently support automatically picking up the file, a pipeline is still required. See [docs](./extension/README.md#usage).
 
-We are well aware that ignore conditions are not explicitly passed and passed on from the extension/server to the container. It is intentional. The ruby script in the docker container does it automatically. If you are having issues, search for related issues such as https://github.com/tinglesoftware/dependabot-azure-devops/pull/582 before creating a new issue. You can also test against various reproductions such as https://dev.azure.com/tingle/dependabot/_git/repro-582
+We are well aware that ignore conditions are not explicitly passed and passed on from the extension/server to the container. It is intentional. The ruby script in the docker container does it automatically. If you are having issues, search for related issues such as <https://github.com/tinglesoftware/dependabot-azure-devops/pull/582> before creating a new issue. You can also test against various reproductions such as <https://dev.azure.com/tingle/dependabot/_git/repro-582>
 
 ## Credentials for private registries and feeds
 
@@ -37,73 +37,72 @@ registries:
   my-Extern@Release:
     type: nuget-feed
     url: https://dev.azure.com/organization1/_packaging/my-Extern@Release/nuget/v3/index.json
-    token: PAT:${{MY_DEPENDABOT_ADO_PAT}}
+    token: PAT:${{ MY_DEPENDABOT_ADO_PAT }}
   my-analyzers:
     type: nuget-feed
     url: https://dev.azure.com/organization2/_packaging/my-analyzers/nuget/v3/index.json
-    token: PAT:${{MY_OTHER_PAT}}
+    token: PAT:${{ MY_OTHER_PAT }}
   artifactory:
     type: nuget-feed
     url: https://artifactory.com/api/nuget/v3/myfeed
-    token: PAT:${{MY_ARTIFACTORY_PAT}}
+    token: PAT:${{ MY_ARTIFACTORY_PAT }}
   telerik:
     type: nuget-feed
     url: https://nuget.telerik.com/v3/index.json
-    username: ${{MY_TELERIK_USERNAME}}
-    password: ${{MY_TELERIK_PASSWORD}}
-    token: ${{MY_TELERIK_USERNAME}}:${{MY_TELERIK_PASSWORD}}
+    username: ${{ MY_TELERIK_USERNAME }}
+    password: ${{ MY_TELERIK_PASSWORD }}
+    token: ${{ MY_TELERIK_USERNAME }}:${{ MY_TELERIK_PASSWORD }}
 updates:
   ...
 ```
 
 Note:
 
-1. `${{VARIABLE_NAME}}` notation is used liked described [here](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/managing-encrypted-secrets-for-dependabot)
+1. `${{ VARIABLE_NAME }}` notation is used liked described [here](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/managing-encrypted-secrets-for-dependabot)
 BUT the values will be used from Environment Variables in the pipeline/environment. Template variables are not supported for this replacement. Replacement only works for values considered secret in the registries section i.e. `username`, `password`, `token`, and `key`
 
-2. When using an Azure DevOps Artifact feed, only the `token` property is required. The token notation should be `PAT:${{VARIABLE_NAME}}` otherwise the wrong authentication mechanism is used by Dependabot, see [here](https://github.com/tinglesoftware/dependabot-azure-devops/issues/50) for more details. 
+2. When using an Azure DevOps Artifact feed, only the `token` property is required. The token notation should be `PAT:${{ VARIABLE_NAME }}` otherwise the wrong authentication mechanism is used by Dependabot, see [here](https://github.com/tinglesoftware/dependabot-azure-devops/issues/50) for more details.
 When working with Azure DevOps Artifacts, some extra permission steps need to be done:
 
     1. The PAT should have *Packaging Read* permission.
     2. The user owning the PAT must be granted permissions to access the feed either directly or via a group. An easy way for this is to give `Contributor` permissions the `[{project_name}]\Contributors` group under the `Feed Settings -> Permissions` page. The page has the url format: `https://dev.azure.com/{organization}/{project}/_packaging?_a=settings&feed={feed-name}&view=permissions`.
 
-3. When using a NuGet package server secured with basic auth, the `username`, `password`, and `token` properties are all required. The token notation should be `${{USERNAME}}:${{PASSWORD}}`, see [here](https://github.com/tinglesoftware/dependabot-azure-devops/issues/1232#issuecomment-2247616424) for more details.
-
+3. When using a NuGet package server secured with basic auth, the `username`, `password`, and `token` properties are all required. The token notation should be `${{ USERNAME }}:${{ PASSWORD }}`, see [here](https://github.com/tinglesoftware/dependabot-azure-devops/issues/1232#issuecomment-2247616424) for more details.
 
 4. When your project contains a `nuget.config` file with custom package source configuration, the `key` property is required for each nuget-feed registry. The key must match between `dependabot.yml` and `nuget.config` otherwise the package source will be duplicated, package source mappings will be ignored, and auth errors will occur during dependency discovery.
 
-   If your `nuget.config` looks like this:
-     ```xml
-      <?xml version="1.0" encoding="utf-8"?>
-      <configuration>
-        <packageSources>
-          <clear />
-          <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
-          <add key="my-organisation1-nuget" value="https://dev.azure.com/my-organization/_packaging/my-nuget-feed/nuget/v3/index.json" />
-        </packageSources>
-        <packageSourceMapping>
-          <packageSource key="nuget.org">
-            <package pattern="*" />
-          </packageSource>
-          <packageSource key="my-organisation-nuget">
-            <package pattern="Organisation.*" />
-          </packageSource>
-        </packageSourceMapping>
-      </configuration>
-      ```
+  If your `nuget.config` looks like this:
 
-    Then your `dependabot.yml` registry should look like this:
+  ```xml
+  <?xml version="1.0" encoding="utf-8"?>
+  <configuration>
+    <packageSources>
+      <clear />
+      <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
+      <add key="my-organisation1-nuget" value="https://dev.azure.com/my-organization/_packaging/my-nuget-feed/nuget/v3/index.json" />
+    </packageSources>
+    <packageSourceMapping>
+      <packageSource key="nuget.org">
+        <package pattern="*" />
+      </packageSource>
+      <packageSource key="my-organisation-nuget">
+        <package pattern="Organisation.*" />
+      </packageSource>
+    </packageSourceMapping>
+  </configuration>
+  ```
 
-    ```yml
-    version: 2
-    registries:
-      my-org:
-        type: nuget-feed
-        key: my-organisation1-nuget
-        url: https://dev.azure.com/my-organization/_packaging/my-nuget-feed/nuget/v3/index.json
-        token: PAT:${{MY_DEPENDABOT_ADO_PAT}}
-    ```
-    
+  Then your `dependabot.yml` registry should look like this:
+
+  ```yml
+  version: 2
+  registries:
+    my-org:
+      type: nuget-feed
+      key: my-organisation1-nuget
+      url: https://dev.azure.com/my-organization/_packaging/my-nuget-feed/nuget/v3/index.json
+      token: PAT:${{ MY_DEPENDABOT_ADO_PAT }}
+  ```
 
 ## Security Advisories, Vulnerabilities, and Updates
 

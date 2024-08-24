@@ -18,8 +18,7 @@ First, you need to pull the docker image locally to your machine:
 docker pull ghcr.io/tinglesoftware/dependabot-updater-<ecosystem>
 ```
 
-Next create and run a container from the image. The full list of container options are detailed in [Environment variables](#environment-variables); at minimum the command should be: 
-
+Next create and run a container from the image. The full list of container options are detailed in [Environment variables](#environment-variables); at minimum the command should be:
 
 ```bash
 docker run --rm -t \
@@ -43,13 +42,13 @@ An example, for Azure DevOps Services:
 
 ```bash
 docker run --rm -t \
-           -e GITHUB_ACCESS_TOKEN=ijkl..mnop \
+           -e GITHUB_ACCESS_TOKEN=ijk..mop \
            -e DEPENDABOT_PACKAGE_MANAGER=nuget \
            -e DEPENDABOT_DIRECTORY=/ \
            -e DEPENDABOT_TARGET_BRANCH=main \
            -e DEPENDABOT_EXTRA_CREDENTIALS='[{"type":"npm_registry","token":"<redacted>","registry":"npm.fontawesome.com"}]' \
            -e AZURE_HOSTNAME=dev.azure.com \
-           -e AZURE_ACCESS_TOKEN=abcd..efgh \
+           -e AZURE_ACCESS_TOKEN=abc..efg \
            -e AZURE_ORGANIZATION=tinglesoftware \
            -e AZURE_PROJECT=oss \
            -e AZURE_REPOSITORY=repro-411 \
@@ -60,7 +59,7 @@ An example, for Azure DevOps Server:
 
 ```bash
 docker run --rm -t \
-           -e GITHUB_ACCESS_TOKEN=ijkl..mnop \
+           -e GITHUB_ACCESS_TOKEN=ijk..mno \
            -e DEPENDABOT_PACKAGE_MANAGER=nuget \
            -e DEPENDABOT_DIRECTORY=/ \
            -e DEPENDABOT_TARGET_BRANCH=main \
@@ -69,7 +68,7 @@ docker run --rm -t \
            -e AZURE_HOSTNAME=my-devops.com \
            -e AZURE_PORT=8080 \
            -e AZURE_VIRTUAL_DIRECTORY=tfs \
-           -e AZURE_ACCESS_TOKEN=abcd..efgh \
+           -e AZURE_ACCESS_TOKEN=abc..efg \
            -e AZURE_ORGANIZATION=tinglesoftware \
            -e AZURE_PROJECT=oss \
            -e AZURE_REPOSITORY=repro-411 \
@@ -108,7 +107,7 @@ To run the script, some environment variables are required.
 |DEPENDABOT_COMPATIBILITY_SCORE_BADGE|vNext|**_Optional_**. Determines if compatibility score badges are shown in the pull request description for single dependency updates (but not group updates). This feature uses public information from GitHub and enabling it does **not** send any private information about your repository to GitHub other than the dependency name and version number(s) required to calculate to the compatibility score. Defaults to `false`. See [official docs](https://docs.github.com/en/code-security/dependabot/dependabot-security-updates/about-dependabot-security-updates#about-compatibility-scores) for more.|
 |DEPENDABOT_MESSAGE_HEADER|vNext|**_Optional_**. Additional pull request description text to shown before the dependency change info.|
 |DEPENDABOT_MESSAGE_FOOTER|vNext|**_Optional_**. Additional pull request description text to shown after the dependency change info. This text will not be truncated, even when the dependency change info exceeds the PR maximum description length. |
-|DEPENDABOT_REVIEWERS|Update,<br/>vNext|**_Optional_**. The user id or email of the users to review the pull requests, in JSON format. These shall be added as optional approvers. For example: `[\"23d9f23d-981e-4a0c-a975-8e5c665914ec\",\"user@company.com\"]`.
+|DEPENDABOT_REVIEWERS|Update,<br/>vNext|**_Optional_**. The user id or email of the users to review the pull requests, in JSON format. These shall be added as optional approvers. For example: `[\"23d9f23d-981e-4a0c-a975-8e5c665914ec\",\"user@company.com\"]`.|
 |DEPENDABOT_ASSIGNEES|Update,<br/>vNext|**_Optional_**. The user ids or emails of the users to be assigned to the pull requests, in JSON format. These shall be added as required approvers. For example: `[\"be9321e2-f404-4ffa-8d6b-44efddb04865\", \"user@company.com\"]`. |
 |DEPENDABOT_LABELS|Update,<br/>vNext|**_Optional_**. The custom labels to be used, in JSON format. This can be used to override the default values. For example: `[\"npm dependencies\",\"triage-board\"]`. See [official docs](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/customizing-dependency-updates#setting-custom-labels) for more.|
 |DEPENDABOT_MILESTONE|Update,<br/>vNext|**_Optional_**. The identifier of the work item to be linked to the Pull Requests that dependabot creates.|
@@ -124,9 +123,9 @@ To run the script, some environment variables are required.
 |AZURE_VIRTUAL_DIRECTORY|Update,<br/>vNext|**_Optional_**. Some Azure DevOps Server installations are hosted in an IIS virtual directory, traditionally named tfs. This variable can be used to define the name of that virtual directory. By default, this is not set.|
 |AZURE_ACCESS_USERNAME|Update,<br/>vNext|**_Optional_**. This Variable can be used together with the User Password in the Access Token Variable to use basic Auth when connecting to Azure Dev Ops. By default, this is not set.|
 |AZURE_ACCESS_TOKEN|Update,<br/>vNext|**_Required_**. The Personal Access in Azure DevOps for accessing the repository and creating pull requests. The required permissions are: <br/>-&nbsp;Code (Full)<br/>-&nbsp;Pull Requests Threads (Read & Write).<br/>See the [documentation](https://docs.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate?view=azure-devops&tabs=preview-page#create-a-pat) to know more about creating a Personal Access Token|
-|AZURE_ORGANIZATION|Update,<br/>vNext|**_Required_**. The name of the Azure DevOps Organization. This is can be extracted from the URL of the home page. https://dev.azure.com/{organization}/|
-|AZURE_PROJECT|Update,<br/>vNext|**_Required_**. The name of the Azure DevOps Project within the above organization. This can be extracted them the URL too. https://dev.azure.com/{organization}/{project}/|
-|AZURE_REPOSITORY|Update,<br/>vNext|**_Required_**. The name of the Azure DevOps Repository within the above project to run Dependabot against. This can be extracted from the URL of the repository. https://dev.azure.com/{organization}/{project}/_git/{repository}/|
+|AZURE_ORGANIZATION|Update,<br/>vNext|**_Required_**. The name of the Azure DevOps Organization. This is can be extracted from the URL of the home page. <https://dev.azure.com/{organization}/>|
+|AZURE_PROJECT|Update,<br/>vNext|**_Required_**. The name of the Azure DevOps Project within the above organization. This can be extracted them the URL too. <https://dev.azure.com/{organization}/{project}/>|
+|AZURE_REPOSITORY|Update,<br/>vNext|**_Required_**. The name of the Azure DevOps Repository within the above project to run Dependabot against. This can be extracted from the URL of the repository. <https://dev.azure.com/{organization}/{project}/_git/{repository}/>|
 |AZURE_SET_AUTO_COMPLETE|Update,<br/>vNext|**_Optional_**. Determines if the pull requests that dependabot creates should have auto complete set. When set to `true`, pull requests that pass all policies will be merged automatically|
 |AZURE_AUTO_COMPLETE_IGNORE_CONFIG_IDS|Update,<br/>vNext|**_Optional_**. List of any policy configuration Id's which auto-complete should not wait for. Only applies to optional policies. Auto-complete always waits for required (blocking) policies.|
 |AZURE_AUTO_APPROVE_PR|Update,<br/>vNext|**_Optional_**. Determines if the pull requests that dependabot creates should be automatically completed. When set to `true`, pull requests will be approved automatically.|
@@ -135,6 +134,7 @@ To run the script, some environment variables are required.
 # Development guide
 
 ## Getting the development environment ready
+
 First, ensure you have [Docker](https://docs.docker.com/engine/install/) and [Ruby](https://www.ruby-lang.org/en/documentation/installation/) installed.
 On Linux, you'll need the the build essentials and Ruby development packages too; These are typically `build-essentials` and `ruby-dev`.
 
@@ -146,6 +146,7 @@ bundle install
 ```
 
 ## Building the Docker image
+
 Each package ecosystem must be built separately; You only need to build images for the ecosystems that you plan on testing.
 
 ```bash
@@ -162,9 +163,11 @@ In some scenarios, you may want to set `BASE_VERSION` to a specific version inst
 See [updater/Dockerfile](../updater/Dockerfile) for a more detailed explanation.
 
 ## Running your code changes
+
 To test run your code changes, you'll first need to build the updater Docker image (see above), then run the updater Docker image in a container with all the required environment variables (see above).
 
 ## Running the code linter
+
 ```bash
 cd updater
 bundle exec rubocop
@@ -172,6 +175,7 @@ bundle exec rubocop -a # to automatically fix any correctable offenses
 ```
 
 ## Running the unit tests
+
 ```bash
 cd updater
 bundle exec rspec spec

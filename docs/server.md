@@ -33,7 +33,7 @@ The current cost we have internally for this in the `westeurope` region:
 - Azure Service Bus namespace: approx $0.05/month
 - Azure Container Instances: approx $2/month for 21 repositories
 - Azure Container Apps: approx $15/month given about 80% idle time
-- **Total: approx $22/month** (expected to reduce when jobs are added to Azure Container Apps, see https://github.com/microsoft/azure-container-apps/issues/526)
+- **Total: approx $22/month** (expected to reduce when jobs are added to Azure Container Apps, see <https://github.com/microsoft/azure-container-apps/issues/526>)
 
 # Deployment
 
@@ -55,7 +55,7 @@ The deployment exposes the following parameters that can be tuned to suit the se
 |--|--|--|--|
 |location|Location to deploy the resources.|No|&lt;resource-group-location&gt;|
 |name|The name of all resources.|No|`dependabot`|
-|projectSetups|A JSON array string representing the projects to be setup on startup. This is useful when running your own setup. Example: `[{\"url\":\"https://dev.azure.com/tingle/dependabot\",\"token\":\"dummy\",\"AutoComplete\":true}]`|
+|projectSetups|A JSON array string representing the projects to be setup on startup. This is useful when running your own setup. Example: `[{\"url\":\"https://dev.azure.com/tingle/dependabot\",\"token\":\"dummy\",\"AutoComplete\":true}]`|Yes|&lt;empty&gt;|
 |githubToken|Access token for authenticating requests to GitHub. Required for vulnerability checks and to avoid rate limiting on free requests|No|&lt;empty&gt;|
 |imageTag|The image tag to use when pulling the docker containers. A tag also defines the version. You should avoid using `latest`. Example: `1.1.0`|No|&lt;version-downloaded&gt;|
 

@@ -15,6 +15,7 @@ See the extension [README.md](../extension/README.md).
 # Development guide
 
 ## Getting the development environment ready
+
 First, ensure you have [Node.js](https://docs.docker.com/engine/install/) v18+ installed.
 Next, install project dependencies with npm:
 
@@ -24,6 +25,7 @@ npm install
 ```
 
 ## Building the extension
+
 ```bash
 cd extension
 npm run build:prod
@@ -37,9 +39,11 @@ npx tfx-cli extension create --overrides-file overrides.local.json --override "{
 ```
 
 ## Installing the extension
+
 To test the extension in Azure DevOps, you'll first need to build the extension `.vsix` file (see above). After this, [publish your extension](https://learn.microsoft.com/en-us/azure/devops/extend/publish/overview?view=azure-devops#publish-your-extension), then [install your extension](https://learn.microsoft.com/en-us/azure/devops/extend/publish/overview?view=azure-devops#install-your-extension).
 
 ## Running the unit tests
+
 ```bash
 cd extension
 npm run test
