@@ -61,8 +61,8 @@ public class MainDbContext(DbContextOptions<MainDbContext> options) : DbContext(
             builder.HasIndex(j => j.Created).IsDescending(); // faster filtering
             builder.HasIndex(j => j.ProjectId);
             builder.HasIndex(j => j.RepositoryId);
-            builder.HasIndex(j => new { j.PackageEcosystem, j.Directory, }); // faster filtering
-            builder.HasIndex(j => new { j.PackageEcosystem, j.Directory, j.EventBusId, }).IsUnique();
+            builder.HasIndex(j => new { j.PackageEcosystem, j.Directory, j.Directories }); // faster filtering
+            builder.HasIndex(j => new { j.PackageEcosystem, j.Directory, j.Directories, j.EventBusId, }).IsUnique();
             builder.HasIndex(j => j.AuthKey).IsUnique();
 
             builder.OwnsOne(j => j.Resources);

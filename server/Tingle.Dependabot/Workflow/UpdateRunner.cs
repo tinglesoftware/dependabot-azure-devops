@@ -77,7 +77,7 @@ internal partial class UpdateRunner
             Name = UpdaterContainerName,
             Image = $"ghcr.io/tinglesoftware/dependabot-updater-{ecosystem}:{updaterImageTag}",
             Resources = job.Resources!,
-            Args = { useV2 ? "update_files" : "update_script", },
+            Args = { useV2 ? "update_files" : "update_script_vnext", },
             VolumeMounts = { new ContainerAppVolumeMount { VolumeName = volumeName, MountPath = options.WorkingDirectory, }, },
         };
         var env = await CreateEnvironmentVariables(project, repository, update, job, directory, credentials, cancellationToken);
@@ -117,10 +117,11 @@ internal partial class UpdateRunner
                 ["purpose"] = "dependabot",
                 ["ecosystem"] = ecosystem,
                 ["repository"] = job.RepositorySlug,
-                ["directory"] = job.Directory,
                 ["machine-name"] = Environment.MachineName,
             },
         };
+        data.Tags.AddIfNotDefault("directory", job.Directory);
+        data.Tags.AddIfNotDefault("directories", ToJson(job.Directories));
 
         // write job definition file
         var experiments = new Dictionary<string, bool>
@@ -238,9 +239,6 @@ internal partial class UpdateRunner
                                                                                 IList<Dictionary<string, string>> credentials,
                                                                                 CancellationToken cancellationToken = default) // TODO: unit test this
     {
-        [return: NotNullIfNotNull(nameof(value))]
-        static string? ToJson<T>(T? value) => value is null ? null : JsonSerializer.Serialize(value, serializerOptions); // null ensures we do not add to the values
-
         // check if debug and determinism is enabled for the project via Feature Management
         var fmc = MakeTargetingContext(project, job);
         var debugAllJobs = await featureManager.IsEnabledAsync(FeatureNames.DebugAllJobs); // context is not passed because this is global
@@ -263,7 +261,6 @@ internal partial class UpdateRunner
 
             // env for v1
             ["DEPENDABOT_PACKAGE_MANAGER"] = job.PackageEcosystem!,
-            ["DEPENDABOT_DIRECTORY"] = job.Directory!,
             ["DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT"] = update.OpenPullRequestsLimit.ToString(),
             ["DEPENDABOT_EXTRA_CREDENTIALS"] = ToJson(credentials),
             ["DEPENDABOT_FAIL_ON_EXCEPTION"] = "false", // we the script to run to completion so that we get notified of job completion
@@ -272,10 +269,13 @@ internal partial class UpdateRunner
         // Add optional values
         values.AddIfNotDefault("GITHUB_ACCESS_TOKEN", project.GithubToken ?? options.GithubToken)
               .AddIfNotDefault("DEPENDABOT_REBASE_STRATEGY", update.RebaseStrategy)
+              .AddIfNotDefault("DEPENDABOT_DIRECTORY", update.Directory)
+              .AddIfNotDefault("DEPENDABOT_DIRECTORIES", ToJson(update.Directories))
               .AddIfNotDefault("DEPENDABOT_TARGET_BRANCH", update.TargetBranch)
               .AddIfNotDefault("DEPENDABOT_VENDOR", update.Vendor ? "true" : null)
               .AddIfNotDefault("DEPENDABOT_REJECT_EXTERNAL_CODE", string.Equals(update.InsecureExternalCodeExecution, "deny").ToString().ToLowerInvariant())
               .AddIfNotDefault("DEPENDABOT_VERSIONING_STRATEGY", update.VersioningStrategy)
+              .AddIfNotDefault("DEPENDABOT_DEPENDENCY_GROUPS", ToJson(update.Groups))
               .AddIfNotDefault("DEPENDABOT_ALLOW_CONDITIONS", ToJson(update.Allow))
               .AddIfNotDefault("DEPENDABOT_IGNORE_CONDITIONS", ToJson(update.Ignore))
               .AddIfNotDefault("DEPENDABOT_COMMIT_MESSAGE_OPTIONS", ToJson(update.CommitMessage))
@@ -320,10 +320,12 @@ internal partial class UpdateRunner
         {
             ["job"] = new JsonObject
             {
+                ["dependency-groups"] = ToJsonNode(update.Groups ?? []),
                 ["allowed-updates"] = ToJsonNode(update.Allow ?? []),
                 ["credentials-metadata"] = ToJsonNode(credentialsMetadata).AsArray(),
                 // ["dependencies"] = null, // object array
                 ["directory"] = job.Directory,
+                ["directories"] = ToJsonNode(job.Directories),
                 // ["existing-pull-requests"] = null, // object array
                 ["experiments"] = ToJsonNode(experiments),
                 ["ignore-conditions"] = ToJsonNode(update.Ignore ?? []),
@@ -335,6 +337,7 @@ internal partial class UpdateRunner
                     ["provider"] = "azure",
                     ["repo"] = job.RepositorySlug,
                     ["directory"] = job.Directory,
+                    ["directories"] = ToJsonNode(job.Directories),
                     ["branch"] = update.TargetBranch,
                     ["hostname"] = url.Hostname,
                     ["api-endpoint"] = new UriBuilder
@@ -485,6 +488,9 @@ internal partial class UpdateRunner
             _ => ecosystem,
         };
     }
+
+    [return: NotNullIfNotNull(nameof(value))]
+    private static string? ToJson<T>(T? value) => value is null ? null : JsonSerializer.Serialize(value, serializerOptions); // null ensures we do not add to the values
 }
 
 public readonly record struct UpdateRunnerState(UpdateJobStatus Status, DateTimeOffset? Start, DateTimeOffset? End)

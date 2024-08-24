@@ -103,7 +103,11 @@ public class UpdateJobsController(MainDbContext dbContext, IEventPublisher publi
         var repository = await dbContext.Repositories.SingleAsync(r => r.Id == job.RepositoryId);
 
         // update the database
-        var update = repository.Updates.SingleOrDefault(u => u.PackageEcosystem == job.PackageEcosystem && u.Directory == job.Directory);
+        var update = (from u in repository.Updates
+            where u.PackageEcosystem == job.PackageEcosystem
+            where u.Directory == job.Directory
+            where u.Directories == job.Directories
+            select u).SingleOrDefault();
         if (update is not null)
         {
             update.Files = model.Data?.DependencyFiles ?? [];

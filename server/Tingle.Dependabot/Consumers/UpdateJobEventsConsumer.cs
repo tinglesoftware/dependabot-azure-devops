@@ -71,7 +71,11 @@ internal class UpdateJobEventsConsumer(MainDbContext dbContext, UpdateRunner upd
         var repository = await dbContext.Repositories.SingleOrDefaultAsync(r => r.Id == job.RepositoryId, cancellationToken);
         if (repository is not null)
         {
-            var update = repository.Updates.SingleOrDefault(u => u.PackageEcosystem == job.PackageEcosystem && u.Directory == job.Directory);
+            var update = (from u in repository.Updates
+                          where u.PackageEcosystem == job.PackageEcosystem
+                          where u.Directory == job.Directory
+                          where u.Directories == job.Directories
+                          select u).SingleOrDefault();
             if (update is not null && update.LatestJobId == job.Id)
             {
                 update.LatestJobStatus = job.Status;

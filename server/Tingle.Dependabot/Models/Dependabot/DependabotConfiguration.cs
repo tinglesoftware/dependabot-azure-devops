@@ -38,16 +38,18 @@ public class DependabotConfiguration : IValidatableObject
     }
 }
 
-public record DependabotUpdate
+public record DependabotUpdate : IValidatableObject
 {
     /// <summary>Ecosystem for the update.</summary>
     [Required]
     [JsonPropertyName("package-ecosystem")]
     public string? PackageEcosystem { get; set; }
 
-    [Required]
     [JsonPropertyName("directory")]
     public string? Directory { get; set; }
+
+    [JsonPropertyName("directories")]
+    public List<string>? Directories { get; set; }
 
     [Required]
     [JsonPropertyName("schedule")]
@@ -61,6 +63,10 @@ public record DependabotUpdate
 
     [JsonPropertyName("allow")]
     public List<DependabotAllowDependency>? Allow { get; set; }
+    
+    [JsonPropertyName("groups")]
+    public List<DependabotGroupDependency>? Groups { get; set; }
+
     [JsonPropertyName("ignore")]
     public List<DependabotIgnoreDependency>? Ignore { get; set; }
     [JsonPropertyName("commit-message")]
@@ -81,6 +87,16 @@ public record DependabotUpdate
     public bool Vendor { get; set; } = false;
     [JsonPropertyName("versioning-strategy")]
     public string VersioningStrategy { get; set; } = "auto";
+
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (string.IsNullOrWhiteSpace(Directory) && (Directories is null || Directories.Count == 0))
+        {
+            yield return new ValidationResult(
+                "Either 'directory' or 'directories' must be provided",
+                memberNames: [nameof(Directory), nameof(Directories)]);
+        }
+    }
 }
 
 public class DependabotUpdateSchedule
@@ -117,6 +133,20 @@ public class DependabotUpdateSchedule
             _ => throw new NotImplementedException(),
         };
     }
+}
+
+public class DependabotGroupDependency
+{
+    [JsonPropertyName("applies-to")]
+    public string? AppliesTo { get; set; }
+    [JsonPropertyName("dependency-type")]
+    public string? DependencyType { get; set; }
+    [JsonPropertyName("patterns")]
+    public List<string>? Patterns { get; set; }
+    [JsonPropertyName("exclude-patterns")]
+    public List<string>? ExcludePatterns { get; set; }
+    [JsonPropertyName("update-types")]
+    public List<string>? UpdateTypes { get; set; }
 }
 
 public class DependabotAllowDependency : IValidatableObject

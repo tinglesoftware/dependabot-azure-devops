@@ -5,7 +5,7 @@
 
 version: 2
 updates:
-  - package-ecosystem: 'docker' # See documentation for possible values
+  - package-ecosystem: 'nuget' # See documentation for possible values
     directory: '/' # Location of package manifests
     schedule:
       interval: 'weekly'
@@ -31,6 +31,10 @@ updates:
       update-types: ['version-update:semver-major']
     - dependency-name: '@types/react-dom'
       update-types: ['version-update:semver-major']
+  - package-ecosystem: 'docker' # See documentation for possible values
+    directories: ['**/*'] # Location of package manifests
+    schedule:
+      interval: 'daily'
 registries:
   reg1:
     type: nuget-feed

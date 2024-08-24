@@ -34,6 +34,7 @@ public class UpdateJobsCleanerTaskTests(ITestOutputHelper outputHelper)
                 Created = DateTimeOffset.UtcNow.AddMinutes(-19),
                 PackageEcosystem = "npm",
                 Directory = "/",
+                Directories = null,
                 Resources = new(0.25, 0.2),
                 AuthKey = Guid.NewGuid().ToString("n"),
                 Status = UpdateJobStatus.Succeeded,
@@ -47,6 +48,7 @@ public class UpdateJobsCleanerTaskTests(ITestOutputHelper outputHelper)
                 Created = DateTimeOffset.UtcNow.AddHours(-100),
                 PackageEcosystem = "nuget",
                 Directory = "/",
+                Directories = null,
                 Resources = new(0.25, 0.2),
                 AuthKey = Guid.NewGuid().ToString("n"),
                 Status = UpdateJobStatus.Succeeded,
@@ -59,7 +61,8 @@ public class UpdateJobsCleanerTaskTests(ITestOutputHelper outputHelper)
                 RepositorySlug = "test-repo",
                 Created = DateTimeOffset.UtcNow.AddMinutes(-30),
                 PackageEcosystem = "docker",
-                Directory = "/",
+                Directory = null,
+                Directories = ["**/*"],
                 Resources = new(0.25, 0.2),
                 AuthKey = Guid.NewGuid().ToString("n"),
                 Status = UpdateJobStatus.Running,
@@ -90,6 +93,7 @@ public class UpdateJobsCleanerTaskTests(ITestOutputHelper outputHelper)
                 Created = DateTimeOffset.UtcNow.AddDays(-80),
                 PackageEcosystem = "npm",
                 Directory = "/",
+                Directories = null,
                 Resources = new(0.25, 0.2),
                 AuthKey = Guid.NewGuid().ToString("n"),
             });
@@ -102,6 +106,7 @@ public class UpdateJobsCleanerTaskTests(ITestOutputHelper outputHelper)
                 Created = DateTimeOffset.UtcNow.AddDays(-100),
                 PackageEcosystem = "nuget",
                 Directory = "/",
+                Directories = null,
                 Resources = new(0.25, 0.2),
                 AuthKey = Guid.NewGuid().ToString("n"),
             });
@@ -113,7 +118,8 @@ public class UpdateJobsCleanerTaskTests(ITestOutputHelper outputHelper)
                 RepositorySlug = "test-repo",
                 Created = DateTimeOffset.UtcNow.AddDays(-120),
                 PackageEcosystem = "docker",
-                Directory = "/",
+                Directory = null,
+                Directories = ["**/*"],
                 Resources = new(0.25, 0.2),
                 AuthKey = Guid.NewGuid().ToString("n"),
             });
@@ -168,6 +174,7 @@ public class UpdateJobsCleanerTaskTests(ITestOutputHelper outputHelper)
                 {
                     PackageEcosystem = "npm",
                     Directory = "/",
+                    Directories = null,
                     Schedule = new DependabotUpdateSchedule
                     {
                         Interval = DependabotScheduleInterval.Daily,
@@ -177,7 +184,8 @@ public class UpdateJobsCleanerTaskTests(ITestOutputHelper outputHelper)
                 new RepositoryUpdate
                 {
                     PackageEcosystem = "npm",
-                    Directory = "/legacy",
+                    Directory = null,
+                    Directories = ["/legacy"],
                     Schedule = new DependabotUpdateSchedule
                     {
                         Interval = DependabotScheduleInterval.Daily,

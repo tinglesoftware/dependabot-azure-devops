@@ -1,6 +1,13 @@
 {
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.29.47.4906",
+      "templateHash": "3661784367808800983"
+    }
+  },
   "parameters": {
     "location": {
       "type": "string",
@@ -141,17 +148,6 @@
       },
       "dependsOn": [
         "[resourceId('Microsoft.KeyVault/vaults', parameters('name'))]"
-      ]
-    },
-    {
-      "type": "Microsoft.AppConfiguration/configurationStores/keyValues",
-      "apiVersion": "2023-03-01",
-      "name": "[format('{0}/{1}', parameters('name'), 'Workflow:UpdaterImageTags:nuget$Production')]",
-      "properties": {
-        "value": "1.24"
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.AppConfiguration/configurationStores', parameters('name'))]"
       ]
     },
     {

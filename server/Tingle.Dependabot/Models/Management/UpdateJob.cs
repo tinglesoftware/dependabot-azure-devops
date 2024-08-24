@@ -49,9 +49,11 @@ public class UpdateJob
     [JsonIgnore] // only for internal use
     public string? PackageEcosystem { get; set; }
 
-    /// <summary>Identifier of the repository update.</summary>
-    [Required]
+    /// <summary>Directory targeted by the repository update.</summary>
     public string? Directory { get; set; }
+
+    /// <summary>Directories targeted by the repository update.</summary>
+    public List<string>? Directories { get; set; }
 
     /// <summary>Resources provisioned for the update.</summary>
     [Required]
