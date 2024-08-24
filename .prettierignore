@@ -14,6 +14,8 @@ out
 .markdownlayer
 .react-email
 
+.idea
+
 # special files
 .config/dotnet-tools.json
 .github/ISSUE_TEMPLATE/**
