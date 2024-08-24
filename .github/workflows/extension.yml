@@ -63,10 +63,6 @@ jobs:
         run: npm run build:prod
         working-directory: '${{ github.workspace }}/extension'
 
-      - name: Move node_modules
-        run: npm run mv:prod
-        working-directory: '${{ github.workspace }}/extension'
-
       - name: Install tfx-cli
         run: npm install -g tfx-cli@0.12.0
 

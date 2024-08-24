@@ -4,9 +4,8 @@
   "description": "Dependabot Azure DevOps task",
   "main": "''",
   "scripts": {
-    "mv:prod": "cp -r node_modules task/node_modules",
     "build": "tsc -p .",
-    "build:prod": "npm run build",
+    "build:prod": "npm run build && cp -r node_modules task/node_modules",
     "test": "jest"
   },
   "repository": {
