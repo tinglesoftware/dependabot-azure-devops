@@ -57,7 +57,12 @@ internal class TriggerUpdateJobsEventConsumer(MainDbContext dbContext, UpdateRun
             var ecosystem = update.PackageEcosystem!;
 
             // check if there is an existing one
-            var job = await dbContext.UpdateJobs.SingleOrDefaultAsync(j => j.PackageEcosystem == ecosystem && j.Directory == update.Directory && j.EventBusId == eventBusId, cancellationToken);
+            var job = await (from j in dbContext.UpdateJobs
+                             where j.PackageEcosystem == ecosystem
+                             where j.Directory == update.Directory
+                             where j.Directories == update.Directories
+                             where j.EventBusId == eventBusId
+                             select j).SingleOrDefaultAsync(cancellationToken);
             if (job is not null)
             {
                 logger.SkippingTriggerJobAlreadyExists(repositoryId: repository.Id,
@@ -89,6 +94,7 @@ internal class TriggerUpdateJobsEventConsumer(MainDbContext dbContext, UpdateRun
                     Commit = repository.LatestCommit,
                     PackageEcosystem = ecosystem,
                     Directory = update.Directory,
+                    Directories = update.Directories,
                     Resources = resources,
                     AuthKey = Guid.NewGuid().ToString("n"),
 

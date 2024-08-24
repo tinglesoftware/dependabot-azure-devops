@@ -119,6 +119,7 @@ public class MissedTriggerCheckerTaskTests(ITestOutputHelper outputHelper)
                 {
                     PackageEcosystem = "npm",
                     Directory = "/",
+                    Directories = null,
                     Schedule = new DependabotUpdateSchedule
                     {
                         Interval = DependabotScheduleInterval.Daily,
@@ -129,7 +130,8 @@ public class MissedTriggerCheckerTaskTests(ITestOutputHelper outputHelper)
                 new RepositoryUpdate
                 {
                     PackageEcosystem = "npm",
-                    Directory = "/legacy",
+                    Directory = null,
+                    Directories = ["/legacy"],
                     Schedule = new DependabotUpdateSchedule
                     {
                         Interval = DependabotScheduleInterval.Daily,

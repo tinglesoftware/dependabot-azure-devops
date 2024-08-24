@@ -22,11 +22,12 @@ public class DependabotConfigurationTests
         Assert.NotNull(configuration);
         Assert.Equal(2, configuration.Version);
         Assert.NotNull(configuration.Updates);
-        Assert.Equal(2, configuration.Updates.Count);
+        Assert.Equal(3, configuration.Updates.Count);
 
         var first = configuration.Updates[0];
         Assert.Equal("/", first.Directory);
-        Assert.Equal("docker", first.PackageEcosystem);
+        Assert.Null(first.Directories);
+        Assert.Equal("nuget", first.PackageEcosystem);
         Assert.Equal(DependabotScheduleInterval.Weekly, first.Schedule?.Interval);
         Assert.Equal(new TimeOnly(3, 0), first.Schedule?.Time);
         Assert.Equal(DependabotScheduleDay.Sunday, first.Schedule?.Day);
@@ -36,6 +37,7 @@ public class DependabotConfigurationTests
 
         var second = configuration.Updates[1];
         Assert.Equal("/client", second.Directory);
+        Assert.Null(second.Directories);
         Assert.Equal("npm", second.PackageEcosystem);
         Assert.Equal(DependabotScheduleInterval.Daily, second.Schedule?.Interval);
         Assert.Equal(new TimeOnly(3, 15), second.Schedule?.Time);
@@ -43,6 +45,17 @@ public class DependabotConfigurationTests
         Assert.Equal("Etc/UTC", second.Schedule?.Timezone);
         Assert.Equal("deny", second.InsecureExternalCodeExecution);
         Assert.Equal(["reg1", "reg2"], second.Registries);
+
+        var third = configuration.Updates[2];
+        Assert.Null(third.Directory);
+        Assert.Equal(["**/*"], third.Directories);
+        Assert.Equal("docker", third.PackageEcosystem);
+        Assert.Equal(DependabotScheduleInterval.Daily, third.Schedule?.Interval);
+        Assert.Equal(new TimeOnly(2, 00), third.Schedule?.Time);
+        Assert.Equal(DependabotScheduleDay.Monday, third.Schedule?.Day);
+        Assert.Equal("Etc/UTC", third.Schedule?.Timezone);
+        Assert.Null(third.InsecureExternalCodeExecution);
+        Assert.Null(third.Registries);
     }
 
     [Fact]
@@ -95,7 +108,7 @@ public class DependabotConfigurationTests
         Assert.NotNull(val.ErrorMessage);
         Assert.Equal("Registries: 'dummy1,dummy2' have not been referenced by any update", val.ErrorMessage);
 
-        // fails: registrynot configured
+        // fails: registry not configured
         configuration.Updates[0].Registries?.AddRange(["dummy1", "dummy2", "dummy3"]);
         results = [];
         actual = RecursiveValidator.TryValidateObject(configuration, results);
