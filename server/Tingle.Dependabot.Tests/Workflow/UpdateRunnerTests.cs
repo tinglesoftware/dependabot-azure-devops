@@ -273,16 +273,18 @@ public class UpdateRunnerTests
         Assert.DoesNotContain("replaces-base", credential);
     }
 
-    [Fact]
-    public void ConvertPlaceholder_Works()
+    [Theory]
+    [InlineData(":${{MY-p_aT}}", ":cake")]
+    [InlineData(":${{ MY-p_aT }}", ":cake")]
+    [InlineData(":${MY-p_aT}", ":${MY-p_aT}")]
+    public void ConvertPlaceholder_Works(string input, string expected)
     {
-        var input = ":${{MY-p_aT}}";
         var secrets = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
             ["my-p_at"] = "cake",
         };
-        var result = UpdateRunner.ConvertPlaceholder(input, secrets);
-        Assert.Equal(":cake", result);
+        var actual = UpdateRunner.ConvertPlaceholder(input, secrets);
+        Assert.Equal(expected, actual);
     }
 
     [Theory]
