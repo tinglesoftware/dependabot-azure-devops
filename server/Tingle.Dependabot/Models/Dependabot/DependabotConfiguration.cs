@@ -63,7 +63,7 @@ public record DependabotUpdate : IValidatableObject
 
     [JsonPropertyName("allow")]
     public List<DependabotAllowDependency>? Allow { get; set; }
-    
+
     [JsonPropertyName("groups")]
     public List<DependabotGroupDependency>? Groups { get; set; }
 

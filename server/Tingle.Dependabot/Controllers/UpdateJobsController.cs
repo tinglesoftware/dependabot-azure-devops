@@ -104,10 +104,10 @@ public class UpdateJobsController(MainDbContext dbContext, IEventPublisher publi
 
         // update the database
         var update = (from u in repository.Updates
-            where u.PackageEcosystem == job.PackageEcosystem
-            where u.Directory == job.Directory
-            where u.Directories == job.Directories
-            select u).SingleOrDefault();
+                      where u.PackageEcosystem == job.PackageEcosystem
+                      where u.Directory == job.Directory
+                      where u.Directories == job.Directories
+                      select u).SingleOrDefault();
         if (update is not null)
         {
             update.Files = model.Data?.DependencyFiles ?? [];
