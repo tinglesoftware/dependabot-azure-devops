@@ -40,7 +40,7 @@ group :test do
   gem "rubocop-sorbet", "~> 0.8.1"
   gem "simplecov", "~> 0.22.0"
   gem "turbo_tests", "~> 2.2.0"
-  gem "vcr", "~> 6.1"
+  gem "vcr", "~> 6.3"
   gem "webmock", "~> 3.18"
   gem "webrick", ">= 1.7"
 end

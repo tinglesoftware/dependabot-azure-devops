@@ -352,7 +352,8 @@ GEM
       parallel_tests (>= 3.3.0, < 5)
       rspec (>= 3.10)
     unicode-display_width (2.5.0)
-    vcr (6.2.0)
+    vcr (6.3.1)
+      base64
     webmock (3.23.1)
       addressable (>= 2.8.0)
       crack (>= 0.3.2)
@@ -402,7 +403,7 @@ DEPENDENCIES
   simplecov (~> 0.22.0)
   terminal-table (~> 3.0.2)
   turbo_tests (~> 2.2.0)
-  vcr (~> 6.1)
+  vcr (~> 6.3)
   webmock (~> 3.18)
   webrick (>= 1.7)
 
