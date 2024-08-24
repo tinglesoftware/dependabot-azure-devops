@@ -30,6 +30,7 @@ module Dependabot
       puts "OpenTelemetry is enabled, configuring..."
 
       require "opentelemetry/exporter/otlp"
+      require "sentry-opentelemetry"
 
       # OpenTelemetry instrumentation expects the related gem to be loaded.
       # While most are already loaded by this point in initialization, some are not.
@@ -49,7 +50,13 @@ module Dependabot
         config.use "OpenTelemetry::Instrumentation::Faraday"
         config.use "OpenTelemetry::Instrumentation::HTTP"
         config.use "OpenTelemetry::Instrumentation::Net::HTTP"
+
+        # https://docs.sentry.io/platforms/ruby/tracing/instrumentation/opentelemetry/
+        config.add_span_processor(::Sentry::OpenTelemetry::SpanProcessor.instance)
       end
+
+      # https://docs.sentry.io/platforms/ruby/tracing/instrumentation/opentelemetry/
+      ::OpenTelemetry.propagation = ::Sentry::OpenTelemetry::Propagator.new
 
       tracer
     end
