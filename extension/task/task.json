@@ -18,7 +18,7 @@
     "Patch": 0
   },
   "instanceNameFormat": "Dependabot",
-  "minimumAgentVersion": "2.105.0",
+  "minimumAgentVersion": "3.232.1",
   "groups": [
     {
       "name": "security_updates",
