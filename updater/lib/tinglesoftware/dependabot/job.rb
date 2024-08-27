@@ -310,7 +310,7 @@ module TingleSoftware
       end
 
       def azure_api_endpoint
-        virual_directory = azure_virtual_directory.empty? ? "" : "#{azure_virtual_directory}/}"
+        virual_directory = azure_virtual_directory.empty? ? "" : "#{azure_virtual_directory}/"
         "#{azure_protocol}://#{azure_hostname}:#{azure_port}/#{virual_directory}"
       end
 
