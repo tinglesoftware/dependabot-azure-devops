@@ -5,7 +5,7 @@ import * as fs from 'fs';
 import { load } from 'js-yaml';
 import * as path from 'path';
 import { URL } from 'url';
-import { IDependabotConfig, IDependabotRegistry, IDependabotUpdate } from '../IDependabotConfig';
+import { IDependabotConfig, IDependabotRegistry, IDependabotUpdate } from './IDependabotConfig';
 import { convertPlaceholder } from './convertPlaceholder';
 import { ISharedVariables } from './getSharedVariables';
 

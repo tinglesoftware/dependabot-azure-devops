@@ -1,4 +1,4 @@
-import extractOrganization from '../../task/utils/extractOrganization';
+import extractOrganization from '../../tasks/utils/extractOrganization';
 
 describe('Extract organization name', () => {
   it('Should extract organization for on-premise domain', () => {

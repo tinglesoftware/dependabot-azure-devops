@@ -1,11 +1,11 @@
 {
   "name": "dependabot-azure-devops",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Dependabot Azure DevOps task",
   "main": "''",
   "scripts": {
-    "build": "tsc -p .",
-    "build:prod": "npm run build && cp -r node_modules task/node_modules",
+    "build": "cp -r node_modules tasks/dependabot/dependabotV1/node_modules && cp -r node_modules tasks/dependabot/dependabotV2/node_modules && tsc -p .",
+    "package": "npx tfx-cli extension create --json5",
     "test": "jest"
   },
   "repository": {
