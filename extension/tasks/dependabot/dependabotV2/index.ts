@@ -1,8 +1,11 @@
 import { which, setResult, TaskResult } from "azure-pipelines-task-lib/task"
 import { debug, warning, error } from "azure-pipelines-task-lib/task"
-import { DependabotUpdater, IUpdateJobConfig, IUpdateScenarioOutput } from '../../utils/dependabotUpdater';
+import { IDependabotUpdateJob } from "../../utils/dependabotTypes";
+import { DependabotUpdater } from '../../utils/dependabotUpdater';
+import { AzureDevOpsClient } from "../../utils/azureDevOpsApiClient";
+import { AzureDevOpsDependabotOutputProcessor } from "../../utils/azureDevOpsDependabotOutputProcessor";
 import { parseConfigFile } from '../../utils/parseConfigFile';
-import getSharedVariables  from '../../utils/getSharedVariables';
+import getSharedVariables from '../../utils/getSharedVariables';
 
 async function run() {
   let updater: DependabotUpdater = undefined;
@@ -19,32 +22,37 @@ async function run() {
     const config = await parseConfigFile(variables);
 
     // Initialise the dependabot updater
-    // TODO: Add config for CLI image argument
-    updater = new DependabotUpdater(null, variables.debug);
+    updater = new DependabotUpdater(
+      DependabotUpdater.CLI_IMAGE_LATEST, // TODO: Add config for this?
+      new AzureDevOpsDependabotOutputProcessor(
+        new AzureDevOpsClient(variables.apiEndpointUrl, variables.systemAccessToken)
+      ),
+      variables.debug
+    );
 
     // Process the updates per-ecosystem
-    let updatedSuccessfully: boolean = true;
+    let taskWasSuccessful: boolean = true;
     config.updates.forEach(async (update) => {
 
       // TODO: Fetch all existing PRs from DevOps
-      
+
       let registryCredentials = new Array();
       for (const key in config.registries) {
         const registry = config.registries[key];
         registryCredentials.push({
-            type: registry.type,
-            host: registry.host,
-            region: undefined, // TODO: registry.region,
-            url: registry.url,
-            registry: registry.registry,
-            username: registry.username,
-            password: registry.password,
-            token: registry.token,
-            'replaces-base': registry['replaces-base']
+          type: registry.type,
+          host: registry.host,
+          region: undefined, // TODO: registry.region,
+          url: registry.url,
+          registry: registry.registry,
+          username: registry.username,
+          password: registry.password,
+          token: registry.token,
+          'replaces-base': registry['replaces-base']
         });
       };
 
-      let job: IUpdateJobConfig = {
+      let job: IDependabotUpdateJob = {
         job: {
           // TODO: Parse all options from `config` and `variables`
           id: 'job-1',
@@ -55,14 +63,14 @@ async function run() {
           ],
           'security-updates-only': false,
           source: {
-              provider: 'azure',
-              'api-endpoint': variables.apiEndpointUrl,
-              hostname: variables.hostname,
-              repo: `${variables.organization}/${variables.project}/_git/${variables.repository}`,
-              branch: update.targetBranch, // TODO: add config for 'source branch'??
-              commit: undefined, // TODO: add config for this?
-              directory: update.directories?.length == 0 ? update.directory : undefined,
-              directories: update.directories?.length > 0 ? update.directories : undefined
+            provider: 'azure',
+            'api-endpoint': variables.apiEndpointUrl,
+            hostname: variables.hostname,
+            repo: `${variables.organization}/${variables.project}/_git/${variables.repository}`,
+            branch: update.targetBranch, // TODO: add config for 'source branch'??
+            commit: undefined, // TODO: add config for this?
+            directory: update.directories?.length == 0 ? update.directory : undefined,
+            directories: update.directories?.length > 0 ? update.directories : undefined
           }
         },
         credentials: (registryCredentials || []).concat([
@@ -76,8 +84,8 @@ async function run() {
       };
 
       // Run dependabot updater for the job
-      if (!processUpdateOutputs(await updater.update(job))) {
-        updatedSuccessfully = false;
+      if ((await updater.update(job)).filter(u => !u.success).length > 0) {
+        taskWasSuccessful = false;
       }
 
       // TODO: Loop through all existing PRs and do a single update job for each, update/close the PR as needed
@@ -86,8 +94,8 @@ async function run() {
     });
 
     setResult(
-      updatedSuccessfully ? TaskResult.Succeeded : TaskResult.Failed, 
-      updatedSuccessfully ? 'All update jobs completed successfully' : 'One or more update jobs failed, check logs for more information'
+      taskWasSuccessful ? TaskResult.Succeeded : TaskResult.Failed,
+      taskWasSuccessful ? 'All update jobs completed successfully' : 'One or more update jobs failed, check logs for more information'
     );
 
   }
@@ -98,69 +106,6 @@ async function run() {
   finally {
     updater?.cleanup();
   }
-}
-
-// Process the job outputs and apply changes to DevOps
-// TODO: Move this to a new util class, e.g. `dependabotOutputProcessor.ts`
-function processUpdateOutputs(outputs: IUpdateScenarioOutput[]) : boolean {
-  let success: boolean = true;
-  outputs.forEach(output => {
-    switch (output.type) {
-
-      case 'update_dependency_list':
-        console.log('TODO: UPDATED DEPENDENCY LIST: ', output.data);
-        // TODO: Save data to DevOps? This would be really useful for generating a dependency graph hub page or HTML report (future feature maybe?)
-        break;
-
-      case 'create_pull_request':
-        console.log('TODO: CREATE PULL REQUEST: ', output.data);
-        // TODO: Implement logic from /updater/lib/tinglesoftware/dependabot/api_clients/azure_apu_client.rb :: create_pull_request()
-        break;
-
-      case 'update_pull_request':
-        console.log('TODO: UPDATE PULL REQUEST ', output.data);
-        // TODO: Implement logic from /updater/lib/tinglesoftware/dependabot/api_clients/azure_apu_client.rb :: update_pull_request()
-        break;
-
-      case 'close_pull_request':
-        console.log('TODO: CLOSE PULL REQUEST ', output.data);
-        // TODO: Implement logic from /updater/lib/tinglesoftware/dependabot/api_clients/azure_apu_client.rb :: close_pull_request()
-        break;
-
-      case 'mark_as_processed':
-        console.log('TODO: MARK AS PROCESSED: ', output.data);
-        // TODO: Log info?
-        break;
-
-      case 'record_ecosystem_versions':
-        console.log('TODO: RECORD ECOSYSTEM VERSIONS: ', output.data);
-        // TODO: Log info?
-        break;
-        
-      case 'record_update_job_error':
-        console.log('TODO: RECORD UPDATE JOB ERROR: ', output.data);
-        // TODO: Log error?
-        success = false;
-        break;
-        
-      case 'record_update_job_unknown_error':
-        console.log('TODO: RECORD UPDATE JOB UNKNOWN ERROR: ', output.data);
-        // TODO: Log error?
-        success = false;
-        break;
-        
-      case 'increment_metric':
-        console.log('TODO: INCREMENT METRIC: ', output.data);
-        // TODO: Log info?
-        break;
-        
-      default:
-        warning(`Unknown dependabot output type: ${output.type}`);
-        success = false;
-        break;
-    }
-  });
-  return success;
 }
 
 run();
