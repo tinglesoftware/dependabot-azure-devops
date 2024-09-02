@@ -1,6 +1,6 @@
 import { which, setResult, TaskResult } from "azure-pipelines-task-lib/task"
 import { debug, warning, error } from "azure-pipelines-task-lib/task"
-import { DependabotUpdater, IUpdateScenarioOutput } from '../../utils/dependabotUpdater';
+import { DependabotUpdater, IUpdateJobConfig, IUpdateScenarioOutput } from '../../utils/dependabotUpdater';
 import { parseConfigFile } from '../../utils/parseConfigFile';
 import getSharedVariables  from '../../utils/getSharedVariables';
 
@@ -19,7 +19,8 @@ async function run() {
     const config = await parseConfigFile(variables);
 
     // Initialise the dependabot updater
-    updater = new DependabotUpdater(undefined /* TODO: Add config for this */, variables.debug);
+    // TODO: Add config for CLI image argument
+    updater = new DependabotUpdater(null, variables.debug);
 
     // Process the updates per-ecosystem
     let updatedSuccessfully: boolean = true;
@@ -27,54 +28,60 @@ async function run() {
 
       // TODO: Fetch all existing PRs from DevOps
       
-      let extraCredentials = new Array();
+      let registryCredentials = new Array();
       for (const key in config.registries) {
         const registry = config.registries[key];
-        extraCredentials.push({
+        registryCredentials.push({
             type: registry.type,
             host: registry.host,
+            region: undefined, // TODO: registry.region,
             url: registry.url,
             registry: registry.registry,
             username: registry.username,
             password: registry.password,
-            token: registry.token
+            token: registry.token,
+            'replaces-base': registry['replaces-base']
         });
       };
 
-      // Run dependabot updater for the job
-      const result = processUpdateOutputs(
-        await updater.update({
-          // TODO: Parse this from `config` and `variables`
-          job: {
-            id: 'job-1',
-            job: {
-              'package-manager': update.packageEcosystem,
-              'allowed-updates': [
-                { 'update-type': 'all' }
-              ],
-              source: {
-                  provider: 'azure',
-                  repo: `${variables.organization}/${variables.project}/_git/${variables.repository}`,
-                  directory: update.directory,
-                  commit: undefined
-              }
-            },
-            credentials: (extraCredentials || []).concat([
-              {
-                type: 'git_source',
-                host: new URL(variables.organizationUrl).hostname,
-                username: 'x-access-token',
-                password: variables.systemAccessToken
-              }
-            ])
+      let job: IUpdateJobConfig = {
+        job: {
+          // TODO: Parse all options from `config` and `variables`
+          id: 'job-1',
+          'package-manager': update.packageEcosystem,
+          'updating-a-pull-request': false,
+          'allowed-updates': [
+            { 'update-type': 'all' }
+          ],
+          'security-updates-only': false,
+          source: {
+              provider: 'azure',
+              'api-endpoint': variables.apiEndpointUrl,
+              hostname: variables.hostname,
+              repo: `${variables.organization}/${variables.project}/_git/${variables.repository}`,
+              branch: update.targetBranch, // TODO: add config for 'source branch'??
+              commit: undefined, // TODO: add config for this?
+              directory: update.directories?.length == 0 ? update.directory : undefined,
+              directories: update.directories?.length > 0 ? update.directories : undefined
           }
-        })
-      );
-      if (!result) {
+        },
+        credentials: (registryCredentials || []).concat([
+          {
+            type: 'git_source',
+            host: variables.hostname,
+            username: variables.systemAccessUser?.trim()?.length > 0 ? variables.systemAccessUser : 'x-access-token',
+            password: variables.systemAccessToken
+          }
+        ])
+      };
+
+      // Run dependabot updater for the job
+      if (!processUpdateOutputs(await updater.update(job))) {
         updatedSuccessfully = false;
       }
 
       // TODO: Loop through all existing PRs and do a single update job for each, update/close the PR as needed
+      //       e.g. https://github.com/dependabot/cli/blob/main/testdata/go/update-pr.yaml
 
     });
 
@@ -84,9 +91,8 @@ async function run() {
     );
 
   }
-  catch (e: any) {
+  catch (e) {
     error(`Unhandled task exception: ${e}`);
-    console.log(e);
     setResult(TaskResult.Failed, e?.message);
   }
   finally {
