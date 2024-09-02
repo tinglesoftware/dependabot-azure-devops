@@ -8,7 +8,7 @@ import { parseConfigFile } from '../../utils/parseConfigFile';
 import getSharedVariables from '../../utils/getSharedVariables';
 
 async function run() {
-  let updater: DependabotUpdater = undefined;
+  let dependabot: DependabotUpdater = undefined;
   try {
 
     // Check if required tools are installed
@@ -17,16 +17,19 @@ async function run() {
     debug('Checking for `go` install...');
     which('go', true);
 
-    // Parse the dependabot configuration file
+    // Parse the dependabot.yaml configuration file
     const variables = getSharedVariables();
     const config = await parseConfigFile(variables);
 
-    // Initialise the dependabot updater
-    updater = new DependabotUpdater(
+    // Initialise the DevOps API client
+    const api = new AzureDevOpsClient(
+      variables.organizationUrl.toString(), variables.systemAccessToken
+    );
+
+    // Initialise the Dependabot updater
+    dependabot = new DependabotUpdater(
       DependabotUpdater.CLI_IMAGE_LATEST, // TODO: Add config for this?
-      new AzureDevOpsDependabotOutputProcessor(
-        new AzureDevOpsClient(variables.apiEndpointUrl, variables.systemAccessToken)
-      ),
+      new AzureDevOpsDependabotOutputProcessor(api),
       variables.debug
     );
 
@@ -42,24 +45,24 @@ async function run() {
         registryCredentials.push({
           type: registry.type,
           host: registry.host,
-          region: undefined, // TODO: registry.region,
           url: registry.url,
           registry: registry.registry,
+          region: undefined, // TODO: registry.region,
           username: registry.username,
           password: registry.password,
           token: registry.token,
-          'replaces-base': registry['replaces-base']
+          'replaces-base': registry['replaces-base'] || false
         });
       };
 
       let job: IDependabotUpdateJob = {
         job: {
           // TODO: Parse all options from `config` and `variables`
-          id: 'job-1',
+          id: 'job-1', // TODO: Make timestamp or auto-incrementing id?
           'package-manager': update.packageEcosystem,
           'updating-a-pull-request': false,
           'allowed-updates': [
-            { 'update-type': 'all' }
+            { 'update-type': 'all' } // TODO: update.allow
           ],
           'security-updates-only': false,
           source: {
@@ -84,7 +87,7 @@ async function run() {
       };
 
       // Run dependabot updater for the job
-      if ((await updater.update(job)).filter(u => !u.success).length > 0) {
+      if ((await dependabot.update(job)).filter(u => !u.success).length > 0) {
         taskWasSuccessful = false;
       }
 
@@ -104,7 +107,7 @@ async function run() {
     setResult(TaskResult.Failed, e?.message);
   }
   finally {
-    updater?.cleanup();
+    dependabot?.cleanup();
   }
 }
 

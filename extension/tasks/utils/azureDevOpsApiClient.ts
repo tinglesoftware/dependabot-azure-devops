@@ -6,9 +6,9 @@ export class AzureDevOpsClient {
     private readonly connection: WebApi;
     private userId: string | null = null;
 
-    constructor(apiEndpointUrl: string, accessToken: string) {
+    constructor(apiUrl: string, accessToken: string) {
         this.connection = new WebApi(
-            apiEndpointUrl,
+            apiUrl,
             getPersonalAccessTokenHandler(accessToken)
         );
     }

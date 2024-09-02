@@ -82,9 +82,9 @@ export interface IDependabotUpdateJob {
         // See: https://github.com/dependabot/dependabot-core/blob/main/common/lib/dependabot/credential.rb
         'type': string,
         'host'?: string,
-        'region'?: string,
         'url'?: string,
         'registry'?: string,
+        'region'?: string,
         'username'?: string,
         'password'?: string,
         'token'?: string,
