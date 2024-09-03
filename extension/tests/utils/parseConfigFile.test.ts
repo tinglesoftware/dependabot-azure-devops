@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import { load } from 'js-yaml';
-import { IDependabotRegistry, IDependabotUpdate } from '../../task/IDependabotConfig';
-import { parseRegistries, parseUpdates, validateConfiguration } from '../../task/utils/parseConfigFile';
+import { IDependabotRegistry, IDependabotUpdate } from '../../tasks/utils/IDependabotConfig';
+import { parseRegistries, parseUpdates, validateConfiguration } from '../../tasks/utils/parseConfigFile';
 
 describe('Parse configuration file', () => {
   it('Parsing works as expected', () => {

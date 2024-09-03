@@ -60,13 +60,13 @@ jobs:
         working-directory: '${{ github.workspace }}/extension'
 
       - name: Build
-        run: npm run build:prod
+        run: npm run build
         working-directory: '${{ github.workspace }}/extension'
 
       - name: Install tfx-cli
         run: npm install -g tfx-cli@0.12.0
 
-      - name: Replace tokens
+      - name: Update version numbers in vss-extension.json overrides files
         uses: cschleiden/replace-tokens@v1
         with:
           files: '["${{ github.workspace }}/extension/overrides*.json"]'
@@ -74,11 +74,11 @@ jobs:
           MAJOR_MINOR_PATCH: ${{ steps.gitversion.outputs.majorMinorPatch }}
           BUILD_NUMBER: ${{ github.run_number }}
 
-      - name: Update values in extension/task/task.json
+      - name: Update version numbers in task.json
         run: |
-          echo "`jq '.version.Major=${{ steps.gitversion.outputs.major }}' extension/task/task.json`" > extension/task/task.json
-          echo "`jq '.version.Minor=${{ steps.gitversion.outputs.minor }}' extension/task/task.json`" > extension/task/task.json
-          echo "`jq '.version.Patch=${{ github.run_number }}' extension/task/task.json`" > extension/task/task.json
+          echo "`jq '.version.Major=${{ steps.gitversion.outputs.major }}' extension/tasks/dependabot/dependabotV1/task.json``" > extension/tasks/dependabot/dependabotV1/task.json`
+          echo "`jq '.version.Minor=${{ steps.gitversion.outputs.minor }}' extension/tasks/dependabot/dependabotV1/task.json``" > extension/tasks/dependabot/dependabotV1/task.json`
+          echo "`jq '.version.Patch=${{ github.run_number }}' extension/tasks/dependabot/dependabotV1/task.json``" > extension/tasks/dependabot/dependabotV1/task.json`
 
       - name: Create Extension (dev)
         run: >
