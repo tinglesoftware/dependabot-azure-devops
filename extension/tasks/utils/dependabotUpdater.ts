@@ -67,12 +67,14 @@ export class DependabotUpdater {
         }
 
         console.info("Running dependabot update...");
-        const dependabotTool = tool(which("dependabot", true)).arg(dependabotArguments);
-        const dependabotResultCode = await dependabotTool.execAsync({
-            silent: !this.debug
-        });
-        if (dependabotResultCode != 0) {
-            throw new Error(`Dependabot update failed with exit code ${dependabotResultCode}`);
+        if (!fs.existsSync(jobOutputPath)) {
+            const dependabotTool = tool(which("dependabot", true)).arg(dependabotArguments);
+            const dependabotResultCode = await dependabotTool.execAsync({
+                silent: !this.debug
+            });
+            if (dependabotResultCode != 0) {
+                throw new Error(`Dependabot update failed with exit code ${dependabotResultCode}`);
+            }
         }
 
         console.info("Processing dependabot update outputs...");
@@ -89,7 +91,7 @@ export class DependabotUpdater {
                 }
             };
             try {
-                processedOutput.success = await this.outputProcessor.process(type, data);
+                processedOutput.success = await this.outputProcessor.process(config, type, data);
             }
             catch (e) {
                 processedOutput.success = false;

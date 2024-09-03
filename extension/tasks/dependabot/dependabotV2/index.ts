@@ -8,7 +8,7 @@ import { parseConfigFile } from '../../utils/parseConfigFile';
 import getSharedVariables from '../../utils/getSharedVariables';
 
 async function run() {
-  let dependabot: DependabotUpdater = undefined;
+  let dependabotCli: DependabotUpdater = undefined;
   try {
 
     // Check if required tools are installed
@@ -18,30 +18,30 @@ async function run() {
     which('go', true);
 
     // Parse the dependabot.yaml configuration file
-    const variables = getSharedVariables();
-    const config = await parseConfigFile(variables);
+    const taskVariables = getSharedVariables();
+    const dependabotConfig = await parseConfigFile(taskVariables);
 
     // Initialise the DevOps API client
-    const api = new AzureDevOpsClient(
-      variables.organizationUrl.toString(), variables.systemAccessToken
+    const azdoApi = new AzureDevOpsClient(
+      taskVariables.organizationUrl.toString(), taskVariables.systemAccessToken
     );
 
     // Initialise the Dependabot updater
-    dependabot = new DependabotUpdater(
+    dependabotCli = new DependabotUpdater(
       DependabotUpdater.CLI_IMAGE_LATEST, // TODO: Add config for this?
-      new AzureDevOpsDependabotOutputProcessor(api),
-      variables.debug
+      new AzureDevOpsDependabotOutputProcessor(azdoApi, taskVariables),
+      taskVariables.debug
     );
 
     // Process the updates per-ecosystem
     let taskWasSuccessful: boolean = true;
-    config.updates.forEach(async (update) => {
+    dependabotConfig.updates.forEach(async (update) => {
 
       // TODO: Fetch all existing PRs from DevOps
 
       let registryCredentials = new Array();
-      for (const key in config.registries) {
-        const registry = config.registries[key];
+      for (const key in dependabotConfig.registries) {
+        const registry = dependabotConfig.registries[key];
         registryCredentials.push({
           type: registry.type,
           host: registry.host,
@@ -67,9 +67,9 @@ async function run() {
           'security-updates-only': false,
           source: {
             provider: 'azure',
-            'api-endpoint': variables.apiEndpointUrl,
-            hostname: variables.hostname,
-            repo: `${variables.organization}/${variables.project}/_git/${variables.repository}`,
+            'api-endpoint': taskVariables.apiEndpointUrl,
+            hostname: taskVariables.hostname,
+            repo: `${taskVariables.organization}/${taskVariables.project}/_git/${taskVariables.repository}`,
             branch: update.targetBranch, // TODO: add config for 'source branch'??
             commit: undefined, // TODO: add config for this?
             directory: update.directories?.length == 0 ? update.directory : undefined,
@@ -79,15 +79,15 @@ async function run() {
         credentials: (registryCredentials || []).concat([
           {
             type: 'git_source',
-            host: variables.hostname,
-            username: variables.systemAccessUser?.trim()?.length > 0 ? variables.systemAccessUser : 'x-access-token',
-            password: variables.systemAccessToken
+            host: taskVariables.hostname,
+            username: taskVariables.systemAccessUser?.trim()?.length > 0 ? taskVariables.systemAccessUser : 'x-access-token',
+            password: taskVariables.systemAccessToken
           }
         ])
       };
 
       // Run dependabot updater for the job
-      if ((await dependabot.update(job)).filter(u => !u.success).length > 0) {
+      if ((await dependabotCli.update(job)).filter(u => !u.success).length > 0) {
         taskWasSuccessful = false;
       }
 
@@ -107,7 +107,7 @@ async function run() {
     setResult(TaskResult.Failed, e?.message);
   }
   finally {
-    dependabot?.cleanup();
+    dependabotCli?.cleanup();
   }
 }
 

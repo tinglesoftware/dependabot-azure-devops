@@ -103,5 +103,5 @@ export interface IDependabotUpdateOutput {
 }
 
 export interface IDependabotUpdateOutputProcessor {
-    process(type: string, data: any): Promise<boolean>;
+    process(update: IDependabotUpdateJob, type: string, data: any): Promise<boolean>;
 }
