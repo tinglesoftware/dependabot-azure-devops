@@ -17,6 +17,7 @@
     "Minor": 0,
     "Patch": 0
   },
+  "preview": true,
   "instanceNameFormat": "Dependabot",
   "minimumAgentVersion": "3.232.1",
   "groups": [
