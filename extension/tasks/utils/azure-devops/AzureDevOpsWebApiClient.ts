@@ -185,11 +185,8 @@ function normalizeDevOpsPath(path: string): string {
 
 function mergeCommitMessage(id: number, title: string, description: string): string {
     //
-    // Pull requests that pass all policies will be merged automatically.
-    // Optional policies can be ignored by passing their identifiers
-    //
     // The merge commit message should contain the PR number and title for tracking.
-    // This is the default behaviour in Azure DevOps
+    // This is the default behaviour in Azure DevOps.
     // Example:
     //   Merged PR 24093: Bump Tingle.Extensions.Logging.LogAnalytics from 3.4.2-ci0005 to 3.4.2-ci0006
     //
@@ -198,15 +195,13 @@ function mergeCommitMessage(id: number, title: string, description: string): str
     //   - [Changelog](....)
     //   - [Commits](....)
     //
-    // There appears to be a DevOps bug when setting "completeOptions" with a "mergeCommitMessage" that is
-    // truncated to 4000 characters. The error message is:
+    // There appears to be a DevOps bug when setting "completeOptions" with a "mergeCommitMessage" even when truncated to 4000 characters. 
+    // The error message is:
     //   Invalid argument value.
     //   Parameter name: Completion options have exceeded the maximum encoded length (4184/4000)
     //
-    // Most users seem to agree that the effective limit is about 3500 characters.
-    // https://developercommunity.visualstudio.com/t/raise-the-character-limit-for-pull-request-descrip/365708
-    //
-    // Until this is fixed, we hard cap the max length to 3500 characters
+    // The effective limit seems to be about 3500 characters:
+    //   https://developercommunity.visualstudio.com/t/raise-the-character-limit-for-pull-request-descrip/365708#T-N424531
     //
     return `Merged PR ${id}: ${title}\n\n${description}`.slice(0, 3500);
 }

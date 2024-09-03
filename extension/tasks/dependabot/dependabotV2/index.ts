@@ -51,7 +51,7 @@ async function run() {
           )
         });
 
-      // Update all packages, this will update our dependencies list and create new pull requests
+      // Update all dependencies, this will update create new pull requests
       const allDependenciesJob = DependabotJobBuilder.updateAllDependenciesJob(taskVariables, update, dependabotConfig.registries, existingPullRequests);
       if ((await dependabot.update(allDependenciesJob)).filter(u => !u.success).length > 0) {
         taskWasSuccessful = false;
@@ -77,7 +77,7 @@ async function run() {
     setResult(TaskResult.Failed, e?.message);
   }
   finally {
-    //dependabotCli?.cleanup();
+    // TODO: dependabotCli?.cleanup();
   }
 }
 
