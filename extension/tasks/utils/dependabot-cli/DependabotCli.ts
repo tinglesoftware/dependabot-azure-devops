@@ -1,14 +1,16 @@
 import { debug, warning, error } from "azure-pipelines-task-lib/task"
 import { which, tool } from "azure-pipelines-task-lib/task"
 import { ToolRunner } from "azure-pipelines-task-lib/toolrunner"
-import { IDependabotUpdateOutputProcessor, IDependabotUpdateJob, IDependabotUpdateOutput } from "./dependabotTypes";
+import { IDependabotUpdateOutputProcessor } from "./interfaces/IDependabotUpdateOutputProcessor";
+import { IDependabotUpdateOutput } from "./interfaces/IDependabotUpdateOutput";
+import { IDependabotUpdateJob } from "./interfaces/IDependabotUpdateJob";
 import * as yaml from 'js-yaml';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as os from 'os';
 
 // Wrapper class for running updates using dependabot-cli
-export class DependabotUpdater {
+export class DependabotCli {
     private readonly jobsPath: string;
     private readonly toolImage: string;
     private readonly outputProcessor: IDependabotUpdateOutputProcessor;
@@ -24,7 +26,7 @@ export class DependabotUpdater {
         this.ensureJobsPathExists();
     }
 
-    // Run dependabot update
+    // Run dependabot update job
     public async update(
         config: IDependabotUpdateJob,
         options?: {
@@ -47,9 +49,6 @@ export class DependabotUpdater {
             fs.mkdirSync(jobPath);
         }
 
-        // Generate the job input file
-        writeJobInput(jobInputPath, config);
-
         // Compile dependabot cmd arguments
         // See: https://github.com/dependabot/cli/blob/main/cmd/dependabot/internal/cmd/root.go
         //      https://github.com/dependabot/cli/blob/main/cmd/dependabot/internal/cmd/update.go
@@ -66,8 +65,12 @@ export class DependabotUpdater {
             dependabotArguments.push("--updater-image", options.updaterImage);
         }
 
-        console.info("Running dependabot update...");
+        // Generate the job input file
+        writeJobFile(jobInputPath, config);
+
+        // Run dependabot update
         if (!fs.existsSync(jobOutputPath)) {
+            console.info("Running dependabot update...");
             const dependabotTool = tool(which("dependabot", true)).arg(dependabotArguments);
             const dependabotResultCode = await dependabotTool.execAsync({
                 silent: !this.debug
@@ -77,28 +80,33 @@ export class DependabotUpdater {
             }
         }
 
-        console.info("Processing dependabot update outputs...");
+        // Process the job output
         const processedOutputs = Array<IDependabotUpdateOutput>();
-        for (const output of readScenarioOutputs(jobOutputPath)) {
-            const type = output['type'];
-            const data = output['expect']?.['data'];
-            var processedOutput = {
-                success: true,
-                error: null,
-                output: {
-                    type: type,
-                    data: data
+        if (fs.existsSync(jobOutputPath)) {
+            console.info("Processing dependabot update outputs...");
+            for (const output of readScenarioOutputs(jobOutputPath)) {
+                // Documentation on the scenario model can be found here:
+                // https://github.com/dependabot/cli/blob/main/internal/model/scenario.go
+                const type = output['type'];
+                const data = output['expect']?.['data'];
+                var processedOutput = {
+                    success: true,
+                    error: null,
+                    output: {
+                        type: type,
+                        data: data
+                    }
+                };
+                try {
+                    processedOutput.success = await this.outputProcessor.process(config, type, data);
                 }
-            };
-            try {
-                processedOutput.success = await this.outputProcessor.process(config, type, data);
-            }
-            catch (e) {
-                processedOutput.success = false;
-                processedOutput.error = e;
-            }
-            finally {
-                processedOutputs.push(processedOutput);
+                catch (e) {
+                    processedOutput.success = false;
+                    processedOutput.error = e;
+                }
+                finally {
+                    processedOutputs.push(processedOutput);
+                }
             }
         }
 
@@ -113,7 +121,7 @@ export class DependabotUpdater {
             return;
         }
 
-        debug("Dependabot CLI was not found, installing with `go install`...");
+        console.info("Dependabot CLI install was not found, installing now with `go install`...");
         const goTool: ToolRunner = tool(which("go", true));
         goTool.arg(["install", this.toolImage]);
         goTool.execSync({
@@ -139,10 +147,17 @@ export class DependabotUpdater {
     }
 }
 
-function writeJobInput(path: string, config: IDependabotUpdateJob): void {
-    fs.writeFileSync(path, yaml.dump(config));
+// Documentation on the job model can be found here:
+// https://github.com/dependabot/cli/blob/main/internal/model/job.go
+function writeJobFile(path: string, config: IDependabotUpdateJob): void {
+    fs.writeFileSync(path, yaml.dump({
+        job: config.job,
+        credentials: config.credentials
+    }));
 }
 
+// Documentation on the scenario model can be found here:
+// https://github.com/dependabot/cli/blob/main/internal/model/scenario.go
 function readScenarioOutputs(path: string): any[] {
     if (!path) {
         throw new Error("Scenario file path is required");

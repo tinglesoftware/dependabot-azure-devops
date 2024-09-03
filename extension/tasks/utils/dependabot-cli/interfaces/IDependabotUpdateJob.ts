@@ -1,19 +1,28 @@
+import { IDependabotUpdate } from "../../IDependabotConfig"
 
 export interface IDependabotUpdateJob {
+
+    // The raw dependabot.yaml update configuration options
+    // See: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+    config: IDependabotUpdate,
+
+    // The dependabot "updater" job configuration
+    // See: https://github.com/dependabot/cli/blob/main/internal/model/job.go
+    //      https://github.com/dependabot/dependabot-core/blob/main/updater/lib/dependabot/job.rb
     job: {
-        // See: https://github.com/dependabot/dependabot-core/blob/main/updater/lib/dependabot/job.rb
         'id': string,
         'package-manager': string,
-        'updating-a-pull-request': boolean,
+        'update-subdependencies'?: boolean,
+        'updating-a-pull-request'?: boolean,
         'dependency-group-to-refresh'?: string,
         'dependency-groups'?: {
             'name': string,
             'applies-to'?: string,
-            'update-types'?: string[],
             'rules': {
                 'patterns'?: string[]
                 'exclude-patterns'?: string[],
                 'dependency-type'?: string
+                'update-types'?: string[]
             }[]
         }[],
         'dependencies'?: string[],
@@ -24,9 +33,12 @@ export interface IDependabotUpdateJob {
         }[],
         'ignore-conditions'?: {
             'dependency-name'?: string,
-            'version-requirement'?: string,
             'source'?: string,
-            'update-types'?: string[]
+            'update-types'?: string[],
+            // TODO: 'updated-at' config is not in the dependabot.yaml docs, but is in the dependabot-cli and dependabot-core models
+            // https://github.com/dependabot/dependabot-core/blob/dc7b8d2ad152780e847ab597d40a57f13ab86d4f/common/lib/dependabot/pull_request_creator/message_builder.rb#L762
+            'updated-at'?: string,
+            'version-requirement'?: string,
         }[],
         'security-updates-only': boolean,
         'security-advisories'?: {
@@ -34,6 +46,7 @@ export interface IDependabotUpdateJob {
             'affected-versions': string[],
             'patched-versions': string[],
             'unaffected-versions': string[],
+            // TODO: The below configs are not in the dependabot-cli model, but are in the dependabot-core model
             'title'?: string,
             'description'?: string,
             'source-name'?: string,
@@ -50,36 +63,37 @@ export interface IDependabotUpdateJob {
             'directories'?: string[]
         },
         'existing-pull-requests'?: {
-            'dependencies': {
-                'name': string,
-                'version'?: string,
-                'removed': boolean,
-                'directory'?: string
-            }[]
-        },
+            'dependency-name': string,
+            'dependency-version': string,
+            'directory': string
+        }[][],
         'existing-group-pull-requests'?: {
             'dependency-group-name': string,
             'dependencies': {
-                'name': string,
-                'version'?: string,
-                'removed': boolean,
-                'directory'?: string
+                'dependency-name': string,
+                'dependency-version': string,
+                'directory': string
             }[]
-        },
+        }[],
         'commit-message-options'?: {
             'prefix'?: string,
             'prefix-development'?: string,
-            'include'?: string,
+            'include-scope'?: string,
         },
         'experiments'?: any,
         'max-updater-run-time'?: number,
         'reject-external-code'?: boolean,
+        'repo-private'?: boolean,
         'repo-contents-path'?: string,
         'requirements-update-strategy'?: string,
-        'lockfile-only'?: boolean
+        'lockfile-only'?: boolean,
+        'vendor-dependencies'?: boolean,
+        'debug'?: boolean,
     },
+
+    // The dependabot "proxy" registry credentials
+    // See: https://github.com/dependabot/dependabot-core/blob/main/common/lib/dependabot/credential.rb
     credentials: {
-        // See: https://github.com/dependabot/dependabot-core/blob/main/common/lib/dependabot/credential.rb
         'type': string,
         'host'?: string,
         'url'?: string,
@@ -90,18 +104,5 @@ export interface IDependabotUpdateJob {
         'token'?: string,
         'replaces-base'?: boolean
     }[]
-}
 
-export interface IDependabotUpdateOutput {
-    success: boolean,
-    error: any,
-    output: {
-        // See: https://github.com/dependabot/smoke-tests/tree/main/tests
-        type: string,
-        data: any
-    }
-}
-
-export interface IDependabotUpdateOutputProcessor {
-    process(update: IDependabotUpdateJob, type: string, data: any): Promise<boolean>;
 }
