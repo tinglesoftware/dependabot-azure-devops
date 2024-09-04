@@ -18,7 +18,7 @@
     "Patch": 0
   },
   "deprecated": true,
-  "deprecationMessage": "This task version is deprecated due to updates in dependabot-core. The recommended approach to running dependabot has changed, and this task is no longer maintained. Please upgrade to the latest version to continue receiving fixes and features. More details: https://github.com/tinglesoftware/dependabot-azure-devops/discussions/1317.",
+  "deprecationMessage": "The recommended approach to running dependabot has changed since the creation of this task, and is no longer maintained. Please upgrade to the latest version to continue receiving fixes and features. More details: https://github.com/tinglesoftware/dependabot-azure-devops/discussions/1317.",
   "instanceNameFormat": "Dependabot",
   "minimumAgentVersion": "3.232.1",
   "groups": [

@@ -27,9 +27,6 @@ export interface ISharedVariables {
   /** Whether the repository was overridden via input */
   repositoryOverridden: boolean;
 
-  /** Organisation API endpoint URL */
-  apiEndpointUrl: string;
-
   /** The github token */
   githubAccessToken: string;
   /** The access User for Azure DevOps Repos */
@@ -89,9 +86,9 @@ export interface ISharedVariables {
  */
 export default function getSharedVariables(): ISharedVariables {
   let organizationUrl = tl.getVariable('System.TeamFoundationCollectionUri');
-  
   //convert url string into a valid JS URL object
   let formattedOrganizationUrl = new URL(organizationUrl);
+
   let protocol: string = formattedOrganizationUrl.protocol.slice(0, -1);
   let hostname: string = extractHostname(formattedOrganizationUrl);
   let port: string = formattedOrganizationUrl.port;
@@ -105,9 +102,6 @@ export default function getSharedVariables(): ISharedVariables {
     repository = tl.getVariable('Build.Repository.Name');
   }
   repository = encodeURI(repository); // encode special characters like spaces
-
-  const virtualDirectorySuffix = virtualDirectory?.length > 0 ? `${virtualDirectory}/` : '';
-  let apiEndpointUrl = `${protocol}://${hostname}:${port}/${virtualDirectorySuffix}`;
 
   // Prepare the access credentials
   let githubAccessToken: string = getGithubAccessToken();
@@ -158,8 +152,6 @@ export default function getSharedVariables(): ISharedVariables {
     project,
     repository,
     repositoryOverridden,
-
-    apiEndpointUrl,
 
     githubAccessToken,
     systemAccessUser,
