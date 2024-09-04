@@ -1,4 +1,4 @@
-import extractVirtualDirectory from '../../tasks/utils/extractVirtualDirectory';
+import extractVirtualDirectory from './extractVirtualDirectory';
 
 describe('Extract virtual directory', () => {
   it('Should extract virtual directory', () => {

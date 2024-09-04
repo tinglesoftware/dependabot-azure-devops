@@ -1,11 +1,11 @@
 import { which, setResult, TaskResult } from "azure-pipelines-task-lib/task"
 import { debug, warning, error } from "azure-pipelines-task-lib/task"
-import { DependabotCli } from '../../utils/dependabot-cli/DependabotCli';
-import { AzureDevOpsWebApiClient } from "../../utils/azure-devops/AzureDevOpsWebApiClient";
-import { DependabotOutputProcessor } from "../../utils/dependabot-cli/DependabotOutputProcessor";
-import { DependabotJobBuilder } from "../../utils/dependabot-cli/DependabotJobBuilder";
-import { parseConfigFile } from '../../utils/parseConfigFile';
-import getSharedVariables from '../../utils/getSharedVariables';
+import { DependabotCli } from './utils/dependabot-cli/DependabotCli';
+import { AzureDevOpsWebApiClient } from "./utils/azure-devops/AzureDevOpsWebApiClient";
+import { DependabotOutputProcessor } from "./utils/dependabot-cli/DependabotOutputProcessor";
+import { DependabotJobBuilder } from "./utils/dependabot-cli/DependabotJobBuilder";
+import { parseConfigFile } from './utils/parseConfigFile';
+import getSharedVariables from './utils/getSharedVariables';
 
 async function run() {
   let taskWasSuccessful: boolean = true;

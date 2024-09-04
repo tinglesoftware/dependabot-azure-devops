@@ -7,8 +7,7 @@ const config: Config.InitialOptions = {
   //   "^.+\\.test.tsx?$": "ts-jest",
   // },
   testEnvironment: 'node',
-  preset: 'ts-jest',
-  rootDir: './tests',
+  preset: 'ts-jest'
 };
 
 export default config;
