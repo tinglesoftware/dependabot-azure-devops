@@ -1,4 +1,4 @@
-import { extractPlaceholder } from '../../tasks/utils/convertPlaceholder';
+import { extractPlaceholder } from './convertPlaceholder';
 
 describe('Parse property placeholder', () => {
   it('Should return key with underscores', () => {

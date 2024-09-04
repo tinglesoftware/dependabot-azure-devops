@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { describe } from 'node:test';
-import { isHostedAzureDevOps, resolveAzureDevOpsIdentities } from '../../tasks/utils/resolveAzureDevOpsIdentities';
+import { isHostedAzureDevOps, resolveAzureDevOpsIdentities } from './resolveAzureDevOpsIdentities';
 
 describe('isHostedAzureDevOps', () => {
   it('Old visualstudio url is hosted.', () => {
