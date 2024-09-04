@@ -1,4 +1,4 @@
-import extractHostname from '../../task/utils/extractHostname';
+import extractHostname from './extractHostname';
 
 describe('Extract hostname', () => {
   it('Should convert old *.visualstudio.com hostname to dev.azure.com', () => {

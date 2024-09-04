@@ -1,11 +1,11 @@
 import * as fs from 'fs';
 import { load } from 'js-yaml';
-import { IDependabotRegistry, IDependabotUpdate } from '../../task/IDependabotConfig';
-import { parseRegistries, parseUpdates, validateConfiguration } from '../../task/utils/parseConfigFile';
+import { IDependabotRegistry, IDependabotUpdate } from './IDependabotConfig';
+import { parseRegistries, parseUpdates, validateConfiguration } from './parseConfigFile';
 
 describe('Parse configuration file', () => {
   it('Parsing works as expected', () => {
-    let config: any = load(fs.readFileSync('tests/utils/dependabot.yml', 'utf-8'));
+    let config: any = load(fs.readFileSync('tests/config/dependabot.yml', 'utf-8'));
     let updates = parseUpdates(config);
     expect(updates.length).toBe(3);
 
@@ -36,7 +36,7 @@ describe('Parse configuration file', () => {
 
 describe('Parse registries', () => {
   it('Parsing works as expected', () => {
-    let config: any = load(fs.readFileSync('tests/utils/sample-registries.yml', 'utf-8'));
+    let config: any = load(fs.readFileSync('tests/config/sample-registries.yml', 'utf-8'));
     let registries = parseRegistries(config);
     expect(Object.keys(registries).length).toBe(11);
 

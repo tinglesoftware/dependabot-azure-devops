@@ -1,6 +1,6 @@
 import * as tl from 'azure-pipelines-task-lib/task';
 import { ToolRunner } from 'azure-pipelines-task-lib/toolrunner';
-import { IDependabotRegistry, IDependabotUpdate } from './IDependabotConfig';
+import { IDependabotRegistry, IDependabotUpdate } from './utils/IDependabotConfig';
 import getSharedVariables from './utils/getSharedVariables';
 import { parseConfigFile } from './utils/parseConfigFile';
 import { resolveAzureDevOpsIdentities } from './utils/resolveAzureDevOpsIdentities';
