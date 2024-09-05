@@ -8,7 +8,7 @@ import { parseConfigFile } from './utils/parseConfigFile';
 import getSharedVariables from './utils/getSharedVariables';
 
 async function run() {
-  let taskWasSuccessful: boolean = true;
+  let taskSucceeded: boolean = true;
   let dependabot: DependabotCli = undefined;
   try {
 
@@ -18,29 +18,40 @@ async function run() {
     debug('Checking for `go` install...');
     which('go', true);
 
-    // Parse the dependabot.yaml configuration file
+    // Parse task input configuration
     const taskVariables = getSharedVariables();
+    if (!taskVariables) {
+      throw new Error('Failed to parse task input configuration');
+    }
+
+    // Parse dependabot.yaml configuration file
     const dependabotConfig = await parseConfigFile(taskVariables);
+    if (!dependabotConfig) {
+      throw new Error('Failed to parse dependabot.yaml configuration file from the target repository');
+    }
 
     // Initialise the DevOps API client
     const azdoApi = new AzureDevOpsWebApiClient(
       taskVariables.organizationUrl.toString(), taskVariables.systemAccessToken
     );
 
-    // Initialise the Dependabot updater
-    dependabot = new DependabotCli(
-      DependabotCli.CLI_IMAGE_LATEST, // TODO: Add config for this?
-      new DependabotOutputProcessor(azdoApi, taskVariables),
-      taskVariables.debug
-    );
-
-    // Fetch all active Dependabot pull requests from DevOps
+    // Fetch the active pull requests created by our user
     const myActivePullRequests = await azdoApi.getMyActivePullRequestProperties(
       taskVariables.project, taskVariables.repository
     );
 
-    // Loop through each package ecyosystem and perform updates
+    // Initialise the Dependabot updater
+    dependabot = new DependabotCli(
+      DependabotCli.CLI_IMAGE_LATEST, // TODO: Add config for this?
+      new DependabotOutputProcessor(azdoApi, myActivePullRequests, taskVariables),
+      taskVariables.debug
+    );
+
+    // Loop through each 'update' block in dependabot.yaml and perform updates
     dependabotConfig.updates.forEach(async (update) => {
+
+      // Parse the Dependabot metadata for the existing pull requests that are related to this update
+      // Dependabot will use this to determine if we need to create new pull requests or update/close existing ones
       const existingPullRequests = myActivePullRequests
         .filter(pr => {
           return pr.properties.find(p => p.name === DependabotOutputProcessor.PR_PROPERTY_NAME_PACKAGE_MANAGER && p.value === update.packageEcosystem);
@@ -51,33 +62,49 @@ async function run() {
           )
         });
 
-      // Update all dependencies, this will update create new pull requests
-      const allDependenciesJob = DependabotJobBuilder.updateAllDependenciesJob(taskVariables, update, dependabotConfig.registries, existingPullRequests);
-      if ((await dependabot.update(allDependenciesJob)).filter(u => !u.success).length > 0) {
-        taskWasSuccessful = false;
+      // Run an update job for "all dependencies"; this will create new pull requests for dependencies that need updating
+      const allDependenciesJob = DependabotJobBuilder.newUpdateAllJob(taskVariables, update, dependabotConfig.registries, existingPullRequests);
+      const allDependenciesUpdateOutputs = await dependabot.update(allDependenciesJob);
+      if (!allDependenciesUpdateOutputs || allDependenciesUpdateOutputs.filter(u => !u.success).length > 0) {
+        allDependenciesUpdateOutputs.filter(u => !u.success).forEach(u => exception(u.error));
+        taskSucceeded = false;
       }
 
-      // Update existing pull requests, this will either resolve merge conflicts or close pull requests that are no longer needed
-      for (const pr of existingPullRequests) {
-        const updatePullRequestJob = DependabotJobBuilder.updatePullRequestJob(taskVariables, update, dependabotConfig.registries, existingPullRequests, pr);
-        if ((await dependabot.update(updatePullRequestJob)).filter(u => !u.success).length > 0) {
-          taskWasSuccessful = false;
+      // Run an update job for each existing pull request; this will resolve merge conflicts and close pull requests that are no longer needed
+      if (!taskVariables.skipPullRequests) {
+        for (const pr of existingPullRequests) {
+          const updatePullRequestJob = DependabotJobBuilder.newUpdatePullRequestJob(taskVariables, update, dependabotConfig.registries, existingPullRequests, pr);
+          const updatePullRequestOutputs = await dependabot.update(updatePullRequestJob);
+          if (!updatePullRequestOutputs || updatePullRequestOutputs.filter(u => !u.success).length > 0) {
+            updatePullRequestOutputs.filter(u => !u.success).forEach(u => exception(u.error));
+            taskSucceeded = false;
+          }
         }
+      } else if (existingPullRequests.length > 0) {
+        warning(`Skipping update of existing pull requests as 'skipPullRequests' is set to 'true'`);
+        return;
       }
+
     });
 
     setResult(
-      taskWasSuccessful ? TaskResult.Succeeded : TaskResult.Failed,
-      taskWasSuccessful ? 'All update jobs completed successfully' : 'One or more update jobs failed, check logs for more information'
+      taskSucceeded ? TaskResult.Succeeded : TaskResult.Failed,
+      taskSucceeded ? 'All update jobs completed successfully' : 'One or more update jobs failed, check logs for more information'
     );
 
   }
   catch (e) {
-    error(`Unhandled task exception: ${e}`);
     setResult(TaskResult.Failed, e?.message);
+    exception(e);
   }
   finally {
     // TODO: dependabotCli?.cleanup();
+  }
+}
+
+function exception(e: Error) {
+  if (e?.stack) {
+    error(e.stack);
   }
 }
 

@@ -6,7 +6,7 @@ import { IDependabotUpdateJob } from "./interfaces/IDependabotUpdateJob";
 export class DependabotJobBuilder {
 
     // Create a dependabot update job that updates all dependencies for a package ecyosystem
-    public static updateAllDependenciesJob(
+    public static newUpdateAllJob(
         variables: ISharedVariables,
         update: IDependabotUpdate,
         registries: Record<string, IDependabotRegistry>,
@@ -24,7 +24,7 @@ export class DependabotJobBuilder {
                 'allowed-updates': [
                     { 'update-type': 'all' } // TODO: update.allow
                 ],
-                'ignore-conditions': [], // TODO: update.ignore
+                'ignore-conditions': mapIgnoreConditions(update.ignore),
                 'security-updates-only': false, // TODO: update.'security-updates-only'
                 'security-advisories': [], // TODO: update.securityAdvisories
                 source: {
@@ -55,7 +55,7 @@ export class DependabotJobBuilder {
     }
 
     // Create a dependabot update job that updates a single pull request
-    static updatePullRequestJob(
+    static newUpdatePullRequestJob(
         variables: ISharedVariables,
         update: IDependabotUpdate,
         registries: Record<string, IDependabotRegistry>,
@@ -64,7 +64,7 @@ export class DependabotJobBuilder {
     ): IDependabotUpdateJob {
         const dependencyGroupName = pullRequestToUpdate['dependency-group-name'];
         const dependencies = (dependencyGroupName ? pullRequestToUpdate['dependencies'] : pullRequestToUpdate)?.map(d => d['dependency-name']);
-        const result = this.updateAllDependenciesJob(variables, update, registries, existingPullRequests);
+        const result = this.newUpdateAllJob(variables, update, registries, existingPullRequests);
         result.job['id'] = `update-${update.packageEcosystem}-${Date.now()}`; // TODO: Refine this
         result.job['updating-a-pull-request'] = true;
         result.job['dependency-group-to-refresh'] = dependencyGroupName;
@@ -107,6 +107,9 @@ function mapRegistryCredentials(variables: ISharedVariables, registries: Record<
 
 // Map dependency groups
 function mapDependencyGroups(groups: string): any[] {
+    if (!groups) {
+        return [];
+    }
     const dependencyGroups = JSON.parse(groups);
     return Object.keys(dependencyGroups).map(name => {
         return {
@@ -114,4 +117,12 @@ function mapDependencyGroups(groups: string): any[] {
             'rules': dependencyGroups[name]
         };
     });
+}
+
+// Map ignore conditions
+function mapIgnoreConditions(ignore: string): any[] {
+    if (!ignore) {
+        return [];
+    }
+    return JSON.parse(ignore);
 }

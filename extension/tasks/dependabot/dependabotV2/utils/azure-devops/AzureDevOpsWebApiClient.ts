@@ -1,6 +1,6 @@
 import { debug, warning, error } from "azure-pipelines-task-lib/task"
 import { WebApi, getPersonalAccessTokenHandler } from "azure-devops-node-api";
-import { ItemContentType, PullRequestStatus } from "azure-devops-node-api/interfaces/GitInterfaces";
+import { CommentThreadStatus, CommentType, ItemContentType, PullRequestStatus } from "azure-devops-node-api/interfaces/GitInterfaces";
 import { IPullRequestProperties } from "./interfaces/IPullRequestProperties";
 import { IPullRequest } from "./interfaces/IPullRequest";
 
@@ -170,6 +170,80 @@ export class AzureDevOpsWebApiClient {
         catch (e) {
             error(`Failed to create pull request: ${e}`);
             return null;
+        }
+    }
+
+    // Close a pull request
+    public async closePullRequest(options: {
+        project: string,
+        repository: string,
+        pullRequestId: number,
+        comment: string,
+        deleteSourceBranch: boolean
+    }): Promise<boolean> {
+        console.info(`Closing pull request #${options.pullRequestId}...`);
+        try {
+            const userId = await this.getUserId();
+            const git = await this.connection.getGitApi();
+
+            // Add a comment to the pull request, if supplied
+            if (options.comment) {
+                console.info(` - Adding comment to pull request...`);
+                await git.createThread(
+                    {
+                        status: CommentThreadStatus.Closed,
+                        comments: [
+                            {
+                                author: {
+                                    id: userId
+                                },
+                                content: options.comment,
+                                commentType: CommentType.System
+                            }
+                        ]
+                    },
+                    options.repository,
+                    options.pullRequestId,
+                    options.project
+                );
+            }
+
+            // Close the pull request
+            console.info(` - Abandoning pull request...`);
+            const pullRequest = await git.updatePullRequest(
+                {
+                    status: PullRequestStatus.Abandoned,
+                    closedBy: {
+                        id: userId
+                    }
+                },
+                options.repository,
+                options.pullRequestId,
+                options.project
+            );
+
+            // Delete the source branch if required
+            if (options.deleteSourceBranch) {
+                console.info(` - Deleting source branch...`);
+                await git.updateRef(
+                    {
+                        name: `refs/heads/${pullRequest.sourceRefName}`,
+                        oldObjectId: pullRequest.lastMergeSourceCommit.commitId,
+                        newObjectId: "0000000000000000000000000000000000000000",
+                        isLocked: false
+                    },
+                    options.repository,
+                    '',
+                    options.project
+                );
+            }
+
+            console.info(` - Pull request #${options.pullRequestId} was closed successfully.`);
+            return true;
+        }
+        catch (e) {
+            error(`Failed to close pull request: ${e}`);
+            return false;
         }
     }
 

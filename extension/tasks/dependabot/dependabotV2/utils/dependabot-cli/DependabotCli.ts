@@ -34,7 +34,7 @@ export class DependabotCli {
             proxyImage?: string,
             updaterImage?: string
         }
-    ): Promise<IDependabotUpdateOutput[]> {
+    ): Promise<IDependabotUpdateOutput[] | undefined> {
 
         // Install dependabot if not already installed
         await this.ensureToolsAreInstalled();
@@ -69,48 +69,53 @@ export class DependabotCli {
         writeJobFile(jobInputPath, config);
 
         // Run dependabot update
-        if (!fs.existsSync(jobOutputPath)) {
-            console.info("Running dependabot update...");
+        if (!fs.existsSync(jobOutputPath) || fs.statSync(jobOutputPath)?.size == 0) {
+            console.info(`Running dependabot update job '${jobInputPath}'...`);
             const dependabotTool = tool(which("dependabot", true)).arg(dependabotArguments);
             const dependabotResultCode = await dependabotTool.execAsync({
-                silent: !this.debug
+                silent: !this.debug,
+                failOnStdErr: false,
+                ignoreReturnCode: true
             });
             if (dependabotResultCode != 0) {
-                throw new Error(`Dependabot update failed with exit code ${dependabotResultCode}`);
+                error(`Dependabot failed with exit code ${dependabotResultCode}`);
             }
         }
 
         // Process the job output
         const processedOutputs = Array<IDependabotUpdateOutput>();
         if (fs.existsSync(jobOutputPath)) {
-            console.info("Processing dependabot update outputs...");
-            for (const output of readScenarioOutputs(jobOutputPath)) {
-                // Documentation on the scenario model can be found here:
-                // https://github.com/dependabot/cli/blob/main/internal/model/scenario.go
-                const type = output['type'];
-                const data = output['expect']?.['data'];
-                var processedOutput = {
-                    success: true,
-                    error: null,
-                    output: {
-                        type: type,
-                        data: data
+            const outputs = readScenarioOutputs(jobOutputPath);
+            if (outputs?.length > 0) {
+                console.info("Processing Dependabot outputs...");
+                for (const output of outputs) {
+                    // Documentation on the scenario model can be found here:
+                    // https://github.com/dependabot/cli/blob/main/internal/model/scenario.go
+                    const type = output['type'];
+                    const data = output['expect']?.['data'];
+                    var processedOutput = {
+                        success: true,
+                        error: null,
+                        output: {
+                            type: type,
+                            data: data
+                        }
+                    };
+                    try {
+                        processedOutput.success = await this.outputProcessor.process(config, type, data);
                     }
-                };
-                try {
-                    processedOutput.success = await this.outputProcessor.process(config, type, data);
-                }
-                catch (e) {
-                    processedOutput.success = false;
-                    processedOutput.error = e;
-                }
-                finally {
-                    processedOutputs.push(processedOutput);
+                    catch (e) {
+                        processedOutput.success = false;
+                        processedOutput.error = e;
+                    }
+                    finally {
+                        processedOutputs.push(processedOutput);
+                    }
                 }
             }
         }
 
-        return processedOutputs;
+        return processedOutputs.length > 0 ? processedOutputs : undefined;
     }
 
     // Install dependabot if not already installed
@@ -159,13 +164,9 @@ function writeJobFile(path: string, config: IDependabotUpdateJob): void {
 // Documentation on the scenario model can be found here:
 // https://github.com/dependabot/cli/blob/main/internal/model/scenario.go
 function readScenarioOutputs(path: string): any[] {
-    if (!path) {
-        throw new Error("Scenario file path is required");
-    }
-
     const scenarioContent = fs.readFileSync(path, 'utf-8');
     if (!scenarioContent || typeof scenarioContent !== 'string') {
-        throw new Error(`Scenario file could not be read at '${path}'`);
+        return []; // No outputs or failed scenario
     }
 
     const scenario: any = yaml.load(scenarioContent);

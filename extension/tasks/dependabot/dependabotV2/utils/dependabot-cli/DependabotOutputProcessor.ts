@@ -4,12 +4,14 @@ import { IDependabotUpdateJob } from "./interfaces/IDependabotUpdateJob";
 import { IDependabotUpdateOutputProcessor } from "./interfaces/IDependabotUpdateOutputProcessor";
 import { AzureDevOpsWebApiClient } from "../azure-devops/AzureDevOpsWebApiClient";
 import { GitPullRequestMergeStrategy, VersionControlChangeType } from "azure-devops-node-api/interfaces/GitInterfaces";
+import { IPullRequestProperties } from "../azure-devops/interfaces/IPullRequestProperties";
 import * as path from 'path';
 import * as crypto from 'crypto';
 
 // Processes dependabot update outputs using the DevOps API
 export class DependabotOutputProcessor implements IDependabotUpdateOutputProcessor {
     private readonly api: AzureDevOpsWebApiClient;
+    private readonly existingPullRequests: IPullRequestProperties[];
     private readonly taskVariables: ISharedVariables;
 
     // Custom properties used to store dependabot metadata in pull requests.
@@ -17,15 +19,18 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
     public static PR_PROPERTY_NAME_PACKAGE_MANAGER = "Dependabot.PackageManager";
     public static PR_PROPERTY_NAME_DEPENDENCIES = "Dependabot.Dependencies";
 
-    constructor(api: AzureDevOpsWebApiClient, taskVariables: ISharedVariables) {
+    constructor(api: AzureDevOpsWebApiClient, existingPullRequests: IPullRequestProperties[], taskVariables: ISharedVariables) {
         this.api = api;
+        this.existingPullRequests = existingPullRequests;
         this.taskVariables = taskVariables;
     }
 
     // Process the appropriate DevOps API actions for the supplied dependabot update output
     public async process(update: IDependabotUpdateJob, type: string, data: any): Promise<boolean> {
         console.debug(`Processing output '${type}' with data:`, data);
-        let success: boolean = true;
+        const sourceRepoParts = update.job.source.repo.split('/'); // "{organisation}/{project}/_git/{repository}""
+        const project = sourceRepoParts[1];
+        const repository = sourceRepoParts[3];
         switch (type) {
 
             // Documentation on the 'data' model for each output type can be found here:
@@ -35,37 +40,24 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
                 // TODO: Store dependency list info in DevOps project properties? 
                 //       This could be used to generate a dependency graph hub/page/report (future feature maybe?)
                 //       https://learn.microsoft.com/en-us/rest/api/azure/devops/core/projects/set-project-properties
-                break;
+                return true;
 
             case 'create_pull_request':
                 if (this.taskVariables.skipPullRequests) {
                     warning(`Skipping pull request creation as 'skipPullRequests' is set to 'true'`);
-                    return;
+                    return true;
                 }
 
                 // TODO: Skip if active pull request limit reached.
 
-                const sourceRepoParts = update.job.source.repo.split('/'); // "{organisation}/{project}/_git/{repository}""
-                const dependencyGroupName = data['dependency-group']?.['name'];
-                let dependencies: any = data['dependencies']?.map((dep) => {
-                    return {
-                        'dependency-name': dep['name'],
-                        'dependency-version': dep['version'],
-                        'directory': dep['directory'],
-                    };
-                });
-                if (dependencyGroupName) {
-                    dependencies = {
-                        'dependency-group-name': dependencyGroupName,
-                        'dependencies': dependencies
-                    };
-                }
-                await this.api.createPullRequest({
-                    project: sourceRepoParts[1],
-                    repository: sourceRepoParts[3],
+                // Create a new pull request
+                const dependencies = getPullRequestDependenciesPropertyValueForOutputData(data);
+                const newPullRequest = await this.api.createPullRequest({
+                    project: project,
+                    repository: repository,
                     source: {
                         commit: data['base-commit-sha'] || update.job.source.commit,
-                        branch: sourceBranchNameForUpdate(update.job["package-manager"], update.config.targetBranch, dependencies)
+                        branch: getSourceBranchNameForUpdate(update.job["package-manager"], update.config.targetBranch, dependencies)
                     },
                     target: {
                         branch: update.config.targetBranch
@@ -116,12 +108,13 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
                         }
                     ]
                 })
-                break;
+
+                return newPullRequest !== undefined;
 
             case 'update_pull_request':
                 if (this.taskVariables.skipPullRequests) {
                     warning(`Skipping pull request update as 'skipPullRequests' is set to 'true'`);
-                    return;
+                    return true;
                 }
                 // TODO: Implement logic from /updater/lib/tinglesoftware/dependabot/api_clients/azure_apu_client.rb :: update_pull_request()
                 /*
@@ -147,25 +140,33 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
                     Mode            string `json:"mode" yaml:"mode,omitempty"`
                 }
                 */
-                break;
+                return true;
 
             case 'close_pull_request':
                 if (this.taskVariables.abandonUnwantedPullRequests) {
                     warning(`Skipping pull request closure as 'abandonUnwantedPullRequests' is set to 'true'`);
-                    return;
+                    return true;
                 }
-                // TODO: Implement logic from /updater/lib/tinglesoftware/dependabot/api_clients/azure_apu_client.rb :: close_pull_request()
-                /*
-                type ClosePullRequest struct {
-                    DependencyNames []string `json:"dependency-names" yaml:"dependency-names"`
-                    Reason          string   `json:"reason" yaml:"reason"`
+
+                // Find the pull request to close
+                const pullRequestToClose = this.getPullRequestForDependencyNames(update.job["package-manager"], data['dependency-names']);
+                if (!pullRequestToClose) {
+                    warning(`Could not find pull request to close for package manager '${update.job["package-manager"]}' and dependencies '${data['dependency-names'].join(', ')}'`);
+                    return true;
                 }
-                */
-                break;
+
+                // Close the pull request
+                return await this.api.closePullRequest({
+                    project: project,
+                    repository: repository,
+                    pullRequestId: pullRequestToClose.id,
+                    comment: this.taskVariables.commentPullRequests ? getPullRequestCloseReasonForOutputData(data) : undefined,
+                    deleteSourceBranch: true
+                });
 
             case 'mark_as_processed':
                 // No action required
-                break;
+                return true;
 
             case 'record_ecosystem_versions':
                 // No action required
@@ -174,29 +175,33 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
             case 'record_update_job_error':
                 error(`Update job error: ${data['error-type']}`);
                 console.log(data['error-details']);
-                success = false;
-                break;
+                return false;
 
             case 'record_update_job_unknown_error':
                 error(`Update job unknown error: ${data['error-type']}`);
                 console.log(data['error-details']);
-                success = false;
-                break;
+                return false;
 
             case 'increment_metric':
                 // No action required
-                break;
+                return true;
 
             default:
                 warning(`Unknown dependabot output type '${type}', ignoring...`);
-                break;
+                return true;
         }
-
-        return success;
     }
+
+    private getPullRequestForDependencyNames(packageManager: string, dependencyNames: string[]): IPullRequestProperties | undefined {
+        return this.existingPullRequests.find(pr => {
+            return pr.properties.find(p => p.name === DependabotOutputProcessor.PR_PROPERTY_NAME_PACKAGE_MANAGER && p.value === packageManager)
+                && pr.properties.find(p => p.name === DependabotOutputProcessor.PR_PROPERTY_NAME_DEPENDENCIES && dependencyNamesAreEqual(getDependencyNames(JSON.parse(p.value)), dependencyNames));
+        });
+    }
+
 }
 
-function sourceBranchNameForUpdate(packageEcosystem: string, targetBranch: string, dependencies: any): string {
+function getSourceBranchNameForUpdate(packageEcosystem: string, targetBranch: string, dependencies: any): string {
     const target = targetBranch?.replace(/^\/+|\/+$/g, ''); // strip leading/trailing slashes
     if (dependencies['dependency-group-name']) {
         // Group dependency update
@@ -211,4 +216,50 @@ function sourceBranchNameForUpdate(packageEcosystem: string, targetBranch: strin
         const leadDependency = dependencies.length === 1 ? dependencies[0] : null;
         return `dependabot/${packageEcosystem}/${target}/${leadDependency['dependency-name']}-${leadDependency['dependency-version']}`;
     }
+}
+
+function getPullRequestCloseReasonForOutputData(data: any): string {
+    // The first dependency is the "lead" dependency in a multi-dependency update
+    const leadDependencyName = data['dependency-names'][0];
+    let reason: string = null;
+    switch (data['reason']) {
+        case 'dependencies_changed': reason = `Looks like the dependencies have changed`; break;
+        case 'dependency_group_empty': reason = `Looks like the dependencies in this group are now empty`; break;
+        case 'dependency_removed': reason = `Looks like ${leadDependencyName} is no longer a dependency`; break;
+        case 'up_to_date': reason = `Looks like ${leadDependencyName} is up-to-date now`; break;
+        case 'update_no_longer_possible': reason = `Looks like ${leadDependencyName} can no longer be updated`; break;
+        // TODO: ??? => "Looks like these dependencies are updatable in another way, so this is no longer needed"
+        // TODO: ??? => "Superseded by ${new_pull_request_id}"
+    }
+    if (reason?.length > 0) {
+        reason += ', so this is no longer needed.';
+    }
+    return reason;
+}
+
+function getPullRequestDependenciesPropertyValueForOutputData(data: any): any {
+    const dependencyGroupName = data['dependency-group']?.['name'];
+    let dependencies: any = data['dependencies']?.map((dep) => {
+        return {
+            'dependency-name': dep['name'],
+            'dependency-version': dep['version'],
+            'directory': dep['directory'],
+        };
+    });
+    if (dependencyGroupName) {
+        dependencies = {
+            'dependency-group-name': dependencyGroupName,
+            'dependencies': dependencies
+        };
+    }
+    return dependencies;
+}
+
+function getDependencyNames(dependencies: any): string[] {
+    return (dependencies['dependency-group-name'] ? dependencies['dependencies'] : dependencies)?.map((dep) => dep['dependency-name']?.toString());
+}
+
+function dependencyNamesAreEqual(a: string[], b: string[]): boolean {
+    if (a.length !== b.length) return false;
+    return a.every((name) => b.includes(name));
 }
