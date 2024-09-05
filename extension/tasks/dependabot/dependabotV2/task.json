@@ -49,26 +49,6 @@
   ],
   "inputs": [
     {
-      "name": "useUpdateScriptvNext",
-      "type": "boolean",
-      "groupName": "advanced",
-      "label": "Use latest update script (vNext) (Experimental)",
-      "defaultValue": "false",
-      "required": false,
-      "helpMarkDown": "Determines if the task will use the newest 'vNext' update script instead of the default update script. This Defaults to `false`. See the [vNext update script documentation](https://github.com/tinglesoftware/dependabot-azure-devops/pull/1186) for more information."
-    },
-
-    {
-      "name": "failOnException",
-      "type": "boolean",
-      "groupName": "advanced",
-      "label": "Fail task when an update exception occurs.",
-      "defaultValue": true,
-      "required": false,
-      "helpMarkDown": "When set to `true`, a failure in updating a single dependency will cause the container execution to fail thereby causing the task to fail. This is important when you want a single failure to prevent trying to update other dependencies."
-    },
-
-    {
       "name": "skipPullRequests",
       "type": "boolean",
       "groupName": "pull_requests",
@@ -149,7 +129,6 @@
       "helpMarkDown": "A personal access token of the user of that shall be used to approve the created PR automatically. If the same user that creates the PR should approve, this can be left empty. This won't work with if the Build Service with the build service account!",
       "visibleRule": "autoApprove=true"
     },
-
     {
       "name": "gitHubConnection",
       "type": "connectedService:github:OAuth,PersonalAccessToken,InstallationToken,Token",
@@ -168,7 +147,6 @@
       "required": false,
       "helpMarkDown": "The raw Personal Access Token for accessing GitHub repositories. Use this in place of `gitHubConnection` such as when it is not possible to create a service connection."
     },
-
     {
       "name": "securityAdvisoriesFile",
       "type": "string",
@@ -177,7 +155,6 @@
       "helpMarkDown": "The file containing security advisories.",
       "required": false
     },
-
     {
       "name": "azureDevOpsServiceConnection",
       "type": "connectedService:Externaltfs",
@@ -226,32 +203,6 @@
       "label": "Space-separated list of dependency updates requirements to be excluded.",
       "required": false,
       "helpMarkDown": "Exclude certain dependency updates requirements. See list of allowed values [here](https://github.com/dependabot/dependabot-core/issues/600#issuecomment-407808103). Useful if you have lots of dependencies and the update script too slow. The values provided are space-separated. Example: `own all` to only use the `none` version requirement."
-    },
-    {
-      "name": "dockerImageTag",
-      "type": "string",
-      "groupName": "advanced",
-      "label": "Tag of the docker image to be pulled.",
-      "required": false,
-      "helpMarkDown": "The image tag to use when pulling the docker container used by the task. A tag also defines the version. By default, the task decides which tag/version to use. This can be the latest or most stable version. You can also use `major.minor` format to get the latest patch"
-    },
-    {
-      "name": "extraEnvironmentVariables",
-      "type": "string",
-      "groupName": "advanced",
-      "label": "Semicolon delimited list of environment variables",
-      "required": false,
-      "defaultValue": "",
-      "helpMarkDown": "A semicolon (`;`) delimited list of environment variables that are sent to the docker container. See possible use case [here](https://github.com/tinglesoftware/dependabot-azure-devops/issues/138)"
-    },
-    {
-      "name": "forwardHostSshSocket",
-      "type": "boolean",
-      "groupName": "advanced",
-      "label": "Forward the host ssh socket",
-      "defaultValue": "false",
-      "required": false,
-      "helpMarkDown": "Ensure that the host ssh socket is forwarded to the container to authenticate with ssh"
     }
   ],
   "dataSourceBindings": [],
