@@ -47,16 +47,22 @@ async function run() {
       taskVariables.debug
     );
 
+    const dependabotUpdaterOptions = {
+      collectorImage: undefined, // TODO: Add config for this?
+      proxyImage: undefined, // TODO: Add config for this?
+      updaterImage: undefined // TODO: Add config for this?
+    };
+
     // Loop through each 'update' block in dependabot.yaml and perform updates
     dependabotConfig.updates.forEach(async (update) => {
-
+      
       // Parse the Dependabot metadata for the existing pull requests that are related to this update
       // Dependabot will use this to determine if we need to create new pull requests or update/close existing ones
       const existingPullRequests = parsePullRequestProperties(prAuthorActivePullRequests, update.packageEcosystem);
 
       // Run an update job for "all dependencies"; this will create new pull requests for dependencies that need updating
       const allDependenciesJob = DependabotJobBuilder.newUpdateAllJob(taskVariables, update, dependabotConfig.registries, existingPullRequests);
-      const allDependenciesUpdateOutputs = await dependabot.update(allDependenciesJob);
+      const allDependenciesUpdateOutputs = await dependabot.update(allDependenciesJob, dependabotUpdaterOptions);
       if (!allDependenciesUpdateOutputs || allDependenciesUpdateOutputs.filter(u => !u.success).length > 0) {
         allDependenciesUpdateOutputs.filter(u => !u.success).forEach(u => exception(u.error));
         taskSucceeded = false;
@@ -66,7 +72,7 @@ async function run() {
       if (!taskVariables.skipPullRequests) {
         for (const pr of existingPullRequests) {
           const updatePullRequestJob = DependabotJobBuilder.newUpdatePullRequestJob(taskVariables, update, dependabotConfig.registries, existingPullRequests, pr);
-          const updatePullRequestOutputs = await dependabot.update(updatePullRequestJob);
+          const updatePullRequestOutputs = await dependabot.update(updatePullRequestJob, dependabotUpdaterOptions);
           if (!updatePullRequestOutputs || updatePullRequestOutputs.filter(u => !u.success).length > 0) {
             updatePullRequestOutputs.filter(u => !u.success).forEach(u => exception(u.error));
             taskSucceeded = false;
