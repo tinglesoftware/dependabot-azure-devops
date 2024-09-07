@@ -37,6 +37,9 @@ export interface ISharedVariables {
   /** The access token for Azure DevOps Repos */
   systemAccessToken: string;
 
+  authorEmail?: string;
+  authorName?: string;
+
   /** Determines if the pull requests that dependabot creates should have auto complete set */
   setAutoComplete: boolean;
   /** Merge strategies which can be used to complete a pull request */
@@ -114,6 +117,9 @@ export default function getSharedVariables(): ISharedVariables {
   let systemAccessUser: string = tl.getInput('azureDevOpsUser');
   let systemAccessToken: string = getAzureDevOpsAccessToken();
 
+  let authorEmail: string | undefined = tl.getInput('authorEmail');
+  let authorName: string | undefined = tl.getInput('authorName');
+
   // Prepare variables for auto complete
   let setAutoComplete = tl.getBoolInput('setAutoComplete', false);
   let mergeStrategy = tl.getInput('mergeStrategy', true);
@@ -165,6 +171,9 @@ export default function getSharedVariables(): ISharedVariables {
     systemAccessUser,
     systemAccessToken,
 
+    authorEmail,
+    authorName,
+    
     setAutoComplete,
     mergeStrategy,
     autoCompleteIgnoreConfigIds,

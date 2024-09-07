@@ -75,6 +75,24 @@
       "required": false,
       "helpMarkDown": "When set to `true` pull requests that are no longer needed are closed at the tail end of the execution. Defaults to `false`."
     },
+    { 
+      "name": "authorEmail",
+      "type": "string",
+      "groupName": "pull_requests",
+      "label": "Author email address",
+      "defaultValue": "",
+      "required": false,
+      "helpMarkDown": "The email address to use as the git commit author of the pull requests. Defaults to 'noreply@github.com'."
+    },
+    {
+      "name": "authorName",
+      "type": "string",
+      "groupName": "pull_requests",
+      "label": "Author name",
+      "defaultValue": "",
+      "required": false,
+      "helpMarkDown": "The name to use as the git commit author of the pull requests. Defaults to 'dependabot[bot]'."
+    },
     {
       "name": "setAutoComplete",
       "type": "boolean",

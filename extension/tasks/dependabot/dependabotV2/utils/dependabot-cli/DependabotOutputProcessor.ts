@@ -70,8 +70,8 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
                         branch: targetBranch
                     },
                     author: {
-                        email: 'noreply@github.com', // TODO: this.taskVariables.extraEnvironmentVariables['DEPENDABOT_AUTHOR_EMAIL']
-                        name: 'dependabot[bot]', // TODO: this.taskVariables.extraEnvironmentVariables['DEPENDABOT_AUTHOR_NAME']
+                        email: this.taskVariables.authorEmail || DependabotOutputProcessor.PR_DEFAULT_AUTHOR_EMAIL,
+                        name: this.taskVariables.authorName || DependabotOutputProcessor.PR_DEFAULT_AUTHOR_NAME
                     },
                     title: data['pr-title'],
                     description: data['pr-body'],
@@ -118,7 +118,7 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
                     repository: repository,
                     pullRequestId: pullRequestToUpdate.id,
                     changes: getPullRequestChangedFilesForOutputData(data),
-                    skipIfCommitsFromUsersOtherThan: 'noreply@github.com', // TODO: this.taskVariables.extraEnvironmentVariables['DEPENDABOT_AUTHOR_EMAIL']
+                    skipIfCommitsFromUsersOtherThan: this.taskVariables.authorEmail || DependabotOutputProcessor.PR_DEFAULT_AUTHOR_EMAIL,
                     skipIfNoConflicts: true,
                 });
 
