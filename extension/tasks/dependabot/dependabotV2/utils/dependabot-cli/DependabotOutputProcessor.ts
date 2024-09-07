@@ -10,7 +10,8 @@ import * as crypto from 'crypto';
 
 // Processes dependabot update outputs using the DevOps API
 export class DependabotOutputProcessor implements IDependabotUpdateOutputProcessor {
-    private readonly api: AzureDevOpsWebApiClient;
+    private readonly prAuthorClient: AzureDevOpsWebApiClient;
+    private readonly prApproverClient: AzureDevOpsWebApiClient;
     private readonly existingPullRequests: IPullRequestProperties[];
     private readonly taskVariables: ISharedVariables;
 
@@ -19,8 +20,13 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
     public static PR_PROPERTY_NAME_PACKAGE_MANAGER = "Dependabot.PackageManager";
     public static PR_PROPERTY_NAME_DEPENDENCIES = "Dependabot.Dependencies";
 
-    constructor(api: AzureDevOpsWebApiClient, existingPullRequests: IPullRequestProperties[], taskVariables: ISharedVariables) {
-        this.api = api;
+    public static PR_DEFAULT_AUTHOR_EMAIL = "noreply@github.com";
+    public static PR_DEFAULT_AUTHOR_NAME = "dependabot[bot]";
+
+    constructor(taskVariables: ISharedVariables, prAuthorClient: AzureDevOpsWebApiClient, prApproverClient: AzureDevOpsWebApiClient, existingPullRequests: IPullRequestProperties[]) {
+        this.taskVariables = taskVariables;
+        this.prAuthorClient = prAuthorClient;
+        this.prApproverClient = prApproverClient;
         this.existingPullRequests = existingPullRequests;
         this.taskVariables = taskVariables;
     }
@@ -52,8 +58,8 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
 
                 // Create a new pull request
                 const dependencies = getPullRequestDependenciesPropertyValueForOutputData(data);
-                const targetBranch = update.config.targetBranch || await this.api.getDefaultBranch(project, repository);
-                const newPullRequest = await this.api.createPullRequest({
+                const targetBranch = update.config.targetBranch || await this.prAuthorClient.getDefaultBranch(project, repository);
+                const newPullRequestId = await this.prAuthorClient.createPullRequest({
                     project: project,
                     repository: repository,
                     source: {
@@ -71,12 +77,8 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
                     description: data['pr-body'],
                     commitMessage: data['commit-message'],
                     autoComplete: this.taskVariables.setAutoComplete ? {
-                        userId: undefined, // TODO: add config for this?
                         ignorePolicyConfigIds: this.taskVariables.autoCompleteIgnoreConfigIds,
                         mergeStrategy: GitPullRequestMergeStrategy[this.taskVariables.mergeStrategy as keyof typeof GitPullRequestMergeStrategy]
-                    } : undefined,
-                    autoApprove: this.taskVariables.autoApprove ? {
-                        userId: this.taskVariables.autoApproveUserToken // TODO: convert token to user id
                     } : undefined,
                     assignees: update.config.assignees,
                     reviewers: update.config.reviewers,
@@ -86,7 +88,16 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
                     properties: buildPullRequestProperties(update.job["package-manager"], dependencies)
                 })
 
-                return newPullRequest !== undefined;
+                // Auto-approve the pull request, if required
+                if (this.taskVariables.autoApprove && this.prApproverClient && newPullRequestId) {
+                    await this.prApproverClient.approvePullRequest({
+                        project: project,
+                        repository: repository,
+                        pullRequestId: newPullRequestId
+                    });
+                }
+
+                return newPullRequestId !== undefined;
 
             case 'update_pull_request':
                 if (this.taskVariables.skipPullRequests) {
@@ -101,10 +112,8 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
                     return false;
                 }
 
-                // TODO: Skip if pull request has been manually modified (i.e. commits from other users)
-
                 // Update the pull request
-                return await this.api.updatePullRequest({
+                const pullRequestWasUpdated = await this.prAuthorClient.updatePullRequest({
                     project: project,
                     repository: repository,
                     pullRequestId: pullRequestToUpdate.id,
@@ -112,6 +121,17 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
                     skipIfCommitsFromUsersOtherThan: 'noreply@github.com', // TODO: this.taskVariables.extraEnvironmentVariables['DEPENDABOT_AUTHOR_EMAIL']
                     skipIfNoConflicts: true,
                 });
+
+                // Re-approve the pull request, if required
+                if (this.taskVariables.autoApprove && this.prApproverClient && pullRequestWasUpdated) {
+                    await this.prApproverClient.approvePullRequest({
+                        project: project,
+                        repository: repository,
+                        pullRequestId: pullRequestToUpdate.id
+                    });
+                }
+
+                return pullRequestWasUpdated;
 
             case 'close_pull_request':
                 if (this.taskVariables.abandonUnwantedPullRequests) {
@@ -127,7 +147,7 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
                 }
 
                 // Close the pull request
-                return await this.api.closePullRequest({
+                return await this.prAuthorClient.closePullRequest({
                     project: project,
                     repository: repository,
                     pullRequestId: pullRequestToClose.id,

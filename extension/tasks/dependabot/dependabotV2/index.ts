@@ -30,20 +30,20 @@ async function run() {
       throw new Error('Failed to parse dependabot.yaml configuration file from the target repository');
     }
 
-    // Initialise the DevOps API client
-    const azdoApi = new AzureDevOpsWebApiClient(
-      taskVariables.organizationUrl.toString(), taskVariables.systemAccessToken
-    );
+    // Initialise the DevOps API clients
+    // There are two clients; one for authoring pull requests and one for auto-approving pull requests (if configured)
+    const prAuthorClient = new AzureDevOpsWebApiClient(taskVariables.organizationUrl.toString(), taskVariables.systemAccessToken);
+    const prApproverClient = taskVariables.autoApprove ? new AzureDevOpsWebApiClient(taskVariables.organizationUrl.toString(), taskVariables.autoApproveUserToken) : null;
 
-    // Fetch the active pull requests created by our user
-    const myActivePullRequests = await azdoApi.getMyActivePullRequestProperties(
+    // Fetch the active pull requests created by the author user
+    const prAuthorActivePullRequests = await prAuthorClient.getMyActivePullRequestProperties(
       taskVariables.project, taskVariables.repository
     );
 
     // Initialise the Dependabot updater
     dependabot = new DependabotCli(
       DependabotCli.CLI_IMAGE_LATEST, // TODO: Add config for this?
-      new DependabotOutputProcessor(azdoApi, myActivePullRequests, taskVariables),
+      new DependabotOutputProcessor(taskVariables, prAuthorClient, prApproverClient, prAuthorActivePullRequests),
       taskVariables.debug
     );
 
@@ -52,7 +52,7 @@ async function run() {
 
       // Parse the Dependabot metadata for the existing pull requests that are related to this update
       // Dependabot will use this to determine if we need to create new pull requests or update/close existing ones
-      const existingPullRequests = parsePullRequestProperties(myActivePullRequests, update.packageEcosystem);
+      const existingPullRequests = parsePullRequestProperties(prAuthorActivePullRequests, update.packageEcosystem);
 
       // Run an update job for "all dependencies"; this will create new pull requests for dependencies that need updating
       const allDependenciesJob = DependabotJobBuilder.newUpdateAllJob(taskVariables, update, dependabotConfig.registries, existingPullRequests);

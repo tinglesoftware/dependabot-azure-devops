@@ -18,12 +18,8 @@ export interface IPullRequest {
     description: string,
     commitMessage: string,
     autoComplete?: {
-        userId: string | undefined,
         ignorePolicyConfigIds?: number[],
         mergeStrategy?: GitPullRequestMergeStrategy
-    },
-    autoApprove?: {
-        userId: string | undefined
     },
     assignees?: string[],
     reviewers?: string[],

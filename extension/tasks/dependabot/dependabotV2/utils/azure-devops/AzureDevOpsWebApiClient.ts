@@ -149,11 +149,10 @@ export class AzureDevOpsWebApiClient {
             // Set the pull request auto-complete status 
             if (pr.autoComplete) {
                 console.info(` - Setting auto-complete...`);
-                const autoCompleteUserId = pr.autoComplete.userId || userId;
                 await git.updatePullRequest(
                     {
                         autoCompleteSetBy: {
-                            id: autoCompleteUserId
+                            id: userId
                         },
                         completionOptions: {
                             autoCompleteIgnoreConfigIds: pr.autoComplete.ignorePolicyConfigIds,
@@ -165,22 +164,6 @@ export class AzureDevOpsWebApiClient {
                     },
                     pr.repository,
                     pullRequest.pullRequestId,
-                    pr.project
-                );
-            }
-
-            // Set the pull request auto-approve status
-            if (pr.autoApprove) {
-                console.info(` - Approving pull request...`);
-                const approverUserId = pr.autoApprove.userId || userId;
-                await git.createPullRequestReviewer(
-                    {
-                        vote: 10, // 10 - approved 5 - approved with suggestions 0 - no vote -5 - waiting for author -10 - rejected
-                        isReapprove: true
-                    },
-                    pr.repository,
-                    pullRequest.pullRequestId,
-                    approverUserId,
                     pr.project
                 );
             }
@@ -266,6 +249,36 @@ export class AzureDevOpsWebApiClient {
         }
         catch (e) {
             error(`Failed to update pull request: ${e}`);
+            return false;
+        }
+    }
+
+    // Approve a pull request
+    public async approvePullRequest(options: {
+        project: string,
+        repository: string,
+        pullRequestId: number
+    }): Promise<boolean> {
+        console.info(`Approving pull request #${options.pullRequestId}...`);
+        try {
+            const userId = await this.getUserId();
+            const git = await this.connection.getGitApi();
+
+            // Approve the pull request
+            console.info(` - Approving pull request...`);
+            await git.createPullRequestReviewer(
+                {
+                    vote: 10, // 10 - approved 5 - approved with suggestions 0 - no vote -5 - waiting for author -10 - rejected
+                    isReapprove: true
+                },
+                options.repository,
+                options.pullRequestId,
+                userId,
+                options.project
+            );
+        }
+        catch (e) {
+            error(`Failed to approve pull request: ${e}`);
             return false;
         }
     }
