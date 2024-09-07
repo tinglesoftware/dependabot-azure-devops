@@ -1,8 +1,8 @@
 import { debug, warning, error } from "azure-pipelines-task-lib/task"
 import { WebApi, getPersonalAccessTokenHandler } from "azure-devops-node-api";
-import { CommentThreadStatus, CommentType, ItemContentType, PullRequestStatus } from "azure-devops-node-api/interfaces/GitInterfaces";
+import { CommentThreadStatus, CommentType, ItemContentType, PullRequestAsyncStatus, PullRequestStatus } from "azure-devops-node-api/interfaces/GitInterfaces";
 import { IPullRequestProperties } from "./interfaces/IPullRequestProperties";
-import { IPullRequest } from "./interfaces/IPullRequest";
+import { IPullRequest, IFileChange } from "./interfaces/IPullRequest";
 
 // Wrapper for DevOps WebApi client with helper methods for easier management of dependabot pull requests
 export class AzureDevOpsWebApiClient {
@@ -33,7 +33,7 @@ export class AzureDevOpsWebApiClient {
             );
 
             return await Promise.all(
-                pullRequests.map(async pr => {
+                pullRequests?.map(async pr => {
                     const properties = (await git.getPullRequestProperties(repository, pr.pullRequestId, project))?.value;
                     return {
                         id: pr.pullRequestId,
@@ -81,8 +81,8 @@ export class AzureDevOpsWebApiClient {
                                         path: normalizeDevOpsPath(change.path)
                                     },
                                     newContent: {
-                                        content: change.content,
-                                        contentType: ItemContentType.RawText
+                                        content: Buffer.from(change.content, <BufferEncoding>change.encoding).toString('base64'),
+                                        contentType: ItemContentType.Base64Encoded
                                     }
                                 };
                             })
@@ -124,6 +124,10 @@ export class AzureDevOpsWebApiClient {
                     pr.project
                 );
             }
+
+            // TODO: Upload the pull request description as a 'changes.md' file attachment?
+            //       This might be a way to work around the 4000 character limit for PR descriptions, but needs more investigation.
+            // https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-attachments/create?view=azure-devops-rest-7.1
 
             // Set the pull request auto-complete status 
             if (pr.autoComplete) {
@@ -170,6 +174,82 @@ export class AzureDevOpsWebApiClient {
         catch (e) {
             error(`Failed to create pull request: ${e}`);
             return null;
+        }
+    }
+
+    // Update a pull request
+    public async updatePullRequest(options: {
+        project: string,
+        repository: string,
+        pullRequestId: number,
+        changes: IFileChange[],
+        skipIfCommitsFromUsersOtherThan?: string,
+        skipIfNoConflicts?: boolean
+    }): Promise<boolean> {
+        console.info(`Updating pull request #${options.pullRequestId}...`);
+        try {
+            const userId = await this.getUserId();
+            const git = await this.connection.getGitApi();
+
+            // Get the pull request details
+            const pullRequest = await git.getPullRequest(options.repository, options.pullRequestId, options.project);
+            if (!pullRequest) {
+                throw new Error(`Pull request #${options.pullRequestId} not found`);
+            }
+
+            // Skip if no merge conflicts
+            if (options.skipIfNoConflicts && pullRequest.mergeStatus !== PullRequestAsyncStatus.Conflicts) {
+                console.info(` - Skipping update as pull request has no merge conflicts.`);
+                return true;
+            }
+
+            // Skip if the pull request has been modified by another user
+            const commits = await git.getPullRequestCommits(options.repository, options.pullRequestId, options.project);
+            if (options.skipIfCommitsFromUsersOtherThan && commits.some(c => c.author?.email !== options.skipIfCommitsFromUsersOtherThan)) {
+                console.info(` - Skipping update as pull request has been modified by another user.`);
+                return true;
+            }
+
+            // Push changes to the source branch
+            console.info(` - Pushing ${options.changes.length} change(s) branch '${pullRequest.sourceRefName}'...`);
+            const push = await git.createPush(
+                {
+                    refUpdates: [
+                        {
+                            name: pullRequest.sourceRefName,
+                            oldObjectId: pullRequest.lastMergeSourceCommit.commitId
+                        }
+                    ],
+                    commits: [
+                        {
+                            comment: (pullRequest.mergeStatus === PullRequestAsyncStatus.Conflicts)
+                                ? "Resolve merge conflicts"
+                                : "Update dependency files",
+                            changes: options.changes.map(change => {
+                                return {
+                                    changeType: change.changeType,
+                                    item: {
+                                        path: normalizeDevOpsPath(change.path)
+                                    },
+                                    newContent: {
+                                        content: Buffer.from(change.content, <BufferEncoding>change.encoding).toString('base64'),
+                                        contentType: ItemContentType.Base64Encoded
+                                    }
+                                };
+                            })
+                        }
+                    ]
+                },
+                options.repository,
+                options.project
+            );
+
+            console.info(` - Pull request #${options.pullRequestId} was updated successfully.`);
+            return true;
+        }
+        catch (e) {
+            error(`Failed to update pull request: ${e}`);
+            return false;
         }
     }
 

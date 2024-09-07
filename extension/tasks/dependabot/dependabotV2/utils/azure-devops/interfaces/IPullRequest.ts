@@ -29,14 +29,16 @@ export interface IPullRequest {
     reviewers?: string[],
     labels?: string[],
     workItems?: number[],
-    changes: {
-        changeType: VersionControlChangeType,
-        path: string,
-        content: string,
-        encoding: string
-    }[],
+    changes: IFileChange[],
     properties?: {
         name: string,
         value: string
     }[]
 };
+
+export interface IFileChange {
+    changeType: VersionControlChangeType,
+    path: string,
+    content: string,
+    encoding: string
+}

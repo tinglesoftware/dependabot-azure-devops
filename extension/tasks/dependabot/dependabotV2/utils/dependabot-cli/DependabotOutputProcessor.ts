@@ -57,7 +57,7 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
                     repository: repository,
                     source: {
                         commit: data['base-commit-sha'] || update.job.source.commit,
-                        branch: getSourceBranchNameForUpdate(update.job["package-manager"], update.config.targetBranch, dependencies)
+                        branch: getSourceBranchNameForUpdate(update.job["package-manager"], targetBranch, dependencies)
                     },
                     target: {
                         branch: update.config.targetBranch
@@ -81,32 +81,8 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
                     reviewers: update.config.reviewers,
                     labels: update.config.labels?.split(',').map((label) => label.trim()) || [],
                     workItems: update.config.milestone ? [Number(update.config.milestone)] : [],
-                    changes: data['updated-dependency-files'].filter((file) => file['type'] === 'file').map((file) => {
-                        let changeType = VersionControlChangeType.None;
-                        if (file['deleted'] === true) {
-                            changeType = VersionControlChangeType.Delete;
-                        } else if (file['operation'] === 'update') {
-                            changeType = VersionControlChangeType.Edit;
-                        } else {
-                            changeType = VersionControlChangeType.Add;
-                        }
-                        return {
-                            changeType: changeType,
-                            path: path.join(file['directory'], file['name']),
-                            content: file['content'],
-                            encoding: file['content_encoding']
-                        }
-                    }),
-                    properties: [
-                        {
-                            name: DependabotOutputProcessor.PR_PROPERTY_NAME_PACKAGE_MANAGER,
-                            value: update.job["package-manager"]
-                        },
-                        {
-                            name: DependabotOutputProcessor.PR_PROPERTY_NAME_DEPENDENCIES,
-                            value: JSON.stringify(dependencies)
-                        }
-                    ]
+                    changes: getPullRequestChangedFilesForOutputData(data),
+                    properties: buildPullRequestProperties(update.job["package-manager"], dependencies)
                 })
 
                 return newPullRequest !== undefined;
@@ -116,31 +92,25 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
                     warning(`Skipping pull request update as 'skipPullRequests' is set to 'true'`);
                     return true;
                 }
-                // TODO: Implement logic from /updater/lib/tinglesoftware/dependabot/api_clients/azure_apu_client.rb :: update_pull_request()
-                /*
-                type UpdatePullRequest struct {
-                    BaseCommitSha          string           `json:"base-commit-sha" yaml:"base-commit-sha"`
-                    DependencyNames        []string         `json:"dependency-names" yaml:"dependency-names"`
-                    UpdatedDependencyFiles []DependencyFile `json:"updated-dependency-files" yaml:"updated-dependency-files"`
-                    PRTitle                string           `json:"pr-title" yaml:"pr-title,omitempty"`
-                    PRBody                 string           `json:"pr-body" yaml:"pr-body,omitempty"`
-                    CommitMessage          string           `json:"commit-message" yaml:"commit-message,omitempty"`
-                    DependencyGroup        map[string]any   `json:"dependency-group" yaml:"dependency-group,omitempty"`
+
+                // Find the pull request to update
+                const pullRequestToUpdate = this.getPullRequestForDependencyNames(update.job["package-manager"], data['dependency-names']);
+                if (!pullRequestToUpdate) {
+                    error(`Could not find pull request to update for package manager '${update.job["package-manager"]}' and dependencies '${data['dependency-names'].join(', ')}'`);
+                    return false;
                 }
-                type DependencyFile struct {
-                    Content         string `json:"content" yaml:"content"`
-                    ContentEncoding string `json:"content_encoding" yaml:"content_encoding"`
-                    Deleted         bool   `json:"deleted" yaml:"deleted"`
-                    Directory       string `json:"directory" yaml:"directory"`
-                    Name            string `json:"name" yaml:"name"`
-                    Operation       string `json:"operation" yaml:"operation"`
-                    SupportFile     bool   `json:"support_file" yaml:"support_file"`
-                    SymlinkTarget   string `json:"symlink_target,omitempty" yaml:"symlink_target,omitempty"`
-                    Type            string `json:"type" yaml:"type"`
-                    Mode            string `json:"mode" yaml:"mode,omitempty"`
-                }
-                */
-                return true;
+
+                // TODO: Skip if pull request has been manually modified (i.e. commits from other users)
+
+                // Update the pull request
+                return await this.api.updatePullRequest({
+                    project: project,
+                    repository: repository,
+                    pullRequestId: pullRequestToUpdate.id,
+                    changes: getPullRequestChangedFilesForOutputData(data),
+                    skipIfCommitsFromUsersOtherThan: 'noreply@github.com', // TODO: this.taskVariables.extraEnvironmentVariables['DEPENDABOT_AUTHOR_EMAIL']
+                    skipIfNoConflicts: true,
+                });
 
             case 'close_pull_request':
                 if (this.taskVariables.abandonUnwantedPullRequests) {
@@ -151,8 +121,8 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
                 // Find the pull request to close
                 const pullRequestToClose = this.getPullRequestForDependencyNames(update.job["package-manager"], data['dependency-names']);
                 if (!pullRequestToClose) {
-                    warning(`Could not find pull request to close for package manager '${update.job["package-manager"]}' and dependencies '${data['dependency-names'].join(', ')}'`);
-                    return true;
+                    error(`Could not find pull request to close for package manager '${update.job["package-manager"]}' and dependencies '${data['dependency-names'].join(', ')}'`);
+                    return false;
                 }
 
                 // Close the pull request
@@ -195,10 +165,35 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
     private getPullRequestForDependencyNames(packageManager: string, dependencyNames: string[]): IPullRequestProperties | undefined {
         return this.existingPullRequests.find(pr => {
             return pr.properties.find(p => p.name === DependabotOutputProcessor.PR_PROPERTY_NAME_PACKAGE_MANAGER && p.value === packageManager)
-                && pr.properties.find(p => p.name === DependabotOutputProcessor.PR_PROPERTY_NAME_DEPENDENCIES && dependencyNamesAreEqual(getDependencyNames(JSON.parse(p.value)), dependencyNames));
+                && pr.properties.find(p => p.name === DependabotOutputProcessor.PR_PROPERTY_NAME_DEPENDENCIES && areEqual(getDependencyNames(JSON.parse(p.value)), dependencyNames));
         });
     }
 
+}
+
+export function buildPullRequestProperties(packageManager: string, dependencies: any): any[] {
+    return [
+        {
+            name: DependabotOutputProcessor.PR_PROPERTY_NAME_PACKAGE_MANAGER,
+            value: packageManager
+        },
+        {
+            name: DependabotOutputProcessor.PR_PROPERTY_NAME_DEPENDENCIES,
+            value: JSON.stringify(dependencies)
+        }
+    ];
+}
+
+export function parsePullRequestProperties(pullRequests: IPullRequestProperties[], packageManager: string | null): any[] {
+    return pullRequests
+        .filter(pr => {
+            return pr.properties.find(p => p.name === DependabotOutputProcessor.PR_PROPERTY_NAME_PACKAGE_MANAGER && (packageManager === null || p.value === packageManager));
+        })
+        .map(pr => {
+            return JSON.parse(
+                pr.properties.find(p => p.name === DependabotOutputProcessor.PR_PROPERTY_NAME_DEPENDENCIES)?.value
+            )
+        });
 }
 
 function getSourceBranchNameForUpdate(packageEcosystem: string, targetBranch: string, dependencies: any): string {
@@ -216,6 +211,25 @@ function getSourceBranchNameForUpdate(packageEcosystem: string, targetBranch: st
         const leadDependency = dependencies.length === 1 ? dependencies[0] : null;
         return `dependabot/${packageEcosystem}/${target}/${leadDependency['dependency-name']}-${leadDependency['dependency-version']}`;
     }
+}
+
+function getPullRequestChangedFilesForOutputData(data: any): any {
+    return data['updated-dependency-files'].filter((file) => file['type'] === 'file').map((file) => {
+        let changeType = VersionControlChangeType.None;
+        if (file['deleted'] === true) {
+            changeType = VersionControlChangeType.Delete;
+        } else if (file['operation'] === 'update') {
+            changeType = VersionControlChangeType.Edit;
+        } else {
+            changeType = VersionControlChangeType.Add;
+        }
+        return {
+            changeType: changeType,
+            path: path.join(file['directory'], file['name']),
+            content: file['content'],
+            encoding: file['content_encoding']
+        }
+    });
 }
 
 function getPullRequestCloseReasonForOutputData(data: any): string {
@@ -259,7 +273,7 @@ function getDependencyNames(dependencies: any): string[] {
     return (dependencies['dependency-group-name'] ? dependencies['dependencies'] : dependencies)?.map((dep) => dep['dependency-name']?.toString());
 }
 
-function dependencyNamesAreEqual(a: string[], b: string[]): boolean {
+function areEqual(a: string[], b: string[]): boolean {
     if (a.length !== b.length) return false;
     return a.every((name) => b.includes(name));
 }

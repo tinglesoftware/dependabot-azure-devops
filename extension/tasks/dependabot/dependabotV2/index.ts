@@ -2,7 +2,7 @@ import { which, setResult, TaskResult } from "azure-pipelines-task-lib/task"
 import { debug, warning, error } from "azure-pipelines-task-lib/task"
 import { DependabotCli } from './utils/dependabot-cli/DependabotCli';
 import { AzureDevOpsWebApiClient } from "./utils/azure-devops/AzureDevOpsWebApiClient";
-import { DependabotOutputProcessor } from "./utils/dependabot-cli/DependabotOutputProcessor";
+import { DependabotOutputProcessor, parsePullRequestProperties } from "./utils/dependabot-cli/DependabotOutputProcessor";
 import { DependabotJobBuilder } from "./utils/dependabot-cli/DependabotJobBuilder";
 import { parseConfigFile } from './utils/parseConfigFile';
 import getSharedVariables from './utils/getSharedVariables';
@@ -52,15 +52,7 @@ async function run() {
 
       // Parse the Dependabot metadata for the existing pull requests that are related to this update
       // Dependabot will use this to determine if we need to create new pull requests or update/close existing ones
-      const existingPullRequests = myActivePullRequests
-        .filter(pr => {
-          return pr.properties.find(p => p.name === DependabotOutputProcessor.PR_PROPERTY_NAME_PACKAGE_MANAGER && p.value === update.packageEcosystem);
-        })
-        .map(pr => {
-          return JSON.parse(
-            pr.properties.find(p => p.name === DependabotOutputProcessor.PR_PROPERTY_NAME_DEPENDENCIES)?.value
-          )
-        });
+      const existingPullRequests = parsePullRequestProperties(myActivePullRequests, update.packageEcosystem);
 
       // Run an update job for "all dependencies"; this will create new pull requests for dependencies that need updating
       const allDependenciesJob = DependabotJobBuilder.newUpdateAllJob(taskVariables, update, dependabotConfig.registries, existingPullRequests);
