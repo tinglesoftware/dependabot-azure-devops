@@ -52,6 +52,7 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
 
                 // Create a new pull request
                 const dependencies = getPullRequestDependenciesPropertyValueForOutputData(data);
+                const targetBranch = update.config.targetBranch || await this.api.getDefaultBranch(project, repository);
                 const newPullRequest = await this.api.createPullRequest({
                     project: project,
                     repository: repository,
@@ -60,7 +61,7 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
                         branch: getSourceBranchNameForUpdate(update.job["package-manager"], targetBranch, dependencies)
                     },
                     target: {
-                        branch: update.config.targetBranch
+                        branch: targetBranch
                     },
                     author: {
                         email: 'noreply@github.com', // TODO: this.taskVariables.extraEnvironmentVariables['DEPENDABOT_AUTHOR_EMAIL']

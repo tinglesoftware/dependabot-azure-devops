@@ -17,6 +17,23 @@ export class AzureDevOpsWebApiClient {
         );
     }
 
+    // Get the default branch for a repository
+    public async getDefaultBranch(project: string, repository: string): Promise<string> {
+        try {
+            const git = await this.connection.getGitApi();
+            const repo = await git.getRepository(repository, project);
+            if (!repo) {
+                throw new Error(`Repository '${project}/${repository}' not found`);
+            }
+
+            return repo.defaultBranch;
+        }
+        catch (e) {
+            error(`Failed to get default branch for '${project}/${repository}': ${e}`);
+            throw e;
+        }
+    }
+
     // Get the properties for all active pull request created by the current user
     public async getMyActivePullRequestProperties(project: string, repository: string): Promise<IPullRequestProperties[]> {
         console.info(`Fetching active pull request properties in '${project}/${repository}'...`);
