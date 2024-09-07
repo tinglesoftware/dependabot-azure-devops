@@ -90,7 +90,7 @@ async function run() {
     exception(e);
   }
   finally {
-    // TODO: dependabotCli?.cleanup();
+    dependabot?.cleanup();
   }
 }
 
