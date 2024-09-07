@@ -54,7 +54,11 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
                     return true;
                 }
 
-                // TODO: Skip if active pull request limit reached.
+                // Skip if active pull request limit reached.
+                if (update.config.openPullRequestsLimit > 0 && this.existingPullRequests.length >= update.config.openPullRequestsLimit) {
+                    warning(`Skipping pull request creation as the maximum number of active pull requests (${update.config.openPullRequestsLimit}) has been reached`);
+                    return true;
+                }
 
                 // Create a new pull request
                 const dependencies = getPullRequestDependenciesPropertyValueForOutputData(data);
