@@ -20,6 +20,10 @@ export class AzureDevOpsWebApiClient {
         );
     }
 
+    private async getUserId(): Promise<string> {
+        return (this.userId ||= (await this.connection.connect()).authenticatedUser?.id || "");
+    }
+
     /**
      * Get the default branch for a repository
      * @param project 
@@ -385,9 +389,65 @@ export class AzureDevOpsWebApiClient {
             return false;
         }
     }
+    
+    /**
+     * Get a project property
+     * @param project 
+     * @param name 
+     * @param valueBuilder 
+     * @returns 
+     */
+    public async getProjectProperty(project: string, name: string): Promise<string | null> {
+        try {
+            const core = await this.connection.getCoreApi();
+            const projects = await core.getProjects();
+            const projectGuid = projects?.find(p => p.name === project)?.id;
+            const properties = await core.getProjectProperties(projectGuid);
+            return properties?.find(p => p.name === name)?.value;
+        } catch (e) {
+            error(`Failed to get project property '${name}': ${e}`);
+            console.log(e);
+            return null;
+        }
+    }
 
-    private async getUserId(): Promise<string> {
-        return (this.userId ||= (await this.connection.connect()).authenticatedUser?.id || "");
+    /**
+     * Update a project property
+     * @param project 
+     * @param name 
+     * @param valueBuilder 
+     * @returns 
+     */
+    public async updateProjectProperty(project: string, name: string, valueBuilder: (existingValue: string) => string): Promise<boolean> {
+        try {
+            
+            // Get the existing project property value
+            const core = await this.connection.getCoreApi();
+            const projects = await core.getProjects();
+            const projectGuid = projects?.find(p => p.name === project)?.id;
+            const properties = await core.getProjectProperties(projectGuid);
+            const propertyValue = properties?.find(p => p.name === name)?.value;
+            
+            // Update the project property
+            await core.setProjectProperties(
+                undefined,
+                projectGuid,
+                [
+                    {
+                        op: "add",
+                        path: "/" + name,
+                        value: valueBuilder(propertyValue || "")
+                    }
+                ]
+            );
+
+            return true;
+
+        } catch (e) {
+            error(`Failed to update project property '${name}': ${e}`);
+            console.log(e);
+            return false;
+        }
     }
 }
 

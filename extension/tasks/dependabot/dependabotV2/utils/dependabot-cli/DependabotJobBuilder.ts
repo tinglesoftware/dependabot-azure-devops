@@ -131,7 +131,7 @@ function buildUpdateJobConfig(
 
 function mapDependenciesForSecurityUpdate(dependencyList: any[]): string[] {
     if (!dependencyList || dependencyList.length == 0) {
-        // No dependency list snapshot exists yet; Attempt to do a security update for all dependencies, but it will probably fail as it is not supported in dependabot-core yet
+        // No dependency list snapshot exists yet; Attempt to do a security update for all dependencies, but it will probably fail as it is not supported in dependabot-updater yet
         // TODO: Find a way to discover vulnerable dependencies for security-only updates without a dependency list snapshot.
         //       It would be nice if we could run dependabot-cli (e.g. `dependabot --discover-only`), but this is not supported currently.
         warning(
@@ -141,7 +141,7 @@ function mapDependenciesForSecurityUpdate(dependencyList: any[]): string[] {
         return []; 
     }
     return dependencyList.map(dependency => {
-        return dependency["dependency-name"];
+        return dependency["name"];
     });
 }
 

@@ -17,6 +17,10 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
     private readonly existingPullRequests: IPullRequestProperties[];
     private readonly taskVariables: ISharedVariables;
 
+    // Custom properties used to store dependabot metadata in projects.
+    // https://learn.microsoft.com/en-us/rest/api/azure/devops/core/projects/set-project-properties
+    public static PROJECT_PROPERTY_NAME_DEPENDENCY_LIST = "Dependabot.DependencyList";
+    
     // Custom properties used to store dependabot metadata in pull requests.
     // https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-properties
     public static PR_PROPERTY_NAME_PACKAGE_MANAGER = "Dependabot.PackageManager";
@@ -51,10 +55,23 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
             // See: https://github.com/dependabot/cli/blob/main/internal/model/update.go
 
             case 'update_dependency_list':
-                // TODO: Store dependency list info in DevOps project properties? 
-                //       This could be used to generate a dependency graph hub/page/report (future feature maybe?)
-                //       https://learn.microsoft.com/en-us/rest/api/azure/devops/core/projects/set-project-properties
-                return true;
+
+                // Store the dependency list snapshot in project properties, for future reference
+                return this.prAuthorClient.updateProjectProperty(
+                    project,
+                    DependabotOutputProcessor.PROJECT_PROPERTY_NAME_DEPENDENCY_LIST,
+                    function(existingValue: string) {
+                        const repoDependencyLists = JSON.parse(existingValue || '{}');
+                        repoDependencyLists[repository] = repoDependencyLists[repository] || {};
+                        repoDependencyLists[repository][update.job["package-manager"]] = {
+                            'dependencies': data['dependencies'],
+                            'dependency-files': data['dependency_files'],
+                            'last-updated': new Date().toISOString()
+                        };
+
+                        return JSON.stringify(repoDependencyLists);
+                    }
+                );
 
             case 'create_pull_request':
                 if (this.taskVariables.skipPullRequests) {
@@ -216,6 +233,11 @@ export function buildPullRequestProperties(packageManager: string, dependencies:
             value: JSON.stringify(dependencies)
         }
     ];
+}
+
+export function parseDependencyListProperty(dependencyList: string, repository: string, packageManager: string): any {
+    const repoDependencyLists = JSON.parse(dependencyList || '{}');
+    return repoDependencyLists[repository]?.[packageManager];
 }
 
 export function parsePullRequestProperties(pullRequests: IPullRequestProperties[], packageManager: string | null): any[] {

@@ -2,7 +2,7 @@ import { which, setResult, TaskResult } from "azure-pipelines-task-lib/task"
 import { debug, warning, error } from "azure-pipelines-task-lib/task"
 import { DependabotCli } from './utils/dependabot-cli/DependabotCli';
 import { AzureDevOpsWebApiClient } from "./utils/azure-devops/AzureDevOpsWebApiClient";
-import { DependabotOutputProcessor, parsePullRequestProperties } from "./utils/dependabot-cli/DependabotOutputProcessor";
+import { DependabotOutputProcessor, parseDependencyListProperty, parsePullRequestProperties } from "./utils/dependabot-cli/DependabotOutputProcessor";
 import { DependabotJobBuilder } from "./utils/dependabot-cli/DependabotJobBuilder";
 import parseDependabotConfigFile from './utils/dependabot/parseConfigFile';
 import parseTaskInputConfiguration from './utils/getSharedVariables';
@@ -56,15 +56,21 @@ async function run() {
     // Loop through each 'update' block in dependabot.yaml and perform updates
     await Promise.all(dependabotConfig.updates.map(async (update) => {
       
-      // TODO: Read the last dependency list snapshot from project properties
-      const dependencyList = undefined;
+      // Parse the last dependency list snapshot (if any) from the project properties.
+      // This is required when doing a security-only update as dependabot requires the list of vulnerable dependencies to be updated update.
+      // Automatic discovery of vulnerable dependencies during a security-only update is not currently supported by dependabot-updater.
+      const dependencyList = parseDependencyListProperty(
+        await prAuthorClient.getProjectProperty(taskInputs.project, DependabotOutputProcessor.PROJECT_PROPERTY_NAME_DEPENDENCY_LIST),
+        taskInputs.repository,
+        update["package-ecosystem"]
+      );
 
       // Parse the Dependabot metadata for the existing pull requests that are related to this update
       // Dependabot will use this to determine if we need to create new pull requests or update/close existing ones
       const existingPullRequests = parsePullRequestProperties(prAuthorActivePullRequests, update["package-ecosystem"]);
 
       // Run an update job for "all dependencies"; this will create new pull requests for dependencies that need updating
-      const allDependenciesJob = DependabotJobBuilder.newUpdateAllJob(taskInputs, update, dependabotConfig.registries, dependencyList, existingPullRequests);
+      const allDependenciesJob = DependabotJobBuilder.newUpdateAllJob(taskInputs, update, dependabotConfig.registries, dependencyList['dependencies'], existingPullRequests);
       const allDependenciesUpdateOutputs = await dependabot.update(allDependenciesJob, dependabotUpdaterOptions);
       if (!allDependenciesUpdateOutputs || allDependenciesUpdateOutputs.filter(u => !u.success).length > 0) {
         allDependenciesUpdateOutputs.filter(u => !u.success).forEach(u => exception(u.error));
