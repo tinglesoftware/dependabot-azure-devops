@@ -1,88 +1,207 @@
+import { error, warning, debug } from "azure-pipelines-task-lib";
 import { ISharedVariables } from "../getSharedVariables";
-import { IDependabotRegistry, IDependabotUpdate } from "../IDependabotConfig";
-import { IDependabotUpdateJob } from "./interfaces/IDependabotUpdateJob";
+import { IDependabotAllowCondition, IDependabotGroup, IDependabotRegistry, IDependabotUpdate } from "../dependabot/interfaces/IDependabotConfig";
+import { IDependabotUpdateOperation } from "./interfaces/IDependabotUpdateOperation";
+import * as crypto from 'crypto';
 
-// Wrapper class for building dependabot update job objects
+/**
+ * Wrapper class for building dependabot update job objects
+ */
 export class DependabotJobBuilder {
 
-    // Create a dependabot update job that updates all dependencies for a package ecyosystem
+    /**
+     * Create a dependabot update job that updates all dependencies for a package ecyosystem
+     * @param taskInputs 
+     * @param update 
+     * @param registries 
+     * @param dependencyList 
+     * @param existingPullRequests 
+     * @returns 
+     */
     public static newUpdateAllJob(
-        variables: ISharedVariables,
+        taskInputs: ISharedVariables,
         update: IDependabotUpdate,
         registries: Record<string, IDependabotRegistry>,
+        dependencyList: any[],
         existingPullRequests: any[]
-    ): IDependabotUpdateJob {
-        return {
-            config: update,
-            job: {
-                // TODO: Parse all options from `config` and `variables`
-                id: `update-${update.packageEcosystem}-all`, // TODO: Refine this
-                'package-manager': update.packageEcosystem,
-                'update-subdependencies': true, // TODO: add config option
-                'updating-a-pull-request': false,
-                'dependency-groups': mapDependencyGroups(update.groups),
-                'allowed-updates': [
-                    { 'update-type': 'all' } // TODO: update.allow
-                ],
-                'ignore-conditions': mapIgnoreConditions(update.ignore),
-                'security-updates-only': false, // TODO: update.'security-updates-only'
-                'security-advisories': [], // TODO: update.securityAdvisories
-                source: {
-                    provider: 'azure',
-                    'api-endpoint': variables.apiEndpointUrl,
-                    hostname: variables.hostname,
-                    repo: `${variables.organization}/${variables.project}/_git/${variables.repository}`,
-                    branch: update.targetBranch,
-                    commit: undefined, // use latest commit of target branch
-                    directory: update.directories?.length == 0 ? update.directory : undefined,
-                    directories: update.directories?.length > 0 ? update.directories : undefined
-                },
-                'existing-pull-requests': existingPullRequests.filter(pr => !pr['dependency-group-name']),
-                'existing-group-pull-requests': existingPullRequests.filter(pr => pr['dependency-group-name']),
-                'commit-message-options': undefined, // TODO: update.commitMessageOptions
-                'experiments': undefined, // TODO: update.experiments
-                'max-updater-run-time': undefined, // TODO: update.maxUpdaterRunTime
-                'reject-external-code': undefined, // TODO: update.insecureExternalCodeExecution
-                'repo-private': undefined, // TODO: update.repoPrivate
-                'repo-contents-path': undefined, // TODO: update.repoContentsPath
-                'requirements-update-strategy': undefined, // TODO: update.requirementsUpdateStrategy
-                'lockfile-only': undefined, // TODO: update.lockfileOnly
-                'vendor-dependencies': undefined, // TODO: update.vendorDependencies
-                'debug': variables.debug
-            },
-            credentials: mapRegistryCredentials(variables, registries)
-        };
+    ): IDependabotUpdateOperation {
+        const packageEcosystem = update["package-ecosystem"];
+        const securityUpdatesOnly = update["open-pull-requests-limit"] == 0;
+        const updateDependencyNames = securityUpdatesOnly ? mapDependenciesForSecurityUpdate(dependencyList): undefined;
+        return buildUpdateJobConfig(
+            `update-${packageEcosystem}-${securityUpdatesOnly ? 'security-only' : 'all'}`,
+            taskInputs, 
+            update, 
+            registries, 
+            false, 
+            undefined, 
+            updateDependencyNames, 
+            existingPullRequests
+        );
     }
 
-    // Create a dependabot update job that updates a single pull request
-    static newUpdatePullRequestJob(
-        variables: ISharedVariables,
+    /**
+     * Create a dependabot update job that updates a single pull request
+     * @param taskInputs 
+     * @param update 
+     * @param registries 
+     * @param existingPullRequests 
+     * @param pullRequestToUpdate 
+     * @returns 
+     */
+    public static newUpdatePullRequestJob(
+        taskInputs: ISharedVariables,
         update: IDependabotUpdate,
         registries: Record<string, IDependabotRegistry>,
         existingPullRequests: any[],
         pullRequestToUpdate: any
-    ): IDependabotUpdateJob {
+    ): IDependabotUpdateOperation {
+        const packageEcosystem = update["package-ecosystem"];
         const dependencyGroupName = pullRequestToUpdate['dependency-group-name'];
         const dependencies = (dependencyGroupName ? pullRequestToUpdate['dependencies'] : pullRequestToUpdate)?.map(d => d['dependency-name']);
-        const result = this.newUpdateAllJob(variables, update, registries, existingPullRequests);
-        result.job['id'] = `update-${update.packageEcosystem}-${Date.now()}`; // TODO: Refine this
-        result.job['updating-a-pull-request'] = true;
-        result.job['dependency-group-to-refresh'] = dependencyGroupName;
-        result.job['dependencies'] = dependencies;
-        return result;
+        const dependencyNamesHash = crypto.createHash('md5').update(dependencies.join(',')).digest('hex').substring(0, 10)
+        return buildUpdateJobConfig(
+            `update-${packageEcosystem}-pr-${dependencyNamesHash}`,
+            taskInputs,
+            update,
+            registries,
+            true,
+            dependencyGroupName,
+            dependencies,
+            existingPullRequests
+        );
     }
 
 }
 
-// Map registry credentials
-function mapRegistryCredentials(variables: ISharedVariables, registries: Record<string, IDependabotRegistry>): any[] {
+function buildUpdateJobConfig(
+    id: string,
+    taskInputs: ISharedVariables,
+    update: IDependabotUpdate,
+    registries: Record<string, IDependabotRegistry>,
+    updatingPullRequest: boolean,
+    updateDependencyGroupName: string | undefined,
+    updateDependencyNames: string[] | undefined,
+    existingPullRequests: any[]) {
+    const hasMultipleDirectories = update.directories?.length > 1;
+    return {
+        config: update,
+        job: {
+            'id': id,
+            'package-manager': update["package-ecosystem"],
+            'update-subdependencies': true, // TODO: add config option?
+            'updating-a-pull-request': updatingPullRequest,
+            'dependency-group-to-refresh': updateDependencyGroupName,
+            'dependency-groups': mapGroupsFromDependabotConfigToJobConfig(update.groups),
+            'dependencies': updateDependencyNames,
+            'allowed-updates': mapAllowedUpdatesFromDependabotConfigToJobConfig(update.allow),
+            'ignore-conditions': mapIgnoreConditionsFromDependabotConfigToJobConfig(update.ignore),
+            'security-updates-only': update["open-pull-requests-limit"] == 0,
+            'security-advisories': [], // TODO: add config option
+            'source': {
+                'provider': 'azure',
+                'api-endpoint': taskInputs.apiEndpointUrl,
+                'hostname': taskInputs.hostname,
+                'repo': `${taskInputs.organization}/${taskInputs.project}/_git/${taskInputs.repository}`,
+                'branch': update["target-branch"],
+                'commit': undefined, // use latest commit of target branch
+                'directory': hasMultipleDirectories ? undefined : update.directory || '/',
+                'directories': hasMultipleDirectories ? update.directories : undefined
+            },
+            'existing-pull-requests': existingPullRequests.filter(pr => !pr['dependency-group-name']),
+            'existing-group-pull-requests': existingPullRequests.filter(pr => pr['dependency-group-name']),
+            'commit-message-options': update["commit-message"] === undefined ? undefined : {
+                'prefix': update["commit-message"]?.["prefix"],
+                'prefix-development': update["commit-message"]?.["prefix-development"],
+                'include-scope': update["commit-message"]?.["include"],
+            },
+            'experiments': undefined, // TODO: add config option
+            'max-updater-run-time': undefined, // TODO: add config option?
+            'reject-external-code': (update["insecure-external-code-execution"]?.toLocaleLowerCase() == "allow"),
+            'repo-private': undefined, // TODO: add config option?
+            'repo-contents-path': undefined, // TODO: add config option?
+            'requirements-update-strategy': undefined, // TODO: add config option
+            'lockfile-only': undefined, // TODO: add config option
+            'vendor-dependencies': update.vendor,
+            'debug': taskInputs.debug
+        },
+        credentials: mapRegistryCredentialsFromDependabotConfigToJobConfig(taskInputs, registries)
+    };
+}
+
+function mapDependenciesForSecurityUpdate(dependencyList: any[]): string[] {
+    if (!dependencyList || dependencyList.length == 0) {
+        // No dependency list snapshot exists yet; Attempt to do a security update for all dependencies, but it will probably fail as it is not supported in dependabot-core yet
+        // TODO: Find a way to discover vulnerable dependencies for security-only updates without a dependency list snapshot.
+        //       It would be nice if we could run dependabot-cli (e.g. `dependabot --discover-only`), but this is not supported currently.
+        warning(
+            "Security updates can only be performed if there is a previous dependency list snapshot available, but there is none as you have not completed a successful update job yet. " +
+            "Dependabot does not currently support discovering vulnerable dependencies during security-only updates and it is likely that this update operation will fail."
+        );
+        return []; 
+    }
+    return dependencyList.map(dependency => {
+        return dependency["dependency-name"];
+    });
+}
+
+function mapGroupsFromDependabotConfigToJobConfig(dependencyGroups: Record<string, IDependabotGroup>): any[] {
+    if (!dependencyGroups) {
+        return undefined;
+    }
+    return Object.keys(dependencyGroups).map(name => {
+        const group = dependencyGroups[name];
+        return {
+            'name': name,
+            'applies-to': group["applies-to"],
+            'rules': {
+                'patterns': group["patterns"],
+                'exclude-patterns': group["exclude-patterns"],
+                'dependency-type': group["dependency-type"],
+                'update-types': group["update-types"]
+            }
+        };
+    });
+}
+
+function mapAllowedUpdatesFromDependabotConfigToJobConfig(allowedUpdates: IDependabotAllowCondition[]): any[] {
+    if (!allowedUpdates) {
+        return [
+            { 'dependency-type': 'all' } // if not explicitly configured, allow all updates
+        ];
+    }
+    return allowedUpdates.map(allow => {
+        return {
+            'dependency-name': allow["dependency-name"],
+            'dependency-type': allow["dependency-type"],
+            //'update-type': allow["update-type"] // TODO: This is missing from dependabot.ymal docs, but is used in the dependabot-core job model!?
+        };
+    });
+}
+
+function mapIgnoreConditionsFromDependabotConfigToJobConfig(ignoreConditions: IDependabotAllowCondition[]): any[] {
+    if (!ignoreConditions) {
+        return undefined;
+    }
+    return ignoreConditions.map(ignore => {
+        return {
+            'dependency-name': ignore["dependency-name"],
+            //'source': ignore["source"], // TODO: This is missing from dependabot.ymal docs, but is used in the dependabot-core job model!?
+            'update-types': ignore["update-types"],
+            //'updated-at': ignore["updated-at"], // TODO: This is missing from dependabot.ymal docs, but is used in the dependabot-core job model!?
+            'version-requirement': (<string[]>ignore["versions"])?.join(", "), // TODO: Test this, not sure how this should be parsed...
+        };
+    });
+}
+
+function mapRegistryCredentialsFromDependabotConfigToJobConfig(taskInputs: ISharedVariables, registries: Record<string, IDependabotRegistry>): any[] {
     let registryCredentials = new Array();
-    if (variables.systemAccessToken) {
+    if (taskInputs.systemAccessToken) {
         registryCredentials.push({
             type: 'git_source',
-            host: variables.hostname,
-            username: variables.systemAccessUser?.trim()?.length > 0 ? variables.systemAccessUser : 'x-access-token',
-            password: variables.systemAccessToken
+            host: taskInputs.hostname,
+            username: taskInputs.systemAccessUser?.trim()?.length > 0 ? taskInputs.systemAccessUser : 'x-access-token',
+            password: taskInputs.systemAccessToken
         });
     }
     if (registries) {
@@ -93,36 +212,13 @@ function mapRegistryCredentials(variables: ISharedVariables, registries: Record<
                 host: registry.host,
                 url: registry.url,
                 registry: registry.registry,
-                region: undefined, // TODO: registry.region,
                 username: registry.username,
                 password: registry.password,
                 token: registry.token,
-                'replaces-base': registry['replaces-base'] || false
+                'replaces-base': registry["replaces-base"]
             });
         }
     }
 
     return registryCredentials;
-}
-
-// Map dependency groups
-function mapDependencyGroups(groups: string): any[] {
-    if (!groups) {
-        return [];
-    }
-    const dependencyGroups = JSON.parse(groups);
-    return Object.keys(dependencyGroups).map(name => {
-        return {
-            'name': name,
-            'rules': dependencyGroups[name]
-        };
-    });
-}
-
-// Map ignore conditions
-function mapIgnoreConditions(ignore: string): any[] {
-    if (!ignore) {
-        return [];
-    }
-    return JSON.parse(ignore);
 }

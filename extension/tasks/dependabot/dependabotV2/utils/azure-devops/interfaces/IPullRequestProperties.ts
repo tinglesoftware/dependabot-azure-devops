@@ -1,4 +1,7 @@
 
+/**
+ * Pull request properties
+ */
 export interface IPullRequestProperties {
     id: number,
     properties?: {

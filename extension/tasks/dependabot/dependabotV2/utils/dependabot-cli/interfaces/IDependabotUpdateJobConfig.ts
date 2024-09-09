@@ -1,10 +1,8 @@
-import { IDependabotUpdate } from "../../IDependabotConfig"
 
-export interface IDependabotUpdateJob {
-
-    // The raw dependabot.yaml update configuration options
-    // See: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
-    config: IDependabotUpdate,
+/**
+ * Represents the Dependabot CLI update job.yaml configuration file options.
+ */
+export interface IDependabotUpdateJobConfig {
 
     // The dependabot "updater" job configuration
     // See: https://github.com/dependabot/cli/blob/main/internal/model/job.go
@@ -23,7 +21,7 @@ export interface IDependabotUpdateJob {
                 'exclude-patterns'?: string[],
                 'dependency-type'?: string
                 'update-types'?: string[]
-            }[]
+            }
         }[],
         'dependencies'?: string[],
         'allowed-updates'?: {

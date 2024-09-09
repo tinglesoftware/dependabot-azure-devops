@@ -1,6 +1,6 @@
 import { debug, warning, error } from "azure-pipelines-task-lib/task"
 import { ISharedVariables } from "../getSharedVariables";
-import { IDependabotUpdateJob } from "./interfaces/IDependabotUpdateJob";
+import { IDependabotUpdateOperation } from "./interfaces/IDependabotUpdateOperation";
 import { IDependabotUpdateOutputProcessor } from "./interfaces/IDependabotUpdateOutputProcessor";
 import { AzureDevOpsWebApiClient } from "../azure-devops/AzureDevOpsWebApiClient";
 import { GitPullRequestMergeStrategy, VersionControlChangeType } from "azure-devops-node-api/interfaces/GitInterfaces";
@@ -8,7 +8,9 @@ import { IPullRequestProperties } from "../azure-devops/interfaces/IPullRequestP
 import * as path from 'path';
 import * as crypto from 'crypto';
 
-// Processes dependabot update outputs using the DevOps API
+/**
+ * Processes dependabot update outputs using the DevOps API
+ */
 export class DependabotOutputProcessor implements IDependabotUpdateOutputProcessor {
     private readonly prAuthorClient: AzureDevOpsWebApiClient;
     private readonly prApproverClient: AzureDevOpsWebApiClient;
@@ -23,16 +25,22 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
     public static PR_DEFAULT_AUTHOR_EMAIL = "noreply@github.com";
     public static PR_DEFAULT_AUTHOR_NAME = "dependabot[bot]";
 
-    constructor(taskVariables: ISharedVariables, prAuthorClient: AzureDevOpsWebApiClient, prApproverClient: AzureDevOpsWebApiClient, existingPullRequests: IPullRequestProperties[]) {
-        this.taskVariables = taskVariables;
+    constructor(taskInputs: ISharedVariables, prAuthorClient: AzureDevOpsWebApiClient, prApproverClient: AzureDevOpsWebApiClient, existingPullRequests: IPullRequestProperties[]) {
+        this.taskVariables = taskInputs;
         this.prAuthorClient = prAuthorClient;
         this.prApproverClient = prApproverClient;
         this.existingPullRequests = existingPullRequests;
-        this.taskVariables = taskVariables;
+        this.taskVariables = taskInputs;
     }
 
-    // Process the appropriate DevOps API actions for the supplied dependabot update output
-    public async process(update: IDependabotUpdateJob, type: string, data: any): Promise<boolean> {
+    /**
+     * Process the appropriate DevOps API actions for the supplied dependabot update output
+     * @param update 
+     * @param type 
+     * @param data 
+     * @returns 
+     */
+    public async process(update: IDependabotUpdateOperation, type: string, data: any): Promise<boolean> {
         console.debug(`Processing output '${type}' with data:`, data);
         const sourceRepoParts = update.job.source.repo.split('/'); // "{organisation}/{project}/_git/{repository}""
         const project = sourceRepoParts[1];
@@ -55,14 +63,15 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
                 }
 
                 // Skip if active pull request limit reached.
-                if (update.config.openPullRequestsLimit > 0 && this.existingPullRequests.length >= update.config.openPullRequestsLimit) {
-                    warning(`Skipping pull request creation as the maximum number of active pull requests (${update.config.openPullRequestsLimit}) has been reached`);
+                const openPullRequestLimit = update.config["open-pull-requests-limit"];
+                if (openPullRequestLimit > 0 && this.existingPullRequests.length >= openPullRequestLimit) {
+                    warning(`Skipping pull request creation as the maximum number of active pull requests (${openPullRequestLimit}) has been reached`);
                     return true;
                 }
 
                 // Create a new pull request
                 const dependencies = getPullRequestDependenciesPropertyValueForOutputData(data);
-                const targetBranch = update.config.targetBranch || await this.prAuthorClient.getDefaultBranch(project, repository);
+                const targetBranch = update.config["target-branch"] || await this.prAuthorClient.getDefaultBranch(project, repository);
                 const newPullRequestId = await this.prAuthorClient.createPullRequest({
                     project: project,
                     repository: repository,

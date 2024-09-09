@@ -2,9 +2,12 @@ import { debug, warning, error } from "azure-pipelines-task-lib/task"
 import { WebApi, getPersonalAccessTokenHandler } from "azure-devops-node-api";
 import { CommentThreadStatus, CommentType, ItemContentType, PullRequestAsyncStatus, PullRequestStatus } from "azure-devops-node-api/interfaces/GitInterfaces";
 import { IPullRequestProperties } from "./interfaces/IPullRequestProperties";
-import { IPullRequest, IFileChange } from "./interfaces/IPullRequest";
+import { IPullRequest } from "./interfaces/IPullRequest";
+import { IFileChange } from "./interfaces/IFileChange";
 
-// Wrapper for DevOps WebApi client with helper methods for easier management of dependabot pull requests
+/**
+ * Wrapper for DevOps WebApi client with helper methods for easier management of dependabot pull requests
+ */
 export class AzureDevOpsWebApiClient {
 
     private readonly connection: WebApi;
@@ -17,7 +20,12 @@ export class AzureDevOpsWebApiClient {
         );
     }
 
-    // Get the default branch for a repository
+    /**
+     * Get the default branch for a repository
+     * @param project 
+     * @param repository 
+     * @returns 
+     */
     public async getDefaultBranch(project: string, repository: string): Promise<string> {
         try {
             const git = await this.connection.getGitApi();
@@ -34,7 +42,12 @@ export class AzureDevOpsWebApiClient {
         }
     }
 
-    // Get the properties for all active pull request created by the current user
+    /**
+     * Get the properties for all active pull request created by the current user
+     * @param project 
+     * @param repository 
+     * @returns 
+     */
     public async getMyActivePullRequestProperties(project: string, repository: string): Promise<IPullRequestProperties[]> {
         console.info(`Fetching active pull request properties in '${project}/${repository}'...`);
         try {
@@ -70,7 +83,11 @@ export class AzureDevOpsWebApiClient {
         }
     }
 
-    // Create a new pull request
+    /**
+     * Create a new pull request
+     * @param pr 
+     * @returns 
+     */
     public async createPullRequest(pr: IPullRequest): Promise<number | null> {
         console.info(`Creating pull request '${pr.title}'...`);
         try {
@@ -177,7 +194,11 @@ export class AzureDevOpsWebApiClient {
         }
     }
 
-    // Update a pull request
+    /**
+     * Update a pull request
+     * @param options 
+     * @returns 
+     */
     public async updatePullRequest(options: {
         project: string,
         repository: string,
@@ -253,7 +274,11 @@ export class AzureDevOpsWebApiClient {
         }
     }
 
-    // Approve a pull request
+    /**
+     * Approve a pull request
+     * @param options 
+     * @returns 
+     */
     public async approvePullRequest(options: {
         project: string,
         repository: string,
@@ -283,7 +308,11 @@ export class AzureDevOpsWebApiClient {
         }
     }
 
-    // Close a pull request
+    /**
+     * Close a pull request
+     * @param options 
+     * @returns 
+     */
     public async closePullRequest(options: {
         project: string,
         repository: string,

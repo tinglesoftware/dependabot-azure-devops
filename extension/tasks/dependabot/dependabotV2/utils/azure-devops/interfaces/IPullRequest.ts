@@ -1,5 +1,9 @@
-import { GitPullRequestMergeStrategy, VersionControlChangeType } from "azure-devops-node-api/interfaces/GitInterfaces";
+import { GitPullRequestMergeStrategy } from "azure-devops-node-api/interfaces/GitInterfaces";
+import { IFileChange } from "./IFileChange";
 
+/**
+ * Pull request creation
+ */
 export interface IPullRequest {
     project: string,
     repository: string,
@@ -31,10 +35,3 @@ export interface IPullRequest {
         value: string
     }[]
 };
-
-export interface IFileChange {
-    changeType: VersionControlChangeType,
-    path: string,
-    content: string,
-    encoding: string
-}

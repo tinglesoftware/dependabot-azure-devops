@@ -5,26 +5,24 @@ import * as fs from 'fs';
 import { load } from 'js-yaml';
 import * as path from 'path';
 import { URL } from 'url';
-import { IDependabotConfig, IDependabotRegistry, IDependabotUpdate } from './IDependabotConfig';
-import { convertPlaceholder } from './convertPlaceholder';
-import { ISharedVariables } from './getSharedVariables';
+import { IDependabotConfig, IDependabotRegistry, IDependabotUpdate } from './interfaces/IDependabotConfig';
+import { convertPlaceholder } from '../convertPlaceholder';
+import { ISharedVariables } from '../getSharedVariables';
 
 /**
- * Parse the dependabot config YAML file to specify update configuration
- *
+ * Parse the dependabot config YAML file to specify update configuration.
  * The file should be located at '/.azuredevops/dependabot.yml' or '/.github/dependabot.yml'
  *
  * To view YAML file format, visit
  * https://docs.github.com/en/github/administering-a-repository/configuration-options-for-dependency-updates#allow
  *
- * @param variables the shared variables of the task
+ * @param taskInputs the input variables of the task
  * @returns {IDependabotConfig} config - the dependabot configuration
  */
-async function parseConfigFile(variables: ISharedVariables): Promise<IDependabotConfig> {
+export default async function parseConfigFile(taskInputs: ISharedVariables): Promise<IDependabotConfig> {
   const possibleFilePaths = [
     '/.azuredevops/dependabot.yml',
     '/.azuredevops/dependabot.yaml',
-
     '/.github/dependabot.yaml',
     '/.github/dependabot.yml',
   ];
@@ -37,18 +35,18 @@ async function parseConfigFile(variables: ISharedVariables): Promise<IDependabot
    * 1. Running the pipeline without cloning, which is useful for huge repositories (multiple submodules or large commit log)
    * 2. Running a single pipeline to update multiple repositories https://github.com/tinglesoftware/dependabot-azure-devops/issues/328
    */
-  if (variables.repositoryOverridden) {
+  if (taskInputs.repositoryOverridden) {
     tl.debug(`Attempting to fetch configuration file via REST API ...`);
     for (const fp of possibleFilePaths) {
       // make HTTP request
-      var url = `${variables.organizationUrl}${variables.project}/_apis/git/repositories/${variables.repository}/items?path=${fp}`;
+      var url = `${taskInputs.organizationUrl}${taskInputs.project}/_apis/git/repositories/${taskInputs.repository}/items?path=${fp}`;
       tl.debug(`GET ${url}`);
 
       try {
         var response = await axios.get(url, {
           auth: {
             username: 'x-access-token',
-            password: variables.systemAccessToken,
+            password: taskInputs.systemAccessToken,
           },
           headers: {
             Accept: '*/*', // Gotcha!!! without this SH*T fails terribly
@@ -146,46 +144,15 @@ function parseUpdates(config: any): IDependabotUpdate[] {
 
   // Parse the value of each of the updates obtained from the file
   rawUpdates.forEach((update) => {
-    var dependabotUpdate: IDependabotUpdate = {
-      packageEcosystem: update['package-ecosystem'],
-      directory: update['directory'],
-      directories: update['directories'] || [],
+    var dependabotUpdate: IDependabotUpdate = update;
 
-      openPullRequestsLimit: update['open-pull-requests-limit'],
-      registries: update['registries'] || [],
-
-      targetBranch: update['target-branch'],
-      vendor: update['vendor'] ? JSON.parse(update['vendor']) : null,
-      versioningStrategy: update['versioning-strategy'],
-      milestone: update['milestone'],
-      branchNameSeparator: update['pull-request-branch-name']
-        ? update['pull-request-branch-name']['separator']
-        : undefined,
-      insecureExternalCodeExecution: update['insecure-external-code-execution'],
-
-      // We are well aware that ignore is not parsed here. It is intentional.
-      // The ruby script in the docker container does it automatically.
-      // If you are having issues, search for related issues such as https://github.com/tinglesoftware/dependabot-azure-devops/pull/582
-      // before creating a new issue.
-      // You can also test against various reproductions such as https://dev.azure.com/tingle/dependabot/_git/repro-582
-
-      // Convert to JSON or as required by the script
-      allow: update['allow'] ? JSON.stringify(update['allow']) : undefined,
-      ignore: update['ignore'] ? JSON.stringify(update['ignore']) : undefined,
-      labels: update['labels'] ? JSON.stringify(update['labels']) : undefined,
-      reviewers: update['reviewers'] ? update['reviewers'] : undefined,
-      assignees: update['assignees'] ? update['assignees'] : undefined,
-      commitMessage: update['commit-message'] ? JSON.stringify(update['commit-message']) : undefined,
-      groups: update['groups'] ? JSON.stringify(update['groups']) : undefined,
-    };
-
-    if (!dependabotUpdate.packageEcosystem) {
+    if (!dependabotUpdate['package-ecosystem']) {
       throw new Error("The value 'package-ecosystem' in dependency update config is missing");
     }
 
     // zero is a valid value
-    if (!dependabotUpdate.openPullRequestsLimit && dependabotUpdate.openPullRequestsLimit !== 0) {
-      dependabotUpdate.openPullRequestsLimit = 5;
+    if (!dependabotUpdate['open-pull-requests-limit'] && dependabotUpdate['open-pull-requests-limit'] !== 0) {
+      dependabotUpdate['open-pull-requests-limit'] = 5;
     }
 
     if (!dependabotUpdate.directory && dependabotUpdate.directories.length === 0) {
@@ -336,4 +303,3 @@ const KnownRegistryTypes = [
   'terraform-registry',
 ];
 
-export { parseConfigFile, parseRegistries, parseUpdates, validateConfiguration };
