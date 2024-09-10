@@ -120,8 +120,8 @@ function buildUpdateJobConfig(
             'reject-external-code': (update["insecure-external-code-execution"]?.toLocaleLowerCase() == "allow"),
             'repo-private': undefined, // TODO: add config for this?
             'repo-contents-path': undefined, // TODO: add config for this?
-            'requirements-update-strategy': undefined, // TODO: add config for this!
-            'lockfile-only': undefined, // TODO: add config for this!
+            'requirements-update-strategy': mapVersionStrategyToRequirementsUpdateStrategy(update["versioning-strategy"]),
+            'lockfile-only': update["versioning-strategy"] === 'lockfile-only',
             'vendor-dependencies': update.vendor,
             'debug': taskInputs.debug
         },
@@ -197,6 +197,20 @@ function mapIgnoreConditionsFromDependabotConfigToJobConfig(ignoreConditions: ID
             'version-requirement': (<string[]>ignore["versions"])?.join(", "), // TODO: Test this, not sure how this should be parsed...
         };
     });
+}
+
+function mapVersionStrategyToRequirementsUpdateStrategy(versioningStrategy: string): string | undefined {
+    if (!versioningStrategy) {
+        return undefined;
+    }
+    switch(versioningStrategy) {
+        case 'auto': return undefined;
+        case 'increase': return 'bump_versions';
+        case 'increase-if-necessary': return 'bump_versions_if_necessary';
+        case 'lockfile-only': return 'lockfile_only';
+        case 'widen': return 'widen_ranges';
+        default: throw new Error(`Invalid dependabot.yaml versioning strategy option '${versioningStrategy}'`);
+    }
 }
 
 function mapRegistryCredentialsFromDependabotConfigToJobConfig(taskInputs: ISharedVariables, registries: Record<string, IDependabotRegistry>): any[] {

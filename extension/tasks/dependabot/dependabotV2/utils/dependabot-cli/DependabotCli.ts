@@ -78,7 +78,7 @@ export class DependabotCli {
 
         // Run dependabot update
         if (!fs.existsSync(jobOutputPath) || fs.statSync(jobOutputPath)?.size == 0) {
-            console.info(`Running dependabot update job '${jobInputPath}'...`);
+            console.info(`Running Dependabot update job from '${jobInputPath}'...`);
             const dependabotTool = tool(which("dependabot", true)).arg(dependabotArguments);
             const dependabotResultCode = await dependabotTool.execAsync({
                 silent: !this.debug,
@@ -95,7 +95,7 @@ export class DependabotCli {
         if (fs.existsSync(jobOutputPath)) {
             const jobOutputs = readJobScenarioOutputFile(jobOutputPath);
             if (jobOutputs?.length > 0) {
-                console.info("Processing Dependabot outputs...");
+                console.info(`Processing Dependabot outputs from '${jobInputPath}'...`);
                 for (const output of jobOutputs) {
                     // Documentation on the scenario model can be found here:
                     // https://github.com/dependabot/cli/blob/main/internal/model/scenario.go
