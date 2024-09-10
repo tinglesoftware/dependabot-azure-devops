@@ -88,3 +88,28 @@ steps:
 ```
 
 Check the logs for the image that is pulled.
+
+## Experiments
+The following Dependabot experiment flags are known to exist.
+
+### All package ecyosystems
+dedup_branch_names
+grouped_updates_experimental_rules
+grouped_security_updates_disabled
+record_ecosystem_versions
+record_update_job_unknown_error
+dependency_change_validation
+add_deprecation_warn_to_pr_message
+threaded_metadata
+
+### Go
+tidy
+vendor
+goprivate
+
+### NPM and Yarn
+enable_pnpm_yarn_dynamic_engine
+
+### NuGet
+nuget_native_analysis
+nuget_dependency_solver

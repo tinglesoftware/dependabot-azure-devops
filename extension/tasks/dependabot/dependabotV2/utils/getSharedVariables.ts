@@ -53,9 +53,7 @@ export interface ISharedVariables {
   /** A personal access token of the user that should approve the PR */
   autoApproveUserToken: string;
 
-  /** Determines if the execution should fail when an exception occurs */
-  excludeRequirementsToUnlock: string;
-  updaterOptions: string;
+  experiments: Record<string, string | boolean>;
 
   /** Determines if verbose log messages are logged */
   debug: boolean;
@@ -119,9 +117,15 @@ export default function getSharedVariables(): ISharedVariables {
   let autoApprove: boolean = tl.getBoolInput('autoApprove', false);
   let autoApproveUserToken: string = tl.getInput('autoApproveUserToken');
 
-  // Prepare control flow variables
-  let excludeRequirementsToUnlock = tl.getInput('excludeRequirementsToUnlock') || '';
-  let updaterOptions = tl.getInput('updaterOptions');
+  // Convert experiments from comma separated key vaule pairs to a record
+  let experiments = tl.getInput('experiments', false)?.split(',')?.reduce(
+    (acc, cur) => {
+      let [key, value] = cur.split('=', 2);
+      acc[key] = value || true;
+      return acc;
+    }, 
+    {} as Record<string, string | boolean>
+  );
 
   let debug: boolean = tl.getVariable('System.Debug')?.localeCompare('true') === 0;
 
@@ -163,8 +167,7 @@ export default function getSharedVariables(): ISharedVariables {
     autoApprove,
     autoApproveUserToken,
 
-    excludeRequirementsToUnlock,
-    updaterOptions,
+    experiments,
 
     debug,
 

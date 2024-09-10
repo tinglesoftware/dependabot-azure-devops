@@ -115,7 +115,7 @@ function buildUpdateJobConfig(
                 'prefix-development': update["commit-message"]?.["prefix-development"],
                 'include-scope': update["commit-message"]?.["include"],
             },
-            'experiments': undefined, // TODO: add config for this!
+            'experiments': taskInputs.experiments,
             'max-updater-run-time': undefined, // TODO: add config for this?
             'reject-external-code': (update["insecure-external-code-execution"]?.toLocaleLowerCase() == "allow"),
             'repo-private': undefined, // TODO: add config for this?

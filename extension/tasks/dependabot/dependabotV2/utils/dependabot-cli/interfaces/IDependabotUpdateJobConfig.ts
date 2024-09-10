@@ -76,7 +76,7 @@ export interface IDependabotUpdateJobConfig {
             'prefix-development'?: string,
             'include-scope'?: string,
         },
-        'experiments'?: any,
+        'experiments'?: Record<string, string | boolean>,
         'max-updater-run-time'?: number,
         'reject-external-code'?: boolean,
         'repo-private'?: boolean,
