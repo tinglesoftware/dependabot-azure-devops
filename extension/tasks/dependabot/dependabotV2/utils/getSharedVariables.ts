@@ -117,7 +117,7 @@ export default function getSharedVariables(): ISharedVariables {
   let autoApprove: boolean = tl.getBoolInput('autoApprove', false);
   let autoApproveUserToken: string = tl.getInput('autoApproveUserToken');
 
-  // Convert experiments from comma separated key vaule pairs to a record
+  // Convert experiments from comma separated key value pairs to a record
   let experiments = tl.getInput('experiments', false)?.split(',')?.reduce(
     (acc, cur) => {
       let [key, value] = cur.split('=', 2);
