@@ -2,7 +2,7 @@ import { which, setResult, TaskResult } from "azure-pipelines-task-lib/task"
 import { debug, warning, error } from "azure-pipelines-task-lib/task"
 import { DependabotCli } from './utils/dependabot-cli/DependabotCli';
 import { AzureDevOpsWebApiClient } from "./utils/azure-devops/AzureDevOpsWebApiClient";
-import { DependabotOutputProcessor, parseDependencyListProperty, parsePullRequestProperties } from "./utils/dependabot-cli/DependabotOutputProcessor";
+import { DependabotOutputProcessor, parseProjectDependencyListProperty, parsePullRequestProperties } from "./utils/dependabot-cli/DependabotOutputProcessor";
 import { DependabotJobBuilder } from "./utils/dependabot-cli/DependabotJobBuilder";
 import parseDependabotConfigFile from './utils/dependabot/parseConfigFile';
 import parseTaskInputConfiguration from './utils/getSharedVariables';
@@ -33,7 +33,7 @@ async function run() {
     // Initialise the DevOps API clients
     // There are two clients; one for authoring pull requests and one for auto-approving pull requests (if configured)
     const prAuthorClient = new AzureDevOpsWebApiClient(taskInputs.organizationUrl.toString(), taskInputs.systemAccessToken);
-    const prApproverClient = taskInputs.autoApprove ? new AzureDevOpsWebApiClient(taskInputs.organizationUrl.toString(), taskInputs.autoApproveUserToken) : null;
+    const prApproverClient = taskInputs.autoApprove ? new AzureDevOpsWebApiClient(taskInputs.organizationUrl.toString(), taskInputs.autoApproveUserToken || taskInputs.systemAccessToken) : null;
 
     // Fetch the active pull requests created by the author user
     const prAuthorActivePullRequests = await prAuthorClient.getMyActivePullRequestProperties(
@@ -57,10 +57,10 @@ async function run() {
     await Promise.all(dependabotConfig.updates.map(async (update) => {
       
       // Parse the last dependency list snapshot (if any) from the project properties.
-      // This is required when doing a security-only update as dependabot requires the list of vulnerable dependencies to be updated update.
+      // This is required when doing a security-only update as dependabot requires the list of vulnerable dependencies to be updated.
       // Automatic discovery of vulnerable dependencies during a security-only update is not currently supported by dependabot-updater.
-      const dependencyList = parseDependencyListProperty(
-        await prAuthorClient.getProjectProperty(taskInputs.project, DependabotOutputProcessor.PROJECT_PROPERTY_NAME_DEPENDENCY_LIST),
+      const dependencyList = parseProjectDependencyListProperty(
+        await prAuthorClient.getProjectProperties(taskInputs.project),
         taskInputs.repository,
         update["package-ecosystem"]
       );

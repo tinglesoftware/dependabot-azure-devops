@@ -49,6 +49,15 @@
   ],
   "inputs": [
     {
+      "name": "storeDependencyList",
+      "type": "boolean",
+      "groupName": "advanced",
+      "label": "Monitor the discovered dependencies",
+      "defaultValue": false,
+      "required": false,
+      "helpMarkDown": "When set to `true`, the discovered dependencies will be stored against the project. Defaults to `false`."
+    },
+    {
       "name": "skipPullRequests",
       "type": "boolean",
       "groupName": "pull_requests",

@@ -33,8 +33,6 @@ export interface IDependabotUpdateJobConfig {
             'dependency-name'?: string,
             'source'?: string,
             'update-types'?: string[],
-            // TODO: 'updated-at' config is not in the dependabot.yaml docs, but is in the dependabot-cli and dependabot-core models
-            // https://github.com/dependabot/dependabot-core/blob/dc7b8d2ad152780e847ab597d40a57f13ab86d4f/common/lib/dependabot/pull_request_creator/message_builder.rb#L762
             'updated-at'?: string,
             'version-requirement'?: string,
         }[],

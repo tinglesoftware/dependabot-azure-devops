@@ -391,23 +391,23 @@ export class AzureDevOpsWebApiClient {
     }
     
     /**
-     * Get a project property
+     * Get project properties
      * @param project 
-     * @param name 
      * @param valueBuilder 
      * @returns 
      */
-    public async getProjectProperty(project: string, name: string): Promise<string | null> {
+    public async getProjectProperties(project: string): Promise<Record<string, string> | undefined> {
         try {
             const core = await this.connection.getCoreApi();
             const projects = await core.getProjects();
             const projectGuid = projects?.find(p => p.name === project)?.id;
             const properties = await core.getProjectProperties(projectGuid);
-            return properties?.find(p => p.name === name)?.value;
+            return properties
+                .map(p => ({ [p.name]: p.value }))
+                .reduce((a, b) => ({ ...a, ...b }), {});
+
         } catch (e) {
-            error(`Failed to get project property '${name}': ${e}`);
-            console.log(e);
-            return null;
+            error(`Failed to get project properties: ${e}`);
         }
     }
 
@@ -418,7 +418,7 @@ export class AzureDevOpsWebApiClient {
      * @param valueBuilder 
      * @returns 
      */
-    public async updateProjectProperty(project: string, name: string, valueBuilder: (existingValue: string) => string): Promise<boolean> {
+    public async updateProjectProperty(project: string, name: string, valueBuilder: (existingValue: string) => string): Promise<void> {
         try {
             
             // Get the existing project property value
@@ -441,12 +441,8 @@ export class AzureDevOpsWebApiClient {
                 ]
             );
 
-            return true;
-
         } catch (e) {
             error(`Failed to update project property '${name}': ${e}`);
-            console.log(e);
-            return false;
         }
     }
 }

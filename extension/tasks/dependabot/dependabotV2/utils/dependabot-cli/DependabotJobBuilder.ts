@@ -89,7 +89,7 @@ function buildUpdateJobConfig(
         job: {
             'id': id,
             'package-manager': update["package-ecosystem"],
-            'update-subdependencies': true, // TODO: add config option?
+            'update-subdependencies': true, // TODO: add config for this?
             'updating-a-pull-request': updatingPullRequest,
             'dependency-group-to-refresh': updateDependencyGroupName,
             'dependency-groups': mapGroupsFromDependabotConfigToJobConfig(update.groups),
@@ -97,7 +97,7 @@ function buildUpdateJobConfig(
             'allowed-updates': mapAllowedUpdatesFromDependabotConfigToJobConfig(update.allow),
             'ignore-conditions': mapIgnoreConditionsFromDependabotConfigToJobConfig(update.ignore),
             'security-updates-only': update["open-pull-requests-limit"] == 0,
-            'security-advisories': [], // TODO: add config option
+            'security-advisories': [], // TODO: add config for this!
             'source': {
                 'provider': 'azure',
                 'api-endpoint': taskInputs.apiEndpointUrl,
@@ -115,13 +115,13 @@ function buildUpdateJobConfig(
                 'prefix-development': update["commit-message"]?.["prefix-development"],
                 'include-scope': update["commit-message"]?.["include"],
             },
-            'experiments': undefined, // TODO: add config option
-            'max-updater-run-time': undefined, // TODO: add config option?
+            'experiments': undefined, // TODO: add config for this!
+            'max-updater-run-time': undefined, // TODO: add config for this?
             'reject-external-code': (update["insecure-external-code-execution"]?.toLocaleLowerCase() == "allow"),
-            'repo-private': undefined, // TODO: add config option?
-            'repo-contents-path': undefined, // TODO: add config option?
-            'requirements-update-strategy': undefined, // TODO: add config option
-            'lockfile-only': undefined, // TODO: add config option
+            'repo-private': undefined, // TODO: add config for this?
+            'repo-contents-path': undefined, // TODO: add config for this?
+            'requirements-update-strategy': undefined, // TODO: add config for this!
+            'lockfile-only': undefined, // TODO: add config for this!
             'vendor-dependencies': update.vendor,
             'debug': taskInputs.debug
         },
@@ -131,18 +131,23 @@ function buildUpdateJobConfig(
 
 function mapDependenciesForSecurityUpdate(dependencyList: any[]): string[] {
     if (!dependencyList || dependencyList.length == 0) {
-        // No dependency list snapshot exists yet; Attempt to do a security update for all dependencies, but it will probably fail as it is not supported in dependabot-updater yet
-        // TODO: Find a way to discover vulnerable dependencies for security-only updates without a dependency list snapshot.
-        //       It would be nice if we could run dependabot-cli (e.g. `dependabot --discover-only`), but this is not supported currently.
+        // This happens when no previous dependency list snapshot exists yet; 
+        // TODO: Find a way to discover dependencies for a first-time security-only update (no existing dependency list snapshot).
+        //       It would be nice if we could use dependabot-cli for this (e.g. `dependabot --discover-only`), but this is not supported currently.
+        // TODO: Open a issue in dependabot-cli project, ask how we should handle this scenario.
         warning(
             "Security updates can only be performed if there is a previous dependency list snapshot available, but there is none as you have not completed a successful update job yet. " +
             "Dependabot does not currently support discovering vulnerable dependencies during security-only updates and it is likely that this update operation will fail."
         );
+
+        // Attempt to do a security update for "all dependencies"; it will probably fail this is not supported in dependabot-updater yet, but it is best we can do...
         return []; 
     }
-    return dependencyList.map(dependency => {
-        return dependency["name"];
-    });
+
+    // Return only dependencies that are vulnerable, ignore the rest
+    const dependencyNames = dependencyList.map(dependency => dependency["name"]);
+    const dependencyVulnerabilities = {}; // TODO: getGitHubSecurityAdvisoriesForDependencies(dependencyNames);
+    return dependencyNames.filter(dependency => dependencyVulnerabilities[dependency]?.length > 0);
 }
 
 function mapGroupsFromDependabotConfigToJobConfig(dependencyGroups: Record<string, IDependabotGroup>): any[] {

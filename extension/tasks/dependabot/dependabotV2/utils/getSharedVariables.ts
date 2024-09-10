@@ -3,7 +3,6 @@ import extractHostname from './extractHostname';
 import extractOrganization from './extractOrganization';
 import extractVirtualDirectory from './extractVirtualDirectory';
 import getAzureDevOpsAccessToken from './getAzureDevOpsAccessToken';
-import getDockerImageTag from './getDockerImageTag';
 import getGithubAccessToken from './getGithubAccessToken';
 
 export interface ISharedVariables {
@@ -40,6 +39,8 @@ export interface ISharedVariables {
   authorEmail?: string;
   authorName?: string;
 
+  storeDependencyList: boolean;
+  
   /** Determines if the pull requests that dependabot creates should have auto complete set */
   setAutoComplete: boolean;
   /** Merge strategies which can be used to complete a pull request */
@@ -53,7 +54,6 @@ export interface ISharedVariables {
   autoApproveUserToken: string;
 
   /** Determines if the execution should fail when an exception occurs */
-  failOnException: boolean;
   excludeRequirementsToUnlock: string;
   updaterOptions: string;
 
@@ -71,18 +71,6 @@ export interface ISharedVariables {
   commentPullRequests: boolean;
   /** Determines whether to abandon unwanted pull requests */
   abandonUnwantedPullRequests: boolean;
-
-  /** List of extra environment variables */
-  extraEnvironmentVariables: string[];
-
-  /** Flag used to forward the host ssh socket */
-  forwardHostSshSocket: boolean;
-
-  /** Tag of the docker image to be pulled */
-  dockerImageTag: string;
-
-  /** Dependabot command to run */
-  command: string;
 }
 
 /**
@@ -125,12 +113,13 @@ export default function getSharedVariables(): ISharedVariables {
   let mergeStrategy = tl.getInput('mergeStrategy', true);
   let autoCompleteIgnoreConfigIds = tl.getDelimitedInput('autoCompleteIgnoreConfigIds', ';', false).map(Number);
 
+  let storeDependencyList = tl.getBoolInput('storeDependencyList', false);
+
   // Prepare variables for auto approve
   let autoApprove: boolean = tl.getBoolInput('autoApprove', false);
   let autoApproveUserToken: string = tl.getInput('autoApproveUserToken');
 
   // Prepare control flow variables
-  let failOnException = tl.getBoolInput('failOnException', true);
   let excludeRequirementsToUnlock = tl.getInput('excludeRequirementsToUnlock') || '';
   let updaterOptions = tl.getInput('updaterOptions');
 
@@ -144,15 +133,6 @@ export default function getSharedVariables(): ISharedVariables {
   let skipPullRequests: boolean = tl.getBoolInput('skipPullRequests', false);
   let commentPullRequests: boolean = tl.getBoolInput('commentPullRequests', false);
   let abandonUnwantedPullRequests: boolean = tl.getBoolInput('abandonUnwantedPullRequests', true);
-
-  let extraEnvironmentVariables = tl.getDelimitedInput('extraEnvironmentVariables', ';', false);
-
-  let forwardHostSshSocket: boolean = tl.getBoolInput('forwardHostSshSocket', false);
-
-  // Prepare variables for the docker image to use
-  let dockerImageTag: string = getDockerImageTag();
-
-  let command: string = tl.getBoolInput('useUpdateScriptvNext', false) ? 'update_script_vnext' : 'update_script';
 
   return {
     organizationUrl: formattedOrganizationUrl,
@@ -174,6 +154,8 @@ export default function getSharedVariables(): ISharedVariables {
     authorEmail,
     authorName,
     
+    storeDependencyList,
+
     setAutoComplete,
     mergeStrategy,
     autoCompleteIgnoreConfigIds,
@@ -181,7 +163,6 @@ export default function getSharedVariables(): ISharedVariables {
     autoApprove,
     autoApproveUserToken,
 
-    failOnException,
     excludeRequirementsToUnlock,
     updaterOptions,
 
@@ -193,13 +174,5 @@ export default function getSharedVariables(): ISharedVariables {
     skipPullRequests,
     commentPullRequests,
     abandonUnwantedPullRequests,
-
-    extraEnvironmentVariables,
-
-    forwardHostSshSocket,
-
-    dockerImageTag,
-
-    command,
   };
 }

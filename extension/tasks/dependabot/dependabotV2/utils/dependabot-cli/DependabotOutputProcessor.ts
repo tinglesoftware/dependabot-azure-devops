@@ -15,7 +15,7 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
     private readonly prAuthorClient: AzureDevOpsWebApiClient;
     private readonly prApproverClient: AzureDevOpsWebApiClient;
     private readonly existingPullRequests: IPullRequestProperties[];
-    private readonly taskVariables: ISharedVariables;
+    private readonly taskInputs: ISharedVariables;
 
     // Custom properties used to store dependabot metadata in projects.
     // https://learn.microsoft.com/en-us/rest/api/azure/devops/core/projects/set-project-properties
@@ -30,11 +30,10 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
     public static PR_DEFAULT_AUTHOR_NAME = "dependabot[bot]";
 
     constructor(taskInputs: ISharedVariables, prAuthorClient: AzureDevOpsWebApiClient, prApproverClient: AzureDevOpsWebApiClient, existingPullRequests: IPullRequestProperties[]) {
-        this.taskVariables = taskInputs;
+        this.taskInputs = taskInputs;
         this.prAuthorClient = prAuthorClient;
         this.prApproverClient = prApproverClient;
         this.existingPullRequests = existingPullRequests;
-        this.taskVariables = taskInputs;
     }
 
     /**
@@ -56,25 +55,31 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
 
             case 'update_dependency_list':
 
-                // Store the dependency list snapshot in project properties, for future reference
-                return this.prAuthorClient.updateProjectProperty(
-                    project,
-                    DependabotOutputProcessor.PROJECT_PROPERTY_NAME_DEPENDENCY_LIST,
-                    function(existingValue: string) {
-                        const repoDependencyLists = JSON.parse(existingValue || '{}');
-                        repoDependencyLists[repository] = repoDependencyLists[repository] || {};
-                        repoDependencyLists[repository][update.job["package-manager"]] = {
-                            'dependencies': data['dependencies'],
-                            'dependency-files': data['dependency_files'],
-                            'last-updated': new Date().toISOString()
-                        };
-
-                        return JSON.stringify(repoDependencyLists);
-                    }
-                );
+                // Store the dependency list snapshot in project properties, if configured
+                if (this.taskInputs.storeDependencyList)
+                {
+                    console.info(`Storing the dependency list snapshot for project '${project}'...`);
+                    await this.prAuthorClient.updateProjectProperty(
+                        project,
+                        DependabotOutputProcessor.PROJECT_PROPERTY_NAME_DEPENDENCY_LIST,
+                        function(existingValue: string) {
+                            const repoDependencyLists = JSON.parse(existingValue || '{}');
+                            repoDependencyLists[repository] = repoDependencyLists[repository] || {};
+                            repoDependencyLists[repository][update.job["package-manager"]] = {
+                                'dependencies': data['dependencies'],
+                                'dependency-files': data['dependency_files'],
+                                'last-updated': new Date().toISOString()
+                            };
+    
+                            return JSON.stringify(repoDependencyLists);
+                        }
+                    );
+                }
+                
+                return true;
 
             case 'create_pull_request':
-                if (this.taskVariables.skipPullRequests) {
+                if (this.taskInputs.skipPullRequests) {
                     warning(`Skipping pull request creation as 'skipPullRequests' is set to 'true'`);
                     return true;
                 }
@@ -100,15 +105,15 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
                         branch: targetBranch
                     },
                     author: {
-                        email: this.taskVariables.authorEmail || DependabotOutputProcessor.PR_DEFAULT_AUTHOR_EMAIL,
-                        name: this.taskVariables.authorName || DependabotOutputProcessor.PR_DEFAULT_AUTHOR_NAME
+                        email: this.taskInputs.authorEmail || DependabotOutputProcessor.PR_DEFAULT_AUTHOR_EMAIL,
+                        name: this.taskInputs.authorName || DependabotOutputProcessor.PR_DEFAULT_AUTHOR_NAME
                     },
                     title: data['pr-title'],
                     description: data['pr-body'],
                     commitMessage: data['commit-message'],
-                    autoComplete: this.taskVariables.setAutoComplete ? {
-                        ignorePolicyConfigIds: this.taskVariables.autoCompleteIgnoreConfigIds,
-                        mergeStrategy: GitPullRequestMergeStrategy[this.taskVariables.mergeStrategy as keyof typeof GitPullRequestMergeStrategy]
+                    autoComplete: this.taskInputs.setAutoComplete ? {
+                        ignorePolicyConfigIds: this.taskInputs.autoCompleteIgnoreConfigIds,
+                        mergeStrategy: GitPullRequestMergeStrategy[this.taskInputs.mergeStrategy as keyof typeof GitPullRequestMergeStrategy]
                     } : undefined,
                     assignees: update.config.assignees,
                     reviewers: update.config.reviewers,
@@ -119,7 +124,7 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
                 })
 
                 // Auto-approve the pull request, if required
-                if (this.taskVariables.autoApprove && this.prApproverClient && newPullRequestId) {
+                if (this.taskInputs.autoApprove && this.prApproverClient && newPullRequestId) {
                     await this.prApproverClient.approvePullRequest({
                         project: project,
                         repository: repository,
@@ -130,7 +135,7 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
                 return newPullRequestId !== undefined;
 
             case 'update_pull_request':
-                if (this.taskVariables.skipPullRequests) {
+                if (this.taskInputs.skipPullRequests) {
                     warning(`Skipping pull request update as 'skipPullRequests' is set to 'true'`);
                     return true;
                 }
@@ -148,12 +153,12 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
                     repository: repository,
                     pullRequestId: pullRequestToUpdate.id,
                     changes: getPullRequestChangedFilesForOutputData(data),
-                    skipIfCommitsFromUsersOtherThan: this.taskVariables.authorEmail || DependabotOutputProcessor.PR_DEFAULT_AUTHOR_EMAIL,
+                    skipIfCommitsFromUsersOtherThan: this.taskInputs.authorEmail || DependabotOutputProcessor.PR_DEFAULT_AUTHOR_EMAIL,
                     skipIfNoConflicts: true,
                 });
 
                 // Re-approve the pull request, if required
-                if (this.taskVariables.autoApprove && this.prApproverClient && pullRequestWasUpdated) {
+                if (this.taskInputs.autoApprove && this.prApproverClient && pullRequestWasUpdated) {
                     await this.prApproverClient.approvePullRequest({
                         project: project,
                         repository: repository,
@@ -164,7 +169,7 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
                 return pullRequestWasUpdated;
 
             case 'close_pull_request':
-                if (this.taskVariables.abandonUnwantedPullRequests) {
+                if (this.taskInputs.abandonUnwantedPullRequests) {
                     warning(`Skipping pull request closure as 'abandonUnwantedPullRequests' is set to 'true'`);
                     return true;
                 }
@@ -176,12 +181,15 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
                     return false;
                 }
 
+                // TODO: GitHub Dependabot will close with reason "Superseded by ${new_pull_request_id}" when another PR supersedes it.
+                //       How do we detect this? Do we need to?
+                
                 // Close the pull request
                 return await this.prAuthorClient.closePullRequest({
                     project: project,
                     repository: repository,
                     pullRequestId: pullRequestToClose.id,
-                    comment: this.taskVariables.commentPullRequests ? getPullRequestCloseReasonForOutputData(data) : undefined,
+                    comment: this.taskInputs.commentPullRequests ? getPullRequestCloseReasonForOutputData(data) : undefined,
                     deleteSourceBranch: true
                 });
 
@@ -235,8 +243,9 @@ export function buildPullRequestProperties(packageManager: string, dependencies:
     ];
 }
 
-export function parseDependencyListProperty(dependencyList: string, repository: string, packageManager: string): any {
-    const repoDependencyLists = JSON.parse(dependencyList || '{}');
+export function parseProjectDependencyListProperty(properties: Record<string, string>, repository: string, packageManager: string): any {
+    const dependencyList = properties?.[DependabotOutputProcessor.PROJECT_PROPERTY_NAME_DEPENDENCY_LIST] || '{}';
+    const repoDependencyLists = JSON.parse(dependencyList);
     return repoDependencyLists[repository]?.[packageManager];
 }
 
@@ -298,8 +307,6 @@ function getPullRequestCloseReasonForOutputData(data: any): string {
         case 'dependency_removed': reason = `Looks like ${leadDependencyName} is no longer a dependency`; break;
         case 'up_to_date': reason = `Looks like ${leadDependencyName} is up-to-date now`; break;
         case 'update_no_longer_possible': reason = `Looks like ${leadDependencyName} can no longer be updated`; break;
-        // TODO: ??? => "Looks like these dependencies are updatable in another way, so this is no longer needed"
-        // TODO: ??? => "Superseded by ${new_pull_request_id}"
     }
     if (reason?.length > 0) {
         reason += ', so this is no longer needed.';
