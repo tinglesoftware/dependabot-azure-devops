@@ -76,6 +76,8 @@ jobs:
         uses: azure/cli@v2
         with:
           inlineScript: |
+            tdnf install -y icu
+            tdnf install -y jq
             cp ${{ github.workspace }}/server/main.bicep ${{ github.workspace }}/drop/main.bicep && \
             az bicep build --file server/main.bicep --outfile ${{ github.workspace }}/drop/main.json
 
