@@ -6,9 +6,11 @@
   "scripts": {
     "postdependencies": "cp -r node_modules tasks/dependabot/dependabotV1/node_modules && cp -r node_modules tasks/dependabot/dependabotV2/node_modules",
     "build": "tsc -p .",
-    "package": "npx tfx-cli extension create --json5",
-    "start": "node tasks/dependabot/dependabotV2/index.js",
-    "test": "jest"
+    "start": "npm run start:V2",
+    "start:V1": "node tasks/dependabot/dependabotV1/index.js",
+    "start:V2": "node tasks/dependabot/dependabotV2/index.js",
+    "test": "jest",
+    "package": "npx tfx-cli extension create --json5"
   },
   "repository": {
     "type": "git",
