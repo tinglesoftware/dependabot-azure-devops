@@ -7,7 +7,7 @@ const config: Config.InitialOptions = {
   //   "^.+\\.test.tsx?$": "ts-jest",
   // },
   testEnvironment: 'node',
-  preset: 'ts-jest'
+  preset: 'ts-jest',
 };
 
 export default config;
