@@ -1,27 +1,51 @@
 import { debug, warning, error } from "azure-pipelines-task-lib/task"
 import { WebApi, getPersonalAccessTokenHandler } from "azure-devops-node-api";
-import { CommentThreadStatus, CommentType, ItemContentType, PullRequestAsyncStatus, PullRequestStatus } from "azure-devops-node-api/interfaces/GitInterfaces";
+import { CommentThreadStatus, CommentType, IdentityRefWithVote, ItemContentType, PullRequestAsyncStatus, PullRequestStatus } from "azure-devops-node-api/interfaces/GitInterfaces";
 import { IPullRequestProperties } from "./interfaces/IPullRequestProperties";
 import { IPullRequest } from "./interfaces/IPullRequest";
 import { IFileChange } from "./interfaces/IFileChange";
+import { resolveAzureDevOpsIdentities } from "./resolveAzureDevOpsIdentities";
 
 /**
  * Wrapper for DevOps WebApi client with helper methods for easier management of dependabot pull requests
  */
 export class AzureDevOpsWebApiClient {
 
+    private readonly organisationApiUrl: string;
+    private readonly accessToken: string;
     private readonly connection: WebApi;
-    private userId: string | null = null;
+    private cachedUserIds: Record<string, string>;
 
     constructor(organisationApiUrl: string, accessToken: string) {
+        this.organisationApiUrl = organisationApiUrl;
+        this.accessToken = accessToken;
         this.connection = new WebApi(
             organisationApiUrl,
             getPersonalAccessTokenHandler(accessToken)
         );
     }
 
-    private async getUserId(): Promise<string> {
-        return (this.userId ||= (await this.connection.connect()).authenticatedUser?.id || "");
+    /**
+     * Get the identity of a user by email address. If no email is provided, the identity of the authenticated user is returned.
+     * @param email 
+     * @returns 
+     */
+    public async getUserId(email?: string): Promise<string> {
+
+        // If no email is provided, resolve to the authenticated user
+        if (!email) {
+            this.cachedUserIds[this.accessToken] ||= (await this.connection.connect()).authenticatedUser?.id || "";
+            return this.cachedUserIds[this.accessToken];
+        }
+
+        // Otherwise, do a cached identity lookup of the supplied email address
+        // TODO: When azure-devops-node-api supports Graph API, use that instead of the REST API
+        else if (!this.cachedUserIds[email]) {
+            const identities = await resolveAzureDevOpsIdentities(new URL(this.organisationApiUrl), [email]);
+            identities.forEach(i => this.cachedUserIds[i.input] ||= i.id);
+        }
+
+        return this.cachedUserIds[email];
     }
 
     /**
@@ -47,20 +71,20 @@ export class AzureDevOpsWebApiClient {
     }
 
     /**
-     * Get the properties for all active pull request created by the current user
+     * Get the properties for all active pull request created by the supplied user
      * @param project 
-     * @param repository 
+     * @param repository
+     * @param creator
      * @returns 
      */
-    public async getMyActivePullRequestProperties(project: string, repository: string): Promise<IPullRequestProperties[]> {
-        console.info(`Fetching active pull request properties in '${project}/${repository}'...`);
+    public async getActivePullRequestProperties(project: string, repository: string, creator: string): Promise<IPullRequestProperties[]> {
+        console.info(`Fetching active pull request properties in '${project}/${repository}' for '${creator}'...`);
         try {
-            const userId = await this.getUserId();
             const git = await this.connection.getGitApi();
             const pullRequests = await git.getPullRequests(
                 repository,
                 {
-                    creatorId: userId,
+                    creatorId: isGuid(creator) ? creator : await this.getUserId(creator),
                     status: PullRequestStatus.Active
                 },
                 project
@@ -131,6 +155,39 @@ export class AzureDevOpsWebApiClient {
                 pr.project
             );
 
+            // Build the list of the pull request reviewers
+            // NOTE: Azure DevOps does not have a concept of assignees, only reviewers.
+            //       We treat assignees as required reviewers and all other reviewers as optional.
+            const allReviewers: IdentityRefWithVote[] = [];
+            if (pr.assignees?.length > 0) {
+                for (const assignee of pr.assignees) {
+                    const identityId = isGuid(assignee) ? assignee : await this.getUserId(assignee);
+                    if (identityId) {
+                        allReviewers.push({
+                            id: identityId,
+                            isRequired: true,
+                            isFlagged: true,
+                        });
+                    }
+                    else {
+                        warning(` - Unable to resolve assignee identity '${assignee}'`);
+                    }
+                }
+            }
+            if (pr.reviewers?.length > 0) {
+                for (const reviewer of pr.reviewers) {
+                    const identityId = isGuid(reviewer) ? reviewer : await this.getUserId(reviewer);
+                    if (identityId) {
+                        allReviewers.push({
+                            id: identityId,
+                        });
+                    }
+                    else {
+                        warning(` - Unable to resolve reviewer identity '${reviewer}'`);
+                    }
+                }
+            }
+
             // Create the pull request
             console.info(` - Creating pull request to merge '${pr.source.branch}' into '${pr.target.branch}'...`);
             const pullRequest = await git.createPullRequest(
@@ -138,7 +195,11 @@ export class AzureDevOpsWebApiClient {
                     sourceRefName: `refs/heads/${pr.source.branch}`,
                     targetRefName: `refs/heads/${pr.target.branch}`,
                     title: pr.title,
-                    description: pr.description
+                    description: pr.description,
+                    reviewers: allReviewers,
+                    workItemRefs: pr.workItems?.map(id => { return { id: id }; }),
+                    labels: pr.labels?.map(label => { return { name: label }; }),
+                    isDraft: false // TODO: Add config for this?
                 },
                 pr.repository,
                 pr.project,
@@ -473,4 +534,9 @@ function mergeCommitMessage(id: number, title: string, description: string): str
     //   https://developercommunity.visualstudio.com/t/raise-the-character-limit-for-pull-request-descrip/365708#T-N424531
     //
     return `Merged PR ${id}: ${title}\n\n${description}`.slice(0, 3500);
+}
+
+function isGuid(guid: string): boolean {
+    const regex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+    return regex.test(guid);
 }

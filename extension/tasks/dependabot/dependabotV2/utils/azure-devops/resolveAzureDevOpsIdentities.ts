@@ -1,6 +1,6 @@
 import axios from 'axios';
 import * as tl from 'azure-pipelines-task-lib/task';
-import extractOrganization from './extractOrganization';
+import extractOrganization from '../extractOrganization';
 
 export interface IIdentity {
   /**

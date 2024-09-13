@@ -36,8 +36,8 @@ async function run() {
     const prApproverClient = taskInputs.autoApprove ? new AzureDevOpsWebApiClient(taskInputs.organizationUrl.toString(), taskInputs.autoApproveUserToken || taskInputs.systemAccessToken) : null;
 
     // Fetch the active pull requests created by the author user
-    const prAuthorActivePullRequests = await prAuthorClient.getMyActivePullRequestProperties(
-      taskInputs.project, taskInputs.repository
+    const prAuthorActivePullRequests = await prAuthorClient.getActivePullRequestProperties(
+      taskInputs.project, taskInputs.repository, await prAuthorClient.getUserId()
     );
 
     // Initialise the Dependabot updater

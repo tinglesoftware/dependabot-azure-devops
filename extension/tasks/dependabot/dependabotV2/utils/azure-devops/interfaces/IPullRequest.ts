@@ -28,7 +28,7 @@ export interface IPullRequest {
     assignees?: string[],
     reviewers?: string[],
     labels?: string[],
-    workItems?: number[],
+    workItems?: string[],
     changes: IFileChange[],
     properties?: {
         name: string,
