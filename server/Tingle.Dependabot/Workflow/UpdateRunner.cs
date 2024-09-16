@@ -175,13 +175,7 @@ internal partial class UpdateRunner
             var execution = executions.SingleOrDefault();
             if (execution is null) return null;
 
-            // this is a temporary workaround
-            // TODO: remove this after https://github.com/Azure/azure-sdk-for-net/issues/38385 is fixed
-            var rr = await resource.GetContainerAppJobExecutionAsync(execution.Data.Name, cancellationToken);
-            var properties = JsonNode.Parse(rr.GetRawResponse().Content.ToString())!.AsObject()["properties"]!;
-
-            //var status = execution.Data.Properties.Status.ToString() switch
-            var status = properties["status"]!.GetValue<string>() switch
+            var status = execution.Data.Status.ToString() switch
             {
                 "Succeeded" => UpdateJobStatus.Succeeded,
                 "Running" => UpdateJobStatus.Running,
@@ -200,8 +194,7 @@ internal partial class UpdateRunner
             }
 
             // get the period
-            //DateTimeOffset? start = execution.Data.Properties.StartTime, end = execution.Data.Properties.EndTime;
-            DateTimeOffset? start = properties["startTime"]?.GetValue<DateTimeOffset?>(), end = properties["endTime"]?.GetValue<DateTimeOffset?>();
+            DateTimeOffset? start = execution.Data.StartOn, end = execution.Data.EndOn;
 
             // create and return state
             return new UpdateRunnerState(status, start, end);
