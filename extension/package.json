@@ -31,7 +31,7 @@
     "js-yaml": "4.1.0"
   },
   "devDependencies": {
-    "@types/jest": "29.5.12",
+    "@types/jest": "29.5.13",
     "@types/js-yaml": "4.0.9",
     "@types/node": "22.5.4",
     "@types/q": "1.5.8",
