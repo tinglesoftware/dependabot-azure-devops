@@ -76,6 +76,9 @@ jobs:
 
       - name: Update version numbers in task.json
         run: |
+          echo "`jq '.version.Major=1' extension/tasks/dependabot/dependabotV1/task.json`" > extension/tasks/dependabot/dependabotV1/task.json
+          echo "`jq '.version.Minor=34' extension/tasks/dependabot/dependabotV1/task.json`" > extension/tasks/dependabot/dependabotV1/task.json
+          echo "`jq '.version.Patch=${{ github.run_number }}' extension/tasks/dependabot/dependabotV1/task.json`" > extension/tasks/dependabot/dependabotV1/task.json
           echo "`jq '.version.Major=${{ steps.gitversion.outputs.major }}' extension/tasks/dependabot/dependabotV2/task.json`" > extension/tasks/dependabot/dependabotV2/task.json
           echo "`jq '.version.Minor=${{ steps.gitversion.outputs.minor }}' extension/tasks/dependabot/dependabotV2/task.json`" > extension/tasks/dependabot/dependabotV2/task.json
           echo "`jq '.version.Patch=${{ github.run_number }}' extension/tasks/dependabot/dependabotV2/task.json`" > extension/tasks/dependabot/dependabotV2/task.json
