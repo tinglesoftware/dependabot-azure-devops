@@ -3,7 +3,7 @@
   "id": "d98b873d-cf18-41eb-8ff5-234f14697896",
   "name": "dependabot",
   "friendlyName": "Dependabot",
-  "description": "Automatically update dependencies and vulnerabilities in your code",
+  "description": "Automatically update dependencies and vulnerabilities in your code using [Dependabot Updater](https://github.com/dependabot/dependabot-core/tree/main/updater)",
   "helpMarkDown": "For help please visit https://github.com/tinglesoftware/dependabot-azure-devops/issues",
   "helpUrl": "https://github.com/tinglesoftware/dependabot-azure-devops/issues",
   "releaseNotes": "https://github.com/tinglesoftware/dependabot-azure-devops/releases",
@@ -18,7 +18,7 @@
     "Patch": 0
   },
   "deprecated": true,
-  "deprecationMessage": "The recommended approach to running dependabot has changed since the creation of this task, and is no longer maintained. Please upgrade to the latest version to continue receiving fixes and features. More details: https://github.com/tinglesoftware/dependabot-azure-devops/discussions/1317.",
+  "deprecationMessage": "This task version is deprecated and is no longer maintained. Please upgrade to the latest version to continue receiving fixes and features. More details: https://github.com/tinglesoftware/dependabot-azure-devops/discussions/1317.",
   "instanceNameFormat": "Dependabot",
   "minimumAgentVersion": "3.232.1",
   "groups": [

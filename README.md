@@ -42,13 +42,13 @@ Unlike the GitHub-hosted version, Dependabot must be explicitly enabled in your 
 
 Similar to the GitHub-hosted version, Dependabot is configured using a [dependabot.yml file](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file) located at `.azuredevops/dependabot.yml` or `.github/dependabot.yml` in your repository. 
 
-All [offical configuration options](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file) are supported since V2, earlier versions have limited support. See [unsupported features and configurations](#unsupported-features-and-configurations) for more. 
+All [official configuration options](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file) are supported since V2, earlier versions have limited support. See [unsupported features and configurations](#unsupported-features-and-configurations) for more. 
 
 ## Configuring private feeds and registries
 
 Besides accessing the repository, sometimes private feeds/registries may need to be accessed. For example a private NuGet feed or a company internal docker registry.
 
-Private registries are configured in `dependabot.yml`, refer to the [offical documentation](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#configuration-options-for-private-registries).
+Private registries are configured in `dependabot.yml`, refer to the [official documentation](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#configuration-options-for-private-registries).
 
 Examples:
 
@@ -165,7 +165,7 @@ The list of experiments is not [publicly] documented, but can be found by search
 | NuGet | nuget_dependency_solver | true/false | |
 
 ## Unsupported features and configurations
-We aim to support all offical features and configuration options, but there are some current limitations and exceptions.
+We aim to support all official features and configuration options, but there are some current limitations and exceptions.
 
 ### Extension Task
 
@@ -177,7 +177,7 @@ We aim to support all offical features and configuration options, but there are 
 - [`schedule` config options](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#scheduleinterval) are ignored, use [pipeline scheduled triggers](https://learn.microsoft.com/en-us/azure/devops/pipelines/process/scheduled-triggers?view=azure-devops&tabs=yaml#scheduled-triggers) instead.
 - [`directories` config option](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#directories) is only supported if task input `useUpdateScriptVNext: true` is set.
 - [`groups` config option](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#groups) is only supported if task input `useUpdateScriptVNext: true` is set.
-- [`ignore` config option](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#ignore) may not behave to offical specifications unless task input `useUpdateScriptVNext: true` is set. If you are having issues, search for related issues such as <https://github.com/tinglesoftware/dependabot-azure-devops/pull/582> before creating a new issue.
+- [`ignore` config option](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#ignore) may not behave to official specifications unless task input `useUpdateScriptVNext: true` is set. If you are having issues, search for related issues such as <https://github.com/tinglesoftware/dependabot-azure-devops/pull/582> before creating a new issue.
 - Private feed/registry authentication is known to cause errors with some package ecyosystems. Support is _slightly_ better when task input `useUpdateScriptVNext: true` is set, but not still not fully supported.
 
 
