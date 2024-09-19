@@ -48,16 +48,7 @@
     }
   ],
   "inputs": [
-    {
-      "name": "storeDependencyList",
-      "type": "boolean",
-      "groupName": "advanced",
-      "label": "Monitor the discovered dependencies",
-      "defaultValue": false,
-      "required": false,
-      "helpMarkDown": "When set to `true`, the discovered dependencies will be stored against the project. Defaults to `false`."
-    },
-    
+
     {
       "name": "skipPullRequests",
       "type": "boolean",
@@ -203,7 +194,16 @@
       "required": false,
       "helpMarkDown": "The raw Personal Access Token for accessing GitHub repositories. Use this in place of `gitHubConnection` such as when it is not possible to create a service connection."
     },
-
+    
+    {
+      "name": "storeDependencyList",
+      "type": "boolean",
+      "groupName": "advanced",
+      "label": "Monitor the discovered dependencies",
+      "defaultValue": false,
+      "required": false,
+      "helpMarkDown": "When set to `true`, the discovered dependencies will be stored against the project. Defaults to `false`."
+    },
     {
       "name": "targetRepositoryName",
       "type": "string",
