@@ -44,7 +44,7 @@ Dependabot uses Docker containers, which may take time to install if not already
 
 ## Task Parameters
 
-### `dependabot@V2` **(Preview)**
+### `dependabot@V2`
 
 |Input|Description|
 |--|--|

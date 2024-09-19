@@ -1,24 +1,27 @@
 
+> [!WARNING]
+> Use of the Dependabot Updater image is no longer recommended since v2.0; This updater image is considered an internal component within Dependabot and is not intended to be run directly without the use of a credentials proxy. See [unsupported features and configuration](../README.md#unsupported-features-and-configurations) for more details on the limitations of this image.
+
 # Table of Contents
 
 - [Running the updater](#running-the-updater)
-  - [Environment variables](#environment-variables)
+   * [Environment Variables](#environment-variables)
 - [Development guide](#development-guide)
-  - [Getting the development environment ready](#getting-the-development-environment-ready)
-  - [Building the Docker image](#building-the-docker-image)
-  - [Running your code changes](#running-your-code-changes)
-  - [Running the code linter](#running-the-code-linter)
-  - [Running the unit tests](#running-the-unit-tests)
+   * [Getting the development environment ready](#getting-the-development-environment-ready)
+   * [Building the Docker image](#building-the-docker-image)
+   * [Running your code changes](#running-your-code-changes)
+   * [Running the code linter](#running-the-code-linter)
+   * [Running the unit tests](#running-the-unit-tests)
 
 # Running the updater
 
-First, you need to pull the docker image locally to your machine:
+[Build](#building-the-docker-image) or pull the docker image:
 
 ```bash
 docker pull ghcr.io/tinglesoftware/dependabot-updater-<ecosystem>
 ```
 
-Next create and run a container from the image. The full list of container options are detailed in [Environment variables](#environment-variables); at minimum the command should be:
+Create and run a container based on the image. The full list of container options are detailed in [environment variables](#environment-variables); at minimum the command should be:
 
 ```bash
 docker run --rm -t \
@@ -77,7 +80,7 @@ docker run --rm -t \
 
 ## Environment Variables
 
-To run the script, some environment variables are required.
+The following environment variables are required when running the container.
 
 |Variable Name|Supported Command(s)|Description|
 |--|--|--|
@@ -135,10 +138,12 @@ To run the script, some environment variables are required.
 
 ## Getting the development environment ready
 
-First, ensure you have [Docker](https://docs.docker.com/engine/install/) and [Ruby](https://www.ruby-lang.org/en/documentation/installation/) installed.
-On Linux, you'll need the the build essentials and Ruby development packages too; These are typically `build-essentials` and `ruby-dev`.
+Install [Docker](https://docs.docker.com/engine/install/) and [Ruby](https://www.ruby-lang.org/en/documentation/installation/).
 
-Next, install project build tools with bundle:
+> [!TIP]
+> If developing in Linux, you'll also need the the build essentials and Ruby development packages; These are typically `build-essentials` and `ruby-dev`.
+
+Install the project build tools using Bundle:
 
 ```bash
 cd updater
@@ -159,21 +164,23 @@ docker build \
     .
 ```
 
-In some scenarios, you may want to set `BASE_VERSION` to a specific version instead of "latest".
-See [updater/Dockerfile](../updater/Dockerfile) for a more detailed explanation.
+> [!TIP]
+> In some scenarios, you may want to set `BASE_VERSION` to a specific version instead of "latest".
+> See [updater/Dockerfile](../updater/Dockerfile) for a more detailed explanation.
 
 ## Running your code changes
 
-To test run your code changes, you'll first need to build the updater Docker image (see above), then run the updater Docker image in a container with all the required environment variables (see above).
+To test run your code changes, you'll first need to [build the Docker image](#building-the-docker-image), then run the Docker image in a container with all the [required environment variables](#environment-variables).
 
 ## Running the code linter
 
 ```bash
 cd updater
 bundle exec rubocop
-bundle exec rubocop -a # to automatically fix any correctable offenses
 ```
 
+> [!TIP]
+> To automatically fix correctable linting issues, use `bundle exec rubocop -a`
 ## Running the unit tests
 
 ```bash

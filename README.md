@@ -22,6 +22,7 @@ In this repository you'll find:
    * [Extension Task](#extension-task)
       + [dependabot@V2](#dependabotv2)
       + [dependabot@V1](#dependabotv1)
+   * [Updater Docker image](#updater-docker-image)
    * [Server](#server)
 - [Migration Guide](#migration-guide)
 - [Development Guide](#development-guide)
@@ -30,12 +31,13 @@ In this repository you'll find:
 
 ## Getting started
 
-Unlike the GitHub-hosted version, Dependabot must be explicitly enabled in your Azure DevOps organisation. There are two options available:
+Unlike the GitHub-hosted version, Dependabot for Azure DevOps must be explicitly enabled in your organisation. There are two ways to do this:
 
 - [Azure DevOps Extension](https://marketplace.visualstudio.com/items?itemName=tingle-software.dependabot) - Ideal if you want to get Dependabot running with minimal administrative effort. The extension runs directly inside your existing pipeline agents and doesn't require hosting of any additional services. Because the extension runs in pipelines, this option does not scale well if you have a large number of projects/repositories.
 
 - [Hosted Server](./docs/server.md) - Ideal if you have a large number of projects/repositories or prefer to run Dependabot as a managed service instead of using pipeline agents. See [why should I use the server?](./docs/server.md#why-should-i-use-the-server)
 
+  > [!NOTE]
   > A hosted version is available to sponsors (most, but not all). It includes hassle free runs where the infrastructure is maintained for you. Much like the GitHub hosted version. Alternatively, you can run and host your own [self-hosted server](./docs/server.md). Once you sponsor, you can send out an email to an maintainer or wait till they reach out. This is meant to ease the burden until GitHub/Azure/Microsoft can get it working natively (which could also be never) and hopefully for free.
 
 ## Using a configuration file
@@ -86,52 +88,51 @@ updates:
   ...
 ```
 
-Notes:
+Note when using authentication secrets in configuration files:
 
-1. `${{ VARIABLE_NAME }}` notation is used liked described [here](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/managing-encrypted-secrets-for-dependabot)
+> [!NOTE]
+> `${{ VARIABLE_NAME }}` notation is used liked described [here](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/managing-encrypted-secrets-for-dependabot)
 BUT the values will be used from pipeline environment variables. Template variables are not supported for this replacement. Replacement only works for values considered secret in the registries section i.e. `username`, `password`, `token`, and `key`
 
-2. When using an Azure DevOps Artifact feed, the token format must be `PAT:${{ VARIABLE_NAME }}` where `VARIABLE_NAME` is a pipeline/environment variable containing the PAT token. The PAT must:
+> [!NOTE]
+> When using an Azure DevOps Artifact feed, the token format must be `PAT:${{ VARIABLE_NAME }}` where `VARIABLE_NAME` is a pipeline/environment variable containing the PAT token. The PAT must:
+>    1. Have `Packaging (Read)` permission.
+>    2. Be issued by a user with permission to the feed either directly or via a group. An easy way for this is to give `Contributor` permissions the `[{project_name}]\Contributors` group under the `Feed Settings -> Permissions` page. The page has the url format: `https://dev.azure.com/{organization}/{project}/_packaging?_a=settings&feed={feed-name}&view=permissions`.
 
-    1. Have `Packaging (Read)` permission.
-    2. Be issued by a user with permission to the feed either directly or via a group. An easy way for this is to give `Contributor` permissions the `[{project_name}]\Contributors` group under the `Feed Settings -> Permissions` page. The page has the url format: `https://dev.azure.com/{organization}/{project}/_packaging?_a=settings&feed={feed-name}&view=permissions`.
+> [!NOTE]
+> When using a private NuGet feed secured with basic auth, the `username`, `password`, **and** `token` properties are all required. The token format must be `${{ USERNAME }}:${{ PASSWORD }}`.
 
-The following only apply when using the `dependabot@V1` task:
-
-3. When using a private NuGet feed secured with basic auth, the `username`, `password`, **and** `token` properties are all required. The token format must be `${{ USERNAME }}:${{ PASSWORD }}`.
-
-4. When your project contains a `nuget.config` file configured with custom package sources, the `key` property is required for each registry. The key must match between `dependabot.yml` and `nuget.config` otherwise the package source will be duplicated, package source mappings will be ignored, and auth errors will occur during dependency discovery. If your `nuget.config` looks like this:
-
-  ```xml
-  <?xml version="1.0" encoding="utf-8"?>
-  <configuration>
-    <packageSources>
-      <clear />
-      <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
-      <add key="my-organisation1-nuget" value="https://dev.azure.com/my-organization/_packaging/my-nuget-feed/nuget/v3/index.json" />
-    </packageSources>
-    <packageSourceMapping>
-      <packageSource key="nuget.org">
-        <package pattern="*" />
-      </packageSource>
-      <packageSource key="my-organisation-nuget">
-        <package pattern="Organisation.*" />
-      </packageSource>
-    </packageSourceMapping>
-  </configuration>
-  ```
-
-  Then your `dependabot.yml` registry should look like this:
-
-  ```yml
-  version: 2
-  registries:
-    my-org:
-      type: nuget-feed
-      key: my-organisation1-nuget
-      url: https://dev.azure.com/my-organization/_packaging/my-nuget-feed/nuget/v3/index.json
-      token: PAT:${{ MY_DEPENDABOT_ADO_PAT }}
-  ```
+> [!NOTE]
+> When your project contains a `nuget.config` file configured with custom package sources, the `key` property is required for each registry. The key must match between `dependabot.yml` and `nuget.config` otherwise the package source will be duplicated, package source mappings will be ignored, and auth errors will occur during dependency discovery. If your `nuget.config` looks like this:
+> ```xml
+>  <?xml version="1.0" encoding="utf-8"?>
+>  <configuration>
+>    <packageSources>
+>      <clear />
+>      <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
+>      <add key="my-organisation1-nuget" value="https://dev.azure.com/my-organization/_packaging/my-nuget-feed/nuget/v3/index.json" />
+>    </packageSources>
+>    <packageSourceMapping>
+>      <packageSource key="nuget.org">
+>        <package pattern="*" />
+>      </packageSource>
+>      <packageSource key="my-organisation-nuget">
+>        <package pattern="Organisation.*" />
+>      </packageSource>
+>    </packageSourceMapping>
+>  </configuration>
+> ```
+>
+> Then your `dependabot.yml` registry should look like this:
+> ```yml
+>  version: 2
+>  registries:
+>    my-org:
+>      type: nuget-feed
+>      key: my-organisation1-nuget
+>      url: https://dev.azure.com/my-organization/_packaging/my-nuget-feed/nuget/v3/index.json
+>      token: PAT:${{ MY_DEPENDABOT_ADO_PAT }}
+> ```
 
 ## Configuring security advisories and known vulnerabilities
 
@@ -140,13 +141,17 @@ Security-only updates is a mechanism to only create pull requests for dependenci
 You can provide extra security advisories, such as those for an internal dependency, in a JSON file via the `securityAdvisoriesFile` task input e.g. `securityAdvisoriesFile: '$(Pipeline.Workspace)/advisories.json'`. An example file is available [here](./advisories-example.json).
 
 ## Configuring experiments
-Dependabot uses an internal feature flag system called "experiments". Typically, experiments represent new features or changes in logic which are still being tested before becoming generally available. In some cases, you may want to opt-in to experiments to work around known issues or to opt-in to preview features.
+Dependabot uses an internal feature flag system called "experiments". Typically, experiments represent new features or changes in logic which are still being ]internal] tested before becoming generally available. In some cases, you may want to opt-in to experiments to work around known issues or to opt-in to preview features.
 
-Experiments can be enabled using the `experiments` task input with a comma-seperated list of key/value pairs representing the experiments e.g. `experiments: 'tidy=true,vendor=true,goprivate=*'`.
+Experiments can be enabled using the `experiments` task input with a comma-seperated list of key/value pairs representing the enabled experiments e.g. `experiments: 'tidy=true,vendor=true,goprivate=*'`.
 
-The list of experiments is not [publicly] documented, but can be found by searching the dependabot-core repository using queries like ["enabled?(x)"](https://github.com/search?q=repo%3Adependabot%2Fdependabot-core+%2Fenabled%5CW%5C%28.*%5C%29%2F&type=code) and ["fetch(x)"](https://github.com/search?q=repo%3Adependabot%2Fdependabot-core+%2Foptions%5C.fetch%5C%28.*%2C%2F&type=code). The table below details _some_ known experiments as of v0.275.0; this could become out-of-date at anytime.
+> [!TIP]
+> The list of experiments are not [publicly] documented, but can be found by searching the dependabot-core GitHub repository using queries like ["enabled?(x)"](https://github.com/search?q=repo%3Adependabot%2Fdependabot-core+%2Fenabled%5CW%5C%28.*%5C%29%2F&type=code) and ["fetch(x)"](https://github.com/search?q=repo%3Adependabot%2Fdependabot-core+%2Foptions%5C.fetch%5C%28.*%2C%2F&type=code). 
 
-|Package Ecosystem|Experiment Name|Type|Description|
+> [!NOTE]
+> For convenience, the known experiments as of v0.275.0 as listed below; this could become out-of-date at anytime.
+
+|Package Ecosystem|Experiment Name|Value Type|Description|
 |--|--|--|--|
 | All | dedup_branch_names | true/false | |
 | All | grouped_updates_experimental_rules | true/false | |
@@ -178,12 +183,16 @@ We aim to support all official features and configuration options, but there are
 - [`directories` config option](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#directories) is only supported if task input `useUpdateScriptVNext: true` is set.
 - [`groups` config option](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#groups) is only supported if task input `useUpdateScriptVNext: true` is set.
 - [`ignore` config option](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#ignore) may not behave to official specifications unless task input `useUpdateScriptVNext: true` is set. If you are having issues, search for related issues such as <https://github.com/tinglesoftware/dependabot-azure-devops/pull/582> before creating a new issue.
-- Private feed/registry authentication is known to cause errors with some package ecyosystems. Support is _slightly_ better when task input `useUpdateScriptVNext: true` is set, but not still not fully supported.
+- Private feed/registry authentication is known to cause errors with some package ecyosystems. Support is _slightly_ improved when task input `useUpdateScriptVNext: true` is set, but not still not fully supported. See [problems with authentication](./docs/migrations/v1-to-v2.md#resolving-private-feedregistry-authentication-issues) for more.
 
+### Updater Docker image
+- Private feed/registry authentication is known to cause errors with some package ecyosystems. See [problems with authentication](./docs/migrations/v1-to-v2.md#resolving-private-feedregistry-authentication-issues) for more.
 
 ### Server
+
 - [`directories` config option](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#directories) is not supported.
 - [`groups` config option](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#groups) is not supported.
+- Private feed/registry authentication is known to cause errors with some package ecyosystems. See [problems with authentication](./docs/migrations/v1-to-v2.md#resolving-private-feedregistry-authentication-issues) for more.
 
 ## Migration Guide
 - [Extension Task V1 → V2](./docs/migrations/v1-to-v2)
