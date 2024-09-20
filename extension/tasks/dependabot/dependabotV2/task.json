@@ -138,7 +138,7 @@
       "label": "Git commit uthor email address",
       "defaultValue": "",
       "required": false,
-      "helpMarkDown": "The email address to use as the git commit author of the pull requests. Defaults to 'noreply@github.com'."
+      "helpMarkDown": "The email address to use for the change commit author. Can be used to associate the committer with an existing account, to provide a profile picture. Defaults to `noreply@github.com`."
     },
     {
       "name": "authorName",
@@ -147,7 +147,7 @@
       "label": "Git commit author name",
       "defaultValue": "",
       "required": false,
-      "helpMarkDown": "The name to use as the git commit author of the pull requests. Defaults to 'dependabot[bot]'."
+      "helpMarkDown": "The name to use as the git commit author of the pull requests. Defaults to `dependabot[bot]`."
     },
 
     {
@@ -202,7 +202,7 @@
       "label": "Monitor the discovered dependencies",
       "defaultValue": false,
       "required": false,
-      "helpMarkDown": "When set to `true`, the discovered dependencies will be stored against the project. Defaults to `false`."
+      "helpMarkDown": "Determines if the last know dependency list information should be stored in the parent DevOps project properties. If enabled, the authenticated user must have the `Project & Team (Write)` permission for the project. Enabling this option improves performance when doing security-only updates. Defaults to `false`."
     },
     {
       "name": "targetRepositoryName",
@@ -227,7 +227,7 @@
       "groupName": "advanced",
       "label": "Dependabot updater experiments",
       "required": false,
-      "helpMarkDown": "Comma-seperated list of Dependabot experiments. Available options depend on the ecosystem."
+      "helpMarkDown": "Comma-seperated list of key/value pairs representing the enabled Dependabot experiments e.g. `experiments: 'tidy=true,vendor=true,goprivate=*'`. Available options vary depending on the package ecosystem. See [configuring experiments](https://github.com/tinglesoftware/dependabot-azure-devops/#configuring-experiments) for more details."
     }
   ],
   "dataSourceBindings": [],

@@ -1,6 +1,6 @@
 
 > [!WARNING]
-> Use of the Dependabot Updater image is no longer recommended since v2.0; This updater image is considered an internal component within Dependabot and is not intended to be run directly without the use of a credentials proxy. See [unsupported features and configuration](../README.md#unsupported-features-and-configurations) for more details on the limitations of this image.
+> **Deprecated;** Use of the Dependabot Updater image is no longer recommended since v2.0; The "updater" component is considered an internal to Dependabot and is not intended to be run directly by end-users. There are known limitations with this image, see [unsupported features and configuration](../README.md#unsupported-features-and-configurations) for more details.
 
 # Table of Contents
 
@@ -140,7 +140,7 @@ The following environment variables are required when running the container.
 
 Install [Docker](https://docs.docker.com/engine/install/) and [Ruby](https://www.ruby-lang.org/en/documentation/installation/).
 
-> [!TIP]
+> [!NOTE]
 > If developing in Linux, you'll also need the the build essentials and Ruby development packages; These are typically `build-essentials` and `ruby-dev`.
 
 Install the project build tools using Bundle:

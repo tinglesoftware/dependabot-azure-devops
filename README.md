@@ -31,20 +31,20 @@ In this repository you'll find:
 
 ## Getting started
 
-Unlike the GitHub-hosted version, Dependabot for Azure DevOps must be explicitly enabled in your organisation. There are two ways to do this:
+Unlike the GitHub-hosted version, Dependabot for Azure DevOps must be explicitly setup in your organisation, creating a `dependabot.yml` file alone will **not** enable updates. There are two ways to enable Dependabot:
 
-- [Azure DevOps Extension](https://marketplace.visualstudio.com/items?itemName=tingle-software.dependabot) - Ideal if you want to get Dependabot running with minimal administrative effort. The extension runs directly inside your existing pipeline agents and doesn't require hosting of any additional services. Because the extension runs in pipelines, this option does not scale well if you have a large number of projects/repositories.
+- [Azure DevOps Extension](https://marketplace.visualstudio.com/items?itemName=tingle-software.dependabot) - Ideal if you want to get Dependabot running with minimal administrative effort. The extension can run directly inside your existing pipeline agents and doesn't require hosting of any additional services. Because the extension runs in pipelines, this option does not scale well if you have a large number of projects/repositories.
 
 - [Hosted Server](./docs/server.md) - Ideal if you have a large number of projects/repositories or prefer to run Dependabot as a managed service instead of using pipeline agents. See [why should I use the server?](./docs/server.md#why-should-i-use-the-server)
 
-  > [!NOTE]
-  > A hosted version is available to sponsors (most, but not all). It includes hassle free runs where the infrastructure is maintained for you. Much like the GitHub hosted version. Alternatively, you can run and host your own [self-hosted server](./docs/server.md). Once you sponsor, you can send out an email to an maintainer or wait till they reach out. This is meant to ease the burden until GitHub/Azure/Microsoft can get it working natively (which could also be never) and hopefully for free.
+> [!NOTE]
+> A hosted version is available to sponsors (most, but not all). It includes hassle free runs where the infrastructure is maintained for you. Much like the GitHub hosted version. Alternatively, you can run and host your own [self-hosted server](./docs/server.md). Once you sponsor, you can send out an email to an maintainer or wait till they reach out. This is meant to ease the burden until GitHub/Azure/Microsoft can get it working natively (which could also be never) and hopefully for free.
 
 ## Using a configuration file
 
 Similar to the GitHub-hosted version, Dependabot is configured using a [dependabot.yml file](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file) located at `.azuredevops/dependabot.yml` or `.github/dependabot.yml` in your repository. 
 
-All [official configuration options](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file) are supported since V2, earlier versions have limited support. See [unsupported features and configurations](#unsupported-features-and-configurations) for more. 
+Most [official configuration options](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file) are supported since V2; Earlier versions have serveral limitations, see [unsupported features and configurations](#unsupported-features-and-configurations) for more. 
 
 ## Configuring private feeds and registries
 
@@ -90,20 +90,20 @@ updates:
 
 Note when using authentication secrets in configuration files:
 
-> [!NOTE]
+> [!IMPORTANT]
 > `${{ VARIABLE_NAME }}` notation is used liked described [here](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/managing-encrypted-secrets-for-dependabot)
 BUT the values will be used from pipeline environment variables. Template variables are not supported for this replacement. Replacement only works for values considered secret in the registries section i.e. `username`, `password`, `token`, and `key`
 
-> [!NOTE]
+> [!IMPORTANT]
 > When using an Azure DevOps Artifact feed, the token format must be `PAT:${{ VARIABLE_NAME }}` where `VARIABLE_NAME` is a pipeline/environment variable containing the PAT token. The PAT must:
 >    1. Have `Packaging (Read)` permission.
 >    2. Be issued by a user with permission to the feed either directly or via a group. An easy way for this is to give `Contributor` permissions the `[{project_name}]\Contributors` group under the `Feed Settings -> Permissions` page. The page has the url format: `https://dev.azure.com/{organization}/{project}/_packaging?_a=settings&feed={feed-name}&view=permissions`.
 
 > [!NOTE]
-> When using a private NuGet feed secured with basic auth, the `username`, `password`, **and** `token` properties are all required. The token format must be `${{ USERNAME }}:${{ PASSWORD }}`.
+> When using `dependabot@V1` with a private feed/registry secured with basic auth, the `username`, `password`, **and** `token` properties are all required. The token format must be `${{ USERNAME }}:${{ PASSWORD }}`.
 
 > [!NOTE]
-> When your project contains a `nuget.config` file configured with custom package sources, the `key` property is required for each registry. The key must match between `dependabot.yml` and `nuget.config` otherwise the package source will be duplicated, package source mappings will be ignored, and auth errors will occur during dependency discovery. If your `nuget.config` looks like this:
+> When using `dependabot@V1` with a repository containing a `nuget.config` file configured with custom package sources, the `key` property is required for each registry. The key must match between `dependabot.yml` and `nuget.config` otherwise the package source will be duplicated, package source mappings will be ignored, and auth errors will occur during dependency discovery. If your `nuget.config` looks like this:
 > ```xml
 >  <?xml version="1.0" encoding="utf-8"?>
 >  <configuration>
@@ -143,13 +143,13 @@ You can provide extra security advisories, such as those for an internal depende
 ## Configuring experiments
 Dependabot uses an internal feature flag system called "experiments". Typically, experiments represent new features or changes in logic which are still being ]internal] tested before becoming generally available. In some cases, you may want to opt-in to experiments to work around known issues or to opt-in to preview features.
 
-Experiments can be enabled using the `experiments` task input with a comma-seperated list of key/value pairs representing the enabled experiments e.g. `experiments: 'tidy=true,vendor=true,goprivate=*'`.
+Experiments vary depending on the package ecyosystem used; They can be enabled using the `experiments` task input with a comma-seperated list of key/value pairs representing the experiments e.g. `experiments: 'tidy=true,vendor=true,goprivate=*'`.
+
+> [!WARNING]
+> For convenience, known experiments as of v0.275.0 are listed below; **This be out-of-date at the time of reading.**
 
 > [!TIP]
-> The list of experiments are not [publicly] documented, but can be found by searching the dependabot-core GitHub repository using queries like ["enabled?(x)"](https://github.com/search?q=repo%3Adependabot%2Fdependabot-core+%2Fenabled%5CW%5C%28.*%5C%29%2F&type=code) and ["fetch(x)"](https://github.com/search?q=repo%3Adependabot%2Fdependabot-core+%2Foptions%5C.fetch%5C%28.*%2C%2F&type=code). 
-
-> [!NOTE]
-> For convenience, the known experiments as of v0.275.0 as listed below; this could become out-of-date at anytime.
+> To find the latest list of Dependabot experiments, search the `dependabot-core` GitHub repository using queries like ["enabled?(x)"](https://github.com/search?q=repo%3Adependabot%2Fdependabot-core+%2Fenabled%5CW%5C%28.*%5C%29%2F&type=code) and ["options.fetch(x)"](https://github.com/search?q=repo%3Adependabot%2Fdependabot-core+%2Foptions%5C.fetch%5C%28.*%2C%2F&type=code). 
 
 |Package Ecosystem|Experiment Name|Value Type|Description|
 |--|--|--|--|
@@ -170,29 +170,29 @@ Experiments can be enabled using the `experiments` task input with a comma-seper
 | NuGet | nuget_dependency_solver | true/false | |
 
 ## Unsupported features and configurations
-We aim to support all official features and configuration options, but there are some current limitations and exceptions.
+We aim to support all [official configuration options](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file), but there are some limitations for:
 
 ### Extension Task
 
 #### `dependabot@V2`
-- [`schedule` config options](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#scheduleinterval) are ignored, use [pipeline scheduled triggers](https://learn.microsoft.com/en-us/azure/devops/pipelines/process/scheduled-triggers?view=azure-devops&tabs=yaml#scheduled-triggers) instead.
-- [Security updates only](https://docs.github.com/en/code-security/dependabot/dependabot-security-updates/configuring-dependabot-security-updates#overriding-the-default-behavior-with-a-configuration-file) (i.e. `open-pull-requests-limit: 0`) are not supported. _(coming soon)_
+- [`schedule`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#scheduleinterval) is ignored, use [pipeline scheduled triggers](https://learn.microsoft.com/en-us/azure/devops/pipelines/process/scheduled-triggers?view=azure-devops&tabs=yaml#scheduled-triggers) instead.
+- [Security-only updates](https://docs.github.com/en/code-security/dependabot/dependabot-security-updates/configuring-dependabot-security-updates#overriding-the-default-behavior-with-a-configuration-file) (`open-pull-requests-limit: 0`) are not supported. _(coming soon)_
 
 #### `dependabot@V1`
-- [`schedule` config options](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#scheduleinterval) are ignored, use [pipeline scheduled triggers](https://learn.microsoft.com/en-us/azure/devops/pipelines/process/scheduled-triggers?view=azure-devops&tabs=yaml#scheduled-triggers) instead.
-- [`directories` config option](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#directories) is only supported if task input `useUpdateScriptVNext: true` is set.
-- [`groups` config option](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#groups) is only supported if task input `useUpdateScriptVNext: true` is set.
-- [`ignore` config option](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#ignore) may not behave to official specifications unless task input `useUpdateScriptVNext: true` is set. If you are having issues, search for related issues such as <https://github.com/tinglesoftware/dependabot-azure-devops/pull/582> before creating a new issue.
-- Private feed/registry authentication is known to cause errors with some package ecyosystems. Support is _slightly_ improved when task input `useUpdateScriptVNext: true` is set, but not still not fully supported. See [problems with authentication](./docs/migrations/v1-to-v2.md#resolving-private-feedregistry-authentication-issues) for more.
+- [`schedule`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#scheduleinterval) is ignored, use [pipeline scheduled triggers](https://learn.microsoft.com/en-us/azure/devops/pipelines/process/scheduled-triggers?view=azure-devops&tabs=yaml#scheduled-triggers) instead.
+- [`directories`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#directories) are only supported if task input `useUpdateScriptVNext: true` is set.
+- [`groups`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#groups) are only supported if task input `useUpdateScriptVNext: true` is set.
+- [`ignore`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#ignore) may not behave to official specifications unless task input `useUpdateScriptVNext: true` is set. If you are having issues, search for related issues such as <https://github.com/tinglesoftware/dependabot-azure-devops/pull/582> before creating a new issue.
+- Private feed/registry authentication may not work with all package ecyosystems. Support is _slightly_ improved when task input `useUpdateScriptVNext: true` is set, but not still not fully supported. See [problems with authentication](https://github.com/tinglesoftware/dependabot-azure-devops/discussions/1317) for more.
 
 ### Updater Docker image
-- Private feed/registry authentication is known to cause errors with some package ecyosystems. See [problems with authentication](./docs/migrations/v1-to-v2.md#resolving-private-feedregistry-authentication-issues) for more.
+- Private feed/registry authentication may not work with all package ecyosystems. See [problems with authentication](https://github.com/tinglesoftware/dependabot-azure-devops/discussions/1317) for more.
 
 ### Server
 
-- [`directories` config option](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#directories) is not supported.
-- [`groups` config option](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#groups) is not supported.
-- Private feed/registry authentication is known to cause errors with some package ecyosystems. See [problems with authentication](./docs/migrations/v1-to-v2.md#resolving-private-feedregistry-authentication-issues) for more.
+- [`directories`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#directories) are not supported.
+- [`groups`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#groups) are not supported.
+- Private feed/registry authentication may not work with all package ecyosystems. See [problems with authentication](https://github.com/tinglesoftware/dependabot-azure-devops/discussions/1317) for more.
 
 ## Migration Guide
 - [Extension Task V1 → V2](./docs/migrations/v1-to-v2)
