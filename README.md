@@ -12,6 +12,9 @@ In this repository you'll find:
 1. Dependabot Server, [source code](./server/) and [docs](./docs/server.md).
 1. Dependabot Updater image, [Dockerfile](./updater/Dockerfile), [source code](./updater/) and [docs](./docs/updater.md). **(Deprecated since v2.0)**
 
+> [!IMPORTANT]
+> This project is currently undergoing a major version increment (V1 → V2); See the [migration guide](./docs/migrations/v1-to-v2.md#summary-of-changes-v1--v2) for more details and progress updates.
+
 ## Table of Contents
 - [Getting started](#getting-started)
 - [Using a configuration file](#using-a-configuration-file)
@@ -31,14 +34,14 @@ In this repository you'll find:
 
 ## Getting started
 
-Unlike the GitHub-hosted version, Dependabot for Azure DevOps must be explicitly setup in your organisation, creating a `dependabot.yml` file alone will **not** enable updates. There are two ways to enable Dependabot:
+Unlike the GitHub-hosted version, Dependabot for Azure DevOps must be explicitly setup in your organisation; creating a `dependabot.yml` file alone is **not** enough to enable updates. There are two ways to enable Dependabot, using:
 
-- [Azure DevOps Extension](https://marketplace.visualstudio.com/items?itemName=tingle-software.dependabot) - Ideal if you want to get Dependabot running with minimal administrative effort. The extension can run directly inside your existing pipeline agents and doesn't require hosting of any additional services. Because the extension runs in pipelines, this option does not scale well if you have a large number of projects/repositories.
+- [Azure DevOps Extension](https://marketplace.visualstudio.com/items?itemName=tingle-software.dependabot) - Ideal if you want to get Dependabot running with minimal administrative effort. The extension can run directly inside your existing pipeline agents and doesn't require hosting of any additional services. Because the extension runs in pipelines, this option does **not** scale well if you have a large number of projects and repositories.
 
-- [Hosted Server](./docs/server.md) - Ideal if you have a large number of projects/repositories or prefer to run Dependabot as a managed service instead of using pipeline agents. See [why should I use the server?](./docs/server.md#why-should-i-use-the-server)
+- [Hosted Server](./docs/server.md) - Ideal if you have a large number of projects and repositories or prefer to run Dependabot as a managed service instead of using pipeline agents. See [why should I use the server?](./docs/server.md#why-should-i-use-the-server) for more info.
 
 > [!NOTE]
-> A hosted version is available to sponsors (most, but not all). It includes hassle free runs where the infrastructure is maintained for you. Much like the GitHub hosted version. Alternatively, you can run and host your own [self-hosted server](./docs/server.md). Once you sponsor, you can send out an email to an maintainer or wait till they reach out. This is meant to ease the burden until GitHub/Azure/Microsoft can get it working natively (which could also be never) and hopefully for free.
+> A hosted version is available to sponsors (most, but not all). It includes hassle free runs where the infrastructure is maintained for you. Much like the GitHub hosted version. Alternatively, you can run and host your own [self-hosted server](./docs/server.md). Once you sponsor, you can send out an email to a maintainer or wait till they reach out. This is meant to ease the burden until GitHub/Azure/Microsoft can get it working natively (which could also be never) and hopefully for free.
 
 ## Using a configuration file
 
@@ -136,20 +139,20 @@ BUT the values will be used from pipeline environment variables. Template variab
 
 ## Configuring security advisories and known vulnerabilities
 
-Security-only updates is a mechanism to only create pull requests for dependencies with vulnerabilities by updating them to the earliest available non-vulnerable version. Security updates are supported in the same way as the GitHub-hosted version provided that a GitHub access token with `public_repo` access is provided in the `gitHubConnection` task input. 
+Security-only updates is a mechanism to only create pull requests for dependencies with vulnerabilities by updating them to the earliest available non-vulnerable version. [Security updates are supported in the same way as the GitHub-hosted version](https://docs.github.com/en/code-security/dependabot/dependabot-security-updates/configuring-dependabot-security-updates#overriding-the-default-behavior-with-a-configuration-file) provided that a GitHub access token with `public_repo` access is provided in the `gitHubAccessToken` or `gitHubConnection` task inputs. 
 
-You can provide extra security advisories, such as those for an internal dependency, in a JSON file via the `securityAdvisoriesFile` task input e.g. `securityAdvisoriesFile: '$(Pipeline.Workspace)/advisories.json'`. An example file is available [here](./advisories-example.json).
+You can provide extra security advisories, such as those for an internal dependency, in a JSON file via the `securityAdvisoriesFile` task input e.g. `securityAdvisoriesFile: '$(Pipeline.Workspace)/advisories.json'`. An example file is available in [./advisories-example.json](./advisories-example.json).
 
 ## Configuring experiments
-Dependabot uses an internal feature flag system called "experiments". Typically, experiments represent new features or changes in logic which are still being ]internal] tested before becoming generally available. In some cases, you may want to opt-in to experiments to work around known issues or to opt-in to preview features.
+Dependabot uses an internal feature flag system called "experiments". Typically, experiments represent new features or changes in logic which are still being internally tested before becoming generally available. In some cases, you may want to opt-in to experiments to work around known issues or to opt-in to preview features ahead of general availability (GA).
 
 Experiments vary depending on the package ecyosystem used; They can be enabled using the `experiments` task input with a comma-seperated list of key/value pairs representing the experiments e.g. `experiments: 'tidy=true,vendor=true,goprivate=*'`.
 
-> [!WARNING]
-> For convenience, known experiments as of v0.275.0 are listed below; **This be out-of-date at the time of reading.**
+> [!NOTE]
+> Dependabot experinment names are not [publicly] documented. For convenience, some known experiments are listed below; However, **be aware that this may be out-of-date at the time of reading.**
 
-> [!TIP]
-> To find the latest list of Dependabot experiments, search the `dependabot-core` GitHub repository using queries like ["enabled?(x)"](https://github.com/search?q=repo%3Adependabot%2Fdependabot-core+%2Fenabled%5CW%5C%28.*%5C%29%2F&type=code) and ["options.fetch(x)"](https://github.com/search?q=repo%3Adependabot%2Fdependabot-core+%2Foptions%5C.fetch%5C%28.*%2C%2F&type=code). 
+<details>
+<summary>List of known experiments from dependabot-core@0.275.0</summary>
 
 |Package Ecosystem|Experiment Name|Value Type|Description|
 |--|--|--|--|
@@ -168,6 +171,11 @@ Experiments vary depending on the package ecyosystem used; They can be enabled u
 | NPM and Yarn | enable_pnpm_yarn_dynamic_engine | true/false | |
 | NuGet | nuget_native_analysis | true/false | |
 | NuGet | nuget_dependency_solver | true/false | |
+
+</details>
+
+> [!TIP]
+> To find the latest list of Dependabot experiments, search the `dependabot-core` GitHub repository using queries like ["enabled?(x)"](https://github.com/search?q=repo%3Adependabot%2Fdependabot-core+%2Fenabled%5CW%5C%28.*%5C%29%2F&type=code) and ["options.fetch(x)"](https://github.com/search?q=repo%3Adependabot%2Fdependabot-core+%2Foptions%5C.fetch%5C%28.*%2C%2F&type=code). 
 
 ## Unsupported features and configurations
 We aim to support all [official configuration options](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file), but there are some limitations for:

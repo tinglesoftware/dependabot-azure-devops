@@ -68,7 +68,8 @@ npm test
 # Architecture
 
 ## Task V2 high-level update process diagram
-High-level sequence diagram illustrating how the `dependabotV2` task performs updates using [dependabot-cli](https://github.com/dependabot/cli). See [how dependabot-cli works](https://github.com/dependabot/cli?tab=readme-ov-file#how-it-works) for more details.
+High-level sequence diagram illustrating how the `dependabotV2` task performs updates using [dependabot-cli](https://github.com/dependabot/cli). For more technical details, see [how dependabot-cli works](https://github.com/dependabot/cli?tab=readme-ov-file#how-it-works).
+
 ```mermaid
  sequenceDiagram
     participant ext as Dependabot DevOps Extension

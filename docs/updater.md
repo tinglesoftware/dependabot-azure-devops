@@ -41,7 +41,8 @@ docker run --rm -t \
            ghcr.io/tinglesoftware/dependabot-updater-<ecosystem> update_script
 ```
 
-An example, for Azure DevOps Services:
+<details>
+<summary>Example, for Azure DevOps Services</summary>
 
 ```bash
 docker run --rm -t \
@@ -58,7 +59,10 @@ docker run --rm -t \
            ghcr.io/tinglesoftware/dependabot-updater-nuget update_script
 ```
 
-An example, for Azure DevOps Server:
+</details>
+
+<details>
+<summary>Example, for Azure DevOps Server</summary>
 
 ```bash
 docker run --rm -t \
@@ -77,6 +81,8 @@ docker run --rm -t \
            -e AZURE_REPOSITORY=repro-411 \
            ghcr.io/tinglesoftware/dependabot-updater-nuget update_script
 ```
+
+</details>
 
 ## Environment Variables
 

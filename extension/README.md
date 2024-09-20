@@ -37,14 +37,15 @@ steps:
 
 ## Task Requirements
 
-The task makes use of [dependabot-cli](https://github.com/dependabot/cli), which requires [Go](https://go.dev/doc/install) (1.22+) and [Docker](https://docs.docker.com/get-started/get-docker/) (with Linux containers) be installed on the pipeline agent.
+The task uses [dependabot-cli](https://github.com/dependabot/cli), which requires [Go](https://go.dev/doc/install) (1.22+) and [Docker](https://docs.docker.com/get-started/get-docker/) (with Linux containers) be installed on the pipeline agent.
 If you use [Microsoft-hosted agents](https://learn.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=azure-devops&tabs=yaml#software), we recommend using the [ubuntu-latest](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md) image, which meets all task requirements.
 
 Dependabot uses Docker containers, which may take time to install if not already cached. Subsequent dependabot tasks in the same job will be faster after initially pulling the images. An alternative way to run your pipelines faster is by leveraging Docker caching in Azure Pipelines (See [#113](https://github.com/tinglesoftware/dependabot-azure-devops/issues/113#issuecomment-894771611)). 
 
 ## Task Parameters
 
-### `dependabot@V2`
+<details>
+<summary>dependabot@V2</summary>
 
 |Input|Description|
 |--|--|
@@ -68,7 +69,10 @@ Dependabot uses Docker containers, which may take time to install if not already
 |targetUpdateIds|**_Optional_**. A semicolon (`;`) delimited list of update identifiers run. Index are zero-based and in the order written in the configuration file. When not present, all the updates are run. This is meant to be used in scenarios where you want to run updates a different times from the same configuration file given you cannot schedule them independently in the pipeline.|
 |experiments|**_Optional_**. Comma separated list of Dependabot experiments; available options depend on the ecosystem. Example: `tidy=true,vendor=true,goprivate=*`. See: [Configuring experiments](https://github.com/tinglesoftware/dependabot-azure-devops/#configuring-experiments)|
 
-### `dependabot@V1` **(Deprecated)**
+</details>
+
+<details>
+<summary>dependabot@V1 <strong>(Deprecated)</strong></summary>
 
 |Input|Description|
 |--|--|
@@ -93,6 +97,8 @@ Dependabot uses Docker containers, which may take time to install if not already
 |excludeRequirementsToUnlock|**_Optional_**. Space-separated list of dependency updates requirements to be excluded. See list of allowed values [here](https://github.com/dependabot/dependabot-core/issues/600#issuecomment-407808103). Useful if you have lots of dependencies and the update script too slow. The values provided are space-separated. Example: `own all` to only use the `none` version requirement.|
 |dockerImageTag|**_Optional_**. The image tag to use when pulling the docker container used by the task. A tag also defines the version. By default, the task decides which tag/version to use. This can be the latest or most stable version. When not provided, the value is inferred from the current task version|
 |extraEnvironmentVariables|**_Optional_**. A semicolon (`;`) delimited list of environment variables that are sent to the docker container. See possible use case [here](https://github.com/tinglesoftware/dependabot-azure-devops/issues/138)|
+
+</details>
 
 ## Advanced
 

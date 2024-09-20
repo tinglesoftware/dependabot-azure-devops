@@ -1,12 +1,10 @@
 
 > [!WARNING]
-> **This is a work in progress;** `dependabot@V2` is still under development and this document may change without notice up until general availability (GA).
+> **:construction: Work in progress;** `dependabot@V2` is still under development and this document may change without notice up until general availability (GA).
 
 # Table of Contents
 - [Summary of changes V1 → V2](#summary-of-changes-v1-v2)
-   * [Resolving private feed/registry authentication issues](#resolving-private-feedregistry-authentication-issues)
 - [Breaking changes V1 → V2](#breaking-changes-v1-v2)
-- [Steps to migrate V1 → V2](#steps-to-migrate-v1-v2)
 - [Todo before general availability](#todo-before-general-availability)
 
 # Summary of changes V1 → V2
@@ -15,9 +13,7 @@ V2 is a complete re-write of the Dependabot task; It aims to:
 - Resolve the [numerous private feed/registry authentication issues](https://github.com/tinglesoftware/dependabot-azure-devops/discussions/1317) that currently exist in V1;
 - More closely align the update logic with the GitHub-hosted Dependabot service;
 
-The task now uses [Dependabot CLI](https://github.com/dependabot/cli) to perform dependency updates, which is the _[current]_ recommended approach for running Dependabot.
-
-See [extension task architecture](../extension.md#architecture) for more technical details on changes to the update process.
+The task now uses [Dependabot CLI](https://github.com/dependabot/cli) to perform dependency updates, which is the _[currently]_ recommended approach for running Dependabot. See [extension task architecture](../extension.md#architecture) for more details on the technical changes and impact to the update process.
 
 # Breaking changes V1 → V2
 
