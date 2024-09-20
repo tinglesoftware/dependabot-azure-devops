@@ -44,7 +44,7 @@ Unlike the GitHub-hosted version, Dependabot for Azure DevOps must be explicitly
 
 Similar to the GitHub-hosted version, Dependabot is configured using a [dependabot.yml file](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file) located at `.azuredevops/dependabot.yml` or `.github/dependabot.yml` in your repository. 
 
-Most [official configuration options](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file) are supported since V2; Earlier versions have serveral limitations, see [unsupported features and configurations](#unsupported-features-and-configurations) for more. 
+Most [official configuration options](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file) are supported since V2; Earlier versions have several limitations, see [unsupported features and configurations](#unsupported-features-and-configurations) for more. 
 
 ## Configuring private feeds and registries
 
