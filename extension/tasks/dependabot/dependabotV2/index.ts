@@ -123,8 +123,10 @@ async function run() {
 }
 
 function exception(e: Error) {
-  error(`An unhandled exception occurred: ${e}`);
-  console.error(e);
+  if (e) {
+    error(`An unhandled exception occurred: ${e}`);
+    console.error(e);
+  }
 }
 
 run();
