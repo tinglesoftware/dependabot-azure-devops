@@ -20,7 +20,7 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
     // Custom properties used to store dependabot metadata in projects.
     // https://learn.microsoft.com/en-us/rest/api/azure/devops/core/projects/set-project-properties
     public static PROJECT_PROPERTY_NAME_DEPENDENCY_LIST = "Dependabot.DependencyList";
-    
+
     // Custom properties used to store dependabot metadata in pull requests.
     // https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-properties
     public static PR_PROPERTY_NAME_PACKAGE_MANAGER = "Dependabot.PackageManager";
@@ -56,13 +56,12 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
             case 'update_dependency_list':
 
                 // Store the dependency list snapshot in project properties, if configured
-                if (this.taskInputs.storeDependencyList)
-                {
+                if (this.taskInputs.storeDependencyList) {
                     console.info(`Storing the dependency list snapshot for project '${project}'...`);
                     await this.prAuthorClient.updateProjectProperty(
                         project,
                         DependabotOutputProcessor.PROJECT_PROPERTY_NAME_DEPENDENCY_LIST,
-                        function(existingValue: string) {
+                        function (existingValue: string) {
                             const repoDependencyLists = JSON.parse(existingValue || '{}');
                             repoDependencyLists[repository] = repoDependencyLists[repository] || {};
                             repoDependencyLists[repository][update.job["package-manager"]] = {
@@ -70,13 +69,13 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
                                 'dependency-files': data['dependency_files'],
                                 'last-updated': new Date().toISOString()
                             };
-    
+
                             return JSON.stringify(repoDependencyLists);
                         }
                     );
                     console.info(`Dependency list snapshot was updated for project '${project}'`);
                 }
-                
+
                 return true;
 
             case 'create_pull_request':
@@ -184,7 +183,7 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
 
                 // TODO: GitHub Dependabot will close with reason "Superseded by ${new_pull_request_id}" when another PR supersedes it.
                 //       How do we detect this? Do we need to?
-                
+
                 // Close the pull request
                 return await this.prAuthorClient.closePullRequest({
                     project: project,

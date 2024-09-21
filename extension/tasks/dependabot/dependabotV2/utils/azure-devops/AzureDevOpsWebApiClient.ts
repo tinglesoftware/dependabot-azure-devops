@@ -251,7 +251,7 @@ export class AzureDevOpsWebApiClient {
                 );
             }
 
-            console.info(` - Pull request ${pullRequest.pullRequestId} was created successfully.`);
+            console.info(` - Pull request #${pullRequest.pullRequestId} was created successfully.`);
             return pullRequest.pullRequestId;
         }
         catch (e) {
@@ -356,7 +356,7 @@ export class AzureDevOpsWebApiClient {
             const git = await this.connection.getGitApi();
 
             // Approve the pull request
-            console.info(` - Approving pull request...`);
+            console.info(` - Creating reviewer vote on pull request...`);
             await git.createPullRequestReviewer(
                 {
                     vote: 10, // 10 - approved 5 - approved with suggestions 0 - no vote -5 - waiting for author -10 - rejected
@@ -367,6 +367,8 @@ export class AzureDevOpsWebApiClient {
                 userId,
                 options.project
             );
+
+            console.info(` - Pull request #${options.pullRequestId} was approved.`);
         }
         catch (e) {
             error(`Failed to approve pull request: ${e}`);
@@ -451,7 +453,7 @@ export class AzureDevOpsWebApiClient {
             return false;
         }
     }
-    
+
     /**
      * Get project properties
      * @param project 
@@ -482,14 +484,14 @@ export class AzureDevOpsWebApiClient {
      */
     public async updateProjectProperty(project: string, name: string, valueBuilder: (existingValue: string) => string): Promise<void> {
         try {
-            
+
             // Get the existing project property value
             const core = await this.connection.getCoreApi();
             const projects = await core.getProjects();
             const projectGuid = projects?.find(p => p.name === project)?.id;
             const properties = await core.getProjectProperties(projectGuid);
             const propertyValue = properties?.find(p => p.name === name)?.value;
-            
+
             // Update the project property
             await core.setProjectProperties(
                 undefined,

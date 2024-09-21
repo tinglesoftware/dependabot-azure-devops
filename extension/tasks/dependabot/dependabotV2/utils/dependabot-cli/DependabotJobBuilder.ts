@@ -27,15 +27,15 @@ export class DependabotJobBuilder {
     ): IDependabotUpdateOperation {
         const packageEcosystem = update["package-ecosystem"];
         const securityUpdatesOnly = update["open-pull-requests-limit"] == 0;
-        const updateDependencyNames = securityUpdatesOnly ? mapDependenciesForSecurityUpdate(dependencyList): undefined;
+        const updateDependencyNames = securityUpdatesOnly ? mapDependenciesForSecurityUpdate(dependencyList) : undefined;
         return buildUpdateJobConfig(
             `update-${packageEcosystem}-${securityUpdatesOnly ? 'security-only' : 'all'}`,
-            taskInputs, 
-            update, 
-            registries, 
-            false, 
-            undefined, 
-            updateDependencyNames, 
+            taskInputs,
+            update,
+            registries,
+            false,
+            undefined,
+            updateDependencyNames,
             existingPullRequests
         );
     }
@@ -141,7 +141,7 @@ function mapDependenciesForSecurityUpdate(dependencyList: any[]): string[] {
         );
 
         // Attempt to do a security update for "all dependencies"; it will probably fail this is not supported in dependabot-updater yet, but it is best we can do...
-        return []; 
+        return [];
     }
 
     // Return only dependencies that are vulnerable, ignore the rest
@@ -203,7 +203,7 @@ function mapVersionStrategyToRequirementsUpdateStrategy(versioningStrategy: stri
     if (!versioningStrategy) {
         return undefined;
     }
-    switch(versioningStrategy) {
+    switch (versioningStrategy) {
         case 'auto': return undefined;
         case 'increase': return 'bump_versions';
         case 'increase-if-necessary': return 'bump_versions_if_necessary';
