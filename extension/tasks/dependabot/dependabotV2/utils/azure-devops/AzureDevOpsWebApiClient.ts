@@ -79,7 +79,7 @@ export class AzureDevOpsWebApiClient {
      * @returns 
      */
     public async getActivePullRequestProperties(project: string, repository: string, creator: string): Promise<IPullRequestProperties[]> {
-        console.info(`Fetching active pull request properties in '${project}/${repository}' for '${creator}'...`);
+        console.info(`Fetching active pull request properties in '${project}/${repository}' for user id '${creator}'...`);
         try {
             const git = await this.connection.getGitApi();
             const pullRequests = await git.getPullRequests(

@@ -44,8 +44,8 @@ export class DependabotCli {
         }
     ): Promise<IDependabotUpdateOperationResult[] | undefined> {
 
-        // Install dependabot if not already installed
-        await this.ensureToolsAreInstalled();
+        // Find the dependabot tool path, or install it if missing
+        const dependabotPath = await this.getDependabotToolPath();
 
         // Create the job directory
         const jobId = operation.job.id;
@@ -79,9 +79,8 @@ export class DependabotCli {
         // Run dependabot update
         if (!fs.existsSync(jobOutputPath) || fs.statSync(jobOutputPath)?.size == 0) {
             console.info(`Running Dependabot update job from '${jobInputPath}'...`);
-            const dependabotTool = tool(which("dependabot", true)).arg(dependabotArguments);
+            const dependabotTool = tool(dependabotPath).arg(dependabotArguments);
             const dependabotResultCode = await dependabotTool.execAsync({
-                silent: !this.debug,
                 failOnStdErr: false,
                 ignoreReturnCode: true
             });
@@ -126,20 +125,27 @@ export class DependabotCli {
         return operationResults.length > 0 ? operationResults : undefined;
     }
 
-    // Install dependabot if not already installed
-    private async ensureToolsAreInstalled(): Promise<void> {
+    // Get the dependabot tool path and install if missing
+    private async getDependabotToolPath(installIfMissing: boolean = true): Promise<string> {
 
         debug('Checking for `dependabot` install...');
-        if (which("dependabot", false)) {
-            return;
+        let dependabotPath = which("dependabot", false);
+        if (dependabotPath) {
+            return dependabotPath;
+        }
+        if (!installIfMissing) {
+            throw new Error("Dependabot CLI install not found");
         }
 
-        console.info("Dependabot CLI install was not found, installing now with `go install`...");
+        console.info("Dependabot CLI install was not found, installing now with `go install dependabot`...");
         const goTool: ToolRunner = tool(which("go", true));
         goTool.arg(["install", this.toolImage]);
-        goTool.execSync({
-            silent: !this.debug
-        });
+        goTool.execSync();
+
+        // Depending on how go is installed on the host agent, the go bin path may not be in the PATH environment variable.
+        // If `which("dependabot")` still doesn't resolve, we must manually resolve the path; It will either be "$GOPATH/bin/dependabot" or "$HOME/go/bin/dependabot" if $GOPATH is not set.
+        const goBinPath = process.env.GOPATH ? path.join(process.env.GOPATH, 'bin') : path.join(os.homedir(), 'go', 'bin');
+        return which("dependabot", false) || path.join(goBinPath, 'dependabot');
     }
 
     // Create the jobs directory if it does not exist
