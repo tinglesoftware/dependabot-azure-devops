@@ -20,6 +20,7 @@ export class DependabotJobBuilder {
      */
     public static newUpdateAllJob(
         taskInputs: ISharedVariables,
+        id: string,
         update: IDependabotUpdate,
         registries: Record<string, IDependabotRegistry>,
         dependencyList: any[],
@@ -29,7 +30,7 @@ export class DependabotJobBuilder {
         const securityUpdatesOnly = update["open-pull-requests-limit"] == 0;
         const updateDependencyNames = securityUpdatesOnly ? mapDependenciesForSecurityUpdate(dependencyList) : undefined;
         return buildUpdateJobConfig(
-            `update-${packageEcosystem}-${securityUpdatesOnly ? 'security-only' : 'all'}`,
+            `update-${id}-${packageEcosystem}-${securityUpdatesOnly ? 'security-only' : 'all'}`,
             taskInputs,
             update,
             registries,
@@ -51,17 +52,16 @@ export class DependabotJobBuilder {
      */
     public static newUpdatePullRequestJob(
         taskInputs: ISharedVariables,
+        id: string,
         update: IDependabotUpdate,
         registries: Record<string, IDependabotRegistry>,
         existingPullRequests: any[],
         pullRequestToUpdate: any
     ): IDependabotUpdateOperation {
-        const packageEcosystem = update["package-ecosystem"];
         const dependencyGroupName = pullRequestToUpdate['dependency-group-name'];
         const dependencies = (dependencyGroupName ? pullRequestToUpdate['dependencies'] : pullRequestToUpdate)?.map(d => d['dependency-name']);
-        const dependencyNamesHash = crypto.createHash('md5').update(dependencies.join(',')).digest('hex').substring(0, 10)
         return buildUpdateJobConfig(
-            `update-${packageEcosystem}-pr-${dependencyNamesHash}`,
+            `update-pr-${id}`,
             taskInputs,
             update,
             registries,

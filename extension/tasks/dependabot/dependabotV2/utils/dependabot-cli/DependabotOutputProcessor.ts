@@ -249,16 +249,20 @@ export function parseProjectDependencyListProperty(properties: Record<string, st
     return repoDependencyLists[repository]?.[packageManager];
 }
 
-export function parsePullRequestProperties(pullRequests: IPullRequestProperties[], packageManager: string | null): any[] {
-    return pullRequests
+export function parsePullRequestProperties(pullRequests: IPullRequestProperties[], packageManager: string | null): Record<string, any[]> {
+    return Object.fromEntries(pullRequests
         .filter(pr => {
             return pr.properties.find(p => p.name === DependabotOutputProcessor.PR_PROPERTY_NAME_PACKAGE_MANAGER && (packageManager === null || p.value === packageManager));
         })
         .map(pr => {
-            return JSON.parse(
-                pr.properties.find(p => p.name === DependabotOutputProcessor.PR_PROPERTY_NAME_DEPENDENCIES)?.value
-            )
-        });
+            return [
+                pr.id,
+                JSON.parse(
+                    pr.properties.find(p => p.name === DependabotOutputProcessor.PR_PROPERTY_NAME_DEPENDENCIES)?.value
+                )
+            ];
+        })
+    );
 }
 
 function getSourceBranchNameForUpdate(packageEcosystem: string, targetBranch: string, dependencies: any): string {

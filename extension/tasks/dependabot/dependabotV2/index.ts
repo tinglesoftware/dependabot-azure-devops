@@ -67,6 +67,7 @@ async function run() {
 
     // Loop through the [targeted] update blocks in dependabot.yaml and perform updates
     await Promise.all(updates.map(async (update) => {
+      const updateId = updates.indexOf(update).toString();
 
       // Parse the last dependency list snapshot (if any) from the project properties.
       // This is required when doing a security-only update as dependabot requires the list of vulnerable dependencies to be updated.
@@ -80,9 +81,10 @@ async function run() {
       // Parse the Dependabot metadata for the existing pull requests that are related to this update
       // Dependabot will use this to determine if we need to create new pull requests or update/close existing ones
       const existingPullRequests = parsePullRequestProperties(prAuthorActivePullRequests, update["package-ecosystem"]);
+      const existingPullRequestDependencies = Object.entries(existingPullRequests).map(([id, deps]) => deps);
 
       // Run an update job for "all dependencies"; this will create new pull requests for dependencies that need updating
-      const allDependenciesJob = DependabotJobBuilder.newUpdateAllJob(taskInputs, update, dependabotConfig.registries, dependencyList['dependencies'], existingPullRequests);
+      const allDependenciesJob = DependabotJobBuilder.newUpdateAllJob(taskInputs, updateId, update, dependabotConfig.registries, dependencyList['dependencies'], existingPullRequestDependencies);
       const allDependenciesUpdateOutputs = await dependabot.update(allDependenciesJob, dependabotUpdaterOptions);
       if (!allDependenciesUpdateOutputs || allDependenciesUpdateOutputs.filter(u => !u.success).length > 0) {
         allDependenciesUpdateOutputs.filter(u => !u.success).forEach(u => exception(u.error));
@@ -91,15 +93,15 @@ async function run() {
 
       // Run an update job for each existing pull request; this will resolve merge conflicts and close pull requests that are no longer needed
       if (!taskInputs.skipPullRequests) {
-        for (const pr of existingPullRequests) {
-          const updatePullRequestJob = DependabotJobBuilder.newUpdatePullRequestJob(taskInputs, update, dependabotConfig.registries, existingPullRequests, pr);
+        for (const pullRequestId in existingPullRequests) {
+          const updatePullRequestJob = DependabotJobBuilder.newUpdatePullRequestJob(taskInputs, pullRequestId, update, dependabotConfig.registries, existingPullRequestDependencies, existingPullRequests[pullRequestId]);
           const updatePullRequestOutputs = await dependabot.update(updatePullRequestJob, dependabotUpdaterOptions);
           if (!updatePullRequestOutputs || updatePullRequestOutputs.filter(u => !u.success).length > 0) {
             updatePullRequestOutputs.filter(u => !u.success).forEach(u => exception(u.error));
             taskSucceeded = false;
           }
         }
-      } else if (existingPullRequests.length > 0) {
+      } else if (existingPullRequests.keys.length > 0) {
         warning(`Skipping update of existing pull requests as 'skipPullRequests' is set to 'true'`);
         return;
       }
