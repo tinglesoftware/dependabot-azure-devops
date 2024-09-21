@@ -2,6 +2,7 @@ import { which, setResult, TaskResult } from "azure-pipelines-task-lib/task"
 import { debug, warning, error } from "azure-pipelines-task-lib/task"
 import { DependabotCli } from './utils/dependabot-cli/DependabotCli';
 import { AzureDevOpsWebApiClient } from "./utils/azure-devops/AzureDevOpsWebApiClient";
+import { IDependabotUpdate } from "./utils/dependabot/interfaces/IDependabotConfig";
 import { DependabotOutputProcessor, parseProjectDependencyListProperty, parsePullRequestProperties } from "./utils/dependabot-cli/DependabotOutputProcessor";
 import { DependabotJobBuilder } from "./utils/dependabot-cli/DependabotJobBuilder";
 import parseDependabotConfigFile from './utils/dependabot/parseConfigFile';
@@ -53,9 +54,20 @@ async function run() {
       updaterImage: undefined // TODO: Add config for this?
     };
 
-    // Loop through each 'update' block in dependabot.yaml and perform updates
-    await Promise.all(dependabotConfig.updates.map(async (update) => {
-      
+    // If update identifiers are specified, select them; otherwise handle all
+    let updates: IDependabotUpdate[] = [];
+    const targetIds = taskInputs.targetUpdateIds;
+    if (targetIds && targetIds.length > 0) {
+      for (const id of targetIds) {
+        updates.push(dependabotConfig.updates[id]);
+      }
+    } else {
+      updates = dependabotConfig.updates;
+    }
+
+    // Loop through the [targeted] update blocks in dependabot.yaml and perform updates
+    await Promise.all(updates.map(async (update) => {
+
       // Parse the last dependency list snapshot (if any) from the project properties.
       // This is required when doing a security-only update as dependabot requires the list of vulnerable dependencies to be updated.
       // Automatic discovery of vulnerable dependencies during a security-only update is not currently supported by dependabot-updater.
