@@ -23,6 +23,7 @@ export class AzureDevOpsWebApiClient {
             organisationApiUrl,
             getPersonalAccessTokenHandler(accessToken)
         );
+        this.cachedUserIds = {};
     }
 
     /**
@@ -34,7 +35,7 @@ export class AzureDevOpsWebApiClient {
 
         // If no email is provided, resolve to the authenticated user
         if (!email) {
-            this.cachedUserIds[this.accessToken] ||= (await this.connection.connect()).authenticatedUser?.id || "";
+            this.cachedUserIds[this.accessToken] ||= ((await this.connection.connect())?.authenticatedUser?.id || "");
             return this.cachedUserIds[this.accessToken];
         }
 
