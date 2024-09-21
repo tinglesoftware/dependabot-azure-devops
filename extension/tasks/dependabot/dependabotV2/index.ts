@@ -123,9 +123,8 @@ async function run() {
 }
 
 function exception(e: Error) {
-  if (e?.stack) {
-    error(e.stack);
-  }
+  error(`An unhandled exception occurred: ${e}`);
+  console.error(e);
 }
 
 run();

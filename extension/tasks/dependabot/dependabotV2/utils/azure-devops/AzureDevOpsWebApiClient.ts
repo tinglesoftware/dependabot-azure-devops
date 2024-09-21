@@ -55,7 +55,7 @@ export class AzureDevOpsWebApiClient {
      * @param repository 
      * @returns 
      */
-    public async getDefaultBranch(project: string, repository: string): Promise<string> {
+    public async getDefaultBranch(project: string, repository: string): Promise<string | undefined> {
         try {
             const git = await this.connection.getGitApi();
             const repo = await git.getRepository(repository, project);
@@ -67,7 +67,8 @@ export class AzureDevOpsWebApiClient {
         }
         catch (e) {
             error(`Failed to get default branch for '${project}/${repository}': ${e}`);
-            throw e;
+            console.error(e);
+            return undefined;
         }
     }
 
@@ -108,6 +109,7 @@ export class AzureDevOpsWebApiClient {
         }
         catch (e) {
             error(`Failed to list active pull request properties: ${e}`);
+            console.error(e);
             return [];
         }
     }
@@ -256,6 +258,7 @@ export class AzureDevOpsWebApiClient {
         }
         catch (e) {
             error(`Failed to create pull request: ${e}`);
+            console.error(e);
             return null;
         }
     }
@@ -336,6 +339,7 @@ export class AzureDevOpsWebApiClient {
         }
         catch (e) {
             error(`Failed to update pull request: ${e}`);
+            console.error(e);
             return false;
         }
     }
@@ -372,6 +376,7 @@ export class AzureDevOpsWebApiClient {
         }
         catch (e) {
             error(`Failed to approve pull request: ${e}`);
+            console.error(e);
             return false;
         }
     }
@@ -450,6 +455,7 @@ export class AzureDevOpsWebApiClient {
         }
         catch (e) {
             error(`Failed to close pull request: ${e}`);
+            console.error(e);
             return false;
         }
     }
@@ -470,8 +476,11 @@ export class AzureDevOpsWebApiClient {
                 .map(p => ({ [p.name]: p.value }))
                 .reduce((a, b) => ({ ...a, ...b }), {});
 
-        } catch (e) {
+        }
+        catch (e) {
             error(`Failed to get project properties: ${e}`);
+            console.error(e);
+            return undefined;
         }
     }
 
@@ -505,8 +514,10 @@ export class AzureDevOpsWebApiClient {
                 ]
             );
 
-        } catch (e) {
+        }
+        catch (e) {
             error(`Failed to update project property '${name}': ${e}`);
+            console.error(e);
         }
     }
 }
