@@ -74,6 +74,7 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
                             return JSON.stringify(repoDependencyLists);
                         }
                     );
+                    console.info(`Dependency list snapshot was updated for project '${project}'`);
                 }
                 
                 return true;
