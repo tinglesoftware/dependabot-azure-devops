@@ -66,7 +66,7 @@ async function run() {
     }
 
     // Loop through the [targeted] update blocks in dependabot.yaml and perform updates
-    await Promise.all(updates.map(async (update) => {
+    for (const update of updates) {
       const updateId = updates.indexOf(update).toString();
 
       // Parse the last dependency list snapshot (if any) from the project properties.
@@ -103,10 +103,9 @@ async function run() {
         }
       } else if (existingPullRequests.keys.length > 0) {
         warning(`Skipping update of existing pull requests as 'skipPullRequests' is set to 'true'`);
-        return;
       }
 
-    }));
+    }
 
     setResult(
       taskSucceeded ? TaskResult.Succeeded : TaskResult.Failed,
