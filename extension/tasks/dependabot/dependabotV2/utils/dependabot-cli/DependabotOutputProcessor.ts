@@ -169,8 +169,8 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
                 return pullRequestWasUpdated;
 
             case 'close_pull_request':
-                if (this.taskInputs.abandonUnwantedPullRequests) {
-                    warning(`Skipping pull request closure as 'abandonUnwantedPullRequests' is set to 'true'`);
+                if (!this.taskInputs.abandonUnwantedPullRequests) {
+                    warning(`Skipping pull request closure as 'abandonUnwantedPullRequests' is set to 'false'`);
                     return true;
                 }
 
