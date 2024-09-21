@@ -17,6 +17,9 @@ The task now uses [Dependabot CLI](https://github.com/dependabot/cli) to perform
 
 # Breaking changes V1 → V2
 
+> [!WARNING]
+> **It is strongly recommended that you complete (or abandon) all active Depedabot pull requests created in V1 before migrating to V2.** Due to changes in Dependabot dependency metadata, V2 pull requests are not compatible with V1 (and vice versa). Migrating to V2 before completing existing pull requests will lead to duplication of pull requests.
+
 ### New pipeline agent requirements; "Go" must be installed
 Dependabot CLI requires [Go](https://go.dev/doc/install) (1.22+) and [Docker](https://docs.docker.com/get-started/get-docker/) (with Linux containers).
 If you use [Microsoft-hosted agents](https://learn.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=azure-devops&tabs=yaml#software), we recommend using the [ubuntu-latest](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md) image, which meets all task requirements.
