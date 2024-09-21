@@ -19,6 +19,8 @@ export class DependabotCli {
     private readonly outputProcessor: IDependabotUpdateOutputProcessor;
     private readonly debug: boolean;
 
+    private toolPath: string;
+
     public static readonly CLI_IMAGE_LATEST = "github.com/dependabot/cli/cmd/dependabot@latest";
 
     constructor(cliToolImage: string, outputProcessor: IDependabotUpdateOutputProcessor, debug: boolean) {
@@ -129,9 +131,9 @@ export class DependabotCli {
     private async getDependabotToolPath(installIfMissing: boolean = true): Promise<string> {
 
         debug('Checking for `dependabot` install...');
-        let dependabotPath = which("dependabot", false);
-        if (dependabotPath) {
-            return dependabotPath;
+        this.toolPath ||= which("dependabot", false);
+        if (this.toolPath) {
+            return this.toolPath;
         }
         if (!installIfMissing) {
             throw new Error("Dependabot CLI install not found");
@@ -142,10 +144,11 @@ export class DependabotCli {
         goTool.arg(["install", this.toolImage]);
         goTool.execSync();
 
-        // Depending on how go is installed on the host agent, the go bin path may not be in the PATH environment variable.
-        // If `which("dependabot")` still doesn't resolve, we must manually resolve the path; It will either be "$GOPATH/bin/dependabot" or "$HOME/go/bin/dependabot" if $GOPATH is not set.
+        // Depending on how Go is configured on the host agent, the "go/bin" path may not be in the PATH environment variable.
+        // If dependabot still cannot be found using `which()` after install, we must manually resolve the path; 
+        // It will either be "$GOPATH/bin/dependabot" or "$HOME/go/bin/dependabot", if GOPATH is not set.
         const goBinPath = process.env.GOPATH ? path.join(process.env.GOPATH, 'bin') : path.join(os.homedir(), 'go', 'bin');
-        return which("dependabot", false) || path.join(goBinPath, 'dependabot');
+        return this.toolPath ||= which("dependabot", false) || path.join(goBinPath, 'dependabot');
     }
 
     // Create the jobs directory if it does not exist
