@@ -133,7 +133,7 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
                     });
                 }
 
-                return newPullRequestId !== undefined;
+                return newPullRequestId > 0;
 
             case 'update_pull_request':
                 if (this.taskInputs.skipPullRequests) {
