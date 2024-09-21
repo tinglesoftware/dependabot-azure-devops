@@ -122,7 +122,7 @@ export default function getSharedVariables(): ISharedVariables {
   let excludeRequirementsToUnlock = tl.getInput('excludeRequirementsToUnlock') || '';
   let updaterOptions = tl.getInput('updaterOptions');
 
-  let debug: boolean = tl.getVariable('System.Debug')?.localeCompare('true') === 0;
+  let debug: boolean = tl.getVariable('System.Debug')?.match(/true/i) ? true : false;
 
   // Get the target identifiers
   let targetUpdateIds = tl.getDelimitedInput('targetUpdateIds', ';', false).map(Number);

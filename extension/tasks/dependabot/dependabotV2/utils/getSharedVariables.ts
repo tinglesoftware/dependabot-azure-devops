@@ -127,7 +127,7 @@ export default function getSharedVariables(): ISharedVariables {
     {} as Record<string, string | boolean>
   );
 
-  let debug: boolean = tl.getVariable('System.Debug')?.localeCompare('true') === 0;
+  let debug: boolean = tl.getVariable('System.Debug')?.match(/true/i) ? true : false;
 
   // Get the target identifiers
   let targetUpdateIds = tl.getDelimitedInput('targetUpdateIds', ';', false).map(Number);
