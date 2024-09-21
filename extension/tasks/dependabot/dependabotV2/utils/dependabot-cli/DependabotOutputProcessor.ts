@@ -117,7 +117,7 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
                     } : undefined,
                     assignees: update.config.assignees,
                     reviewers: update.config.reviewers,
-                    labels: update.config.labels?.split(',').map((label) => label.trim()) || [],
+                    labels: update.config.labels?.map((label) => label?.trim()) || [],
                     workItems: update.config.milestone ? [update.config.milestone] : [],
                     changes: getPullRequestChangedFilesForOutputData(data),
                     properties: buildPullRequestProperties(update.job["package-manager"], dependencies)
