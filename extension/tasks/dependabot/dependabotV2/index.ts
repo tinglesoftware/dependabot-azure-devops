@@ -9,8 +9,8 @@ import parseDependabotConfigFile from './utils/dependabot/parseConfigFile';
 import parseTaskInputConfiguration from './utils/getSharedVariables';
 
 async function run() {
-  let taskSucceeded: boolean = true;
   let dependabot: DependabotCli = undefined;
+  let failedJobs: number = 0;
   try {
 
     // Check if required tools are installed
@@ -88,7 +88,7 @@ async function run() {
       const allDependenciesUpdateOutputs = await dependabot.update(allDependenciesJob, dependabotUpdaterOptions);
       if (!allDependenciesUpdateOutputs || allDependenciesUpdateOutputs.filter(u => !u.success).length > 0) {
         allDependenciesUpdateOutputs.filter(u => !u.success).forEach(u => exception(u.error));
-        taskSucceeded = false;
+        failedJobs++;
       }
 
       // Run an update job for each existing pull request; this will resolve merge conflicts and close pull requests that are no longer needed
@@ -98,7 +98,7 @@ async function run() {
           const updatePullRequestOutputs = await dependabot.update(updatePullRequestJob, dependabotUpdaterOptions);
           if (!updatePullRequestOutputs || updatePullRequestOutputs.filter(u => !u.success).length > 0) {
             updatePullRequestOutputs.filter(u => !u.success).forEach(u => exception(u.error));
-            taskSucceeded = false;
+            failedJobs++;
           }
         }
       } else if (existingPullRequests.keys.length > 0) {
@@ -108,8 +108,8 @@ async function run() {
     }
 
     setResult(
-      taskSucceeded ? TaskResult.Succeeded : TaskResult.Failed,
-      taskSucceeded ? 'All update jobs completed successfully' : 'One or more update jobs failed, check logs for more information'
+      failedJobs ? TaskResult.Failed : TaskResult.Succeeded,
+      failedJobs ? `${failedJobs} update job(s) failed, check logs for more information` : `All update jobs completed successfully`
     );
 
   }
