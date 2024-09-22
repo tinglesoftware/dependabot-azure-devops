@@ -56,8 +56,6 @@ npm run format              # to automatically fix formatting issues
 
 ## Spelling
 
-Changes cannot contain common misspellings; Check for misspellings using `codespell`:
-
 ```bash
 pip install codespell
 codespell                   # to check for misspellings
