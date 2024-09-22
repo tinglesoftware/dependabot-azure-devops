@@ -40,7 +40,7 @@ export interface ISharedVariables {
   authorName?: string;
 
   storeDependencyList: boolean;
-  
+
   /** Determines if the pull requests that dependabot creates should have auto complete set */
   setAutoComplete: boolean;
   /** Merge strategies which can be used to complete a pull request */
@@ -78,7 +78,7 @@ export interface ISharedVariables {
  */
 export default function getSharedVariables(): ISharedVariables {
   let organizationUrl = tl.getVariable('System.TeamFoundationCollectionUri');
-  
+
   //convert url string into a valid JS URL object
   let formattedOrganizationUrl = new URL(organizationUrl);
   let protocol: string = formattedOrganizationUrl.protocol.slice(0, -1);
@@ -118,14 +118,17 @@ export default function getSharedVariables(): ISharedVariables {
   let autoApproveUserToken: string = tl.getInput('autoApproveUserToken');
 
   // Convert experiments from comma separated key value pairs to a record
-  let experiments = tl.getInput('experiments', false)?.split(',')?.reduce(
-    (acc, cur) => {
-      let [key, value] = cur.split('=', 2);
-      acc[key] = value || true;
-      return acc;
-    }, 
-    {} as Record<string, string | boolean>
-  );
+  let experiments = tl
+    .getInput('experiments', false)
+    ?.split(',')
+    ?.reduce(
+      (acc, cur) => {
+        let [key, value] = cur.split('=', 2);
+        acc[key] = value || true;
+        return acc;
+      },
+      {} as Record<string, string | boolean>,
+    );
 
   let debug: boolean = tl.getVariable('System.Debug')?.match(/true/i) ? true : false;
 
@@ -157,7 +160,7 @@ export default function getSharedVariables(): ISharedVariables {
 
     authorEmail,
     authorName,
-    
+
     storeDependencyList,
 
     setAutoComplete,
