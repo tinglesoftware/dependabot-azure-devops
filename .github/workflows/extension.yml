@@ -50,6 +50,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18.x'
+          cache: npm
+
+      - name: Install (root)
+        run: npm install
+
+      - name: Format check (root)
+        run: npm run format:check
 
       - name: Install
         run: npm install

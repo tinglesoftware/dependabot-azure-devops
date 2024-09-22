@@ -5,9 +5,9 @@ import * as fs from 'fs';
 import { load } from 'js-yaml';
 import * as path from 'path';
 import { URL } from 'url';
-import { IDependabotConfig, IDependabotRegistry, IDependabotUpdate } from './interfaces/IDependabotConfig';
 import { convertPlaceholder } from '../convertPlaceholder';
 import { ISharedVariables } from '../getSharedVariables';
+import { IDependabotConfig, IDependabotRegistry, IDependabotUpdate } from './interfaces/IDependabotConfig';
 
 /**
  * Parse the dependabot config YAML file to specify update configuration.
@@ -302,4 +302,3 @@ const KnownRegistryTypes = [
   'rubygems-server',
   'terraform-registry',
 ];
-

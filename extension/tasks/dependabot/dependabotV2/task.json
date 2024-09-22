@@ -48,7 +48,6 @@
     }
   ],
   "inputs": [
-
     {
       "name": "skipPullRequests",
       "type": "boolean",
@@ -131,7 +130,7 @@
       "helpMarkDown": "A personal access token of the user of that shall be used to approve the created PR automatically. If the same user that creates the PR should approve, this can be left empty. This won't work with if the Build Service with the build service account!",
       "visibleRule": "autoApprove=true"
     },
-    { 
+    {
       "name": "authorEmail",
       "type": "string",
       "groupName": "pull_requests",
@@ -194,7 +193,7 @@
       "required": false,
       "helpMarkDown": "The raw Personal Access Token for accessing GitHub repositories. Use this in place of `gitHubConnection` such as when it is not possible to create a service connection."
     },
-    
+
     {
       "name": "storeDependencyList",
       "type": "boolean",
