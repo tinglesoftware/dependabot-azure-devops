@@ -204,7 +204,7 @@ We aim to support all [official configuration options](https://docs.github.com/e
 - Private feed/registry authentication may not work with all package ecyosystems. See [problems with authentication](https://github.com/tinglesoftware/dependabot-azure-devops/discussions/1317) for more.
 
 ## Migration Guide
-- [Extension Task V1 → V2](./docs/migrations/v1-to-v2)
+- [Extension Task V1 → V2](./docs/migrations/v1-to-v2.md)
 
 ## Contributing
 
