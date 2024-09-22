@@ -9,6 +9,9 @@
    * [Deployment with CLI](#deployment-with-cli)
    * [Service Hooks and Subscriptions](#service-hooks-and-subscriptions)
 - [Keeping updated](#keeping-updated)
+- [Development guide](#development-guide)
+   * [Getting the development environment ready](#getting-the-development-environment-ready)
+   * [Running the unit tests](#running-the-unit-tests)
 
 # Why should I use the server?
 
