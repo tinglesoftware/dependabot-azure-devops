@@ -4,11 +4,11 @@
   "description": "Dependabot Azure DevOps task",
   "main": "''",
   "scripts": {
-    "postdependencies": "cp -r node_modules tasks/dependabot/dependabotV1/node_modules && cp -r node_modules tasks/dependabot/dependabotV2/node_modules",
+    "postdependencies": "cp -r node_modules tasks/dependabotV1/node_modules && cp -r node_modules tasks/dependabotV2/node_modules",
     "build": "tsc -p .",
     "start": "npm run start:V2",
-    "start:V1": "node tasks/dependabot/dependabotV1/index.js",
-    "start:V2": "node tasks/dependabot/dependabotV2/index.js",
+    "start:V1": "node tasks/dependabotV1/index.js",
+    "start:V2": "node tasks/dependabotV2/index.js",
     "test": "jest",
     "package": "npx tfx-cli extension create --json5"
   },
