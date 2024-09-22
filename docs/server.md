@@ -118,3 +118,22 @@ To enable automatic pickup of configuration files, merge conflict resolution and
 If you wish to keep your deployment updated, you can create a private repository with this one as a git submodule, configure dependabot to update it then add a new workflow that deploys to your preferred host using a manual trigger (or one of your choice).
 
 You can also choose to watch the repository so as to be notified when a new release is published.
+
+# Development guide
+
+## Getting the development environment ready
+
+Install [.NET 8](https://dotnet.microsoft.com/en-us/download) and [Docker](https://docs.docker.com/engine/install/) (with Linux containers); Install project dependencies using `dotnet` or Visual Studio [Code]:
+
+```bash
+cd server
+dotnet restore Tingle.Dependabot
+dotnet restore Tingle.Dependabot.Tests
+```
+
+## Running the unit tests
+
+```bash
+cd server
+dotnet test Tingle.Dependabot.Tests
+```

@@ -28,9 +28,10 @@ In this repository you'll find:
    * [Updater Docker image](#updater-docker-image)
    * [Server](#server)
 - [Migration Guide](#migration-guide)
-- [Development Guide](#development-guide)
+- [Contributing](#contributing)
+   * [Reporting issues and feature requests](#reporting-issues-and-feature-requests)
+   * [Submitting pull requests](#submitting-pull-requests)
 - [Acknowledgements](#acknowledgements)
-- [Issues &amp; Comments](#issues-amp-comments)
 
 ## Getting started
 
@@ -205,13 +206,18 @@ We aim to support all [official configuration options](https://docs.github.com/e
 ## Migration Guide
 - [Extension Task V1 → V2](./docs/migrations/v1-to-v2)
 
-## Development Guide
+## Contributing
 
-If you'd like to contribute to the project or just run it locally, view our development guides for:
+:wave: Want to give us feedback on Dependabot for Azure DevOps, or contribute to it? That's great - thank you so much!
 
-- [Azure DevOps Extension](./docs/extension.md#development-guide)
-- [Dependabot Server](./docs/server.md#development-guide)
-- [Dependabot Updater image](./docs/updater.md#development-guide) **(Deprecated since v2.0)**
+### Reporting issues and feature requests
+
+Please leave all issues, bugs, and feature requests on the [issues page](https://github.com/tinglesoftware/dependabot-azure-devops/issues). We'll respond ASAP!
+Use the [discussions page](https://github.com/tinglesoftware/dependabot-azure-devops/discussions) for all other questions and comments.
+
+### Submitting pull requests
+
+Please refer to the [contributing guidelines](./CONTRIBUTING.MD) for more information on how to get started.
 
 ## Acknowledgements
 
@@ -222,9 +228,3 @@ The work in this repository is based on inspired and occasionally guided by some
 3. Chris' work: [code](https://github.com/chris5287/dependabot-for-azuredevops)
 4. andrcun's work on GitLab: [code](https://gitlab.com/dependabot-gitlab/dependabot)
 5. WeWork's work for GitLab: [code](https://github.com/wemake-services/kira-dependencies)
-
-## Issues &amp; Comments
-
-Please leave all issues, bugs, and feature requests on the [issues page](https://github.com/tinglesoftware/dependabot-azure-devops/issues). We'll respond ASAP!
-
-Use the [discussions page](https://github.com/tinglesoftware/dependabot-azure-devops/discussions) for all other questions and comments.

@@ -20,7 +20,7 @@ Refer to the extension [README.md](../extension/README.md).
 
 ## Getting the development environment ready
 
-Install [Node.js](https://docs.docker.com/engine/install/) v18 or higher; Install project dependencies using NPM:
+Install [Node.js](https://docs.docker.com/engine/install/) (18+), [Go](https://go.dev/doc/install) (1.22+), and [Docker](https://docs.docker.com/engine/install/) (with Linux containers); Install project dependencies using NPM:
 
 ```bash
 cd extension
@@ -58,6 +58,7 @@ To run a specific task version:
 npm run start:V1 # runs dependabotV1 task
 npm run start:V2 # runs dependabotV2 task
 ```
+
 ## Running the unit tests
 
 ```bash
