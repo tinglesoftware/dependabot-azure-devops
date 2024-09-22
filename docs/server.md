@@ -4,10 +4,10 @@
 - [Why should I use the server?](#why-should-i-use-the-server)
 - [Composition](#composition)
 - [Deployment](#deployment)
-  - [Single click deployment](#single-click-deployment)
-  - [Deployment Parameters](#deployment-parameters)
-  - [Deployment with CLI](#deployment-with-cli)
-  - [Service Hooks and Subscriptions](#service-hooks-and-subscriptions)
+   * [Single click deployment](#single-click-deployment)
+   * [Deployment Parameters](#deployment-parameters)
+   * [Deployment with CLI](#deployment-with-cli)
+   * [Service Hooks and Subscriptions](#service-hooks-and-subscriptions)
 - [Keeping updated](#keeping-updated)
 
 # Why should I use the server?
@@ -59,10 +59,12 @@ The deployment exposes the following parameters that can be tuned to suit the se
 |githubToken|Access token for authenticating requests to GitHub. Required for vulnerability checks and to avoid rate limiting on free requests|No|&lt;empty&gt;|
 |imageTag|The image tag to use when pulling the docker containers. A tag also defines the version. You should avoid using `latest`. Example: `1.1.0`|No|&lt;version-downloaded&gt;|
 
+> [!NOTE]
 > The template includes a User Assigned Managed Identity, which is used when performing Azure Resource Manager operations such as deletions. In the deployment it creates the role assignments that it needs. These role assignments are on the resource group that you deploy to.
 
 ## Deployment with CLI
 
+> [!IMPORTANT]
 > Ensure the Azure CLI tools are installed and that you are logged in.
 
 For a one time deployment, it is similar to how you deploy other resources on Azure.

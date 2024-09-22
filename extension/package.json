@@ -1,14 +1,16 @@
 {
   "name": "dependabot-azure-devops",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Dependabot Azure DevOps task",
   "main": "''",
   "scripts": {
-    "postdependencies": "cp -r node_modules tasks/dependabot/dependabotV1/node_modules",
+    "postdependencies": "cp -r node_modules tasks/dependabot/dependabotV1/node_modules && cp -r node_modules tasks/dependabot/dependabotV2/node_modules",
     "build": "tsc -p .",
-    "package": "npx tfx-cli extension create --json5",
-    "start": "node tasks/dependabot/dependabotV1/index.js",
-    "test": "jest"
+    "start": "npm run start:V2",
+    "start:V1": "node tasks/dependabot/dependabotV1/index.js",
+    "start:V2": "node tasks/dependabot/dependabotV2/index.js",
+    "test": "jest",
+    "package": "npx tfx-cli extension create --json5"
   },
   "repository": {
     "type": "git",
@@ -27,6 +29,7 @@
   "homepage": "https://github.com/tinglesoftware/dependabot-azure-devops#readme",
   "dependencies": {
     "axios": "1.7.7",
+    "azure-devops-node-api": "^14.0.2",
     "azure-pipelines-task-lib": "4.17.2",
     "js-yaml": "4.1.0"
   },

@@ -2,7 +2,7 @@
   "manifestVersion": 1,
   "id": "dependabot",
   "name": "Dependabot",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "publisher": "tingle-software",
   "public": false,
   "targets": [

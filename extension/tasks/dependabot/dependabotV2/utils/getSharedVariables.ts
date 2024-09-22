@@ -3,7 +3,6 @@ import extractHostname from './extractHostname';
 import extractOrganization from './extractOrganization';
 import extractVirtualDirectory from './extractVirtualDirectory';
 import getAzureDevOpsAccessToken from './getAzureDevOpsAccessToken';
-import getDockerImageTag from './getDockerImageTag';
 import getGithubAccessToken from './getGithubAccessToken';
 
 export interface ISharedVariables {
@@ -27,6 +26,9 @@ export interface ISharedVariables {
   /** Whether the repository was overridden via input */
   repositoryOverridden: boolean;
 
+  /** Organisation API endpoint URL */
+  apiEndpointUrl: string;
+
   /** The github token */
   githubAccessToken: string;
   /** The access User for Azure DevOps Repos */
@@ -34,6 +36,11 @@ export interface ISharedVariables {
   /** The access token for Azure DevOps Repos */
   systemAccessToken: string;
 
+  authorEmail?: string;
+  authorName?: string;
+
+  storeDependencyList: boolean;
+  
   /** Determines if the pull requests that dependabot creates should have auto complete set */
   setAutoComplete: boolean;
   /** Merge strategies which can be used to complete a pull request */
@@ -46,10 +53,7 @@ export interface ISharedVariables {
   /** A personal access token of the user that should approve the PR */
   autoApproveUserToken: string;
 
-  /** Determines if the execution should fail when an exception occurs */
-  failOnException: boolean;
-  excludeRequirementsToUnlock: string;
-  updaterOptions: string;
+  experiments: Record<string, string | boolean>;
 
   /** Determines if verbose log messages are logged */
   debug: boolean;
@@ -65,18 +69,6 @@ export interface ISharedVariables {
   commentPullRequests: boolean;
   /** Determines whether to abandon unwanted pull requests */
   abandonUnwantedPullRequests: boolean;
-
-  /** List of extra environment variables */
-  extraEnvironmentVariables: string[];
-
-  /** Flag used to forward the host ssh socket */
-  forwardHostSshSocket: boolean;
-
-  /** Tag of the docker image to be pulled */
-  dockerImageTag: string;
-
-  /** Dependabot command to run */
-  command: string;
 }
 
 /**
@@ -86,9 +78,9 @@ export interface ISharedVariables {
  */
 export default function getSharedVariables(): ISharedVariables {
   let organizationUrl = tl.getVariable('System.TeamFoundationCollectionUri');
+  
   //convert url string into a valid JS URL object
   let formattedOrganizationUrl = new URL(organizationUrl);
-
   let protocol: string = formattedOrganizationUrl.protocol.slice(0, -1);
   let hostname: string = extractHostname(formattedOrganizationUrl);
   let port: string = formattedOrganizationUrl.port;
@@ -103,24 +95,37 @@ export default function getSharedVariables(): ISharedVariables {
   }
   repository = encodeURI(repository); // encode special characters like spaces
 
+  const virtualDirectorySuffix = virtualDirectory?.length > 0 ? `${virtualDirectory}/` : '';
+  let apiEndpointUrl = `${protocol}://${hostname}:${port}/${virtualDirectorySuffix}`;
+
   // Prepare the access credentials
   let githubAccessToken: string = getGithubAccessToken();
   let systemAccessUser: string = tl.getInput('azureDevOpsUser');
   let systemAccessToken: string = getAzureDevOpsAccessToken();
+
+  let authorEmail: string | undefined = tl.getInput('authorEmail');
+  let authorName: string | undefined = tl.getInput('authorName');
 
   // Prepare variables for auto complete
   let setAutoComplete = tl.getBoolInput('setAutoComplete', false);
   let mergeStrategy = tl.getInput('mergeStrategy', true);
   let autoCompleteIgnoreConfigIds = tl.getDelimitedInput('autoCompleteIgnoreConfigIds', ';', false).map(Number);
 
+  let storeDependencyList = tl.getBoolInput('storeDependencyList', false);
+
   // Prepare variables for auto approve
   let autoApprove: boolean = tl.getBoolInput('autoApprove', false);
   let autoApproveUserToken: string = tl.getInput('autoApproveUserToken');
 
-  // Prepare control flow variables
-  let failOnException = tl.getBoolInput('failOnException', true);
-  let excludeRequirementsToUnlock = tl.getInput('excludeRequirementsToUnlock') || '';
-  let updaterOptions = tl.getInput('updaterOptions');
+  // Convert experiments from comma separated key value pairs to a record
+  let experiments = tl.getInput('experiments', false)?.split(',')?.reduce(
+    (acc, cur) => {
+      let [key, value] = cur.split('=', 2);
+      acc[key] = value || true;
+      return acc;
+    }, 
+    {} as Record<string, string | boolean>
+  );
 
   let debug: boolean = tl.getVariable('System.Debug')?.match(/true/i) ? true : false;
 
@@ -133,15 +138,6 @@ export default function getSharedVariables(): ISharedVariables {
   let commentPullRequests: boolean = tl.getBoolInput('commentPullRequests', false);
   let abandonUnwantedPullRequests: boolean = tl.getBoolInput('abandonUnwantedPullRequests', true);
 
-  let extraEnvironmentVariables = tl.getDelimitedInput('extraEnvironmentVariables', ';', false);
-
-  let forwardHostSshSocket: boolean = tl.getBoolInput('forwardHostSshSocket', false);
-
-  // Prepare variables for the docker image to use
-  let dockerImageTag: string = getDockerImageTag();
-
-  let command: string = tl.getBoolInput('useUpdateScriptvNext', false) ? 'update_script_vnext' : 'update_script';
-
   return {
     organizationUrl: formattedOrganizationUrl,
     protocol,
@@ -153,9 +149,16 @@ export default function getSharedVariables(): ISharedVariables {
     repository,
     repositoryOverridden,
 
+    apiEndpointUrl,
+
     githubAccessToken,
     systemAccessUser,
     systemAccessToken,
+
+    authorEmail,
+    authorName,
+    
+    storeDependencyList,
 
     setAutoComplete,
     mergeStrategy,
@@ -164,9 +167,7 @@ export default function getSharedVariables(): ISharedVariables {
     autoApprove,
     autoApproveUserToken,
 
-    failOnException,
-    excludeRequirementsToUnlock,
-    updaterOptions,
+    experiments,
 
     debug,
 
@@ -176,13 +177,5 @@ export default function getSharedVariables(): ISharedVariables {
     skipPullRequests,
     commentPullRequests,
     abandonUnwantedPullRequests,
-
-    extraEnvironmentVariables,
-
-    forwardHostSshSocket,
-
-    dockerImageTag,
-
-    command,
   };
 }
