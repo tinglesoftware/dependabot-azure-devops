@@ -81,12 +81,12 @@ jobs:
           MAJOR_MINOR_PATCH: ${{ steps.gitversion.outputs.majorMinorPatch }}
           BUILD_NUMBER: ${{ github.run_number }}
 
-      - name: Update version numbers in task.json
+      - name: Update minor and path versions in task.json
         run: |
-          echo "`jq '.version.Major=1' extension/tasks/dependabotV1/task.json`" > extension/tasks/dependabotV1/task.json
+          # Major versions are left out here because they are fixed in the task.json files.
+          # The minor and patch versions are updated to make sure we keep recent changes deployed.
           echo "`jq '.version.Minor=34' extension/tasks/dependabotV1/task.json`" > extension/tasks/dependabotV1/task.json
           echo "`jq '.version.Patch=${{ github.run_number }}' extension/tasks/dependabotV1/task.json`" > extension/tasks/dependabotV1/task.json
-          echo "`jq '.version.Major=${{ steps.gitversion.outputs.major }}' extension/tasks/dependabotV2/task.json`" > extension/tasks/dependabotV2/task.json
           echo "`jq '.version.Minor=${{ steps.gitversion.outputs.minor }}' extension/tasks/dependabotV2/task.json`" > extension/tasks/dependabotV2/task.json
           echo "`jq '.version.Patch=${{ github.run_number }}' extension/tasks/dependabotV2/task.json`" > extension/tasks/dependabotV2/task.json
 
