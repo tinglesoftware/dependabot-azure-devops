@@ -39,6 +39,7 @@ export class DependabotCli {
   public async update(
     operation: IDependabotUpdateOperation,
     options?: {
+      gitHubAccessToken?: string;
       collectorImage?: string;
       proxyImage?: string;
       updaterImage?: string;
@@ -81,6 +82,10 @@ export class DependabotCli {
       const dependabotResultCode = await dependabotTool.execAsync({
         failOnStdErr: false,
         ignoreReturnCode: true,
+        env: {
+          DEPENDABOT_JOB_ID: jobId.replace(/-/g, '_'), // replace hyphens with underscores
+          LOCAL_GITHUB_ACCESS_TOKEN: options?.gitHubAccessToken, // avoid rate-limiting when pulling images from GitHub container registries
+        },
       });
       if (dependabotResultCode != 0) {
         error(`Dependabot failed with exit code ${dependabotResultCode}`);

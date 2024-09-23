@@ -61,6 +61,7 @@ async function run() {
     );
 
     const dependabotUpdaterOptions = {
+      gitHubAccessToken: taskInputs.githubAccessToken,
       collectorImage: undefined, // TODO: Add config for this?
       proxyImage: undefined, // TODO: Add config for this?
       updaterImage: undefined, // TODO: Add config for this?
@@ -101,7 +102,7 @@ async function run() {
         updateId,
         update,
         dependabotConfig.registries,
-        dependencyList['dependencies'],
+        dependencyList?.['dependencies'],
         existingPullRequestDependencies,
       );
       const allDependenciesUpdateOutputs = await dependabot.update(allDependenciesJob, dependabotUpdaterOptions);
