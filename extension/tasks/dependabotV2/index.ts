@@ -61,6 +61,7 @@ async function run() {
     );
 
     const dependabotUpdaterOptions = {
+      gitHubAccessToken: taskInputs.githubAccessToken,
       collectorImage: undefined, // TODO: Add config for this?
       proxyImage: undefined, // TODO: Add config for this?
       updaterImage: undefined, // TODO: Add config for this?
