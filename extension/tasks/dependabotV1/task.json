@@ -258,7 +258,8 @@
   "dataSourceBindings": [],
   "execution": {
     "Node20_1": {
-      "target": "index.js"
+      "target": "index.js",
+      "argumentFormat": ""
     }
   }
 }
