@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/Microsoft/azure-pipelines-task-lib/master/tasks.schema.json",
   "id": "d98b873d-cf18-41eb-8ff5-234f14697896",
-  "name": "DependabotV2",
+  "name": "dependabot",
   "friendlyName": "Dependabot",
   "description": "Automatically update dependencies and vulnerabilities in your code using [Dependabot CLI](https://github.com/dependabot/cli)",
   "helpMarkDown": "For help please visit https://github.com/tinglesoftware/dependabot-azure-devops/issues",
