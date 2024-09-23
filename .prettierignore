@@ -1,7 +1,6 @@
 # dependencies
 node_modules
 package-lock.json
-pnpm-lock.yaml
 
 # outputs
 bin
@@ -21,6 +20,7 @@ out
 .github/ISSUE_TEMPLATE/**
 .vscode/settings.json
 README.md
+CONTRIBUTING.md
 docs/**/*.md
 .rubocop*.yml
 advisories-example.json

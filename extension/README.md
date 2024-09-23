@@ -37,7 +37,7 @@ steps:
 
 ## Task Requirements
 
-The task uses [dependabot-cli](https://github.com/dependabot/cli), which requires [Go](https://go.dev/doc/install) (1.22+) and [Docker](https://docs.docker.com/get-started/get-docker/) (with Linux containers) be installed on the pipeline agent.
+The task uses [dependabot-cli](https://github.com/dependabot/cli), which requires [Go](https://go.dev/doc/install) (1.22+) and [Docker](https://docs.docker.com/engine/install/) (with Linux containers) be installed on the pipeline agent.
 If you use [Microsoft-hosted agents](https://learn.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=azure-devops&tabs=yaml#software), we recommend using the [ubuntu-latest](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md) image, which meets all task requirements.
 
 Dependabot uses Docker containers, which may take time to install if not already cached. Subsequent dependabot tasks in the same job will be faster after initially pulling the images. An alternative way to run your pipelines faster is by leveraging Docker caching in Azure Pipelines (See [#113](https://github.com/tinglesoftware/dependabot-azure-devops/issues/113#issuecomment-894771611)). 
