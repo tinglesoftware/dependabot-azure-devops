@@ -101,7 +101,7 @@ async function run() {
         updateId,
         update,
         dependabotConfig.registries,
-        dependencyList['dependencies'],
+        dependencyList?.['dependencies'],
         existingPullRequestDependencies,
       );
       const allDependenciesUpdateOutputs = await dependabot.update(allDependenciesJob, dependabotUpdaterOptions);
