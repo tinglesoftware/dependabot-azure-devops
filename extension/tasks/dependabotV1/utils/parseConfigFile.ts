@@ -305,7 +305,7 @@ function parseRegistries(config: any): Record<string, IDependabotRegistry> {
 function validateConfiguration(updates: IDependabotUpdate[], registries: Record<string, IDependabotRegistry>) {
   const configured = Object.keys(registries);
   const referenced: string[] = [];
-  for (const u of updates) referenced.push(...u.registries);
+  for (const u of updates) referenced.push(...(u.registries ?? []));
 
   // ensure there are no configured registries that have not been referenced
   const missingConfiguration = referenced.filter((el) => !configured.includes(el));
