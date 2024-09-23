@@ -83,8 +83,8 @@ export class DependabotCli {
         failOnStdErr: false,
         ignoreReturnCode: true,
         env: {
-          'DEPENDABOT_JOB_ID': jobId.replace(/-/g, '_'), // replace hyphens with underscores
-          'LOCAL_GITHUB_ACCESS_TOKEN': options?.gitHubAccessToken, // avoid rate-limiting when pulling images from GitHub container registries
+          DEPENDABOT_JOB_ID: jobId.replace(/-/g, '_'), // replace hyphens with underscores
+          LOCAL_GITHUB_ACCESS_TOKEN: options?.gitHubAccessToken, // avoid rate-limiting when pulling images from GitHub container registries
         },
       });
       if (dependabotResultCode != 0) {
