@@ -68,7 +68,7 @@ export class AzureDevOpsWebApiClient {
       return repo.defaultBranch;
     } catch (e) {
       error(`Failed to get default branch for '${project}/${repository}': ${e}`);
-      console.error(e);
+      console.debug(e); // Dump the error stack trace to help with debugging
       return undefined;
     }
   }
@@ -114,7 +114,7 @@ export class AzureDevOpsWebApiClient {
       );
     } catch (e) {
       error(`Failed to list active pull request properties: ${e}`);
-      console.error(e);
+      console.debug(e); // Dump the error stack trace to help with debugging
       return [];
     }
   }
@@ -264,7 +264,7 @@ export class AzureDevOpsWebApiClient {
       return pullRequest.pullRequestId;
     } catch (e) {
       error(`Failed to create pull request: ${e}`);
-      console.error(e);
+      console.debug(e); // Dump the error stack trace to help with debugging
       return null;
     }
   }
@@ -348,7 +348,7 @@ export class AzureDevOpsWebApiClient {
       return true;
     } catch (e) {
       error(`Failed to update pull request: ${e}`);
-      console.error(e);
+      console.debug(e); // Dump the error stack trace to help with debugging
       return false;
     }
   }
@@ -384,7 +384,7 @@ export class AzureDevOpsWebApiClient {
       console.info(` - Pull request #${options.pullRequestId} was approved.`);
     } catch (e) {
       error(`Failed to approve pull request: ${e}`);
-      console.error(e);
+      console.debug(e); // Dump the error stack trace to help with debugging
       return false;
     }
   }
@@ -462,7 +462,7 @@ export class AzureDevOpsWebApiClient {
       return true;
     } catch (e) {
       error(`Failed to close pull request: ${e}`);
-      console.error(e);
+      console.debug(e); // Dump the error stack trace to help with debugging
       return false;
     }
   }
@@ -482,7 +482,7 @@ export class AzureDevOpsWebApiClient {
       return properties.map((p) => ({ [p.name]: p.value })).reduce((a, b) => ({ ...a, ...b }), {});
     } catch (e) {
       error(`Failed to get project properties: ${e}`);
-      console.error(e);
+      console.debug(e); // Dump the error stack trace to help with debugging
       return undefined;
     }
   }
@@ -517,7 +517,7 @@ export class AzureDevOpsWebApiClient {
       ]);
     } catch (e) {
       error(`Failed to update project property '${name}': ${e}`);
-      console.error(e);
+      console.debug(e); // Dump the error stack trace to help with debugging
     }
   }
 }

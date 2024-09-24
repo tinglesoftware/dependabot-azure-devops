@@ -224,13 +224,11 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
         break;
 
       case 'record_update_job_error':
-        error(`Update job error: ${data['error-type']}`);
-        console.log(data['error-details']);
+        error(`Update job error: ${data['error-type']} ${JSON.stringify(data['error-details'])}`);
         return false;
 
       case 'record_update_job_unknown_error':
-        error(`Update job unknown error: ${data['error-type']}`);
-        console.log(data['error-details']);
+        error(`Update job unknown error: ${data['error-type']}, ${JSON.stringify(data['error-details'])}`);
         return false;
 
       case 'increment_metric':
