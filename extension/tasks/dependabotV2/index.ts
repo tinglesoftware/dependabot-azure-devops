@@ -111,25 +111,27 @@ async function run() {
         failedJobs++;
       }
 
-      // Run an update job for each existing pull request; this will resolve merge conflicts and close pull requests that are no longer needed
-      if (!taskInputs.skipPullRequests) {
-        for (const pullRequestId in existingPullRequests) {
-          const updatePullRequestJob = DependabotJobBuilder.newUpdatePullRequestJob(
-            taskInputs,
-            pullRequestId,
-            update,
-            dependabotConfig.registries,
-            existingPullRequestDependencies,
-            existingPullRequests[pullRequestId],
-          );
-          const updatePullRequestOutputs = await dependabot.update(updatePullRequestJob, dependabotUpdaterOptions);
-          if (!updatePullRequestOutputs || updatePullRequestOutputs.filter((u) => !u.success).length > 0) {
-            updatePullRequestOutputs.filter((u) => !u.success).forEach((u) => exception(u.error));
-            failedJobs++;
+      // If there are existing pull requests, run an update job for each one; this will resolve merge conflicts and close pull requests that are no longer needed
+      if (existingPullRequests && existingPullRequests.keys.length > 0) {
+        if (!taskInputs.skipPullRequests) {
+          for (const pullRequestId in existingPullRequests) {
+            const updatePullRequestJob = DependabotJobBuilder.newUpdatePullRequestJob(
+              taskInputs,
+              pullRequestId,
+              update,
+              dependabotConfig.registries,
+              existingPullRequestDependencies,
+              existingPullRequests[pullRequestId],
+            );
+            const updatePullRequestOutputs = await dependabot.update(updatePullRequestJob, dependabotUpdaterOptions);
+            if (!updatePullRequestOutputs || updatePullRequestOutputs.filter((u) => !u.success).length > 0) {
+              updatePullRequestOutputs.filter((u) => !u.success).forEach((u) => exception(u.error));
+              failedJobs++;
+            }
           }
+        } else {
+          warning(`Skipping update of existing pull requests as 'skipPullRequests' is set to 'true'`);
         }
-      } else if (existingPullRequests.keys.length > 0) {
-        warning(`Skipping update of existing pull requests as 'skipPullRequests' is set to 'true'`);
       }
     }
 
@@ -150,7 +152,7 @@ async function run() {
 function exception(e: Error) {
   if (e) {
     error(`An unhandled exception occurred: ${e}`);
-    console.error(e);
+    console.debug(e); // Dump the stack trace to help with debugging
   }
 }
 
