@@ -112,7 +112,7 @@ async function run() {
       }
 
       // If there are existing pull requests, run an update job for each one; this will resolve merge conflicts and close pull requests that are no longer needed
-      if (existingPullRequests && existingPullRequests.keys.length > 0) {
+      if (existingPullRequests && Object.keys(existingPullRequests).length > 0) {
         if (!taskInputs.skipPullRequests) {
           for (const pullRequestId in existingPullRequests) {
             const updatePullRequestJob = DependabotJobBuilder.newUpdatePullRequestJob(
