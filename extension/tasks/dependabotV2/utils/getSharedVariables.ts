@@ -19,6 +19,8 @@ export interface ISharedVariables {
   virtualDirectory: string;
   /** Organization name */
   organization: string;
+  /** Project ID */
+  projectId: string;
   /** Project name */
   project: string;
   /** Repository name */
@@ -86,6 +88,7 @@ export default function getSharedVariables(): ISharedVariables {
   let port: string = formattedOrganizationUrl.port;
   let virtualDirectory: string = extractVirtualDirectory(formattedOrganizationUrl);
   let organization: string = extractOrganization(organizationUrl);
+  let projectId: string = tl.getVariable('System.TeamProjectId');
   let project: string = encodeURI(tl.getVariable('System.TeamProject')); // encode special characters like spaces
   let repository: string = tl.getInput('targetRepositoryName');
   let repositoryOverridden = typeof repository === 'string';
@@ -148,6 +151,7 @@ export default function getSharedVariables(): ISharedVariables {
     port,
     virtualDirectory,
     organization,
+    projectId,
     project,
     repository,
     repositoryOverridden,

@@ -87,7 +87,7 @@ async function run() {
       // This is required when doing a security-only update as dependabot requires the list of vulnerable dependencies to be updated.
       // Automatic discovery of vulnerable dependencies during a security-only update is not currently supported by dependabot-updater.
       const dependencyList = parseProjectDependencyListProperty(
-        await prAuthorClient.getProjectProperties(taskInputs.project),
+        await prAuthorClient.getProjectProperties(taskInputs.projectId),
         taskInputs.repository,
         update['package-ecosystem'],
       );
@@ -113,7 +113,8 @@ async function run() {
       }
 
       // If there are existing pull requests, run an update job for each one; this will resolve merge conflicts and close pull requests that are no longer needed
-      if (existingPullRequests && Object.keys(existingPullRequests).length > 0) {
+      const numberOfPullRequestsToUpdate = Object.keys(existingPullRequests).length;
+      if (numberOfPullRequestsToUpdate > 0) {
         if (!taskInputs.skipPullRequests) {
           for (const pullRequestId in existingPullRequests) {
             const updatePullRequestJob = DependabotJobBuilder.newUpdatePullRequestJob(
@@ -131,7 +132,9 @@ async function run() {
             }
           }
         } else {
-          warning(`Skipping update of existing pull requests as 'skipPullRequests' is set to 'true'`);
+          warning(
+            `Skipping update of ${numberOfPullRequestsToUpdate} existing pull request(s) as 'skipPullRequests' is set to 'true'`,
+          );
         }
       }
     }

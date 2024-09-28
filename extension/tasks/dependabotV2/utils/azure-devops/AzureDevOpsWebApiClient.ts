@@ -85,7 +85,6 @@ export class AzureDevOpsWebApiClient {
     repository: string,
     creator: string,
   ): Promise<IPullRequestProperties[]> {
-    console.info(`Fetching active pull request properties in '${project}/${repository}' for user id '${creator}'...`);
     try {
       const git = await this.connection.getGitApi();
       const pullRequests = await git.getPullRequests(
@@ -472,16 +471,14 @@ export class AzureDevOpsWebApiClient {
 
   /**
    * Get project properties
-   * @param project
+   * @param projectId
    * @param valueBuilder
    * @returns
    */
-  public async getProjectProperties(project: string): Promise<Record<string, string> | undefined> {
+  public async getProjectProperties(projectId: string): Promise<Record<string, string> | undefined> {
     try {
       const core = await this.connection.getCoreApi();
-      const projects = await core.getProjects();
-      const projectGuid = projects?.find((p) => p.name === project)?.id;
-      const properties = await core.getProjectProperties(projectGuid);
+      const properties = await core.getProjectProperties(projectId);
       return properties?.map((p) => ({ [p.name]: p.value }))?.reduce((a, b) => ({ ...a, ...b }), {});
     } catch (e) {
       error(`Failed to get project properties: ${e}`);
@@ -498,20 +495,18 @@ export class AzureDevOpsWebApiClient {
    * @returns
    */
   public async updateProjectProperty(
-    project: string,
+    projectId: string,
     name: string,
     valueBuilder: (existingValue: string) => string,
   ): Promise<void> {
     try {
       // Get the existing project property value
       const core = await this.connection.getCoreApi();
-      const projects = await core.getProjects();
-      const projectGuid = projects?.find((p) => p.name === project)?.id;
-      const properties = await core.getProjectProperties(projectGuid);
+      const properties = await core.getProjectProperties(projectId);
       const propertyValue = properties?.find((p) => p.name === name)?.value;
 
       // Update the project property
-      await core.setProjectProperties(undefined, projectGuid, [
+      await core.setProjectProperties(undefined, projectId, [
         {
           op: 'add',
           path: '/' + name,
