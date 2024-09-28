@@ -142,7 +142,7 @@ export class DependabotCli {
     console.info('Dependabot CLI install was not found, installing now with `go install dependabot`...');
     const goTool: ToolRunner = tool(which('go', true));
     goTool.arg(['install', this.toolImage]);
-    goTool.execSync();
+    await goTool.execAsync();
 
     // Depending on how Go is configured on the host agent, the "go/bin" path may not be in the PATH environment variable.
     // If dependabot still cannot be found using `which()` after install, we must manually resolve the path;
