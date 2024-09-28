@@ -95,17 +95,20 @@ export class AzureDevOpsWebApiClient {
         },
         project,
       );
+      if (!pullRequests || pullRequests.length === 0) {
+        return [];
+      }
 
       return await Promise.all(
-        pullRequests?.map(async (pr) => {
-          const properties = (await git.getPullRequestProperties(repository, pr.pullRequestId, project))?.value;
+        pullRequests.map(async (pr) => {
+          const properties = (await git.getPullRequestProperties(repository, pr.pullRequestId, project))?.value || {};
           return {
             id: pr.pullRequestId,
             properties:
-              Object.keys(properties)?.map((key) => {
+              Object.keys(properties).map((key) => {
                 return {
                   name: key,
-                  value: properties[key].$value,
+                  value: properties[key]?.$value,
                 };
               }) || [],
           };
@@ -476,7 +479,7 @@ export class AzureDevOpsWebApiClient {
     try {
       const core = await this.connection.getCoreApi();
       const properties = await core.getProjectProperties(projectId);
-      return properties.map((p) => ({ [p.name]: p.value })).reduce((a, b) => ({ ...a, ...b }), {});
+      return properties?.map((p) => ({ [p.name]: p.value }))?.reduce((a, b) => ({ ...a, ...b }), {});
     } catch (e) {
       error(`Failed to get project properties: ${e}`);
       console.debug(e); // Dump the error stack trace to help with debugging

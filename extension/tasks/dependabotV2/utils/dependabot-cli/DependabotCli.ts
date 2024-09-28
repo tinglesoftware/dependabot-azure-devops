@@ -39,6 +39,7 @@ export class DependabotCli {
   public async update(
     operation: IDependabotUpdateOperation,
     options?: {
+      azureDevOpsAccessToken?: string;
       gitHubAccessToken?: string;
       collectorImage?: string;
       proxyImage?: string;
@@ -85,6 +86,7 @@ export class DependabotCli {
         env: {
           DEPENDABOT_JOB_ID: jobId.replace(/-/g, '_'), // replace hyphens with underscores
           LOCAL_GITHUB_ACCESS_TOKEN: options?.gitHubAccessToken, // avoid rate-limiting when pulling images from GitHub container registries
+          LOCAL_AZURE_ACCESS_TOKEN: options?.azureDevOpsAccessToken, // technically not needed since we already supply this in our 'git_source' registry, but included for consistency
         },
       });
       if (dependabotResultCode != 0) {
@@ -140,7 +142,7 @@ export class DependabotCli {
     console.info('Dependabot CLI install was not found, installing now with `go install dependabot`...');
     const goTool: ToolRunner = tool(which('go', true));
     goTool.arg(['install', this.toolImage]);
-    goTool.execSync();
+    await goTool.execAsync();
 
     // Depending on how Go is configured on the host agent, the "go/bin" path may not be in the PATH environment variable.
     // If dependabot still cannot be found using `which()` after install, we must manually resolve the path;

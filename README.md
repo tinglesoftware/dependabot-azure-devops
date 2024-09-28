@@ -153,7 +153,7 @@ Experiments vary depending on the package ecyosystem used; They can be enabled u
 > Dependabot experinment names are not [publicly] documented. For convenience, some known experiments are listed below; However, **be aware that this may be out-of-date at the time of reading.**
 
 <details>
-<summary>List of known experiments from dependabot-core@0.275.0</summary>
+<summary>List of known experiments from dependabot-core@0.278.0</summary>
 
 |Package Ecosystem|Experiment Name|Value Type|Description|
 |--|--|--|--|
@@ -170,8 +170,9 @@ Experiments vary depending on the package ecyosystem used; They can be enabled u
 | Go | vendor | true/false | |
 | Go | goprivate | string | |
 | NPM and Yarn | enable_pnpm_yarn_dynamic_engine | true/false | |
-| NuGet | nuget_native_analysis | true/false | |
-| NuGet | nuget_dependency_solver | true/false | |
+| NuGet | nuget_native_analysis | true/false | https://github.com/dependabot/dependabot-core/pull/10025 |
+| NuGet | nuget_native_updater | true/false | https://github.com/dependabot/dependabot-core/pull/10521 |
+| NuGet | nuget_dependency_solver | true/false | https://github.com/dependabot/dependabot-core/pull/10343 |
 
 </details>
 
