@@ -50,9 +50,8 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
    */
   public async process(update: IDependabotUpdateOperation, type: string, data: any): Promise<boolean> {
     console.debug(`Processing output '${type}' with data:`, data);
-    const sourceRepoParts = update.job.source.repo.split('/'); // "{organisation}/{project}/_git/{repository}""
-    const project = sourceRepoParts[1];
-    const repository = sourceRepoParts[3];
+    const project = this.taskInputs.project;
+    const repository = this.taskInputs.repository;
     switch (type) {
       // Documentation on the 'data' model for each output type can be found here:
       // See: https://github.com/dependabot/cli/blob/main/internal/model/update.go
@@ -62,7 +61,7 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
         if (this.taskInputs.storeDependencyList) {
           console.info(`Storing the dependency list snapshot for project '${project}'...`);
           await this.prAuthorClient.updateProjectProperty(
-            project,
+            this.taskInputs.projectId,
             DependabotOutputProcessor.PROJECT_PROPERTY_NAME_DEPENDENCY_LIST,
             function (existingValue: string) {
               const repoDependencyLists = JSON.parse(existingValue || '{}');
