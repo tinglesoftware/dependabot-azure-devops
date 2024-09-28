@@ -479,7 +479,7 @@ export class AzureDevOpsWebApiClient {
       const projects = await core.getProjects();
       const projectGuid = projects?.find((p) => p.name === project)?.id;
       const properties = await core.getProjectProperties(projectGuid);
-      return properties.map((p) => ({ [p.name]: p.value })).reduce((a, b) => ({ ...a, ...b }), {});
+      return properties?.map((p) => ({ [p.name]: p.value }))?.reduce((a, b) => ({ ...a, ...b }), {});
     } catch (e) {
       error(`Failed to get project properties: ${e}`);
       console.debug(e); // Dump the error stack trace to help with debugging
