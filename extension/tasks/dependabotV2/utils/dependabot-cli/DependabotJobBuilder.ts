@@ -233,6 +233,7 @@ function mapRegistryCredentialsFromDependabotConfigToJobConfig(
 ): any[] {
   let registryCredentials = new Array();
   if (taskInputs.systemAccessToken) {
+    // Required to authenticate with the Azure DevOps git repository when cloning the source code
     registryCredentials.push({
       type: 'git_source',
       host: taskInputs.hostname,
@@ -240,7 +241,17 @@ function mapRegistryCredentialsFromDependabotConfigToJobConfig(
       password: taskInputs.systemAccessToken,
     });
   }
+  if (taskInputs.githubAccessToken) {
+    // Required to avoid rate-limiting errors when generating pull request descriptions (e.g. fetching release notes, commit messages, etc)
+    registryCredentials.push({
+      type: 'git_source',
+      host: 'github.com',
+      username: 'x-access-token',
+      password: taskInputs.githubAccessToken,
+    });
+  }
   if (registries) {
+    // Required to authenticate with private package feeds when finding the latest version of dependencies
     for (const key in registries) {
       const registry = registries[key];
       registryCredentials.push({
