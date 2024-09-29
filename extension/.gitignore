@@ -2,3 +2,4 @@ node_modules
 .taskkey
 **/*.js
 *.vsix
+*flamegraph.html
