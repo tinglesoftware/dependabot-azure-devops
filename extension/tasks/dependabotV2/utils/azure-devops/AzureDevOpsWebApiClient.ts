@@ -66,7 +66,7 @@ export class AzureDevOpsWebApiClient {
       }
 
       // Strip reference prefix from the branch name, the caller doesn't need to know this
-      return repo.defaultBranch?.toLowerCase()?.replace('refs/heads/', '');
+      return repo.defaultBranch?.replace(/^refs\/heads\//i, '');
     } catch (e) {
       error(`Failed to get default branch for '${project}/${repository}': ${e}`);
       console.debug(e); // Dump the error stack trace to help with debugging
