@@ -108,7 +108,7 @@ async function run() {
       );
       const allDependenciesUpdateOutputs = await dependabot.update(allDependenciesJob, dependabotUpdaterOptions);
       if (!allDependenciesUpdateOutputs || allDependenciesUpdateOutputs.filter((u) => !u.success).length > 0) {
-        allDependenciesUpdateOutputs.filter((u) => !u.success).forEach((u) => exception(u.error));
+        allDependenciesUpdateOutputs?.filter((u) => !u.success)?.forEach((u) => exception(u.error));
         failedJobs++;
       }
 
@@ -127,7 +127,7 @@ async function run() {
             );
             const updatePullRequestOutputs = await dependabot.update(updatePullRequestJob, dependabotUpdaterOptions);
             if (!updatePullRequestOutputs || updatePullRequestOutputs.filter((u) => !u.success).length > 0) {
-              updatePullRequestOutputs.filter((u) => !u.success).forEach((u) => exception(u.error));
+              updatePullRequestOutputs?.filter((u) => !u.success)?.forEach((u) => exception(u.error));
               failedJobs++;
             }
           }
