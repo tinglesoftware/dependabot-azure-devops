@@ -61,11 +61,16 @@ async function run() {
     );
 
     const dependabotUpdaterOptions = {
+      sourceProvider: 'azure',
+      sourceLocalPath: undefined, // TODO: Implement this
       azureDevOpsAccessToken: taskInputs.systemAccessToken,
       gitHubAccessToken: taskInputs.githubAccessToken,
       collectorImage: undefined, // TODO: Add config for this?
+      collectorConfigPath: undefined, // TODO: Add config for this?
       proxyImage: undefined, // TODO: Add config for this?
       updaterImage: undefined, // TODO: Add config for this?
+      timeoutDuration: undefined, // TODO: Add config for this?
+      flamegraph: taskInputs.debug,
     };
 
     // If update identifiers are specified, select them; otherwise handle all
