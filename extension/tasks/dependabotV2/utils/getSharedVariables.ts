@@ -27,6 +27,8 @@ export interface ISharedVariables {
   repository: string;
   /** Whether the repository was overridden via input */
   repositoryOverridden: boolean;
+  /** Path to the repository source */
+  repositorySourcePath: string;
 
   /** Organisation API endpoint URL */
   apiEndpointUrl: string;
@@ -97,6 +99,7 @@ export default function getSharedVariables(): ISharedVariables {
     repository = tl.getVariable('Build.Repository.Name');
   }
   repository = encodeURI(repository); // encode special characters like spaces
+  let repositorySourcePath: string = tl.getVariable('Build.SourcesDirectory');
 
   const virtualDirectorySuffix = virtualDirectory?.length > 0 ? `${virtualDirectory}/` : '';
   let apiEndpointUrl = `${protocol}://${hostname}:${port}/${virtualDirectorySuffix}`;
@@ -155,6 +158,7 @@ export default function getSharedVariables(): ISharedVariables {
     project,
     repository,
     repositoryOverridden,
+    repositorySourcePath,
 
     apiEndpointUrl,
 
