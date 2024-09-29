@@ -66,6 +66,7 @@ async function run() {
       collectorImage: undefined, // TODO: Add config for this?
       proxyImage: undefined, // TODO: Add config for this?
       updaterImage: undefined, // TODO: Add config for this?
+      flamegraph: taskInputs.debug,
     };
 
     // If update identifiers are specified, select them; otherwise handle all
