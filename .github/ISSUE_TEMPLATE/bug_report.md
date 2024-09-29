@@ -25,8 +25,9 @@ Steps to reproduce the behavior:
 **Expected behavior**
 A clear and concise description of what you expected to happen.
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+**Logs and screenshots**
+If applicable, include relevant logs or screenshots to help explain your problem.
+See [extension troubleshooting](https://github.com/tinglesoftware/dependabot-azure-devops/blob/main/docs/extension.md#troubleshooting-issues) for more on how to collect additional diagnostic logs.
 
 **Extension (please complete the following information):**
  - Host: [e.g. Azure DevOps, Azure DevOps Server]
