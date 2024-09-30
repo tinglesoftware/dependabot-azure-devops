@@ -133,7 +133,38 @@ export class AzureDevOpsWebApiClient {
       const userId = await this.getUserId();
       const git = await this.connection.getGitApi();
 
-      // Create the source branch and commit the file changes
+      // Map the list of the pull request reviewer ids
+      // NOTE: Azure DevOps does not have a concept of assignees, only reviewers.
+      //       We treat assignees as required reviewers and all other reviewers as optional.
+      const allReviewers: IdentityRefWithVote[] = [];
+      if (pr.assignees?.length > 0) {
+        for (const assignee of pr.assignees) {
+          const identityId = isGuid(assignee) ? assignee : await this.getUserId(assignee);
+          if (identityId) {
+            allReviewers.push({
+              id: identityId,
+              isRequired: true,
+              isFlagged: true,
+            });
+          } else {
+            warning(` ! Unable to resolve assignee identity '${assignee}'`);
+          }
+        }
+      }
+      if (pr.reviewers?.length > 0) {
+        for (const reviewer of pr.reviewers) {
+          const identityId = isGuid(reviewer) ? reviewer : await this.getUserId(reviewer);
+          if (identityId) {
+            allReviewers.push({
+              id: identityId,
+            });
+          } else {
+            warning(` ! Unable to resolve reviewer identity '${reviewer}'`);
+          }
+        }
+      }
+
+      // Create the source branch and push a commit with the dependency file changes
       console.info(` - Pushing ${pr.changes.length} change(s) to branch '${pr.source.branch}'...`);
       const push = await git.createPush(
         {
@@ -165,37 +196,10 @@ export class AzureDevOpsWebApiClient {
         pr.repository,
         pr.project,
       );
-
-      // Build the list of the pull request reviewers
-      // NOTE: Azure DevOps does not have a concept of assignees, only reviewers.
-      //       We treat assignees as required reviewers and all other reviewers as optional.
-      const allReviewers: IdentityRefWithVote[] = [];
-      if (pr.assignees?.length > 0) {
-        for (const assignee of pr.assignees) {
-          const identityId = isGuid(assignee) ? assignee : await this.getUserId(assignee);
-          if (identityId) {
-            allReviewers.push({
-              id: identityId,
-              isRequired: true,
-              isFlagged: true,
-            });
-          } else {
-            warning(` - Unable to resolve assignee identity '${assignee}'`);
-          }
-        }
+      if (!push?.commits?.length) {
+        throw new Error('Failed to push changes to source branch, no commits were created');
       }
-      if (pr.reviewers?.length > 0) {
-        for (const reviewer of pr.reviewers) {
-          const identityId = isGuid(reviewer) ? reviewer : await this.getUserId(reviewer);
-          if (identityId) {
-            allReviewers.push({
-              id: identityId,
-            });
-          } else {
-            warning(` - Unable to resolve reviewer identity '${reviewer}'`);
-          }
-        }
-      }
+      console.log(` - Pushed commit: ${push.commits.map((c) => c.commitId).join(', ')}.`);
 
       // Create the pull request
       console.info(` - Creating pull request to merge '${pr.source.branch}' into '${pr.target.branch}'...`);
@@ -218,11 +222,15 @@ export class AzureDevOpsWebApiClient {
         pr.project,
         true,
       );
+      if (!pullRequest?.pullRequestId) {
+        throw new Error('Failed to create pull request, no pull request id was returned');
+      }
+      console.log(` - Created pull request: #${pullRequest.pullRequestId}.`);
 
       // Add the pull request properties
       if (pr.properties?.length > 0) {
         console.info(` - Adding dependency metadata to pull request properties...`);
-        await git.updatePullRequestProperties(
+        const newProperties = await git.updatePullRequestProperties(
           null,
           pr.properties.map((property) => {
             return {
@@ -235,6 +243,9 @@ export class AzureDevOpsWebApiClient {
           pullRequest.pullRequestId,
           pr.project,
         );
+        if (!newProperties?.count) {
+          throw new Error('Failed to add dependency metadata properties to pull request');
+        }
       }
 
       // TODO: Upload the pull request description as a 'changes.md' file attachment?
@@ -243,8 +254,8 @@ export class AzureDevOpsWebApiClient {
 
       // Set the pull request auto-complete status
       if (pr.autoComplete) {
-        console.info(` - Setting auto-complete...`);
-        await git.updatePullRequest(
+        console.info(` - Updating auto-complete options...`);
+        const updatedPullRequest = await git.updatePullRequest(
           {
             autoCompleteSetBy: {
               id: userId,
@@ -261,9 +272,12 @@ export class AzureDevOpsWebApiClient {
           pullRequest.pullRequestId,
           pr.project,
         );
+        if (!updatedPullRequest || updatedPullRequest.autoCompleteSetBy?.id !== userId) {
+          throw new Error('Failed to set auto-complete on pull request');
+        }
       }
 
-      console.info(` - Pull request #${pullRequest.pullRequestId} was created successfully.`);
+      console.log(` - Pull request was created successfully.`);
       return pullRequest.pullRequestId;
     } catch (e) {
       error(`Failed to create pull request: ${e}`);
@@ -346,8 +360,12 @@ export class AzureDevOpsWebApiClient {
         options.repository,
         options.project,
       );
+      if (!push?.commits?.length) {
+        throw new Error('Failed to push changes to source branch, no commits were created');
+      }
+      console.info(` - Pushed commit: ${push.commits.map((c) => c.commitId).join(', ')}.`);
 
-      console.info(` - Pull request #${options.pullRequestId} was updated successfully.`);
+      console.info(` - Pull request was updated successfully.`);
       return true;
     } catch (e) {
       error(`Failed to update pull request: ${e}`);
@@ -373,7 +391,7 @@ export class AzureDevOpsWebApiClient {
 
       // Approve the pull request
       console.info(` - Creating reviewer vote on pull request...`);
-      await git.createPullRequestReviewer(
+      const userVote = await git.createPullRequestReviewer(
         {
           vote: 10, // 10 - approved 5 - approved with suggestions 0 - no vote -5 - waiting for author -10 - rejected
           isReapprove: true,
@@ -383,8 +401,11 @@ export class AzureDevOpsWebApiClient {
         userId,
         options.project,
       );
+      if (userVote?.vote != 10) {
+        throw new Error('Failed to approve pull request, vote was not recorded');
+      }
 
-      console.info(` - Pull request #${options.pullRequestId} was approved.`);
+      console.info(` - Pull request was approved successfully.`);
     } catch (e) {
       error(`Failed to approve pull request: ${e}`);
       console.debug(e); // Dump the error stack trace to help with debugging
@@ -411,8 +432,8 @@ export class AzureDevOpsWebApiClient {
 
       // Add a comment to the pull request, if supplied
       if (options.comment) {
-        console.info(` - Adding comment to pull request...`);
-        await git.createThread(
+        console.info(` - Adding abandonment reason comment to pull request...`);
+        const thread = await git.createThread(
           {
             status: CommentThreadStatus.Closed,
             comments: [
@@ -429,11 +450,14 @@ export class AzureDevOpsWebApiClient {
           options.pullRequestId,
           options.project,
         );
+        if (!thread?.id) {
+          throw new Error('Failed to add comment to pull request, thread was not created');
+        }
       }
 
       // Close the pull request
       console.info(` - Abandoning pull request...`);
-      const pullRequest = await git.updatePullRequest(
+      const abandonedPullRequest = await git.updatePullRequest(
         {
           status: PullRequestStatus.Abandoned,
           closedBy: {
@@ -444,14 +468,17 @@ export class AzureDevOpsWebApiClient {
         options.pullRequestId,
         options.project,
       );
+      if (abandonedPullRequest?.status !== PullRequestStatus.Abandoned) {
+        throw new Error('Failed to close pull request, status was not updated');
+      }
 
       // Delete the source branch if required
       if (options.deleteSourceBranch) {
         console.info(` - Deleting source branch...`);
         await git.updateRef(
           {
-            name: `refs/heads/${pullRequest.sourceRefName}`,
-            oldObjectId: pullRequest.lastMergeSourceCommit.commitId,
+            name: `refs/heads/${abandonedPullRequest.sourceRefName}`,
+            oldObjectId: abandonedPullRequest.lastMergeSourceCommit.commitId,
             newObjectId: '0000000000000000000000000000000000000000',
             isLocked: false,
           },
@@ -461,7 +488,7 @@ export class AzureDevOpsWebApiClient {
         );
       }
 
-      console.info(` - Pull request #${options.pullRequestId} was closed successfully.`);
+      console.info(` - Pull request was closed successfully.`);
       return true;
     } catch (e) {
       error(`Failed to close pull request: ${e}`);
