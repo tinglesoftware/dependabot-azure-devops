@@ -119,10 +119,20 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
           autoComplete: this.taskInputs.setAutoComplete
             ? {
                 ignorePolicyConfigIds: this.taskInputs.autoCompleteIgnoreConfigIds,
-                mergeStrategy:
-                  GitPullRequestMergeStrategy[
-                    this.taskInputs.mergeStrategy as keyof typeof GitPullRequestMergeStrategy
-                  ],
+                mergeStrategy: (() => {
+                  switch (this.taskInputs.mergeStrategy) {
+                    case 'noFastForward':
+                      return GitPullRequestMergeStrategy.NoFastForward;
+                    case 'squash':
+                      return GitPullRequestMergeStrategy.Squash;
+                    case 'rebase':
+                      return GitPullRequestMergeStrategy.Rebase;
+                    case 'rebaseMerge':
+                      return GitPullRequestMergeStrategy.RebaseMerge;
+                    default:
+                      return GitPullRequestMergeStrategy.Squash;
+                  }
+                })(),
               }
             : undefined,
           assignees: update.config.assignees,
