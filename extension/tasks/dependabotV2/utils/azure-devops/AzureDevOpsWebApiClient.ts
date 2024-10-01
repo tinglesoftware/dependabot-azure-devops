@@ -8,6 +8,7 @@ import {
   PullRequestStatus,
 } from 'azure-devops-node-api/interfaces/GitInterfaces';
 import { error, warning } from 'azure-pipelines-task-lib/task';
+import { IHttpClientResponse } from 'typed-rest-client/Interfaces';
 import { IFileChange } from './interfaces/IFileChange';
 import { IPullRequest } from './interfaces/IPullRequest';
 import { IPullRequestProperties } from './interfaces/IPullRequestProperties';
@@ -88,21 +89,21 @@ export class AzureDevOpsWebApiClient {
   ): Promise<IPullRequestProperties[]> {
     try {
       const git = await this.connection.getGitApi();
-      const pullRequests = await git.getPullRequests(
-        repository,
-        {
-          creatorId: isGuid(creator) ? creator : await this.getUserId(creator),
-          status: PullRequestStatus.Active,
-        },
-        project,
-      );
+      const pullRequests = (await this.restApiGet(
+        `${this.organisationApiUrl}/${project}/_apis/git/repositories/${repository}/pullrequests?searchCriteria.creatorId=${isGuid(creator) ? creator : await this.getUserId(creator)}&searchCriteria.status${PullRequestStatus.Active}&api-version=7.1`,
+      ))?.value || [];
       if (!pullRequests || pullRequests.length === 0) {
         return [];
       }
 
       return await Promise.all(
         pullRequests.map(async (pr) => {
-          const properties = (await git.getPullRequestProperties(repository, pr.pullRequestId, project))?.value || {};
+          const properties =
+            (
+              await this.restApiGet(
+                `${this.organisationApiUrl}/${project}/_apis/git/repositories/${repository}/pullrequests/${pr.pullRequestId}/properties?api-version=7.1`,
+              )
+            )?.value || {};
           return {
             id: pr.pullRequestId,
             properties:
@@ -166,7 +167,8 @@ export class AzureDevOpsWebApiClient {
 
       // Create the source branch and push a commit with the dependency file changes
       console.info(` - Pushing ${pr.changes.length} file change(s) to branch '${pr.source.branch}'...`);
-      const push = await git.createPush(
+      const push = await this.restApiPost(
+        `${this.organisationApiUrl}/${pr.project}/_apis/git/repositories/${pr.repository}/pushes?api-version=7.1`,
         {
           refUpdates: [
             {
@@ -193,8 +195,6 @@ export class AzureDevOpsWebApiClient {
             },
           ],
         },
-        pr.repository,
-        pr.project,
       );
       if (!push?.commits?.length) {
         throw new Error('Failed to push changes to source branch, no commits were created');
@@ -203,7 +203,8 @@ export class AzureDevOpsWebApiClient {
 
       // Create the pull request
       console.info(` - Creating pull request to merge '${pr.source.branch}' into '${pr.target.branch}'...`);
-      const pullRequest = await git.createPullRequest(
+      const pullRequest = await this.restApiPost(
+        `${this.organisationApiUrl}/${pr.project}/_apis/git/repositories/${pr.repository}/pullrequests?api-version=7.1`,
         {
           sourceRefName: `refs/heads/${pr.source.branch}`,
           targetRefName: `refs/heads/${pr.target.branch}`,
@@ -218,9 +219,6 @@ export class AzureDevOpsWebApiClient {
           }),
           isDraft: false, // TODO: Add config for this?
         },
-        pr.repository,
-        pr.project,
-        true,
       );
       if (!pullRequest?.pullRequestId) {
         throw new Error('Failed to create pull request, no pull request id was returned');
@@ -230,8 +228,8 @@ export class AzureDevOpsWebApiClient {
       // Add the pull request properties
       if (pr.properties?.length > 0) {
         console.info(` - Adding dependency metadata to pull request properties...`);
-        const newProperties = await git.updatePullRequestProperties(
-          null,
+        const newProperties = await this.restApiPatch(
+          `${this.organisationApiUrl}/${pr.project}/_apis/git/repositories/${pr.repository}/pullrequests/${pullRequest.pullRequestId}/properties?api-version=7.1`,
           pr.properties.map((property) => {
             return {
               op: 'add',
@@ -239,9 +237,7 @@ export class AzureDevOpsWebApiClient {
               value: property.value,
             };
           }),
-          pr.repository,
-          pullRequest.pullRequestId,
-          pr.project,
+          'application/json-patch+json',
         );
         if (!newProperties?.count) {
           throw new Error('Failed to add dependency metadata properties to pull request');
@@ -255,7 +251,8 @@ export class AzureDevOpsWebApiClient {
       // Set the pull request auto-complete status
       if (pr.autoComplete) {
         console.info(` - Updating auto-complete options...`);
-        const updatedPullRequest = await git.updatePullRequest(
+        const updatedPullRequest = await this.restApiPatch(
+          `${this.organisationApiUrl}/${pr.project}/_apis/git/repositories/${pr.repository}/pullrequests/${pullRequest.pullRequestId}?api-version=7.1`,
           {
             autoCompleteSetBy: {
               id: userId,
@@ -268,9 +265,6 @@ export class AzureDevOpsWebApiClient {
               transitionWorkItems: false,
             },
           },
-          pr.repository,
-          pullRequest.pullRequestId,
-          pr.project,
         );
         if (!updatedPullRequest || updatedPullRequest.autoCompleteSetBy?.id !== userId) {
           throw new Error('Failed to set auto-complete on pull request');
@@ -297,6 +291,7 @@ export class AzureDevOpsWebApiClient {
     pullRequestId: number;
     changes: IFileChange[];
     skipIfCommitsFromUsersOtherThan?: string;
+    skipIfNotBehindTargetBranch?: boolean;
     skipIfNoConflicts?: boolean;
   }): Promise<boolean> {
     console.info(`Updating pull request #${options.pullRequestId}...`);
@@ -310,25 +305,35 @@ export class AzureDevOpsWebApiClient {
         throw new Error(`Pull request #${options.pullRequestId} not found`);
       }
 
+      // Skip if the pull request has been modified by another user
+      if (options.skipIfCommitsFromUsersOtherThan) {
+        const commits = await git.getPullRequestCommits(options.repository, options.pullRequestId, options.project);
+        if (commits.some((c) => c.author?.email !== options.skipIfCommitsFromUsersOtherThan)) {
+          console.info(` - Skipping update as pull request has been modified by another user.`);
+          return true;
+        }
+      }
+
+      // Skip if the source branch is not behind the target branch
+      if (options.skipIfNotBehindTargetBranch) {
+        // TODO: https://learn.microsoft.com/en-us/rest/api/azure/devops/git/stats/get?view=azure-devops-rest-7.1&tabs=HTTP#examples
+        //const stats = await this.restApiGet(...)
+        //if (stats.behindCount > 0) {
+        //  console.info(` - Skipping update as source branch is not behind target branch.`);
+        //  return true;
+        //}
+      }
+
       // Skip if no merge conflicts
       if (options.skipIfNoConflicts && pullRequest.mergeStatus !== PullRequestAsyncStatus.Conflicts) {
         console.info(` - Skipping update as pull request has no merge conflicts.`);
         return true;
       }
 
-      // Skip if the pull request has been modified by another user
-      const commits = await git.getPullRequestCommits(options.repository, options.pullRequestId, options.project);
-      if (
-        options.skipIfCommitsFromUsersOtherThan &&
-        commits.some((c) => c.author?.email !== options.skipIfCommitsFromUsersOtherThan)
-      ) {
-        console.info(` - Skipping update as pull request has been modified by another user.`);
-        return true;
-      }
-
       // Push changes to the source branch
       console.info(` - Pushing ${options.changes.length} file change(s) branch '${pullRequest.sourceRefName}'...`);
-      const push = await git.createPush(
+      const push = await this.restApiPost(
+        `${this.organisationApiUrl}/${options.project}/_apis/git/repositories/${options.repository}/pushes?api-version=7.1`,
         {
           refUpdates: [
             {
@@ -357,8 +362,6 @@ export class AzureDevOpsWebApiClient {
             },
           ],
         },
-        options.repository,
-        options.project,
       );
       if (!push?.commits?.length) {
         throw new Error('Failed to push changes to source branch, no commits were created');
@@ -544,6 +547,45 @@ export class AzureDevOpsWebApiClient {
     } catch (e) {
       error(`Failed to update project property '${name}': ${e}`);
       console.debug(e); // Dump the error stack trace to help with debugging
+    }
+  }
+
+  private async restApiGet(url: string): Promise<any | undefined> {
+    return await this.restApiRequest(await this.connection.rest.client.get(url, { Accept: 'application/json' }));
+  }
+
+  private async restApiPost(url: string, data?: any): Promise<any | undefined> {
+    return await this.restApiRequest(
+      await this.connection.rest.client.post(url, JSON.stringify(data), { 'Content-Type': 'application/json' }),
+    );
+  }
+
+  private async restApiPatch(url: string, data?: any, contentType?: string): Promise<any | undefined> {
+    return await this.restApiRequest(
+      await this.connection.rest.client.patch(url, JSON.stringify(data), {
+        'Content-Type': contentType || 'application/json',
+      }),
+    );
+  }
+
+  private async restApiRequest(response: IHttpClientResponse): Promise<any | undefined> {
+    try {
+      const body = JSON.parse(await response.readBody());
+      if (body?.errorCode !== undefined && body?.message) {
+        throw new Error(body.message);
+      }
+      return body;
+    } catch (error) {
+      var responseStatusCode = error?.response?.statusCode;
+      if (responseStatusCode === 404) {
+        return undefined;
+      } else if (responseStatusCode === 401) {
+        throw new Error(`No access token has been provided to access '${response.message.url}'`);
+      } else if (responseStatusCode === 403) {
+        throw new Error(`The access token provided does not have permissions to access '${response.message.url}'`);
+      } else {
+        throw error;
+      }
     }
   }
 }
