@@ -13,7 +13,7 @@ import parseTaskInputConfiguration from './utils/getSharedVariables';
 
 async function run() {
   let dependabot: DependabotCli = undefined;
-  let failedJobs: number = 0;
+  let failedTasks: number = 0;
   try {
     // Check if required tools are installed
     debug('Checking for `docker` install...');
@@ -108,9 +108,12 @@ async function run() {
         existingPullRequestDependencies,
       );
       const allDependenciesUpdateOutputs = await dependabot.update(allDependenciesJob, dependabotUpdaterOptions);
-      if (!allDependenciesUpdateOutputs || allDependenciesUpdateOutputs.filter((u) => !u.success).length > 0) {
-        allDependenciesUpdateOutputs?.filter((u) => !u.success)?.forEach((u) => exception(u.error));
-        failedJobs++;
+      if (allDependenciesUpdateOutputs) {
+        const failedUpdateTasks = allDependenciesUpdateOutputs.filter((u) => !u.success);
+        if (failedUpdateTasks.length > 0) {
+          failedUpdateTasks.forEach((u) => exception(u.error));
+          failedTasks += failedUpdateTasks.length;
+        }
       }
 
       // If there are existing pull requests, run an update job for each one; this will resolve merge conflicts and close pull requests that are no longer needed
@@ -127,9 +130,12 @@ async function run() {
               existingPullRequests[pullRequestId],
             );
             const updatePullRequestOutputs = await dependabot.update(updatePullRequestJob, dependabotUpdaterOptions);
-            if (!updatePullRequestOutputs || updatePullRequestOutputs.filter((u) => !u.success).length > 0) {
-              updatePullRequestOutputs?.filter((u) => !u.success)?.forEach((u) => exception(u.error));
-              failedJobs++;
+            if (updatePullRequestOutputs) {
+              const failedUpdateTasks = updatePullRequestOutputs.filter((u) => !u.success);
+              if (failedUpdateTasks.length > 0) {
+                failedUpdateTasks.forEach((u) => exception(u.error));
+                failedTasks += failedUpdateTasks.length;
+              }
             }
           }
         } else {
@@ -141,10 +147,10 @@ async function run() {
     }
 
     setResult(
-      failedJobs ? TaskResult.Failed : TaskResult.Succeeded,
-      failedJobs
-        ? `${failedJobs} update job(s) failed, check logs for more information`
-        : `All update jobs completed successfully`,
+      failedTasks ? TaskResult.Failed : TaskResult.Succeeded,
+      failedTasks
+        ? `${failedTasks} update tasks(s) failed, check logs for more information`
+        : `All update tasks completed successfully`,
     );
   } catch (e) {
     setResult(TaskResult.Failed, e?.message);
