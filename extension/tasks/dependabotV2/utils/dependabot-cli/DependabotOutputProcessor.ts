@@ -96,10 +96,6 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
           return true;
         }
 
-        // TODO: Add config for custom PR description header text? Task V1 supported this via DEPENDABOT_MESSAGE_HEADER
-        // TODO: Add config for custom PR description footer text? Task V1 supported this via DEPENDABOT_MESSAGE_FOOTER
-        // TODO: Add config for GitHub compatibility score badges? Task V1 supported this via DEPENDABOT_COMPATIBILITY_SCORE_BADGE
-
         // Create a new pull request
         const dependencies = getPullRequestDependenciesPropertyValueForOutputData(data);
         const targetBranch =

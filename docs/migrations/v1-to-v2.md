@@ -61,11 +61,11 @@ The following environment variables have been removed entirely; the feature is n
 
 | Removed Environment Variable | Reason |
 |--|--|
-|`DEPENDABOT_PR_NAME_PREFIX_STYLE`| Feature is not supported |
-|`DEPENDABOT_COMPATIBILITY_SCORE_BADGE`| Feature is not supported |
-|`DEPENDABOT_MESSAGE_HEADER`| Feature is not supported |
-|`DEPENDABOT_MESSAGE_FOOTER`| Feature is not supported |
-|`DEPENDABOT_SIGNATURE_KEY`| Feature is not supported |
+|`DEPENDABOT_PR_NAME_PREFIX_STYLE`| Feature is not supported; It is not an official configuration |
+|`DEPENDABOT_COMPATIBILITY_SCORE_BADGE`| Feature is not supported; It is not an official configuration |
+|`DEPENDABOT_MESSAGE_HEADER`| Feature is not supported; It is not an official configuration |
+|`DEPENDABOT_MESSAGE_FOOTER`| Feature is not supported; It is not an official configuration |
+|`DEPENDABOT_SIGNATURE_KEY`| Feature is not supported; It is not an official configuration |
 |`DEPENDABOT_JOB_ID`| Set automatically by extension |
 
 ## Todo before general availability
