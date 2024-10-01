@@ -7,6 +7,7 @@ import {
   parseProjectDependencyListProperty,
   parsePullRequestProperties,
 } from './utils/dependabot-cli/DependabotOutputProcessor';
+import { IDependabotUpdateOperationResult } from './utils/dependabot-cli/interfaces/IDependabotUpdateOperationResult';
 import { IDependabotUpdate } from './utils/dependabot/interfaces/IDependabotConfig';
 import parseDependabotConfigFile from './utils/dependabot/parseConfigFile';
 import parseTaskInputConfiguration from './utils/getSharedVariables';
@@ -99,44 +100,38 @@ async function run() {
       const existingPullRequestDependencies = Object.entries(existingPullRequests).map(([id, deps]) => deps);
 
       // Run an update job for "all dependencies"; this will create new pull requests for dependencies that need updating
-      const allDependenciesJob = DependabotJobBuilder.newUpdateAllJob(
-        taskInputs,
-        updateId,
-        update,
-        dependabotConfig.registries,
-        dependencyList?.['dependencies'],
-        existingPullRequestDependencies,
+      failedTasks += handleUpdateOperationResults(
+        await dependabot.update(
+          DependabotJobBuilder.newUpdateAllJob(
+            taskInputs,
+            updateId,
+            update,
+            dependabotConfig.registries,
+            dependencyList?.['dependencies'],
+            existingPullRequestDependencies,
+          ),
+          dependabotUpdaterOptions,
+        ),
       );
-      const allDependenciesUpdateOutputs = await dependabot.update(allDependenciesJob, dependabotUpdaterOptions);
-      if (allDependenciesUpdateOutputs) {
-        const failedUpdateTasks = allDependenciesUpdateOutputs.filter((u) => !u.success);
-        if (failedUpdateTasks.length > 0) {
-          failedUpdateTasks.forEach((u) => exception(u.error));
-          failedTasks += failedUpdateTasks.length;
-        }
-      }
 
       // If there are existing pull requests, run an update job for each one; this will resolve merge conflicts and close pull requests that are no longer needed
       const numberOfPullRequestsToUpdate = Object.keys(existingPullRequests).length;
       if (numberOfPullRequestsToUpdate > 0) {
         if (!taskInputs.skipPullRequests) {
           for (const pullRequestId in existingPullRequests) {
-            const updatePullRequestJob = DependabotJobBuilder.newUpdatePullRequestJob(
-              taskInputs,
-              pullRequestId,
-              update,
-              dependabotConfig.registries,
-              existingPullRequestDependencies,
-              existingPullRequests[pullRequestId],
+            failedTasks += handleUpdateOperationResults(
+              await dependabot.update(
+                DependabotJobBuilder.newUpdatePullRequestJob(
+                  taskInputs,
+                  pullRequestId,
+                  update,
+                  dependabotConfig.registries,
+                  existingPullRequestDependencies,
+                  existingPullRequests[pullRequestId],
+                ),
+                dependabotUpdaterOptions,
+              ),
             );
-            const updatePullRequestOutputs = await dependabot.update(updatePullRequestJob, dependabotUpdaterOptions);
-            if (updatePullRequestOutputs) {
-              const failedUpdateTasks = updatePullRequestOutputs.filter((u) => !u.success);
-              if (failedUpdateTasks.length > 0) {
-                failedUpdateTasks.forEach((u) => exception(u.error));
-                failedTasks += failedUpdateTasks.length;
-              }
-            }
           }
         } else {
           warning(
@@ -158,6 +153,33 @@ async function run() {
   } finally {
     dependabot?.cleanup();
   }
+}
+
+/**
+ * Handles the results of an update operation.
+ * @param outputs The processed outputs of the update operation.
+ * @returns The number of failed tasks (i.e. outputs that could not be processed).
+ * @remarks
+ * If the update operation completed with all outputs processed successfully, it will return 0.
+ * If the update operation completed with no outputs, it will return 1.
+ * If the update operation completed with some outputs processed unsuccessfully, it will return the number of failed outputs.
+ */
+function handleUpdateOperationResults(outputs: IDependabotUpdateOperationResult[] | undefined) {
+  let failedTasks = 0; // assume success, initially
+  if (outputs) {
+    // The update operation completed, but some output tasks may have failed
+    const failedUpdateTasks = outputs.filter((u) => !u.success);
+    if (failedUpdateTasks.length > 0) {
+      // At least one output task failed to process
+      failedUpdateTasks.forEach((u) => exception(u.error));
+      failedTasks += failedUpdateTasks.length;
+    }
+  } else {
+    // The update operation critically failed, it produced no output
+    failedTasks++;
+  }
+
+  return failedTasks;
 }
 
 function exception(e: Error) {
