@@ -165,7 +165,7 @@ export class AzureDevOpsWebApiClient {
       }
 
       // Create the source branch and push a commit with the dependency file changes
-      console.info(` - Pushing ${pr.changes.length} change(s) to branch '${pr.source.branch}'...`);
+      console.info(` - Pushing ${pr.changes.length} file change(s) to branch '${pr.source.branch}'...`);
       const push = await git.createPush(
         {
           refUpdates: [
@@ -199,7 +199,7 @@ export class AzureDevOpsWebApiClient {
       if (!push?.commits?.length) {
         throw new Error('Failed to push changes to source branch, no commits were created');
       }
-      console.log(` - Pushed commit: ${push.commits.map((c) => c.commitId).join(', ')}.`);
+      console.info(` - Pushed commit: ${push.commits.map((c) => c.commitId).join(', ')}.`);
 
       // Create the pull request
       console.info(` - Creating pull request to merge '${pr.source.branch}' into '${pr.target.branch}'...`);
@@ -225,7 +225,7 @@ export class AzureDevOpsWebApiClient {
       if (!pullRequest?.pullRequestId) {
         throw new Error('Failed to create pull request, no pull request id was returned');
       }
-      console.log(` - Created pull request: #${pullRequest.pullRequestId}.`);
+      console.info(` - Created pull request: #${pullRequest.pullRequestId}.`);
 
       // Add the pull request properties
       if (pr.properties?.length > 0) {
@@ -277,7 +277,7 @@ export class AzureDevOpsWebApiClient {
         }
       }
 
-      console.log(` - Pull request was created successfully.`);
+      console.info(` - Pull request was created successfully.`);
       return pullRequest.pullRequestId;
     } catch (e) {
       error(`Failed to create pull request: ${e}`);
@@ -327,7 +327,7 @@ export class AzureDevOpsWebApiClient {
       }
 
       // Push changes to the source branch
-      console.info(` - Pushing ${options.changes.length} change(s) branch '${pullRequest.sourceRefName}'...`);
+      console.info(` - Pushing ${options.changes.length} file change(s) branch '${pullRequest.sourceRefName}'...`);
       const push = await git.createPush(
         {
           refUpdates: [
