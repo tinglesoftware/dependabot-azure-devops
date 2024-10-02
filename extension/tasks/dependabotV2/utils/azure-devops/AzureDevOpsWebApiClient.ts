@@ -499,7 +499,7 @@ export class AzureDevOpsWebApiClient {
     projectId: string,
     name: string,
     valueBuilder: (existingValue: string) => string,
-  ): Promise<void> {
+  ): Promise<boolean> {
     try {
       // Get the existing project property value
       const core = await this.connection.getCoreApi();
@@ -514,9 +514,12 @@ export class AzureDevOpsWebApiClient {
           value: valueBuilder(propertyValue || ''),
         },
       ]);
+
+      return true;
     } catch (e) {
       error(`Failed to update project property '${name}': ${e}`);
       console.debug(e); // Dump the error stack trace to help with debugging
+      return false;
     }
   }
 }

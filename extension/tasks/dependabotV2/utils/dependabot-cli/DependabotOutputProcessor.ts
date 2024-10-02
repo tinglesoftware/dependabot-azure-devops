@@ -60,8 +60,8 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
       case 'update_dependency_list':
         // Store the dependency list snapshot in project properties, if configured
         if (this.taskInputs.storeDependencyList) {
-          console.info(`Storing the dependency list snapshot for project '${project}'...`);
-          await this.prAuthorClient.updateProjectProperty(
+          console.info(`Updating the dependency list snapshot for project '${project}'...`);
+          return await this.prAuthorClient.updateProjectProperty(
             this.taskInputs.projectId,
             DependabotOutputProcessor.PROJECT_PROPERTY_NAME_DEPENDENCY_LIST,
             function (existingValue: string) {
@@ -76,7 +76,6 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
               return JSON.stringify(repoDependencyLists);
             },
           );
-          console.info(`Dependency list snapshot was updated for project '${project}'`);
         }
 
         return true;
