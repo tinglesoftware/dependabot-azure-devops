@@ -150,6 +150,40 @@ function parseUpdates(config: any): IDependabotUpdate[] {
       throw new Error("The value 'package-ecosystem' in dependency update config is missing");
     }
 
+    // Remap the package ecyosystem name from config to a value that dependabot-core/cli understands.
+    // Config values: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#package-ecosystem
+    // Core/CLI values: https://github.com/dependabot/dependabot-core/blob/main/common/lib/dependabot/config/file.rb
+    dependabotUpdate['package-ecosystem'] = (() => {
+      const ecosystem = dependabotUpdate['package-ecosystem'].toLowerCase();
+      switch (ecosystem) {
+        case 'devcontainer':
+          return 'devcontainers';
+        case 'github-actions':
+          return 'github_actions';
+        case 'gitsubmodule':
+          return 'submodules';
+        case 'gomod':
+          return 'go_modules';
+        case 'mix':
+          return 'hex';
+        case 'npm':
+          return 'npm_and_yarn';
+        // Additional aliases, for convenience
+        case 'pipenv':
+          return 'pip';
+        case 'pip-compile':
+          return 'pip';
+        case 'poetry':
+          return 'pip';
+        case 'pnpm':
+          return 'npm_and_yarn';
+        case 'yarn':
+          return 'npm_and_yarn';
+        default:
+          return ecosystem;
+      }
+    })();
+
     // zero is a valid value
     if (!dependabotUpdate['open-pull-requests-limit'] && dependabotUpdate['open-pull-requests-limit'] !== 0) {
       dependabotUpdate['open-pull-requests-limit'] = 5;

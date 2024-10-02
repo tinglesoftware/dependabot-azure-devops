@@ -4,6 +4,7 @@ import * as crypto from 'crypto';
 import * as path from 'path';
 import { AzureDevOpsWebApiClient } from '../azure-devops/AzureDevOpsWebApiClient';
 import { IPullRequestProperties } from '../azure-devops/interfaces/IPullRequestProperties';
+import { IDependabotUpdate } from '../dependabot/interfaces/IDependabotConfig';
 import { ISharedVariables } from '../getSharedVariables';
 import { IDependabotUpdateOperation } from './interfaces/IDependabotUpdateOperation';
 import { IDependabotUpdateOutputProcessor } from './interfaces/IDependabotUpdateOutputProcessor';
@@ -99,12 +100,13 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
         const dependencies = getPullRequestDependenciesPropertyValueForOutputData(data);
         const targetBranch =
           update.config['target-branch'] || (await this.prAuthorClient.getDefaultBranch(project, repository));
+        const sourceBranch = getSourceBranchNameForUpdate(update.config, targetBranch, dependencies);
         const newPullRequestId = await this.prAuthorClient.createPullRequest({
           project: project,
           repository: repository,
           source: {
             commit: data['base-commit-sha'] || update.job.source.commit,
-            branch: getSourceBranchNameForUpdate(update.job['package-manager'], targetBranch, dependencies),
+            branch: sourceBranch,
           },
           target: {
             branch: targetBranch,
@@ -119,10 +121,20 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
           autoComplete: this.taskInputs.setAutoComplete
             ? {
                 ignorePolicyConfigIds: this.taskInputs.autoCompleteIgnoreConfigIds,
-                mergeStrategy:
-                  GitPullRequestMergeStrategy[
-                    this.taskInputs.mergeStrategy as keyof typeof GitPullRequestMergeStrategy
-                  ],
+                mergeStrategy: (() => {
+                  switch (this.taskInputs.mergeStrategy) {
+                    case 'noFastForward':
+                      return GitPullRequestMergeStrategy.NoFastForward;
+                    case 'squash':
+                      return GitPullRequestMergeStrategy.Squash;
+                    case 'rebase':
+                      return GitPullRequestMergeStrategy.Rebase;
+                    case 'rebaseMerge':
+                      return GitPullRequestMergeStrategy.RebaseMerge;
+                    default:
+                      return GitPullRequestMergeStrategy.Squash;
+                  }
+                })(),
               }
             : undefined,
           assignees: update.config.assignees,
@@ -306,8 +318,11 @@ export function parsePullRequestProperties(
   );
 }
 
-function getSourceBranchNameForUpdate(packageEcosystem: string, targetBranch: string, dependencies: any): string {
-  const target = targetBranch?.replace(/^\/+|\/+$/g, ''); // strip leading/trailing slashes
+function getSourceBranchNameForUpdate(update: IDependabotUpdate, targetBranch: string, dependencies: any): string {
+  const prefix = 'dependabot'; // TODO: Add config for this? Task V1 supported this via DEPENDABOT_BRANCH_NAME_PREFIX
+  const separator = update['pull-request-branch-name'].separator || '/';
+  const packageEcosystem = update['package-ecosystem'];
+  const targetBranchName = targetBranch?.replace(/^\/+|\/+$/g, ''); // strip leading/trailing slashes
   if (dependencies['dependency-group-name']) {
     // Group dependency update
     // e.g. dependabot/nuget/main/microsoft-3b49c54d9e
@@ -317,12 +332,12 @@ function getSourceBranchNameForUpdate(packageEcosystem: string, targetBranch: st
       .update(dependencies['dependencies'].map((d) => `${d['dependency-name']}-${d['dependency-version']}`).join(','))
       .digest('hex')
       .substring(0, 10);
-    return `dependabot/${packageEcosystem}/${target}/${dependencyGroupName}-${dependencyHash}`;
+    return `${prefix}${separator}${packageEcosystem}${separator}${targetBranchName}${separator}${dependencyGroupName}-${dependencyHash}`;
   } else {
     // Single dependency update
     // e.g. dependabot/nuget/main/Microsoft.Extensions.Logging-1.0.0
     const leadDependency = dependencies.length === 1 ? dependencies[0] : null;
-    return `dependabot/${packageEcosystem}/${target}/${leadDependency['dependency-name']}-${leadDependency['dependency-version']}`;
+    return `${prefix}${separator}${packageEcosystem}${separator}${targetBranchName}${separator}${leadDependency['dependency-name']}-${leadDependency['dependency-version']}`;
   }
 }
 

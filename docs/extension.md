@@ -2,6 +2,7 @@
 # Table of Contents
 
 - [Using the extension](#using-the-extension)
+- [Troubleshooting issues](#troubleshooting-issues)
 - [Development guide](#development-guide)
    * [Getting the development environment ready](#getting-the-development-environment-ready)
    * [Building the extension](#building-the-extension)
@@ -15,6 +16,15 @@
 # Using the extension
 
 Refer to the extension [README.md](../extension/README.md).
+
+# Troubleshooting issues
+
+Dependabot will log more diagnostic information when [verbose logs are enabled](https://learn.microsoft.com/en-us/azure/devops/pipelines/troubleshooting/review-logs?view=azure-devops&tabs=windows-agent#configure-verbose-logs); i.e. `system.debug` variable is set to `true`.
+
+When verbose logs are enable, Dependabot will also generate a [Flame Graph performance metrics report](https://www.brendangregg.com/flamegraphs.html), which can be viewed by [downloading the pipeline logs](https://learn.microsoft.com/en-us/azure/devops/pipelines/troubleshooting/review-logs?view=azure-devops&tabs=windows-agent#view-and-download-logs), then locating the corresponding HTML report file in the `Job` folder. To understand how to read Flame Graph reports, see: https://www.brendangregg.com/flamegraphs.html#summary
+
+> [!WARNING]
+> When sharing pipeline logs, please be aware that the **task log contains potentionally sensitive information** such as your DevOps organisation name, project names, repository names, private package feeds URLs, list of used dependency names/versions, and the contents of any dependency files that are updated (e.g. `package.json`, `*.csproj`, etc). The Flame Graph report does **not** contain any sensitive information about your DevOps environment.
 
 # Development guide
 

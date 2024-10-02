@@ -42,13 +42,31 @@ This was a customisation/workaround specific to the V1 update script that can no
 This is no longer required as the [custom] [Dependabot Updater image](../updater.md) is no longer used.
 
 ### Task Input `extraEnvironmentVariables` has been removed
-Due to the containerised design of Dependabot CLI, environment variables can no longer be passed from the task to the updater process. All Dependabot config must now set via `dependabot.yaml` or as task inputs. The following old environment variables have been converted to task inputs:
+Due to the containerised design of Dependabot CLI, environment variables can no longer be passed from the task to the updater process. All Dependabot config must now set via `dependabot.yaml` or as task inputs. See changes to environment variables below for more details.
 
-| Environment Variable | New Task Input |
+### Changes to environment variables
+The following environment variables are now configured using [pipeline system variables](https://learn.microsoft.com/en-us/azure/devops/pipelines/process/variables?view=azure-devops&tabs=yaml%2Cbatch#system-variables):
+| Environment Variable | → | Pipeline Variable |
+|--|--|--|
+|`DEPENDABOT_DEBUG`| → |`System.Debug`|
+
+The following environment variables are now configured using task inputs:
+| Environment Variable | → | Task Input |
+|--|--|--|
+|`DEPENDABOT_AUTHOR_EMAIL`| → |`authorEmail`|
+|`DEPENDABOT_AUTHOR_NAME`| → |`authorName`|
+|`DEPENDABOT_UPDATER_OPTIONS`| → |`experiments`|
+
+The following environment variables have been removed entirely; the feature is no longer supported:
+
+| Removed Environment Variable | Reason |
 |--|--|
-|DEPENDABOT_AUTHOR_EMAIL|authorEmail|
-|DEPENDABOT_AUTHOR_NAME|authorName|
-
+|`DEPENDABOT_PR_NAME_PREFIX_STYLE`| Feature is not supported; It is not an official configuration |
+|`DEPENDABOT_COMPATIBILITY_SCORE_BADGE`| Feature is not supported; It is not an official configuration |
+|`DEPENDABOT_MESSAGE_HEADER`| Feature is not supported; It is not an official configuration |
+|`DEPENDABOT_MESSAGE_FOOTER`| Feature is not supported; It is not an official configuration |
+|`DEPENDABOT_SIGNATURE_KEY`| Feature is not supported; It is not an official configuration |
+|`DEPENDABOT_JOB_ID`| Set automatically by extension |
 
 ## Todo before general availability
 Before removing the preview flag from V2 `task.json`, we need to:

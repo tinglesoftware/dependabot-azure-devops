@@ -65,7 +65,8 @@ export class AzureDevOpsWebApiClient {
         throw new Error(`Repository '${project}/${repository}' not found`);
       }
 
-      return repo.defaultBranch;
+      // Strip reference prefix from the branch name, the caller doesn't need to know this
+      return repo.defaultBranch?.replace(/^refs\/heads\//i, '');
     } catch (e) {
       error(`Failed to get default branch for '${project}/${repository}': ${e}`);
       console.debug(e); // Dump the error stack trace to help with debugging
@@ -238,7 +239,7 @@ export class AzureDevOpsWebApiClient {
 
       // TODO: Upload the pull request description as a 'changes.md' file attachment?
       //       This might be a way to work around the 4000 character limit for PR descriptions, but needs more investigation.
-      // https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-attachments/create?view=azure-devops-rest-7.1
+      //       https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-attachments/create?view=azure-devops-rest-7.1
 
       // Set the pull request auto-complete status
       if (pr.autoComplete) {

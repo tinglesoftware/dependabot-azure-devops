@@ -1,4 +1,4 @@
-import { debug, error, tool, which } from 'azure-pipelines-task-lib/task';
+import { command, debug, error, tool, which } from 'azure-pipelines-task-lib/task';
 import { ToolRunner } from 'azure-pipelines-task-lib/toolrunner';
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
@@ -112,6 +112,15 @@ export class DependabotCli {
       if (dependabotResultCode != 0) {
         error(`Dependabot failed with exit code ${dependabotResultCode}`);
       }
+    }
+
+    // If flamegraph is enabled, upload the report to the pipeline timeline so the use can download it
+    const flamegraphPath = path.join(process.cwd(), 'flamegraph.html');
+    if (options?.flamegraph && fs.existsSync(flamegraphPath)) {
+      const jobFlamegraphPath = path.join(process.cwd(), `dependabot-${operation.job.id}-flamegraph.html`);
+      fs.renameSync(flamegraphPath, jobFlamegraphPath);
+      console.info(`Uploading flamegraph report '${jobFlamegraphPath}' to pipeline timeline...`);
+      command('task.uploadfile', {}, jobFlamegraphPath);
     }
 
     // Process the job output
