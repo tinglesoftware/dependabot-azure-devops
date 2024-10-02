@@ -179,9 +179,8 @@ function mapGroupsFromDependabotConfigToJobConfig(dependencyGroups: Record<strin
 
 function mapAllowedUpdatesFromDependabotConfigToJobConfig(allowedUpdates: IDependabotAllowCondition[]): any[] {
   if (!allowedUpdates) {
-    return [
-      { 'dependency-type': 'all' }, // if not explicitly configured, allow all updates
-    ];
+    // If no allow conditions are specified, update all dependencies by default
+    return [{ 'dependency-type': 'all' }];
   }
   return allowedUpdates.map((allow) => {
     return {
