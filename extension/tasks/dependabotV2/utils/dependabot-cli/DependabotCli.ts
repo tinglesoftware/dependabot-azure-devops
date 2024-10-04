@@ -71,7 +71,7 @@ export class DependabotCli {
     if (options?.sourceProvider) {
       dependabotArguments.push('--provider', options.sourceProvider);
     }
-    if (options?.sourceLocalPath) {
+    if (options?.sourceLocalPath && fs.existsSync(options.sourceLocalPath)) {
       dependabotArguments.push('--local', options.sourceLocalPath);
     }
     if (options?.collectorImage) {
