@@ -4,6 +4,7 @@ import { DependabotCli } from './utils/dependabot-cli/DependabotCli';
 import { DependabotJobBuilder } from './utils/dependabot-cli/DependabotJobBuilder';
 import {
   DependabotOutputProcessor,
+  parseProjectDependencyListProperty,
   parsePullRequestProperties,
 } from './utils/dependabot-cli/DependabotOutputProcessor';
 import { IDependabotUpdate } from './utils/dependabot/interfaces/IDependabotConfig';
@@ -83,6 +84,15 @@ async function run() {
     for (const update of updates) {
       const updateId = updates.indexOf(update).toString();
 
+      // Parse the last dependency list snapshot (if any) from the project properties.
+      // This is required when doing a security-only update as dependabot requires the list of vulnerable dependencies to be updated.
+      // Automatic discovery of vulnerable dependencies during a security-only update is not currently supported by dependabot-updater.
+      const dependencyList = parseProjectDependencyListProperty(
+        await prAuthorClient.getProjectProperties(taskInputs.projectId),
+        taskInputs.repository,
+        update['package-ecosystem'],
+      );
+
       // Parse the Dependabot metadata for the existing pull requests that are related to this update
       // Dependabot will use this to determine if we need to create new pull requests or update/close existing ones
       const existingPullRequests = parsePullRequestProperties(prAuthorActivePullRequests, update['package-ecosystem']);
@@ -94,7 +104,7 @@ async function run() {
         updateId,
         update,
         dependabotConfig.registries,
-        undefined, // TODO: Implement this, required for security-only updates
+        dependencyList?.['dependencies'],
         existingPullRequestDependencies,
       );
       const allDependenciesUpdateOutputs = await dependabot.update(allDependenciesJob, dependabotUpdaterOptions);
