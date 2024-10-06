@@ -21,6 +21,7 @@ In this repository you'll find:
 - [Configuring private feeds and registries](#configuring-private-feeds-and-registries)
 - [Configuring security advisories and known vulnerabilities](#configuring-security-advisories-and-known-vulnerabilities)
 - [Configuring experiments](#configuring-experiments)
+- [Configuring assignees and reviewers](#configuring-assignees-and-reviewers)
 - [Unsupported features and configurations](#unsupported-features-and-configurations)
    * [Extension Task](#extension-task)
       + [dependabot@V2](#dependabotv2)
@@ -174,10 +175,22 @@ Experiments vary depending on the package ecyosystem used; They can be enabled u
 | NuGet | nuget_native_updater | true/false | https://github.com/dependabot/dependabot-core/pull/10521 |
 | NuGet | nuget_dependency_solver | true/false | https://github.com/dependabot/dependabot-core/pull/10343 |
 
-</details>
-
 > [!TIP]
 > To find the latest list of Dependabot experiments, search the `dependabot-core` GitHub repository using queries like ["enabled?(x)"](https://github.com/search?q=repo%3Adependabot%2Fdependabot-core+%2Fenabled%5CW%5C%28.*%5C%29%2F&type=code) and ["options.fetch(x)"](https://github.com/search?q=repo%3Adependabot%2Fdependabot-core+%2Foptions%5C.fetch%5C%28.*%2C%2F&type=code). 
+
+</details>
+
+## Configuring assignees and reviewers
+Dependabot allows for the configuration of both [`assignees`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#assignees) and [`reviewers`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#reviewers). However, Azure DevOps does not have the concept of pull request assignees. Because of this, `assignees` will be treated as **required** reviewers and `reviewers` will be treated as **optional** reviewers.
+
+Reviewers can be any of the following values:
+
+- User GUID
+- User username
+- User email address
+- User full [display] name
+- Group name
+- Team name
 
 ## Unsupported features and configurations
 We aim to support all [official configuration options](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file), but there are some limitations for:
@@ -193,15 +206,18 @@ We aim to support all [official configuration options](https://docs.github.com/e
 - [`directories`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#directories) are only supported if task input `useUpdateScriptVNext: true` is set.
 - [`groups`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#groups) are only supported if task input `useUpdateScriptVNext: true` is set.
 - [`ignore`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#ignore) may not behave to official specifications unless task input `useUpdateScriptVNext: true` is set. If you are having issues, search for related issues such as <https://github.com/tinglesoftware/dependabot-azure-devops/pull/582> before creating a new issue.
+- [`assignees`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#assignees) and [`reviewers`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#reviewers) must be a list of user guids or email addressess; group/team names are not supported.
 - Private feed/registry authentication may not work with all package ecyosystems. Support is _slightly_ improved when task input `useUpdateScriptVNext: true` is set, but not still not fully supported. See [problems with authentication](https://github.com/tinglesoftware/dependabot-azure-devops/discussions/1317) for more.
 
 ### Updater Docker image
+- `DEPENDABOT_ASSIGNEES` and `DEPENDABOT_REVIEWERS` must be a list of user guids; email addressess and group/team names are not supported.
 - Private feed/registry authentication may not work with all package ecyosystems. See [problems with authentication](https://github.com/tinglesoftware/dependabot-azure-devops/discussions/1317) for more.
 
 ### Server
 
 - [`directories`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#directories) are not supported.
 - [`groups`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#groups) are not supported.
+- [`assignees`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#assignees) and [`reviewers`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#reviewers) must be a list of user guids; email addressess and group/team names are not supported.
 - Private feed/registry authentication may not work with all package ecyosystems. See [problems with authentication](https://github.com/tinglesoftware/dependabot-azure-devops/discussions/1317) for more.
 
 ## Migration Guide
