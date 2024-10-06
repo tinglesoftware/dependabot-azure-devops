@@ -46,24 +46,24 @@ export class AzureDevOpsWebApiClient {
   /**
    * Get the identity id from a user name, email, or group name.
    * Requires scope "Identity (Read)" (vso.identity).
-   * @param nameEmailOrGroup
+   * @param userNameEmailOrGroupName
    * @returns
    */
-  public async resolveIdentityId(nameEmailOrGroup?: string): Promise<string | undefined> {
-    if (this.resolvedUserIds[nameEmailOrGroup]) {
-      return this.resolvedUserIds[nameEmailOrGroup];
+  public async resolveIdentityId(userNameEmailOrGroupName?: string): Promise<string | undefined> {
+    if (this.resolvedUserIds[userNameEmailOrGroupName]) {
+      return this.resolvedUserIds[userNameEmailOrGroupName];
     }
     try {
       const identities = await this.restApiGet(`${this.identityApiUrl}/_apis/identities`, {
         searchFilter: 'General',
-        filterValue: nameEmailOrGroup,
+        filterValue: userNameEmailOrGroupName,
         queryMembership: 'None',
       });
       if (!identities?.value || identities.value.length === 0) {
         return undefined;
       }
-      this.resolvedUserIds[nameEmailOrGroup] = identities.value[0]?.id;
-      return this.resolvedUserIds[nameEmailOrGroup];
+      this.resolvedUserIds[userNameEmailOrGroupName] = identities.value[0]?.id;
+      return this.resolvedUserIds[userNameEmailOrGroupName];
     } catch (e) {
       error(`Failed to resolve user id: ${e}`);
       console.debug(e); // Dump the error stack trace to help with debugging
@@ -81,7 +81,6 @@ export class AzureDevOpsWebApiClient {
   public async getDefaultBranch(project: string, repository: string): Promise<string | undefined> {
     try {
       const repo = await this.restApiGet(`${this.organisationApiUrl}/${project}/_apis/git/repositories/${repository}`);
-      console.log(repo);
       if (!repo) {
         throw new Error(`Repository '${project}/${repository}' not found`);
       }
@@ -108,32 +107,26 @@ export class AzureDevOpsWebApiClient {
     creator: string,
   ): Promise<IPullRequestProperties[]> {
     try {
-      const pullRequests =
-        (
-          await this.restApiGet(
-            `${this.organisationApiUrl}/${project}/_apis/git/repositories/${repository}/pullrequests`,
-            {
-              'searchCriteria.creatorId': isGuid(creator) ? creator : await this.getUserId(),
-              'searchCriteria.status': 'Active',
-            },
-          )
-        )?.value || [];
-      if (!pullRequests || pullRequests.length === 0) {
+      const pullRequests = await this.restApiGet(
+        `${this.organisationApiUrl}/${project}/_apis/git/repositories/${repository}/pullrequests`,
+        {
+          'searchCriteria.creatorId': isGuid(creator) ? creator : await this.getUserId(),
+          'searchCriteria.status': 'Active',
+        },
+      );
+      if (!pullRequests?.value || pullRequests.value.length === 0) {
         return [];
       }
 
       return await Promise.all(
-        pullRequests.map(async (pr) => {
-          const properties =
-            (
-              await this.restApiGet(
-                `${this.organisationApiUrl}/${project}/_apis/git/repositories/${repository}/pullrequests/${pr.pullRequestId}/properties`,
-              )
-            )?.value || {};
+        pullRequests.value.map(async (pr) => {
+          const properties = await this.restApiGet(
+            `${this.organisationApiUrl}/${project}/_apis/git/repositories/${repository}/pullrequests/${pr.pullRequestId}/properties`,
+          );
           return {
             id: pr.pullRequestId,
             properties:
-              Object.keys(properties).map((key) => {
+              Object.keys(properties?.value || {}).map((key) => {
                 return {
                   name: key,
                   value: properties[key]?.$value,
