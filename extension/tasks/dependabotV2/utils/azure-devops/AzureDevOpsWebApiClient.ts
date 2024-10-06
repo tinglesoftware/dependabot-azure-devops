@@ -12,62 +12,81 @@ import { IHttpClientResponse } from 'typed-rest-client/Interfaces';
 import { IFileChange } from './interfaces/IFileChange';
 import { IPullRequest } from './interfaces/IPullRequest';
 import { IPullRequestProperties } from './interfaces/IPullRequestProperties';
-import { resolveAzureDevOpsIdentities } from './resolveAzureDevOpsIdentities';
 
 /**
  * Wrapper for DevOps WebApi client with helper methods for easier management of dependabot pull requests
  */
 export class AzureDevOpsWebApiClient {
   private readonly organisationApiUrl: string;
+  private readonly identityApiUrl: string;
   private readonly accessToken: string;
   private readonly connection: WebApi;
-  private cachedUserIds: Record<string, string>;
+  private authenticatedUserId: string;
+  private resolvedUserIds: Record<string, string>;
+
+  public static API_VERSION = '7.1';
 
   constructor(organisationApiUrl: string, accessToken: string) {
     this.organisationApiUrl = organisationApiUrl;
+    this.identityApiUrl = getIdentityApiUrl(organisationApiUrl);
     this.accessToken = accessToken;
     this.connection = new WebApi(organisationApiUrl, getPersonalAccessTokenHandler(accessToken));
-    this.cachedUserIds = {};
+    this.resolvedUserIds = {};
   }
 
   /**
-   * Get the identity of a user by email address. If no email is provided, the identity of the authenticated user is returned.
-   * @param email
+   * Get the identity of the authenticated user.
    * @returns
    */
-  public async getUserId(email?: string): Promise<string> {
-    // If no email is provided, resolve to the authenticated user
-    if (!email) {
-      this.cachedUserIds[this.accessToken] ||= (await this.connection.connect())?.authenticatedUser?.id || '';
-      return this.cachedUserIds[this.accessToken];
-    }
-
-    // Otherwise, do a cached identity lookup of the supplied email address
-    // TODO: When azure-devops-node-api supports Graph API, use that instead of the REST API
-    else if (!this.cachedUserIds[email]) {
-      const identities = await resolveAzureDevOpsIdentities(new URL(this.organisationApiUrl), [email]);
-      identities.forEach((i) => (this.cachedUserIds[i.input] ||= i.id));
-    }
-
-    return this.cachedUserIds[email];
+  public async getUserId(): Promise<string> {
+    this.authenticatedUserId ||= (await this.connection.connect()).authenticatedUser.id;
+    return this.authenticatedUserId;
   }
 
   /**
-   * Get the default branch for a repository
+   * Get the identity id from a user name, email, or group name.
+   * Requires scope "Identity (Read)" (vso.identity).
+   * @param nameEmailOrGroup
+   * @returns
+   */
+  public async resolveIdentityId(nameEmailOrGroup?: string): Promise<string | undefined> {
+    if (this.resolvedUserIds[nameEmailOrGroup]) {
+      return this.resolvedUserIds[nameEmailOrGroup];
+    }
+    try {
+      const identities = await this.restApiGet(`${this.identityApiUrl}/_apis/identities`, {
+        searchFilter: 'General',
+        filterValue: nameEmailOrGroup,
+        queryMembership: 'None',
+      });
+      if (!identities?.value || identities.value.length === 0) {
+        return undefined;
+      }
+      this.resolvedUserIds[nameEmailOrGroup] = identities.value.map((i) => i.id) || [];
+      return this.resolvedUserIds[nameEmailOrGroup];
+    } catch (e) {
+      error(`Failed to resolve user id: ${e}`);
+      console.debug(e); // Dump the error stack trace to help with debugging
+      return undefined;
+    }
+  }
+
+  /**
+   * Get the default branch for a repository.
+   * Requires scope "Code (Read)" (vso.code).
    * @param project
    * @param repository
    * @returns
    */
   public async getDefaultBranch(project: string, repository: string): Promise<string | undefined> {
     try {
-      const git = await this.connection.getGitApi();
-      const repo = await git.getRepository(repository, project);
+      const repo = await this.restApiGet(`${this.organisationApiUrl}/${project}/_apis/git/repositories/${repository}`);
+      console.log(repo);
       if (!repo) {
         throw new Error(`Repository '${project}/${repository}' not found`);
       }
 
-      // Strip reference prefix from the branch name, the caller doesn't need to know this
-      return repo.defaultBranch?.replace(/^refs\/heads\//i, '');
+      return normalizeBranchName(repo.defaultBranch);
     } catch (e) {
       error(`Failed to get default branch for '${project}/${repository}': ${e}`);
       console.debug(e); // Dump the error stack trace to help with debugging
@@ -76,7 +95,8 @@ export class AzureDevOpsWebApiClient {
   }
 
   /**
-   * Get the properties for all active pull request created by the supplied user
+   * Get the properties for all active pull request created by the supplied user.
+   * Requires scope "Code (Read)" (vso.code).
    * @param project
    * @param repository
    * @param creator
@@ -88,10 +108,16 @@ export class AzureDevOpsWebApiClient {
     creator: string,
   ): Promise<IPullRequestProperties[]> {
     try {
-      const git = await this.connection.getGitApi();
-      const pullRequests = (await this.restApiGet(
-        `${this.organisationApiUrl}/${project}/_apis/git/repositories/${repository}/pullrequests?searchCriteria.creatorId=${isGuid(creator) ? creator : await this.getUserId(creator)}&searchCriteria.status${PullRequestStatus.Active}&api-version=7.1`,
-      ))?.value || [];
+      const pullRequests =
+        (
+          await this.restApiGet(
+            `${this.organisationApiUrl}/${project}/_apis/git/repositories/${repository}/pullrequests`,
+            {
+              'searchCriteria.creatorId': isGuid(creator) ? creator : await this.getUserId(),
+              'searchCriteria.status': 'Active',
+            },
+          )
+        )?.value || [];
       if (!pullRequests || pullRequests.length === 0) {
         return [];
       }
@@ -101,7 +127,7 @@ export class AzureDevOpsWebApiClient {
           const properties =
             (
               await this.restApiGet(
-                `${this.organisationApiUrl}/${project}/_apis/git/repositories/${repository}/pullrequests/${pr.pullRequestId}/properties?api-version=7.1`,
+                `${this.organisationApiUrl}/${project}/_apis/git/repositories/${repository}/pullrequests/${pr.pullRequestId}/properties`,
               )
             )?.value || {};
           return {
@@ -124,7 +150,9 @@ export class AzureDevOpsWebApiClient {
   }
 
   /**
-   * Create a new pull request
+   * Create a new pull request.
+   * Requires scope "Code (Write)" (vso.code_write).
+   * Requires scope "Identity (Read)" (vso.identity), if assignees or reviewers are specified.
    * @param pr
    * @returns
    */
@@ -132,7 +160,6 @@ export class AzureDevOpsWebApiClient {
     console.info(`Creating pull request '${pr.title}'...`);
     try {
       const userId = await this.getUserId();
-      const git = await this.connection.getGitApi();
 
       // Map the list of the pull request reviewer ids
       // NOTE: Azure DevOps does not have a concept of assignees, only reviewers.
@@ -140,7 +167,7 @@ export class AzureDevOpsWebApiClient {
       const allReviewers: IdentityRefWithVote[] = [];
       if (pr.assignees?.length > 0) {
         for (const assignee of pr.assignees) {
-          const identityId = isGuid(assignee) ? assignee : await this.getUserId(assignee);
+          const identityId = isGuid(assignee) ? assignee : await this.resolveIdentityId(assignee);
           if (identityId) {
             allReviewers.push({
               id: identityId,
@@ -154,7 +181,7 @@ export class AzureDevOpsWebApiClient {
       }
       if (pr.reviewers?.length > 0) {
         for (const reviewer of pr.reviewers) {
-          const identityId = isGuid(reviewer) ? reviewer : await this.getUserId(reviewer);
+          const identityId = isGuid(reviewer) ? reviewer : await this.resolveIdentityId(reviewer);
           if (identityId) {
             allReviewers.push({
               id: identityId,
@@ -168,7 +195,7 @@ export class AzureDevOpsWebApiClient {
       // Create the source branch and push a commit with the dependency file changes
       console.info(` - Pushing ${pr.changes.length} file change(s) to branch '${pr.source.branch}'...`);
       const push = await this.restApiPost(
-        `${this.organisationApiUrl}/${pr.project}/_apis/git/repositories/${pr.repository}/pushes?api-version=7.1`,
+        `${this.organisationApiUrl}/${pr.project}/_apis/git/repositories/${pr.repository}/pushes`,
         {
           refUpdates: [
             {
@@ -184,7 +211,7 @@ export class AzureDevOpsWebApiClient {
                 return {
                   changeType: change.changeType,
                   item: {
-                    path: normalizeDevOpsPath(change.path),
+                    path: normalizeFilePath(change.path),
                   },
                   newContent: {
                     content: Buffer.from(change.content, <BufferEncoding>change.encoding).toString('base64'),
@@ -204,7 +231,7 @@ export class AzureDevOpsWebApiClient {
       // Create the pull request
       console.info(` - Creating pull request to merge '${pr.source.branch}' into '${pr.target.branch}'...`);
       const pullRequest = await this.restApiPost(
-        `${this.organisationApiUrl}/${pr.project}/_apis/git/repositories/${pr.repository}/pullrequests?api-version=7.1`,
+        `${this.organisationApiUrl}/${pr.project}/_apis/git/repositories/${pr.repository}/pullrequests`,
         {
           sourceRefName: `refs/heads/${pr.source.branch}`,
           targetRefName: `refs/heads/${pr.target.branch}`,
@@ -229,7 +256,7 @@ export class AzureDevOpsWebApiClient {
       if (pr.properties?.length > 0) {
         console.info(` - Adding dependency metadata to pull request properties...`);
         const newProperties = await this.restApiPatch(
-          `${this.organisationApiUrl}/${pr.project}/_apis/git/repositories/${pr.repository}/pullrequests/${pullRequest.pullRequestId}/properties?api-version=7.1`,
+          `${this.organisationApiUrl}/${pr.project}/_apis/git/repositories/${pr.repository}/pullrequests/${pullRequest.pullRequestId}/properties`,
           pr.properties.map((property) => {
             return {
               op: 'add',
@@ -252,7 +279,7 @@ export class AzureDevOpsWebApiClient {
       if (pr.autoComplete) {
         console.info(` - Updating auto-complete options...`);
         const updatedPullRequest = await this.restApiPatch(
-          `${this.organisationApiUrl}/${pr.project}/_apis/git/repositories/${pr.repository}/pullrequests/${pullRequest.pullRequestId}?api-version=7.1`,
+          `${this.organisationApiUrl}/${pr.project}/_apis/git/repositories/${pr.repository}/pullrequests/${pullRequest.pullRequestId}`,
           {
             autoCompleteSetBy: {
               id: userId,
@@ -281,7 +308,8 @@ export class AzureDevOpsWebApiClient {
   }
 
   /**
-   * Update a pull request
+   * Update a pull request.
+   * Requires scope "Code (Read & Write)" (vso.code, vso.code_write).
    * @param options
    * @returns
    */
@@ -290,25 +318,32 @@ export class AzureDevOpsWebApiClient {
     repository: string;
     pullRequestId: number;
     changes: IFileChange[];
-    skipIfCommitsFromUsersOtherThan?: string;
+    skipIfDraft?: boolean;
+    skipIfCommitsFromAuthorsOtherThan?: string;
     skipIfNotBehindTargetBranch?: boolean;
-    skipIfNoConflicts?: boolean;
   }): Promise<boolean> {
     console.info(`Updating pull request #${options.pullRequestId}...`);
     try {
-      const userId = await this.getUserId();
-      const git = await this.connection.getGitApi();
-
       // Get the pull request details
-      const pullRequest = await git.getPullRequest(options.repository, options.pullRequestId, options.project);
+      const pullRequest = await this.restApiGet(
+        `${this.organisationApiUrl}/${options.project}/_apis/git/repositories/${options.repository}/pullrequests/${options.pullRequestId}`,
+      );
       if (!pullRequest) {
         throw new Error(`Pull request #${options.pullRequestId} not found`);
       }
 
-      // Skip if the pull request has been modified by another user
-      if (options.skipIfCommitsFromUsersOtherThan) {
-        const commits = await git.getPullRequestCommits(options.repository, options.pullRequestId, options.project);
-        if (commits.some((c) => c.author?.email !== options.skipIfCommitsFromUsersOtherThan)) {
+      // Skip if the pull request is a draft
+      if (options.skipIfDraft && pullRequest.isDraft) {
+        console.info(` - Skipping update as pull request is currently marked as a draft.`);
+        return true;
+      }
+
+      // Skip if the pull request has been modified by another author
+      if (options.skipIfCommitsFromAuthorsOtherThan) {
+        const commits = await this.restApiGet(
+          `${this.organisationApiUrl}/${options.project}/_apis/git/repositories/${options.repository}/pullrequests/${options.pullRequestId}/commits`,
+        );
+        if (commits?.value?.some((c) => c.author?.email !== options.skipIfCommitsFromAuthorsOtherThan)) {
           console.info(` - Skipping update as pull request has been modified by another user.`);
           return true;
         }
@@ -316,24 +351,22 @@ export class AzureDevOpsWebApiClient {
 
       // Skip if the source branch is not behind the target branch
       if (options.skipIfNotBehindTargetBranch) {
-        // TODO: https://learn.microsoft.com/en-us/rest/api/azure/devops/git/stats/get?view=azure-devops-rest-7.1&tabs=HTTP#examples
-        //const stats = await this.restApiGet(...)
-        //if (stats.behindCount > 0) {
-        //  console.info(` - Skipping update as source branch is not behind target branch.`);
-        //  return true;
-        //}
-      }
-
-      // Skip if no merge conflicts
-      if (options.skipIfNoConflicts && pullRequest.mergeStatus !== PullRequestAsyncStatus.Conflicts) {
-        console.info(` - Skipping update as pull request has no merge conflicts.`);
-        return true;
+        const stats = await this.restApiGet(
+          `${this.organisationApiUrl}/${options.project}/_apis/git/repositories/${options.repository}/stats/branches`,
+          {
+            name: normalizeBranchName(pullRequest.sourceRefName),
+          },
+        );
+        if (stats?.behindCount === 0) {
+          console.info(` - Skipping update as source branch is not behind target branch.`);
+          return true;
+        }
       }
 
       // Push changes to the source branch
       console.info(` - Pushing ${options.changes.length} file change(s) branch '${pullRequest.sourceRefName}'...`);
       const push = await this.restApiPost(
-        `${this.organisationApiUrl}/${options.project}/_apis/git/repositories/${options.repository}/pushes?api-version=7.1`,
+        `${this.organisationApiUrl}/${options.project}/_apis/git/repositories/${options.repository}/pushes`,
         {
           refUpdates: [
             {
@@ -351,7 +384,7 @@ export class AzureDevOpsWebApiClient {
                 return {
                   changeType: change.changeType,
                   item: {
-                    path: normalizeDevOpsPath(change.path),
+                    path: normalizeFilePath(change.path),
                   },
                   newContent: {
                     content: Buffer.from(change.content, <BufferEncoding>change.encoding).toString('base64'),
@@ -378,7 +411,8 @@ export class AzureDevOpsWebApiClient {
   }
 
   /**
-   * Approve a pull request
+   * Approve a pull request.
+   * Requires scope "Code (Write)" (vso.code_write).
    * @param options
    * @returns
    */
@@ -389,20 +423,15 @@ export class AzureDevOpsWebApiClient {
   }): Promise<boolean> {
     console.info(`Approving pull request #${options.pullRequestId}...`);
     try {
-      const userId = await this.getUserId();
-      const git = await this.connection.getGitApi();
-
       // Approve the pull request
       console.info(` - Creating reviewer vote on pull request...`);
-      const userVote = await git.createPullRequestReviewer(
+      const userId = await this.getUserId();
+      const userVote = await this.restApiPut(
+        `${this.organisationApiUrl}/${options.project}/_apis/git/repositories/${options.repository}/pullrequests/${options.pullRequestId}/reviewers/${userId}`,
         {
           vote: 10, // 10 - approved 5 - approved with suggestions 0 - no vote -5 - waiting for author -10 - rejected
           isReapprove: true,
         },
-        options.repository,
-        options.pullRequestId,
-        userId,
-        options.project,
       );
       if (userVote?.vote != 10) {
         throw new Error('Failed to approve pull request, vote was not recorded');
@@ -417,7 +446,8 @@ export class AzureDevOpsWebApiClient {
   }
 
   /**
-   * Close a pull request
+   * Close a pull request.
+   * Requires scope "Code (Write)" (vso.code_write).
    * @param options
    * @returns
    */
@@ -431,12 +461,12 @@ export class AzureDevOpsWebApiClient {
     console.info(`Closing pull request #${options.pullRequestId}...`);
     try {
       const userId = await this.getUserId();
-      const git = await this.connection.getGitApi();
 
       // Add a comment to the pull request, if supplied
       if (options.comment) {
         console.info(` - Adding abandonment reason comment to pull request...`);
-        const thread = await git.createThread(
+        const thread = await this.restApiPost(
+          `${this.organisationApiUrl}/${options.project}/_apis/git/repositories/${options.repository}/pullrequests/${options.pullRequestId}/threads`,
           {
             status: CommentThreadStatus.Closed,
             comments: [
@@ -449,9 +479,6 @@ export class AzureDevOpsWebApiClient {
               },
             ],
           },
-          options.repository,
-          options.pullRequestId,
-          options.project,
         );
         if (!thread?.id) {
           throw new Error('Failed to add comment to pull request, thread was not created');
@@ -460,16 +487,14 @@ export class AzureDevOpsWebApiClient {
 
       // Close the pull request
       console.info(` - Abandoning pull request...`);
-      const abandonedPullRequest = await git.updatePullRequest(
+      const abandonedPullRequest = await this.restApiPatch(
+        `${this.organisationApiUrl}/${options.project}/_apis/git/repositories/${options.repository}/pullrequests/${options.pullRequestId}`,
         {
           status: PullRequestStatus.Abandoned,
           closedBy: {
             id: userId,
           },
         },
-        options.repository,
-        options.pullRequestId,
-        options.project,
       );
       if (abandonedPullRequest?.status !== PullRequestStatus.Abandoned) {
         throw new Error('Failed to close pull request, status was not updated');
@@ -478,16 +503,14 @@ export class AzureDevOpsWebApiClient {
       // Delete the source branch if required
       if (options.deleteSourceBranch) {
         console.info(` - Deleting source branch...`);
-        await git.updateRef(
+        await this.restApiPost(
+          `${this.organisationApiUrl}/${options.project}/_apis/git/repositories/${options.repository}/refs`,
           {
-            name: `refs/heads/${abandonedPullRequest.sourceRefName}`,
+            name: abandonedPullRequest.sourceRefName,
             oldObjectId: abandonedPullRequest.lastMergeSourceCommit.commitId,
             newObjectId: '0000000000000000000000000000000000000000',
             isLocked: false,
           },
-          options.repository,
-          '',
-          options.project,
         );
       }
 
@@ -500,102 +523,106 @@ export class AzureDevOpsWebApiClient {
     }
   }
 
-  /**
-   * Get project properties
-   * @param projectId
-   * @param valueBuilder
-   * @returns
-   */
-  public async getProjectProperties(projectId: string): Promise<Record<string, string> | undefined> {
-    try {
-      const core = await this.connection.getCoreApi();
-      const properties = await core.getProjectProperties(projectId);
-      return properties?.map((p) => ({ [p.name]: p.value }))?.reduce((a, b) => ({ ...a, ...b }), {});
-    } catch (e) {
-      error(`Failed to get project properties: ${e}`);
-      console.debug(e); // Dump the error stack trace to help with debugging
-      return undefined;
-    }
-  }
-
-  /**
-   * Update a project property
-   * @param project
-   * @param name
-   * @param valueBuilder
-   * @returns
-   */
-  public async updateProjectProperty(
-    projectId: string,
-    name: string,
-    valueBuilder: (existingValue: string) => string,
-  ): Promise<void> {
-    try {
-      // Get the existing project property value
-      const core = await this.connection.getCoreApi();
-      const properties = await core.getProjectProperties(projectId);
-      const propertyValue = properties?.find((p) => p.name === name)?.value;
-
-      // Update the project property
-      await core.setProjectProperties(undefined, projectId, [
-        {
-          op: 'add',
-          path: '/' + name,
-          value: valueBuilder(propertyValue || ''),
-        },
-      ]);
-    } catch (e) {
-      error(`Failed to update project property '${name}': ${e}`);
-      console.debug(e); // Dump the error stack trace to help with debugging
-    }
-  }
-
-  private async restApiGet(url: string): Promise<any | undefined> {
-    return await this.restApiRequest(await this.connection.rest.client.get(url, { Accept: 'application/json' }));
-  }
-
-  private async restApiPost(url: string, data?: any): Promise<any | undefined> {
-    return await this.restApiRequest(
-      await this.connection.rest.client.post(url, JSON.stringify(data), { 'Content-Type': 'application/json' }),
+  private async restApiGet(
+    url: string,
+    params?: Record<string, string>,
+    apiVersion: string = AzureDevOpsWebApiClient.API_VERSION,
+  ): Promise<any | undefined> {
+    const queryString = Object.keys(params || {})
+      .map((key) => `${key}=${params[key]}`)
+      .join('&');
+    const fullUrl = `${url}?api-version=${apiVersion}${queryString ? `&${queryString}` : ''}`;
+    return await this.restApiRequest('GET', url, () =>
+      this.connection.rest.client.get(fullUrl, {
+        Accept: 'application/json',
+      }),
     );
   }
 
-  private async restApiPatch(url: string, data?: any, contentType?: string): Promise<any | undefined> {
-    return await this.restApiRequest(
-      await this.connection.rest.client.patch(url, JSON.stringify(data), {
+  private async restApiPost(
+    url: string,
+    data?: any,
+    apiVersion: string = AzureDevOpsWebApiClient.API_VERSION,
+  ): Promise<any | undefined> {
+    const fullUrl = `${url}?api-version=${apiVersion}`;
+    return await this.restApiRequest('POST', url, () =>
+      this.connection.rest.client.post(fullUrl, JSON.stringify(data), {
+        'Content-Type': 'application/json',
+      }),
+    );
+  }
+
+  private async restApiPut(
+    url: string,
+    data?: any,
+    apiVersion: string = AzureDevOpsWebApiClient.API_VERSION,
+  ): Promise<any | undefined> {
+    const fullUrl = `${url}?api-version=${apiVersion}`;
+    return await this.restApiRequest('PUT', url, () =>
+      this.connection.rest.client.put(fullUrl, JSON.stringify(data), {
+        'Content-Type': 'application/json',
+      }),
+    );
+  }
+
+  private async restApiPatch(
+    url: string,
+    data?: any,
+    contentType?: string,
+    apiVersion: string = AzureDevOpsWebApiClient.API_VERSION,
+  ): Promise<any | undefined> {
+    const fullUrl = `${url}?api-version=${apiVersion}`;
+    return await this.restApiRequest('PATCH', url, () =>
+      this.connection.rest.client.patch(fullUrl, JSON.stringify(data), {
         'Content-Type': contentType || 'application/json',
       }),
     );
   }
 
-  private async restApiRequest(response: IHttpClientResponse): Promise<any | undefined> {
+  private async restApiRequest(
+    method: string,
+    url: string,
+    request: () => Promise<IHttpClientResponse>,
+  ): Promise<any | undefined> {
+    console.debug(`🌎 🠊 [${method}] ${url}`);
+    const response = await request();
+    console.debug(`🌎 🠈 [${response.message.statusCode}] ${response.message.statusMessage}`);
+    if (response.message.statusCode === 401) {
+      throw new Error(`No access token has been provided to access '${url}'`);
+    }
+    if (response.message.statusCode === 403) {
+      throw new Error(`The access token provided does not have permissions to access '${url}'`);
+    }
+    if (response.message.statusCode < 200 || response.message.statusCode > 299) {
+      throw new Error(`Request to '${url}' failed: ${response.message.statusCode} ${response.message.statusMessage}`);
+    }
     try {
-      const body = JSON.parse(await response.readBody());
-      if (body?.errorCode !== undefined && body?.message) {
-        throw new Error(body.message);
+      const responseBodyJson = JSON.parse(await response.readBody());
+      if (responseBodyJson?.errorCode !== undefined && responseBodyJson?.message) {
+        // .NET API error response
+        throw new Error(responseBodyJson.message);
       }
-      return body;
-    } catch (error) {
-      var responseStatusCode = error?.response?.statusCode;
-      if (responseStatusCode === 404) {
-        return undefined;
-      } else if (responseStatusCode === 401) {
-        throw new Error(`No access token has been provided to access '${response.message.url}'`);
-      } else if (responseStatusCode === 403) {
-        throw new Error(`The access token provided does not have permissions to access '${response.message.url}'`);
-      } else {
-        throw error;
-      }
+
+      return responseBodyJson;
+    } catch (e) {
+      // JSON parsing failed, log the error and return undefined
+      console.debug(response.message);
+      throw new Error(`Failed to parse response body as JSON: ${e}`);
     }
   }
 }
 
-function normalizeDevOpsPath(path: string): string {
+function normalizeFilePath(path: string): string {
   // Convert backslashes to forward slashes, convert './' => '/' and ensure the path starts with a forward slash if it doesn't already, this is how DevOps paths are formatted
   return path
     .replace(/\\/g, '/')
     .replace(/^\.\//, '/')
     .replace(/^([^/])/, '/$1');
+}
+
+function normalizeBranchName(branch: string): string {
+  // Strip the 'refs/heads/' prefix from the branch name, if present
+  return branch.replace(/^refs\/heads\//i, '');
 }
 
 function mergeCommitMessage(id: number, title: string, description: string): string {
@@ -624,4 +651,15 @@ function mergeCommitMessage(id: number, title: string, description: string): str
 function isGuid(guid: string): boolean {
   const regex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
   return regex.test(guid);
+}
+
+function getIdentityApiUrl(organisationApiUrl: string): string {
+  const uri = new URL(organisationApiUrl);
+  const hostname = uri.hostname.toLowerCase();
+
+  // If the organisation is hosted on Azure DevOps, use the 'vssps.dev.azure.com' domain
+  if (hostname === 'dev.azure.com' || hostname.endsWith('.visualstudio.com')) {
+    uri.host = 'vssps.dev.azure.com';
+  }
+  return uri.toString();
 }

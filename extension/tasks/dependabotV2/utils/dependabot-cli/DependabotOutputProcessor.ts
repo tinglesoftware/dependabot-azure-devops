@@ -180,9 +180,11 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
           repository: repository,
           pullRequestId: pullRequestToUpdate.id,
           changes: getPullRequestChangedFilesForOutputData(data),
-          skipIfCommitsFromUsersOtherThan:
+          skipIfDraft: true, // TODO: Add config for this?
+          // TODO: Add config for this?
+          skipIfCommitsFromAuthorsOtherThan:
             this.taskInputs.authorEmail || DependabotOutputProcessor.PR_DEFAULT_AUTHOR_EMAIL,
-          skipIfNoConflicts: true,
+          skipIfNotBehindTargetBranch: true, // TODO: Add config for this?
         });
 
         // Re-approve the pull request, if required
