@@ -62,7 +62,7 @@ export class AzureDevOpsWebApiClient {
       if (!identities?.value || identities.value.length === 0) {
         return undefined;
       }
-      this.resolvedUserIds[nameEmailOrGroup] = identities.value.map((i) => i.id) || [];
+      this.resolvedUserIds[nameEmailOrGroup] = identities.value[0]?.id;
       return this.resolvedUserIds[nameEmailOrGroup];
     } catch (e) {
       error(`Failed to resolve user id: ${e}`);
