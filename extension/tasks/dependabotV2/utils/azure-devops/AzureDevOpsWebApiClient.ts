@@ -28,7 +28,7 @@ export class AzureDevOpsWebApiClient {
 
   constructor(organisationApiUrl: string, accessToken: string) {
     this.organisationApiUrl = organisationApiUrl.replace(/\/$/, ''); // trim trailing slash
-    this.identityApiUrl = getIdentityApiUrl(organisationApiUrl).replace(/\/$/, '');; // trim trailing slash
+    this.identityApiUrl = getIdentityApiUrl(organisationApiUrl).replace(/\/$/, ''); // trim trailing slash
     this.accessToken = accessToken;
     this.connection = new WebApi(organisationApiUrl, getPersonalAccessTokenHandler(accessToken));
     this.resolvedUserIds = {};
@@ -636,28 +636,24 @@ export class AzureDevOpsWebApiClient {
   ): Promise<any | undefined> {
     console.debug(`🌎 🠊 [${method}] ${url}`);
     const response = await request();
+    const body = await response.readBody();
     console.debug(`🌎 🠈 [${response.message.statusCode}] ${response.message.statusMessage}`);
-    if (response.message.statusCode === 401) {
-      throw new Error(`No access token has been provided to access '${url}'`);
-    }
-    if (response.message.statusCode === 403) {
-      throw new Error(`The access token provided does not have permissions to access '${url}'`);
-    }
-    if (response.message.statusCode < 200 || response.message.statusCode > 299) {
-      throw new Error(`Request to '${url}' failed: ${response.message.statusCode} ${response.message.statusMessage}`);
-    }
     try {
-      const responseBodyJson = JSON.parse(await response.readBody());
-      if (responseBodyJson?.errorCode !== undefined && responseBodyJson?.message) {
-        // .NET API error response
-        throw new Error(responseBodyJson.message);
+      if (response.message.statusCode === 401) {
+        throw new Error(`No access token has been provided to access '${url}'`);
       }
-
-      return responseBodyJson;
+      if (response.message.statusCode === 403) {
+        throw new Error(`The access token provided does not have permissions to access '${url}'`);
+      }
+      if (response.message.statusCode < 200 || response.message.statusCode > 299) {
+        throw new Error(`Request to '${url}' failed: ${response.message.statusCode} ${response.message.statusMessage}`);
+      }
+      return JSON.parse(body);
     } catch (e) {
-      // JSON parsing failed, log the error and return undefined
-      console.debug(response.message);
-      throw new Error(`Failed to parse response body as JSON: ${e}`);
+      if (body) {
+        console.debug(body);
+      }
+      throw e;
     }
   }
 }
