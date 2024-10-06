@@ -523,6 +523,56 @@ export class AzureDevOpsWebApiClient {
     }
   }
 
+  /**
+   * Get project properties
+   * @param projectId
+   * @param valueBuilder
+   * @returns
+   */
+  public async getProjectProperties(projectId: string): Promise<Record<string, string> | undefined> {
+    try {
+      const core = await this.connection.getCoreApi();
+      const properties = await core.getProjectProperties(projectId);
+      return properties?.map((p) => ({ [p.name]: p.value }))?.reduce((a, b) => ({ ...a, ...b }), {});
+    } catch (e) {
+      error(`Failed to get project properties: ${e}`);
+      console.debug(e); // Dump the error stack trace to help with debugging
+      return undefined;
+    }
+  }
+
+  /**
+   * Update a project property
+   * @param project
+   * @param name
+   * @param valueBuilder
+   * @returns
+   */
+  public async updateProjectProperty(
+    projectId: string,
+    name: string,
+    valueBuilder: (existingValue: string) => string,
+  ): Promise<void> {
+    try {
+      // Get the existing project property value
+      const core = await this.connection.getCoreApi();
+      const properties = await core.getProjectProperties(projectId);
+      const propertyValue = properties?.find((p) => p.name === name)?.value;
+
+      // Update the project property
+      await core.setProjectProperties(undefined, projectId, [
+        {
+          op: 'add',
+          path: '/' + name,
+          value: valueBuilder(propertyValue || ''),
+        },
+      ]);
+    } catch (e) {
+      error(`Failed to update project property '${name}': ${e}`);
+      console.debug(e); // Dump the error stack trace to help with debugging
+    }
+  }
+
   private async restApiGet(
     url: string,
     params?: Record<string, string>,
