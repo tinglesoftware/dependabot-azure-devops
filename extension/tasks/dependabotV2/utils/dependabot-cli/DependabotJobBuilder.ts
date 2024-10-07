@@ -1,4 +1,3 @@
-import { warning } from 'azure-pipelines-task-lib';
 import {
   IDependabotAllowCondition,
   IDependabotGroup,
@@ -6,6 +5,7 @@ import {
   IDependabotUpdate,
 } from '../dependabot/interfaces/IDependabotConfig';
 import { ISharedVariables } from '../getSharedVariables';
+import { ISecurityAdvisory } from '../github/getSecurityAdvisories';
 import { IDependabotUpdateOperation } from './interfaces/IDependabotUpdateOperation';
 
 /**
@@ -13,12 +13,40 @@ import { IDependabotUpdateOperation } from './interfaces/IDependabotUpdateOperat
  */
 export class DependabotJobBuilder {
   /**
+   * Create a dependabot update job that updates nothing, but will discover the dependency list for a package ecyosystem
+   * @param taskInputs
+   * @param update
+   * @param registries
+   * @returns
+   */
+  public static newDiscoverDependencyListJob(
+    taskInputs: ISharedVariables,
+    id: string,
+    update: IDependabotUpdate,
+    registries: Record<string, IDependabotRegistry>,
+  ): IDependabotUpdateOperation {
+    return {
+      config: update,
+      job: {
+        'id': `discover-${id}-${update['package-ecosystem']}-dependency-list`,
+        'package-manager': update['package-ecosystem'],
+        'ignore-conditions': [{ 'dependency-name': '*' }],
+        'source': mapSourceFromDependabotConfigToJobConfig(taskInputs, update),
+        'experiments': taskInputs.experiments,
+        'debug': taskInputs.debug,
+      },
+      credentials: mapRegistryCredentialsFromDependabotConfigToJobConfig(taskInputs, registries),
+    };
+  }
+
+  /**
    * Create a dependabot update job that updates all dependencies for a package ecyosystem
    * @param taskInputs
    * @param update
    * @param registries
-   * @param dependencyList
+   * @param dependencyNamesToUpdate
    * @param existingPullRequests
+   * @param securityAdvisories
    * @returns
    */
   public static newUpdateAllJob(
@@ -26,12 +54,12 @@ export class DependabotJobBuilder {
     id: string,
     update: IDependabotUpdate,
     registries: Record<string, IDependabotRegistry>,
-    dependencyList: any[],
-    existingPullRequests: any[],
+    dependencyNamesToUpdate?: string[],
+    existingPullRequests?: any[],
+    securityAdvisories?: ISecurityAdvisory[],
   ): IDependabotUpdateOperation {
     const packageEcosystem = update['package-ecosystem'];
     const securityUpdatesOnly = update['open-pull-requests-limit'] == 0;
-    const updateDependencyNames = securityUpdatesOnly ? mapDependenciesForSecurityUpdate(dependencyList) : undefined;
     return buildUpdateJobConfig(
       `update-${id}-${packageEcosystem}-${securityUpdatesOnly ? 'security-only' : 'all'}`,
       taskInputs,
@@ -39,8 +67,11 @@ export class DependabotJobBuilder {
       registries,
       false,
       undefined,
-      updateDependencyNames,
+      securityUpdatesOnly
+        ? dependencyNamesToUpdate?.filter((d) => securityAdvisories?.find((a) => a['dependency-name'] == d))
+        : dependencyNamesToUpdate,
       existingPullRequests,
+      securityAdvisories,
     );
   }
 
@@ -62,7 +93,7 @@ export class DependabotJobBuilder {
     pullRequestToUpdate: any,
   ): IDependabotUpdateOperation {
     const dependencyGroupName = pullRequestToUpdate['dependency-group-name'];
-    const dependencies = (dependencyGroupName ? pullRequestToUpdate['dependencies'] : pullRequestToUpdate)?.map(
+    const dependencyNames = (dependencyGroupName ? pullRequestToUpdate['dependencies'] : pullRequestToUpdate)?.map(
       (d) => d['dependency-name'],
     );
     return buildUpdateJobConfig(
@@ -72,7 +103,7 @@ export class DependabotJobBuilder {
       registries,
       true,
       dependencyGroupName,
-      dependencies,
+      dependencyNames,
       existingPullRequests,
     );
   }
@@ -83,38 +114,29 @@ function buildUpdateJobConfig(
   taskInputs: ISharedVariables,
   update: IDependabotUpdate,
   registries: Record<string, IDependabotRegistry>,
-  updatingPullRequest: boolean,
-  updateDependencyGroupName: string | undefined,
-  updateDependencyNames: string[] | undefined,
-  existingPullRequests: any[],
+  updatingPullRequest?: boolean | undefined,
+  updateDependencyGroupName?: string | undefined,
+  updateDependencyNames?: string[] | undefined,
+  existingPullRequests?: any[],
+  securityAdvisories?: ISecurityAdvisory[],
 ) {
-  const hasMultipleDirectories = update.directories?.length > 1;
   return {
     config: update,
     job: {
       'id': id,
       'package-manager': update['package-ecosystem'],
       'update-subdependencies': true, // TODO: add config for this?
-      'updating-a-pull-request': updatingPullRequest,
+      'updating-a-pull-request': updatingPullRequest || false,
       'dependency-group-to-refresh': updateDependencyGroupName,
       'dependency-groups': mapGroupsFromDependabotConfigToJobConfig(update.groups),
       'dependencies': updateDependencyNames,
       'allowed-updates': mapAllowedUpdatesFromDependabotConfigToJobConfig(update.allow),
       'ignore-conditions': mapIgnoreConditionsFromDependabotConfigToJobConfig(update.ignore),
       'security-updates-only': update['open-pull-requests-limit'] == 0,
-      'security-advisories': [], // TODO: add config for this!
-      'source': {
-        'provider': 'azure',
-        'api-endpoint': taskInputs.apiEndpointUrl,
-        'hostname': taskInputs.hostname,
-        'repo': `${taskInputs.organization}/${taskInputs.project}/_git/${taskInputs.repository}`,
-        'branch': update['target-branch'],
-        'commit': undefined, // use latest commit of target branch
-        'directory': hasMultipleDirectories ? undefined : update.directory || '/',
-        'directories': hasMultipleDirectories ? update.directories : undefined,
-      },
-      'existing-pull-requests': existingPullRequests.filter((pr) => !pr['dependency-group-name']),
-      'existing-group-pull-requests': existingPullRequests.filter((pr) => pr['dependency-group-name']),
+      'security-advisories': mapSecurityAdvisories(securityAdvisories),
+      'source': mapSourceFromDependabotConfigToJobConfig(taskInputs, update),
+      'existing-pull-requests': existingPullRequests?.filter((pr) => !pr['dependency-group-name']),
+      'existing-group-pull-requests': existingPullRequests?.filter((pr) => pr['dependency-group-name']),
       'commit-message-options':
         update['commit-message'] === undefined
           ? undefined
@@ -137,25 +159,18 @@ function buildUpdateJobConfig(
   };
 }
 
-function mapDependenciesForSecurityUpdate(dependencyList: any[]): string[] {
-  if (!dependencyList || dependencyList.length == 0) {
-    // This happens when no previous dependency list snapshot exists yet;
-    // TODO: Find a way to discover dependencies for a first-time security-only update (no existing dependency list snapshot).
-    //       It would be nice if we could use dependabot-cli for this (e.g. `dependabot --discover-only`), but this is not supported currently.
-    // TODO: Open a issue in dependabot-cli project, ask how we should handle this scenario.
-    warning(
-      'Security updates can only be performed if there is a previous dependency list snapshot available, but there is none as you have not completed a successful update job yet. ' +
-        'Dependabot does not currently support discovering vulnerable dependencies during security-only updates and it is likely that this update operation will fail.',
-    );
-
-    // Attempt to do a security update for "all dependencies"; it will probably fail this is not supported in dependabot-updater yet, but it is best we can do...
-    return [];
-  }
-
-  // Return only dependencies that are vulnerable, ignore the rest
-  const dependencyNames = dependencyList.map((dependency) => dependency['name']);
-  const dependencyVulnerabilities = {}; // TODO: getGitHubSecurityAdvisoriesForDependencies(dependencyNames);
-  return dependencyNames.filter((dependency) => dependencyVulnerabilities[dependency]?.length > 0);
+function mapSourceFromDependabotConfigToJobConfig(taskInputs: ISharedVariables, update: IDependabotUpdate): any {
+  const hasMultipleDirectories = update.directories?.length > 1;
+  return {
+    'provider': 'azure',
+    'api-endpoint': taskInputs.apiEndpointUrl,
+    'hostname': taskInputs.hostname,
+    'repo': `${taskInputs.organization}/${taskInputs.project}/_git/${taskInputs.repository}`,
+    'branch': update['target-branch'],
+    'commit': undefined, // use latest commit of target branch
+    'directory': hasMultipleDirectories ? undefined : update.directory || '/',
+    'directories': hasMultipleDirectories ? update.directories : undefined,
+  };
 }
 
 function mapGroupsFromDependabotConfigToJobConfig(dependencyGroups: Record<string, IDependabotGroup>): any[] {
@@ -202,6 +217,24 @@ function mapIgnoreConditionsFromDependabotConfigToJobConfig(ignoreConditions: ID
       'update-types': ignore['update-types'],
       //'updated-at': ignore["updated-at"], // TODO: This is missing from dependabot.ymal docs, but is used in the dependabot-core job model!?
       'version-requirement': (<string[]>ignore['versions'])?.join(', '), // TODO: Test this, not sure how this should be parsed...
+    };
+  });
+}
+
+function mapSecurityAdvisories(securityAdvisories: ISecurityAdvisory[]): any[] {
+  if (!securityAdvisories) {
+    return undefined;
+  }
+  return securityAdvisories.map((advisory) => {
+    return {
+      'dependency-name': advisory['dependency-name'],
+      'affected-versions': advisory['affected-versions'],
+      'patched-versions': advisory['patched-versions'],
+      'unaffected-versions': advisory['unaffected-versions'],
+      'title': advisory['title'],
+      'description': advisory['description'],
+      'source-name': advisory['source-name'],
+      'source-url': advisory['source-url'],
     };
   });
 }
