@@ -9,9 +9,13 @@ import {
 } from 'azure-devops-node-api/interfaces/GitInterfaces';
 import { error, warning } from 'azure-pipelines-task-lib/task';
 import { IHttpClientResponse } from 'typed-rest-client/Interfaces';
-import { IFileChange } from './interfaces/IFileChange';
-import { IPullRequest } from './interfaces/IPullRequest';
-import { IPullRequestProperties } from './interfaces/IPullRequestProperties';
+import {
+  IAbandonPullRequest,
+  IApprovePullRequest,
+  ICreatePullRequest,
+  IPullRequestProperties,
+  IUpdatePullRequest,
+} from './interfaces/IPullRequest';
 
 /**
  * Wrapper for DevOps WebApi client with helper methods for easier management of dependabot pull requests
@@ -129,7 +133,7 @@ export class AzureDevOpsWebApiClient {
               Object.keys(properties?.value || {}).map((key) => {
                 return {
                   name: key,
-                  value: properties[key]?.$value,
+                  value: properties.value[key]?.$value,
                 };
               }) || [],
           };
@@ -149,7 +153,7 @@ export class AzureDevOpsWebApiClient {
    * @param pr
    * @returns
    */
-  public async createPullRequest(pr: IPullRequest): Promise<number | null> {
+  public async createPullRequest(pr: ICreatePullRequest): Promise<number | null> {
     console.info(`Creating pull request '${pr.title}'...`);
     try {
       const userId = await this.getUserId();
@@ -303,68 +307,85 @@ export class AzureDevOpsWebApiClient {
   /**
    * Update a pull request.
    * Requires scope "Code (Read & Write)" (vso.code, vso.code_write).
-   * @param options
+   * @param pr
    * @returns
    */
-  public async updatePullRequest(options: {
-    project: string;
-    repository: string;
-    pullRequestId: number;
-    changes: IFileChange[];
-    skipIfDraft?: boolean;
-    skipIfCommitsFromAuthorsOtherThan?: string;
-    skipIfNotBehindTargetBranch?: boolean;
-  }): Promise<boolean> {
-    console.info(`Updating pull request #${options.pullRequestId}...`);
+  public async updatePullRequest(pr: IUpdatePullRequest): Promise<boolean> {
+    console.info(`Updating pull request #${pr.pullRequestId}...`);
     try {
       // Get the pull request details
       const pullRequest = await this.restApiGet(
-        `${this.organisationApiUrl}/${options.project}/_apis/git/repositories/${options.repository}/pullrequests/${options.pullRequestId}`,
+        `${this.organisationApiUrl}/${pr.project}/_apis/git/repositories/${pr.repository}/pullrequests/${pr.pullRequestId}`,
       );
       if (!pullRequest) {
-        throw new Error(`Pull request #${options.pullRequestId} not found`);
+        throw new Error(`Pull request #${pr.pullRequestId} not found`);
       }
 
       // Skip if the pull request is a draft
-      if (options.skipIfDraft && pullRequest.isDraft) {
+      if (pr.skipIfDraft && pullRequest.isDraft) {
         console.info(` - Skipping update as pull request is currently marked as a draft.`);
         return true;
       }
 
       // Skip if the pull request has been modified by another author
-      if (options.skipIfCommitsFromAuthorsOtherThan) {
+      if (pr.skipIfCommitsFromAuthorsOtherThan) {
         const commits = await this.restApiGet(
-          `${this.organisationApiUrl}/${options.project}/_apis/git/repositories/${options.repository}/pullrequests/${options.pullRequestId}/commits`,
+          `${this.organisationApiUrl}/${pr.project}/_apis/git/repositories/${pr.repository}/pullrequests/${pr.pullRequestId}/commits`,
         );
-        if (commits?.value?.some((c) => c.author?.email !== options.skipIfCommitsFromAuthorsOtherThan)) {
+        if (commits?.value?.some((c) => c.author?.email !== pr.skipIfCommitsFromAuthorsOtherThan)) {
           console.info(` - Skipping update as pull request has been modified by another user.`);
           return true;
         }
       }
 
+      // Get the branch stats to check if the source branch is behind the target branch
+      const stats = await this.restApiGet(
+        `${this.organisationApiUrl}/${pr.project}/_apis/git/repositories/${pr.repository}/stats/branches`,
+        {
+          name: normalizeBranchName(pullRequest.sourceRefName),
+        },
+      );
+      if (stats?.behindCount === undefined) {
+        throw new Error(`Failed to get branch stats for '${pullRequest.sourceRefName}'`);
+      }
+
       // Skip if the source branch is not behind the target branch
-      if (options.skipIfNotBehindTargetBranch) {
-        const stats = await this.restApiGet(
-          `${this.organisationApiUrl}/${options.project}/_apis/git/repositories/${options.repository}/stats/branches`,
-          {
-            name: normalizeBranchName(pullRequest.sourceRefName),
-          },
+      if (pr.skipIfNotBehindTargetBranch && stats.behindCount === 0) {
+        console.info(` - Skipping update as source branch is not behind target branch.`);
+        return true;
+      }
+
+      // Rebase the target branch into the source branch to reset the "behind" count
+      const sourceBranchName = normalizeBranchName(pullRequest.sourceRefName);
+      const targetBranchName = normalizeBranchName(pullRequest.targetRefName);
+      if (stats.behindCount > 0) {
+        console.info(
+          ` - Rebasing '${targetBranchName}' into '${sourceBranchName}' (${stats.behindCount} commit(s) behind)...`,
         );
-        if (stats?.behindCount === 0) {
-          console.info(` - Skipping update as source branch is not behind target branch.`);
-          return true;
+        const rebase = await this.restApiPost(
+          `${this.organisationApiUrl}/${pr.project}/_apis/git/repositories/${pr.repository}/refs`,
+          [
+            {
+              name: pullRequest.sourceRefName,
+              oldObjectId: pullRequest.lastMergeSourceCommit.commitId,
+              newObjectId: pr.commit,
+            },
+          ],
+        );
+        if (rebase?.value?.[0]?.success !== true) {
+          throw new Error('Failed to rebase the target branch into the source branch');
         }
       }
 
-      // Push changes to the source branch
-      console.info(` - Pushing ${options.changes.length} file change(s) branch '${pullRequest.sourceRefName}'...`);
+      // Push all file changes to the source branch
+      console.info(` - Pushing ${pr.changes.length} file change(s) to branch '${pullRequest.sourceRefName}'...`);
       const push = await this.restApiPost(
-        `${this.organisationApiUrl}/${options.project}/_apis/git/repositories/${options.repository}/pushes`,
+        `${this.organisationApiUrl}/${pr.project}/_apis/git/repositories/${pr.repository}/pushes`,
         {
           refUpdates: [
             {
               name: pullRequest.sourceRefName,
-              oldObjectId: pullRequest.lastMergeSourceCommit.commitId,
+              oldObjectId: pr.commit,
             },
           ],
           commits: [
@@ -372,8 +393,9 @@ export class AzureDevOpsWebApiClient {
               comment:
                 pullRequest.mergeStatus === PullRequestAsyncStatus.Conflicts
                   ? 'Resolve merge conflicts'
-                  : 'Update dependency files',
-              changes: options.changes.map((change) => {
+                  : `Rebase with '${targetBranchName}'`,
+              author: pr.author,
+              changes: pr.changes.map((change) => {
                 return {
                   changeType: change.changeType,
                   item: {
@@ -406,24 +428,20 @@ export class AzureDevOpsWebApiClient {
   /**
    * Approve a pull request.
    * Requires scope "Code (Write)" (vso.code_write).
-   * @param options
+   * @param pr
    * @returns
    */
-  public async approvePullRequest(options: {
-    project: string;
-    repository: string;
-    pullRequestId: number;
-  }): Promise<boolean> {
-    console.info(`Approving pull request #${options.pullRequestId}...`);
+  public async approvePullRequest(pr: IApprovePullRequest): Promise<boolean> {
+    console.info(`Approving pull request #${pr.pullRequestId}...`);
     try {
       // Approve the pull request
-      console.info(` - Creating reviewer vote on pull request...`);
+      console.info(` - Updating reviewer vote on pull request...`);
       const userId = await this.getUserId();
       const userVote = await this.restApiPut(
-        `${this.organisationApiUrl}/${options.project}/_apis/git/repositories/${options.repository}/pullrequests/${options.pullRequestId}/reviewers/${userId}`,
+        `${this.organisationApiUrl}/${pr.project}/_apis/git/repositories/${pr.repository}/pullrequests/${pr.pullRequestId}/reviewers/${userId}`,
         {
           vote: 10, // 10 - approved 5 - approved with suggestions 0 - no vote -5 - waiting for author -10 - rejected
-          isReapprove: true,
+          isReapprove: false, // don't re-approve if already approved
         },
       );
       if (userVote?.vote != 10) {
@@ -439,27 +457,21 @@ export class AzureDevOpsWebApiClient {
   }
 
   /**
-   * Close a pull request.
+   * Abandon a pull request.
    * Requires scope "Code (Write)" (vso.code_write).
-   * @param options
+   * @param pr
    * @returns
    */
-  public async closePullRequest(options: {
-    project: string;
-    repository: string;
-    pullRequestId: number;
-    comment: string;
-    deleteSourceBranch: boolean;
-  }): Promise<boolean> {
-    console.info(`Closing pull request #${options.pullRequestId}...`);
+  public async abandonPullRequest(pr: IAbandonPullRequest): Promise<boolean> {
+    console.info(`Abandoning pull request #${pr.pullRequestId}...`);
     try {
       const userId = await this.getUserId();
 
       // Add a comment to the pull request, if supplied
-      if (options.comment) {
+      if (pr.comment) {
         console.info(` - Adding abandonment reason comment to pull request...`);
         const thread = await this.restApiPost(
-          `${this.organisationApiUrl}/${options.project}/_apis/git/repositories/${options.repository}/pullrequests/${options.pullRequestId}/threads`,
+          `${this.organisationApiUrl}/${pr.project}/_apis/git/repositories/${pr.repository}/pullrequests/${pr.pullRequestId}/threads`,
           {
             status: CommentThreadStatus.Closed,
             comments: [
@@ -467,7 +479,7 @@ export class AzureDevOpsWebApiClient {
                 author: {
                   id: userId,
                 },
-                content: options.comment,
+                content: pr.comment,
                 commentType: CommentType.System,
               },
             ],
@@ -478,10 +490,10 @@ export class AzureDevOpsWebApiClient {
         }
       }
 
-      // Close the pull request
+      // Abandon the pull request
       console.info(` - Abandoning pull request...`);
       const abandonedPullRequest = await this.restApiPatch(
-        `${this.organisationApiUrl}/${options.project}/_apis/git/repositories/${options.repository}/pullrequests/${options.pullRequestId}`,
+        `${this.organisationApiUrl}/${pr.project}/_apis/git/repositories/${pr.repository}/pullrequests/${pr.pullRequestId}`,
         {
           status: PullRequestStatus.Abandoned,
           closedBy: {
@@ -490,14 +502,14 @@ export class AzureDevOpsWebApiClient {
         },
       );
       if (abandonedPullRequest?.status !== PullRequestStatus.Abandoned) {
-        throw new Error('Failed to close pull request, status was not updated');
+        throw new Error('Failed to abandon pull request, status was not updated');
       }
 
       // Delete the source branch if required
-      if (options.deleteSourceBranch) {
+      if (pr.deleteSourceBranch) {
         console.info(` - Deleting source branch...`);
         await this.restApiPost(
-          `${this.organisationApiUrl}/${options.project}/_apis/git/repositories/${options.repository}/refs`,
+          `${this.organisationApiUrl}/${pr.project}/_apis/git/repositories/${pr.repository}/refs`,
           {
             name: abandonedPullRequest.sourceRefName,
             oldObjectId: abandonedPullRequest.lastMergeSourceCommit.commitId,
@@ -507,10 +519,10 @@ export class AzureDevOpsWebApiClient {
         );
       }
 
-      console.info(` - Pull request was closed successfully.`);
+      console.info(` - Pull request was abandoned successfully.`);
       return true;
     } catch (e) {
-      error(`Failed to close pull request: ${e}`);
+      error(`Failed to abandon pull request: ${e}`);
       console.debug(e); // Dump the error stack trace to help with debugging
       return false;
     }
@@ -632,12 +644,6 @@ export class AzureDevOpsWebApiClient {
     const body = await response.readBody();
     console.debug(`🌎 🠈 [${response.message.statusCode}] ${response.message.statusMessage}`);
     try {
-      if (response.message.statusCode === 401) {
-        throw new Error(`No access token has been provided to access '${url}'`);
-      }
-      if (response.message.statusCode === 403) {
-        throw new Error(`The access token provided does not have permissions to access '${url}'`);
-      }
       if (response.message.statusCode < 200 || response.message.statusCode > 299) {
         throw new Error(`Request to '${url}' failed: ${response.message.statusCode} ${response.message.statusMessage}`);
       }
