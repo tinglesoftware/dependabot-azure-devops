@@ -272,7 +272,7 @@ GEM
       http-cookie (>= 1.0.2, < 2.0)
       mime-types (>= 1.16, < 4.0)
       netrc (~> 0.8)
-    rexml (3.3.7)
+    rexml (3.3.8)
     rspec (3.13.0)
       rspec-core (~> 3.13.0)
       rspec-expectations (~> 3.13.0)
@@ -352,7 +352,7 @@ GEM
     unicode-display_width (2.6.0)
     vcr (6.3.1)
       base64
-    webmock (3.23.1)
+    webmock (3.24.0)
       addressable (>= 2.8.0)
       crack (>= 0.3.2)
       hashdiff (>= 0.4.0, < 2.0.0)
@@ -402,7 +402,7 @@ DEPENDENCIES
   terminal-table (~> 3.0.2)
   turbo_tests (~> 2.2.0)
   vcr (~> 6.3)
-  webmock (~> 3.18)
+  webmock (~> 3.24)
   webrick (>= 1.7)
 
 BUNDLED WITH
