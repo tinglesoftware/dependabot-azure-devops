@@ -501,22 +501,27 @@ export class AzureDevOpsWebApiClient {
           },
         },
       );
-      if (abandonedPullRequest?.status !== PullRequestStatus.Abandoned) {
+      if (abandonedPullRequest?.status?.toLowerCase() !== 'abandoned') {
         throw new Error('Failed to abandon pull request, status was not updated');
       }
 
       // Delete the source branch if required
       if (pr.deleteSourceBranch) {
         console.info(` - Deleting source branch...`);
-        await this.restApiPost(
+        const deletedBranch = await this.restApiPost(
           `${this.organisationApiUrl}/${pr.project}/_apis/git/repositories/${pr.repository}/refs`,
-          {
-            name: abandonedPullRequest.sourceRefName,
-            oldObjectId: abandonedPullRequest.lastMergeSourceCommit.commitId,
-            newObjectId: '0000000000000000000000000000000000000000',
-            isLocked: false,
-          },
+          [
+            {
+              name: abandonedPullRequest.sourceRefName,
+              oldObjectId: abandonedPullRequest.lastMergeSourceCommit.commitId,
+              newObjectId: '0000000000000000000000000000000000000000',
+              isLocked: false,
+            },
+          ],
         );
+        if (deletedBranch?.value?.[0]?.success !== true) {
+          throw new Error('Failed to delete the source branch');
+        }
       }
 
       console.info(` - Pull request was abandoned successfully.`);
