@@ -326,7 +326,7 @@ export function parsePullRequestProperties(
 
 function getSourceBranchNameForUpdate(update: IDependabotUpdate, targetBranch: string, dependencies: any): string {
   const prefix = 'dependabot'; // TODO: Add config for this? Task V1 supported this via DEPENDABOT_BRANCH_NAME_PREFIX
-  const separator = update['pull-request-branch-name'].separator || '/';
+  const separator = update['pull-request-branch-name']?.separator || '/';
   const packageEcosystem = update['package-ecosystem'];
   const targetBranchName = targetBranch?.replace(/^\/+|\/+$/g, ''); // strip leading/trailing slashes
   if (dependencies['dependency-group-name']) {
