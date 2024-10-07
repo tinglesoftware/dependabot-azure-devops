@@ -2,9 +2,20 @@ import { GitPullRequestMergeStrategy } from 'azure-devops-node-api/interfaces/Gi
 import { IFileChange } from './IFileChange';
 
 /**
- * Pull request creation
+ * Pull request properties
  */
-export interface IPullRequest {
+export interface IPullRequestProperties {
+  id: number;
+  properties?: {
+    name: string;
+    value: string;
+  }[];
+}
+
+/**
+ * Pull request creation request
+ */
+export interface ICreatePullRequest {
   project: string;
   repository: string;
   source: {
@@ -34,4 +45,42 @@ export interface IPullRequest {
     name: string;
     value: string;
   }[];
+}
+
+/**
+ * Pull request update request
+ */
+export interface IUpdatePullRequest {
+  project: string;
+  repository: string;
+  pullRequestId: number;
+  commit?: string;
+  author?: {
+    email: string;
+    name: string;
+  };
+  changes: IFileChange[];
+  skipIfDraft?: boolean;
+  skipIfCommitsFromAuthorsOtherThan?: string;
+  skipIfNotBehindTargetBranch?: boolean;
+}
+
+/**
+ * Pull request approval request
+ */
+export interface IApprovePullRequest {
+  project: string;
+  repository: string;
+  pullRequestId: number;
+}
+
+/**
+ * Pull request abandon request
+ */
+export interface IAbandonPullRequest {
+  project: string;
+  repository: string;
+  pullRequestId: number;
+  comment: string;
+  deleteSourceBranch: boolean;
 }

@@ -105,5 +105,6 @@ Dependabot uses Docker containers, which may take time to install if not already
 - [Configuring private feeds and registries](https://github.com/tinglesoftware/dependabot-azure-devops/#configuring-private-feeds-and-registries)
 - [Configuring security advisories and known vulnerabilities](https://github.com/tinglesoftware/dependabot-azure-devops/#configuring-security-advisories-and-known-vulnerabilities)
 - [Configuring experiments](https://github.com/tinglesoftware/dependabot-azure-devops/#configuring-experiments)
+- [Configuring assignees and reviewers](https://github.com/tinglesoftware/dependabot-azure-devops/#configuring-assignees-and-reviewers)
 - [Unsupported features and configurations](https://github.com/tinglesoftware/dependabot-azure-devops/#unsupported-features-and-configurations)
 - [Task migration guide for V1 → V2](https://github.com/tinglesoftware/dependabot-azure-devops/blob/main/docs/migrations/v1-to-v2.md)
