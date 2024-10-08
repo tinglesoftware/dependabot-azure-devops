@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as os from 'os';
 import * as path from 'path';
+import { endgroup, group, section } from '../azure-devops/formattingCommands';
 import { IDependabotUpdateJobConfig } from './interfaces/IDependabotUpdateJobConfig';
 import { IDependabotUpdateOperation } from './interfaces/IDependabotUpdateOperation';
 import { IDependabotUpdateOperationResult } from './interfaces/IDependabotUpdateOperationResult';
@@ -48,7 +49,7 @@ export class DependabotCli {
     },
   ): Promise<IDependabotUpdateOperationResult[] | undefined> {
     try {
-      command('group', undefined, `Dependabot update job '${operation.job.id}'`);
+      group(`Dependabot update job '${operation.job.id}'`);
 
       // Find the dependabot tool path, or install it if missing
       const dependabotPath = await this.getDependabotToolPath();
@@ -85,7 +86,7 @@ export class DependabotCli {
 
       // Run dependabot update
       if (!fs.existsSync(jobOutputPath) || fs.statSync(jobOutputPath)?.size == 0) {
-        command('section', undefined, `Processing Dependabot update job '${jobInputPath}'`);
+        section(`Processing Dependabot update job '${jobInputPath}'`);
         const dependabotTool = tool(dependabotPath).arg(dependabotArguments);
         const dependabotResultCode = await dependabotTool.execAsync({
           failOnStdErr: false,
@@ -104,7 +105,7 @@ export class DependabotCli {
       // If flamegraph is enabled, upload the report to the pipeline timeline so the use can download it
       const flamegraphPath = path.join(process.cwd(), 'flamegraph.html');
       if (options?.flamegraph && fs.existsSync(flamegraphPath)) {
-        command('section', undefined, `Processing Dependabot flame graph report`);
+        section(`Processing Dependabot flame graph report`);
         const jobFlamegraphPath = path.join(process.cwd(), `dependabot-${operation.job.id}-flamegraph.html`);
         fs.renameSync(flamegraphPath, jobFlamegraphPath);
         command('task.uploadfile', {}, jobFlamegraphPath);
@@ -115,7 +116,7 @@ export class DependabotCli {
       if (fs.existsSync(jobOutputPath)) {
         const jobOutputs = readJobScenarioOutputFile(jobOutputPath);
         if (jobOutputs?.length > 0) {
-          command('section', undefined, `Processing Dependabot job outputs '${jobOutputPath}'`);
+          section(`Processing Dependabot job outputs '${jobOutputPath}'`);
           for (const output of jobOutputs) {
             // Documentation on the scenario model can be found here:
             // https://github.com/dependabot/cli/blob/main/internal/model/scenario.go
@@ -143,7 +144,7 @@ export class DependabotCli {
 
       return operationResults.length > 0 ? operationResults : undefined;
     } finally {
-      command('endgroup', undefined, undefined);
+      endgroup();
     }
   }
 
@@ -159,7 +160,7 @@ export class DependabotCli {
     }
 
     debug('Dependabot CLI install was not found, installing now with `go install dependabot`...');
-    command('section', undefined, 'Installing Dependabot CLI');
+    section('Installing Dependabot CLI');
     const goTool: ToolRunner = tool(which('go', true));
     goTool.arg(['install', this.toolImage]);
     await goTool.execAsync();
