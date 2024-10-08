@@ -1,4 +1,4 @@
-import { debug, error, setResult, TaskResult, warning, which } from 'azure-pipelines-task-lib/task';
+import { debug, error, setResult, setSecret, TaskResult, warning, which } from 'azure-pipelines-task-lib/task';
 import { AzureDevOpsWebApiClient } from './utils/azure-devops/AzureDevOpsWebApiClient';
 import { DependabotCli } from './utils/dependabot-cli/DependabotCli';
 import { DependabotJobBuilder } from './utils/dependabot-cli/DependabotJobBuilder';
@@ -26,6 +26,24 @@ async function run() {
     if (!taskInputs) {
       throw new Error('Failed to parse task input configuration');
     }
+
+    // Mask environment, organisation, and project specific variables from the logs.
+    // Most user's environments are private and they're less likely to share diagnostic info when it exposes information about their environment or organisation.
+    // Although not exhaustive, this will mask the most common information that could be used to identify the user's environment.
+    setSecrets(
+      taskInputs.hostname,
+      taskInputs.virtualDirectory,
+      taskInputs.organization,
+      taskInputs.projectId,
+      taskInputs.project,
+      taskInputs.repository,
+      taskInputs.githubAccessToken,
+      taskInputs.systemAccessUser,
+      taskInputs.systemAccessToken,
+      taskInputs.authorEmail,
+      taskInputs.authorName,
+      taskInputs.autoApproveUserToken,
+    );
 
     // Parse dependabot.yaml configuration file
     const dependabotConfig = await parseDependabotConfigFile(taskInputs);
@@ -151,6 +169,15 @@ async function run() {
     exception(e);
   } finally {
     dependabot?.cleanup();
+  }
+}
+
+function setSecrets(...args: any[]) {
+  for (const arg of args) {
+    const secretParts = arg.split(' ');
+    for (const secret of secretParts) {
+      setSecret(secret);
+    }
   }
 }
 
