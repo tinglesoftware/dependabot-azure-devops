@@ -174,7 +174,7 @@ async function run() {
 
 function setSecrets(...args: any[]) {
   for (const arg of args) {
-    const secretParts = arg.split(' ');
+    const secretParts = arg?.split(' ') || [];
     for (const secret of secretParts) {
       setSecret(secret);
     }
