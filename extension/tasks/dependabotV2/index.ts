@@ -94,28 +94,22 @@ async function run() {
       // that need updating and check each one for security advisories. This is because Dependabot requires the list of vulnerable dependencies
       // to be supplied in the job definition of security-only update job, it will not automatically discover them like a versioned update does.
       // https://docs.github.com/en/code-security/dependabot/dependabot-security-updates/configuring-dependabot-security-updates#overriding-the-default-behavior-with-a-configuration-file
-      // TODO: If/when Dependabot supports a better way to do security-only updates, we should remove this code block.
       let securityAdvisories: ISecurityAdvisory[] = undefined;
       let dependencyNamesToUpdate: string[] = undefined;
       const securityUpdatesOnly = update['open-pull-requests-limit'] === 0;
       if (securityUpdatesOnly) {
+        // TODO: If and when Dependabot supports a better way to do security-only updates, we should remove this code block.
         warning(
-          'Security-only updates are not yet fully supported by Dependabot CLI. ' +
-            'The task will now attempt to discover the dependencies that need updating using an "ignore everything" update job, ' +
-            'then check the discovered dependencies for security advisories before finally performing the requested security-only update. ' +
-            'Because of this, the task may take longer to complete than usual.',
+          'Security-only updates are only partially supported by Dependabot CLI. For more info, see: https://github.com/tinglesoftware/dependabot-azure-devops/blob/main/docs/migrations/v1-to-v2.md#security-only-updates'
+        );
+        warning(
+          'To work around the limitations of Dependabot CLI, vulnerable dependencies will be discovered using an "ignore everything" regular update job. ' +
+            'After discovery has completed, security advisories for your dependencies will be checked before finally performing your requested security-only update job. ' +
+            'Because of these required extra steps, the task may take longer to complete than usual.',
         );
         const discoveredDependencyListOutputs = await dependabot.update(
           DependabotJobBuilder.newDiscoverDependencyListJob(taskInputs, updateId, update, dependabotConfig.registries),
           dependabotUpdaterOptions,
-        );
-        dependencyNamesToUpdate = discoveredDependencyListOutputs
-          ?.find((x) => x.output.type == 'update_dependency_list')
-          ?.output?.data?.dependencies?.map((d) => d.name);
-        securityAdvisories = await getSecurityAdvisories(
-          taskInputs.githubAccessToken,
-          packageEcosystem,
-          dependencyNamesToUpdate || [],
         );
       }
 
