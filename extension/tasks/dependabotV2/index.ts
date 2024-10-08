@@ -172,14 +172,16 @@ async function run() {
   }
 }
 
-function setSecrets(...args: any[]) {
-  for (const arg of args) {
-    const secretParts = arg?.split(' ') || [];
-    for (const secret of secretParts) {
-      if (secret !== 'dependabot') {
-        setSecret(secret);
-      }
-    }
+/**
+ * Masks the supplied values in the task log output.
+ * @param args
+ */
+function setSecrets(...args: string[]) {
+  for (const arg of args.filter((a) => a && a?.toLowerCase() !== 'dependabot')) {
+    // Mask the value and the uri encoded value. This is required to ensure that API and package feed url don't expose the value.
+    // e.g. "Contoso Ltd" would appear as "Contoso%20Ltd" unless the uri encoded value was set as a secret.
+    setSecret(arg);
+    setSecret(encodeURIComponent(arg));
   }
 }
 
