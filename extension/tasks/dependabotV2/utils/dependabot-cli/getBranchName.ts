@@ -35,17 +35,6 @@ export function getBranchNameForUpdate(
     branchName = `${dependencyNames}-${versionSuffix}`;
   }
 
-  sanitizeRef(
-    [
-      'dependabot',
-      packageEcosystem,
-      targetBranchName,
-      directory,
-      'org.junit:junit-bom-5.11.2'.replace(/[:\[\]]/g, '-'),
-    ],
-    separator || '/',
-  );
-
   // TODO: Add config for the branch prefix? Task V1 supported this via DEPENDABOT_BRANCH_NAME_PREFIX
   return sanitizeRef(['dependabot', packageEcosystem, targetBranchName, directory, branchName], separator || '/');
 }
