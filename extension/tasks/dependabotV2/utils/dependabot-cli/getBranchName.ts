@@ -54,6 +54,7 @@ function sanitizeRef(refParts: string[], separator): string {
       .replace(/[^A-Za-z0-9\/\-_.(){}]/g, '')
       // Slashes can't be followed by periods
       .replace(/\/\./g, '/dot-')
+      // Squeeze out consecutive periods and slashes
       .replace(/\.+/g, '.')
       .replace(/\/+/g, '/')
       // Trailing periods are forbidden

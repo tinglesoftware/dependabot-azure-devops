@@ -98,15 +98,13 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
 
         // Create a new pull request
         const changedFiles = getPullRequestChangedFilesForOutputData(data);
-        const directory =
-          update.config.directory || update.config.directories?.find((dir) => changedFiles[0]?.path?.startsWith(dir));
         const dependencies = getPullRequestDependenciesPropertyValueForOutputData(data);
         const targetBranch =
           update.config['target-branch'] || (await this.prAuthorClient.getDefaultBranch(project, repository));
         const sourceBranch = getBranchNameForUpdate(
           update.config['package-ecosystem'],
           targetBranch,
-          directory,
+          update.config.directory || update.config.directories?.find((dir) => changedFiles[0]?.path?.startsWith(dir)),
           dependencies['dependency-group-name'],
           dependencies['dependencies'] || dependencies,
           update.config['pull-request-branch-name']?.separator,
