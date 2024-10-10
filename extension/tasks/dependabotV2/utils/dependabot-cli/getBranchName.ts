@@ -18,7 +18,7 @@ export function getBranchNameForUpdate(
     // e.g. dependabot/nuget/main/microsoft-3b49c54d9e
     const dependencyDigest = crypto
       .createHash('md5')
-      .update(dependencies['dependencies'].map((d) => `${d['dependency-name']}-${d['dependency-version']}`).join(','))
+      .update(dependencies.map((d) => `${d['dependency-name']}-${d['dependency-version']}`).join(','))
       .digest('hex')
       .substring(0, 10);
     branchName = `${dependencyGroupName || 'multi'}-${dependencyDigest}`;
