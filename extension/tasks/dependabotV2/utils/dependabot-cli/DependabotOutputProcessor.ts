@@ -107,7 +107,8 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
           update.config['package-ecosystem'],
           targetBranch,
           directory,
-          dependencies,
+          dependencies['dependency-group-name'],
+          dependencies['dependencies'] || dependencies,
           update.config['pull-request-branch-name']?.separator,
         );
         const newPullRequestId = await this.prAuthorClient.createPullRequest({

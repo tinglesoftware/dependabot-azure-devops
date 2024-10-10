@@ -4,6 +4,7 @@ export function getBranchNameForUpdate(
   packageEcosystem: string,
   targetBranchName: string,
   directory: string,
+  dependencyGroupName: string,
   dependencies: any,
   separator?: string,
 ): string {
@@ -11,18 +12,16 @@ export function getBranchNameForUpdate(
   // https://github.com/dependabot/dependabot-core/blob/main/common/lib/dependabot/pull_request_creator/branch_namer/solo_strategy.rb
   // https://github.com/dependabot/dependabot-core/blob/main/common/lib/dependabot/pull_request_creator/branch_namer/dependency_group_strategy.rb
   let branchName: string;
-  const isGroupUpdate = dependencies['dependency-group-name'];
-  const branchNameMightBeTooLong = isGroupUpdate || dependencies.length > 1;
+  const branchNameMightBeTooLong = dependencyGroupName || dependencies.length > 1;
   if (branchNameMightBeTooLong) {
     // Group/multi dependency update
     // e.g. dependabot/nuget/main/microsoft-3b49c54d9e
-    const dependencyGroupName = dependencies['dependency-group-name'] || 'multi';
     const dependencyDigest = crypto
       .createHash('md5')
       .update(dependencies['dependencies'].map((d) => `${d['dependency-name']}-${d['dependency-version']}`).join(','))
       .digest('hex')
       .substring(0, 10);
-    branchName = `${dependencyGroupName}-${dependencyDigest}`;
+    branchName = `${dependencyGroupName || 'multi'}-${dependencyDigest}`;
   } else {
     // Single dependency update
     // e.g. dependabot/nuget/main/Microsoft.Extensions.Logging-1.0.0
@@ -39,7 +38,7 @@ export function getBranchNameForUpdate(
   return sanitizeRef(['dependabot', packageEcosystem, targetBranchName, directory, branchName], separator || '/');
 }
 
-function sanitizeRef(refParts: string[], seperator): string {
+function sanitizeRef(refParts: string[], separator): string {
   // Based on dependabot-core implementation:
   // https://github.com/dependabot/dependabot-core/blob/fc31ae64f492dc977cfe6773ab13fb6373aabec4/common/lib/dependabot/pull_request_creator/branch_namer/base.rb#L99
 
@@ -48,9 +47,9 @@ function sanitizeRef(refParts: string[], seperator): string {
   // bit stricter than git's, but that's for cosmetic reasons.
   return (
     refParts
-      // Join the parts with the seperator, ignore empty parts
+      // Join the parts with the separator, ignore empty parts
       .filter((p) => p?.trim()?.length > 0)
-      .join(seperator)
+      .join(separator)
       // Remove forbidden characters (those not already replaced elsewhere)
       .replace(/[^A-Za-z0-9\/\-_.(){}]/g, '')
       // Slashes can't be followed by periods
