@@ -25,10 +25,6 @@ Dependabot CLI requires [Go](https://go.dev/doc/install) (1.22+) and [Docker](ht
 If you use [Microsoft-hosted agents](https://learn.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=azure-devops&tabs=yaml#software), we recommend using the [ubuntu-latest](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md) image, which meets all task requirements.
 For self-hosted agents, you will need to install Go 1.22+.
 
-### Security-only updates and "fixed vulnerabilities" are not implemented (yet)
-Using configuration `open-pull-requests-limit: 0` will cause a "not implemented" error. This is [current limitation of V2](../../README.md#unsupported-features-and-configurations). A solution is still under development and is expected to be resolved before general availability.
-See: https://github.com/dependabot/cli/issues/360 for more technical details.
-
 ### Task Input `updaterOptions` has been renamed to `experiments`
 Renamed to match Dependabot Core/CLI terminology. The input value remains unchanged. See [configuring experiments](../../README.md#configuring-experiments) for more details.
 
