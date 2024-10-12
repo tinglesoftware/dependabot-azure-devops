@@ -9,7 +9,7 @@ import {
 import { IDependabotUpdate } from './utils/dependabot/interfaces/IDependabotConfig';
 import parseDependabotConfigFile from './utils/dependabot/parseConfigFile';
 import parseTaskInputConfiguration from './utils/getSharedVariables';
-import { getSecurityAdvisories, ISecurityAdvisory } from './utils/github/getSecurityAdvisories';
+import { ISecurityAdvisory } from './utils/github/getSecurityAdvisories';
 
 async function run() {
   let dependabot: DependabotCli = undefined;
@@ -100,7 +100,7 @@ async function run() {
       if (securityUpdatesOnly) {
         // TODO: If and when Dependabot supports a better way to do security-only updates, we should remove this code block.
         warning(
-          'Security-only updates are only partially supported by Dependabot CLI. For more info, see: https://github.com/tinglesoftware/dependabot-azure-devops/blob/main/docs/migrations/v1-to-v2.md#security-only-updates'
+          'Security-only updates are only partially supported by Dependabot CLI. For more info, see: https://github.com/tinglesoftware/dependabot-azure-devops/blob/main/docs/migrations/v1-to-v2.md#security-only-updates',
         );
         warning(
           'To work around the limitations of Dependabot CLI, vulnerable dependencies will be discovered using an "ignore everything" regular update job. ' +
