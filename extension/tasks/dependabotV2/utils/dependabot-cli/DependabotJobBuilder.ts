@@ -88,7 +88,6 @@ function buildUpdateJobConfig(
   updateDependencyNames: string[] | undefined,
   existingPullRequests: any[],
 ) {
-  const hasMultipleDirectories = update.directories?.length > 1;
   return {
     config: update,
     job: {
@@ -110,8 +109,8 @@ function buildUpdateJobConfig(
         'repo': `${taskInputs.organization}/${taskInputs.project}/_git/${taskInputs.repository}`,
         'branch': update['target-branch'],
         'commit': undefined, // use latest commit of target branch
-        'directory': hasMultipleDirectories ? undefined : update.directory || '/',
-        'directories': hasMultipleDirectories ? update.directories : undefined,
+        'directory': update.directory,
+        'directories': update.directories,
       },
       'existing-pull-requests': existingPullRequests.filter((pr) => !pr['dependency-group-name']),
       'existing-group-pull-requests': existingPullRequests.filter((pr) => pr['dependency-group-name']),
