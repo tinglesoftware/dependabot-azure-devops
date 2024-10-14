@@ -62,11 +62,15 @@ async function run() {
     );
 
     const dependabotUpdaterOptions = {
+      sourceProvider: 'azure',
+      sourceLocalPath: taskInputs.repositorySourcePath,
       azureDevOpsAccessToken: taskInputs.systemAccessToken,
       gitHubAccessToken: taskInputs.githubAccessToken,
       collectorImage: undefined, // TODO: Add config for this?
+      collectorConfigPath: undefined, // TODO: Add config for this?
       proxyImage: undefined, // TODO: Add config for this?
       updaterImage: undefined, // TODO: Add config for this?
+      timeoutDuration: undefined, // TODO: Add config for this?
       flamegraph: taskInputs.debug,
     };
 
