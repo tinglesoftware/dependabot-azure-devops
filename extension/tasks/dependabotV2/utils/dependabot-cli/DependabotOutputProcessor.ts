@@ -3,7 +3,7 @@ import { error, warning } from 'azure-pipelines-task-lib/task';
 import * as path from 'path';
 import { AzureDevOpsWebApiClient } from '../azure-devops/AzureDevOpsWebApiClient';
 import { IFileChange } from '../azure-devops/interfaces/IFileChange';
-import { IPullRequestProperties } from '../azure-devops/interfaces/IPullRequestProperties';
+import { IPullRequestProperties } from '../azure-devops/interfaces/IPullRequest';
 import { ISharedVariables } from '../getSharedVariables';
 import { getBranchNameForUpdate } from './getBranchName';
 import { IDependabotUpdateOperation } from './interfaces/IDependabotUpdateOperation';
@@ -60,8 +60,8 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
       case 'update_dependency_list':
         // Store the dependency list snapshot in project properties, if configured
         if (this.taskInputs.storeDependencyList) {
-          console.info(`Storing the dependency list snapshot for project '${project}'...`);
-          await this.prAuthorClient.updateProjectProperty(
+          console.info(`Updating the dependency list snapshot for project '${project}'...`);
+          return await this.prAuthorClient.updateProjectProperty(
             this.taskInputs.projectId,
             DependabotOutputProcessor.PROJECT_PROPERTY_NAME_DEPENDENCY_LIST,
             function (existingValue: string) {
@@ -76,7 +76,6 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
               return JSON.stringify(repoDependencyLists);
             },
           );
-          console.info(`Dependency list snapshot was updated for project '${project}'`);
         }
 
         return true;
@@ -187,10 +186,16 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
           project: project,
           repository: repository,
           pullRequestId: pullRequestToUpdate.id,
+          commit: data['base-commit-sha'] || update.job.source.commit,
+          author: {
+            email: this.taskInputs.authorEmail || DependabotOutputProcessor.PR_DEFAULT_AUTHOR_EMAIL,
+            name: this.taskInputs.authorName || DependabotOutputProcessor.PR_DEFAULT_AUTHOR_NAME,
+          },
           changes: getPullRequestChangedFilesForOutputData(data),
-          skipIfCommitsFromUsersOtherThan:
+          skipIfDraft: true,
+          skipIfCommitsFromAuthorsOtherThan:
             this.taskInputs.authorEmail || DependabotOutputProcessor.PR_DEFAULT_AUTHOR_EMAIL,
-          skipIfNoConflicts: true,
+          skipIfNotBehindTargetBranch: true,
         });
 
         // Re-approve the pull request, if required
@@ -226,7 +231,7 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
         //       How do we detect this? Do we need to?
 
         // Close the pull request
-        return await this.prAuthorClient.closePullRequest({
+        return await this.prAuthorClient.abandonPullRequest({
           project: project,
           repository: repository,
           pullRequestId: pullRequestToClose.id,
