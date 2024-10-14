@@ -40,11 +40,15 @@ export class DependabotCli {
   public async update(
     operation: IDependabotUpdateOperation,
     options?: {
+      sourceProvider?: string;
+      sourceLocalPath?: string;
       azureDevOpsAccessToken?: string;
       gitHubAccessToken?: string;
       collectorImage?: string;
+      collectorConfigPath?: string;
       proxyImage?: string;
       updaterImage?: string;
+      timeoutDurationMinutes?: number;
       flamegraph?: boolean;
     },
   ): Promise<IDependabotUpdateOperationResult[] | undefined> {
