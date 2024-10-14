@@ -67,6 +67,7 @@ export class DependabotJobBuilder {
       registries,
       false,
       undefined,
+      // TODO: To make this more accurate, we should be evaluating the dependency name AND version against the security advisories, but that requires a lot of complex dependabot-core logic to do correctly
       securityUpdatesOnly
         ? dependencyNamesToUpdate?.filter((d) => securityAdvisories?.find((a) => a['dependency-name'] == d))
         : dependencyNamesToUpdate,
@@ -160,7 +161,6 @@ function buildUpdateJobConfig(
 }
 
 function mapSourceFromDependabotConfigToJobConfig(taskInputs: ISharedVariables, update: IDependabotUpdate): any {
-  const hasMultipleDirectories = update.directories?.length > 1;
   return {
     'provider': 'azure',
     'api-endpoint': taskInputs.apiEndpointUrl,
@@ -168,8 +168,8 @@ function mapSourceFromDependabotConfigToJobConfig(taskInputs: ISharedVariables, 
     'repo': `${taskInputs.organization}/${taskInputs.project}/_git/${taskInputs.repository}`,
     'branch': update['target-branch'],
     'commit': undefined, // use latest commit of target branch
-    'directory': hasMultipleDirectories ? undefined : update.directory || '/',
-    'directories': hasMultipleDirectories ? update.directories : undefined,
+    'directory': update.directory,
+    'directories': update.directories,
   };
 }
 
@@ -231,6 +231,7 @@ function mapSecurityAdvisories(securityAdvisories: ISecurityAdvisory[]): any[] {
       'affected-versions': advisory['affected-versions'],
       'patched-versions': advisory['patched-versions'],
       'unaffected-versions': advisory['unaffected-versions'],
+      // TODO: These are not currently used by dependabot-core, but should be required so that dependabot can process "fixed vulnerabilities" correctly
       'title': advisory['title'],
       'description': advisory['description'],
       'source-name': advisory['source-name'],
