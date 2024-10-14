@@ -27,6 +27,8 @@ export interface ISharedVariables {
   repository: string;
   /** Whether the repository was overridden via input */
   repositoryOverridden: boolean;
+  /** Path to the local repository source. When specified, Dependabot will use this local repo rather than cloning it from the remote repo again */
+  repositorySourcePath?: string;
 
   /** Organisation API endpoint URL */
   apiEndpointUrl: string;
@@ -98,6 +100,10 @@ export default function getSharedVariables(): ISharedVariables {
   }
   repository = encodeURI(repository); // encode special characters like spaces
 
+  // If the repository name is NOT overridden, then use the already cloned repository source directory
+  // for the dependabot update operation. This will save time and bandwidth as we don't have to clone the repository again.
+  let repositorySourcePath = repositoryOverridden ? undefined : tl.getVariable('Build.SourcesDirectory');
+
   const virtualDirectorySuffix = virtualDirectory?.length > 0 ? `${virtualDirectory}/` : '';
   let apiEndpointUrl = `${protocol}://${hostname}:${port}/${virtualDirectorySuffix}`;
 
@@ -155,6 +161,7 @@ export default function getSharedVariables(): ISharedVariables {
     project,
     repository,
     repositoryOverridden,
+    repositorySourcePath,
 
     apiEndpointUrl,
 

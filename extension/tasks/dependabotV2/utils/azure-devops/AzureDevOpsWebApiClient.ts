@@ -562,7 +562,7 @@ export class AzureDevOpsWebApiClient {
     projectId: string,
     name: string,
     valueBuilder: (existingValue: string) => string,
-  ): Promise<void> {
+  ): Promise<boolean> {
     try {
       // Get the existing project property value
       const core = await this.connection.getCoreApi();
@@ -577,9 +577,90 @@ export class AzureDevOpsWebApiClient {
           value: valueBuilder(propertyValue || ''),
         },
       ]);
+
+      return true;
     } catch (e) {
       error(`Failed to update project property '${name}': ${e}`);
       console.debug(e); // Dump the error stack trace to help with debugging
+      return false;
+    }
+  }
+
+  private async restApiGet(
+    url: string,
+    params?: Record<string, string>,
+    apiVersion: string = AzureDevOpsWebApiClient.API_VERSION,
+  ): Promise<any | undefined> {
+    const queryString = Object.keys(params || {})
+      .map((key) => `${key}=${params[key]}`)
+      .join('&');
+    const fullUrl = `${url}?api-version=${apiVersion}${queryString ? `&${queryString}` : ''}`;
+    return await this.restApiRequest('GET', url, () =>
+      this.connection.rest.client.get(fullUrl, {
+        Accept: 'application/json',
+      }),
+    );
+  }
+
+  private async restApiPost(
+    url: string,
+    data?: any,
+    apiVersion: string = AzureDevOpsWebApiClient.API_VERSION,
+  ): Promise<any | undefined> {
+    const fullUrl = `${url}?api-version=${apiVersion}`;
+    return await this.restApiRequest('POST', url, () =>
+      this.connection.rest.client.post(fullUrl, JSON.stringify(data), {
+        'Content-Type': 'application/json',
+      }),
+    );
+  }
+
+  private async restApiPut(
+    url: string,
+    data?: any,
+    apiVersion: string = AzureDevOpsWebApiClient.API_VERSION,
+  ): Promise<any | undefined> {
+    const fullUrl = `${url}?api-version=${apiVersion}`;
+    return await this.restApiRequest('PUT', url, () =>
+      this.connection.rest.client.put(fullUrl, JSON.stringify(data), {
+        'Content-Type': 'application/json',
+      }),
+    );
+  }
+
+  private async restApiPatch(
+    url: string,
+    data?: any,
+    contentType?: string,
+    apiVersion: string = AzureDevOpsWebApiClient.API_VERSION,
+  ): Promise<any | undefined> {
+    const fullUrl = `${url}?api-version=${apiVersion}`;
+    return await this.restApiRequest('PATCH', url, () =>
+      this.connection.rest.client.patch(fullUrl, JSON.stringify(data), {
+        'Content-Type': contentType || 'application/json',
+      }),
+    );
+  }
+
+  private async restApiRequest(
+    method: string,
+    url: string,
+    request: () => Promise<IHttpClientResponse>,
+  ): Promise<any | undefined> {
+    console.debug(`🌎 🠊 [${method}] ${url}`);
+    const response = await request();
+    const body = await response.readBody();
+    console.debug(`🌎 🠈 [${response.message.statusCode}] ${response.message.statusMessage}`);
+    try {
+      if (response.message.statusCode < 200 || response.message.statusCode > 299) {
+        throw new Error(`Request to '${url}' failed: ${response.message.statusCode} ${response.message.statusMessage}`);
+      }
+      return JSON.parse(body);
+    } catch (e) {
+      if (body) {
+        console.debug(body);
+      }
+      throw e;
     }
   }
 
