@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as os from 'os';
 import * as path from 'path';
-import { group, section } from '../azure-devops/formattingCommands';
+import { endgroup, group, section } from '../azure-devops/formattingCommands';
 import { IDependabotUpdateJobConfig } from './interfaces/IDependabotUpdateJobConfig';
 import { IDependabotUpdateOperation } from './interfaces/IDependabotUpdateOperation';
 import { IDependabotUpdateOperationResult } from './interfaces/IDependabotUpdateOperationResult';

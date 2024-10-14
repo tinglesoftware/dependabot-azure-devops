@@ -1,5 +1,6 @@
-import { debug, error, setResult, setSecret, TaskResult, warning, which } from 'azure-pipelines-task-lib/task';
+import { debug, error, setResult, TaskResult, warning, which } from 'azure-pipelines-task-lib/task';
 import { AzureDevOpsWebApiClient } from './utils/azure-devops/AzureDevOpsWebApiClient';
+import { setSecrets } from './utils/azure-devops/formattingCommands';
 import { DependabotCli } from './utils/dependabot-cli/DependabotCli';
 import { DependabotJobBuilder } from './utils/dependabot-cli/DependabotJobBuilder';
 import {
@@ -174,19 +175,6 @@ async function run() {
     exception(e);
   } finally {
     dependabot?.cleanup();
-  }
-}
-
-/**
- * Masks the supplied values in the task log output.
- * @param args
- */
-function setSecrets(...args: string[]) {
-  for (const arg of args.filter((a) => a && a?.toLowerCase() !== 'dependabot')) {
-    // Mask the value and the uri encoded value. This is required to ensure that API and package feed url don't expose the value.
-    // e.g. "Contoso Ltd" would appear as "Contoso%20Ltd" unless the uri encoded value was set as a secret.
-    setSecret(arg);
-    setSecret(encodeURIComponent(arg));
   }
 }
 
