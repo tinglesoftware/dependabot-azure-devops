@@ -3,7 +3,7 @@ import { error, warning } from 'azure-pipelines-task-lib/task';
 import * as crypto from 'crypto';
 import * as path from 'path';
 import { AzureDevOpsWebApiClient } from '../azure-devops/AzureDevOpsWebApiClient';
-import { IPullRequestProperties } from '../azure-devops/interfaces/IPullRequestProperties';
+import { IPullRequestProperties } from '../azure-devops/interfaces/IPullRequest';
 import { IDependabotUpdate } from '../dependabot/interfaces/IDependabotConfig';
 import { ISharedVariables } from '../getSharedVariables';
 import { IDependabotUpdateOperation } from './interfaces/IDependabotUpdateOperation';
@@ -178,10 +178,16 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
           project: project,
           repository: repository,
           pullRequestId: pullRequestToUpdate.id,
+          commit: data['base-commit-sha'] || update.job.source.commit,
+          author: {
+            email: this.taskInputs.authorEmail || DependabotOutputProcessor.PR_DEFAULT_AUTHOR_EMAIL,
+            name: this.taskInputs.authorName || DependabotOutputProcessor.PR_DEFAULT_AUTHOR_NAME,
+          },
           changes: getPullRequestChangedFilesForOutputData(data),
-          skipIfCommitsFromUsersOtherThan:
+          skipIfDraft: true,
+          skipIfCommitsFromAuthorsOtherThan:
             this.taskInputs.authorEmail || DependabotOutputProcessor.PR_DEFAULT_AUTHOR_EMAIL,
-          skipIfNoConflicts: true,
+          skipIfNotBehindTargetBranch: true,
         });
 
         // Re-approve the pull request, if required
@@ -217,7 +223,7 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
         //       How do we detect this? Do we need to?
 
         // Close the pull request
-        return await this.prAuthorClient.closePullRequest({
+        return await this.prAuthorClient.abandonPullRequest({
           project: project,
           repository: repository,
           pullRequestId: pullRequestToClose.id,
@@ -319,7 +325,7 @@ export function parsePullRequestProperties(
 
 function getSourceBranchNameForUpdate(update: IDependabotUpdate, targetBranch: string, dependencies: any): string {
   const prefix = 'dependabot'; // TODO: Add config for this? Task V1 supported this via DEPENDABOT_BRANCH_NAME_PREFIX
-  const separator = update['pull-request-branch-name'].separator || '/';
+  const separator = update['pull-request-branch-name']?.separator || '/';
   const packageEcosystem = update['package-ecosystem'];
   const targetBranchName = targetBranch?.replace(/^\/+|\/+$/g, ''); // strip leading/trailing slashes
   if (dependencies['dependency-group-name']) {
