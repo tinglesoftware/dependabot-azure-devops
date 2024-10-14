@@ -72,14 +72,26 @@ export class DependabotCli {
     // See: https://github.com/dependabot/cli/blob/main/cmd/dependabot/internal/cmd/root.go
     //      https://github.com/dependabot/cli/blob/main/cmd/dependabot/internal/cmd/update.go
     let dependabotArguments = ['update', '--file', jobInputPath, '--output', jobOutputPath];
+    if (options?.sourceProvider) {
+      dependabotArguments.push('--provider', options.sourceProvider);
+    }
+    if (options?.sourceLocalPath && fs.existsSync(options.sourceLocalPath)) {
+      dependabotArguments.push('--local', options.sourceLocalPath);
+    }
     if (options?.collectorImage) {
       dependabotArguments.push('--collector-image', options.collectorImage);
+    }
+    if (options?.collectorConfigPath && fs.existsSync(options.collectorConfigPath)) {
+      dependabotArguments.push('--collector-config', options.collectorConfigPath);
     }
     if (options?.proxyImage) {
       dependabotArguments.push('--proxy-image', options.proxyImage);
     }
     if (options?.updaterImage) {
       dependabotArguments.push('--updater-image', options.updaterImage);
+    }
+    if (options?.timeoutDurationMinutes) {
+      dependabotArguments.push('--timeout', `${options.timeoutDurationMinutes}m`);
     }
     if (options?.flamegraph) {
       dependabotArguments.push('--flamegraph');
