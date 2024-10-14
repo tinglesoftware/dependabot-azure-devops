@@ -10,7 +10,7 @@ import { IDependabotUpdateOperationResult } from './utils/dependabot-cli/interfa
 import { IDependabotUpdate } from './utils/dependabot/interfaces/IDependabotConfig';
 import parseDependabotConfigFile from './utils/dependabot/parseConfigFile';
 import parseTaskInputConfiguration from './utils/getSharedVariables';
-import { ISecurityAdvisory } from './utils/github/getSecurityAdvisories';
+import { getSecurityAdvisories, ISecurityAdvisory } from './utils/github/getSecurityAdvisories';
 
 async function run() {
   let dependabot: DependabotCli = undefined;
@@ -32,6 +32,19 @@ async function run() {
     const dependabotConfig = await parseDependabotConfigFile(taskInputs);
     if (!dependabotConfig) {
       throw new Error('Failed to parse dependabot.yaml configuration file from the target repository');
+    }
+
+    // Print a warning about the required workarounds for security-only updates, if any update is configured as such
+    // TODO: If and when Dependabot supports a better way to do security-only updates, remove this.
+    if (dependabotConfig.updates?.some((u) => u['open-pull-requests-limit'] === 0)) {
+      warning(
+        'Security-only updates have a performance overhead due to limitations in Dependabot CLI. For more info, see: https://github.com/tinglesoftware/dependabot-azure-devops/blob/main/docs/migrations/v1-to-v2.md#security-only-updates',
+      );
+      warning(
+        'To work around the Dependabot CLI limitations, vulnerable dependencies will first be discovered using an "ignore everything" update job. ' +
+          'After discovery has completed, security advisories for the dependencies will be checked before finally performing the requested security-only update job. ' +
+          'Because of these required extra steps, the task will take longer to complete than usual due to the need to discover dependencies multiple times.',
+      );
     }
 
     // Initialise the DevOps API clients
@@ -103,18 +116,17 @@ async function run() {
       let dependencyNamesToUpdate: string[] = undefined;
       const securityUpdatesOnly = update['open-pull-requests-limit'] === 0;
       if (securityUpdatesOnly) {
-        // TODO: If and when Dependabot supports a better way to do security-only updates, we should remove this code block.
-        warning(
-          'Security-only updates are only partially supported by Dependabot CLI. For more info, see: https://github.com/tinglesoftware/dependabot-azure-devops/blob/main/docs/migrations/v1-to-v2.md#security-only-updates',
-        );
-        warning(
-          'To work around the limitations of Dependabot CLI, vulnerable dependencies will be discovered using an "ignore everything" regular update job. ' +
-            'After discovery has completed, security advisories for your dependencies will be checked before finally performing your requested security-only update job. ' +
-            'Because of these required extra steps, the task may take longer to complete than usual.',
-        );
         const discoveredDependencyListOutputs = await dependabot.update(
           DependabotJobBuilder.newDiscoverDependencyListJob(taskInputs, updateId, update, dependabotConfig.registries),
           dependabotUpdaterOptions,
+        );
+        dependencyNamesToUpdate = discoveredDependencyListOutputs
+          ?.find((x) => x.output.type == 'update_dependency_list')
+          ?.output?.data?.dependencies?.map((d) => d.name);
+        securityAdvisories = await getSecurityAdvisories(
+          taskInputs.githubAccessToken,
+          packageEcosystem,
+          dependencyNamesToUpdate || [],
         );
       }
 
