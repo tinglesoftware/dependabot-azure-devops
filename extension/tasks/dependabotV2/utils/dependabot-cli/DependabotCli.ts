@@ -52,116 +52,116 @@ export class DependabotCli {
       flamegraph?: boolean;
     },
   ): Promise<IDependabotUpdateOperationResult[] | undefined> {
-    //try {
-    group(`Job '${operation.job.id}'`);
+    try {
+      group(`Job '${operation.job.id}'`);
 
-    // Find the dependabot tool path, or install it if missing
-    const dependabotPath = await this.getDependabotToolPath();
+      // Find the dependabot tool path, or install it if missing
+      const dependabotPath = await this.getDependabotToolPath();
 
-    // Create the job directory
-    const jobId = operation.job.id;
-    const jobPath = path.join(this.jobsPath, jobId.toString());
-    const jobInputPath = path.join(jobPath, 'job.yaml');
-    const jobOutputPath = path.join(jobPath, 'scenario.yaml');
-    this.ensureJobsPathExists();
-    if (!fs.existsSync(jobPath)) {
-      fs.mkdirSync(jobPath);
-    }
-
-    // Compile dependabot cmd arguments
-    // See: https://github.com/dependabot/cli/blob/main/cmd/dependabot/internal/cmd/root.go
-    //      https://github.com/dependabot/cli/blob/main/cmd/dependabot/internal/cmd/update.go
-    let dependabotArguments = ['update', '--file', jobInputPath, '--output', jobOutputPath];
-    if (options?.sourceProvider) {
-      dependabotArguments.push('--provider', options.sourceProvider);
-    }
-    if (options?.sourceLocalPath && fs.existsSync(options.sourceLocalPath)) {
-      dependabotArguments.push('--local', options.sourceLocalPath);
-    }
-    if (options?.collectorImage) {
-      dependabotArguments.push('--collector-image', options.collectorImage);
-    }
-    if (options?.collectorConfigPath && fs.existsSync(options.collectorConfigPath)) {
-      dependabotArguments.push('--collector-config', options.collectorConfigPath);
-    }
-    if (options?.proxyImage) {
-      dependabotArguments.push('--proxy-image', options.proxyImage);
-    }
-    if (options?.updaterImage) {
-      dependabotArguments.push('--updater-image', options.updaterImage);
-    }
-    if (options?.timeoutDurationMinutes) {
-      dependabotArguments.push('--timeout', `${options.timeoutDurationMinutes}m`);
-    }
-    if (options?.flamegraph) {
-      dependabotArguments.push('--flamegraph');
-    }
-
-    // Generate the job input file
-    writeJobConfigFile(jobInputPath, operation);
-
-    // Run dependabot update
-    if (!fs.existsSync(jobOutputPath) || fs.statSync(jobOutputPath)?.size == 0) {
-      section(`Processing job from '${jobInputPath}'`);
-      const dependabotTool = tool(dependabotPath).arg(dependabotArguments);
-      const dependabotResultCode = await dependabotTool.execAsync({
-        failOnStdErr: false,
-        ignoreReturnCode: true,
-        env: {
-          DEPENDABOT_JOB_ID: jobId.replace(/-/g, '_'), // replace hyphens with underscores
-          LOCAL_GITHUB_ACCESS_TOKEN: options?.gitHubAccessToken, // avoid rate-limiting when pulling images from GitHub container registries
-          LOCAL_AZURE_ACCESS_TOKEN: options?.azureDevOpsAccessToken, // technically not needed since we already supply this in our 'git_source' registry, but included for consistency
-        },
-      });
-      if (dependabotResultCode != 0) {
-        error(`Dependabot failed with exit code ${dependabotResultCode}`);
+      // Create the job directory
+      const jobId = operation.job.id;
+      const jobPath = path.join(this.jobsPath, jobId.toString());
+      const jobInputPath = path.join(jobPath, 'job.yaml');
+      const jobOutputPath = path.join(jobPath, 'scenario.yaml');
+      this.ensureJobsPathExists();
+      if (!fs.existsSync(jobPath)) {
+        fs.mkdirSync(jobPath);
       }
-    }
 
-    // If flamegraph is enabled, upload the report to the pipeline timeline so the use can download it
-    const flamegraphPath = path.join(process.cwd(), 'flamegraph.html');
-    if (options?.flamegraph && fs.existsSync(flamegraphPath)) {
-      section(`Processing Dependabot flame graph report`);
-      const jobFlamegraphPath = path.join(process.cwd(), `dependabot-${operation.job.id}-flamegraph.html`);
-      fs.renameSync(flamegraphPath, jobFlamegraphPath);
-      command('task.uploadfile', {}, jobFlamegraphPath);
-    }
+      // Compile dependabot cmd arguments
+      // See: https://github.com/dependabot/cli/blob/main/cmd/dependabot/internal/cmd/root.go
+      //      https://github.com/dependabot/cli/blob/main/cmd/dependabot/internal/cmd/update.go
+      let dependabotArguments = ['update', '--file', jobInputPath, '--output', jobOutputPath];
+      if (options?.sourceProvider) {
+        dependabotArguments.push('--provider', options.sourceProvider);
+      }
+      if (options?.sourceLocalPath && fs.existsSync(options.sourceLocalPath)) {
+        dependabotArguments.push('--local', options.sourceLocalPath);
+      }
+      if (options?.collectorImage) {
+        dependabotArguments.push('--collector-image', options.collectorImage);
+      }
+      if (options?.collectorConfigPath && fs.existsSync(options.collectorConfigPath)) {
+        dependabotArguments.push('--collector-config', options.collectorConfigPath);
+      }
+      if (options?.proxyImage) {
+        dependabotArguments.push('--proxy-image', options.proxyImage);
+      }
+      if (options?.updaterImage) {
+        dependabotArguments.push('--updater-image', options.updaterImage);
+      }
+      if (options?.timeoutDurationMinutes) {
+        dependabotArguments.push('--timeout', `${options.timeoutDurationMinutes}m`);
+      }
+      if (options?.flamegraph) {
+        dependabotArguments.push('--flamegraph');
+      }
 
-    // Process the job output
-    const operationResults = Array<IDependabotUpdateOperationResult>();
-    if (fs.existsSync(jobOutputPath)) {
-      const jobOutputs = readJobScenarioOutputFile(jobOutputPath);
-      if (jobOutputs?.length > 0) {
-        section(`Processing job outputs from '${jobOutputPath}'`);
-        for (const output of jobOutputs) {
-          // Documentation on the scenario model can be found here:
-          // https://github.com/dependabot/cli/blob/main/internal/model/scenario.go
-          const type = output['type'];
-          const data = output['expect']?.['data'];
-          var operationResult = {
-            success: true,
-            error: null,
-            output: {
-              type: type,
-              data: data,
-            },
-          };
-          try {
-            operationResult.success = await this.outputProcessor.process(operation, type, data);
-          } catch (e) {
-            operationResult.success = false;
-            operationResult.error = e;
-          } finally {
-            operationResults.push(operationResult);
+      // Generate the job input file
+      writeJobConfigFile(jobInputPath, operation);
+
+      // Run dependabot update
+      if (!fs.existsSync(jobOutputPath) || fs.statSync(jobOutputPath)?.size == 0) {
+        section(`Processing job from '${jobInputPath}'`);
+        const dependabotTool = tool(dependabotPath).arg(dependabotArguments);
+        const dependabotResultCode = await dependabotTool.execAsync({
+          failOnStdErr: false,
+          ignoreReturnCode: true,
+          env: {
+            DEPENDABOT_JOB_ID: jobId.replace(/-/g, '_'), // replace hyphens with underscores
+            LOCAL_GITHUB_ACCESS_TOKEN: options?.gitHubAccessToken, // avoid rate-limiting when pulling images from GitHub container registries
+            LOCAL_AZURE_ACCESS_TOKEN: options?.azureDevOpsAccessToken, // technically not needed since we already supply this in our 'git_source' registry, but included for consistency
+          },
+        });
+        if (dependabotResultCode != 0) {
+          error(`Dependabot failed with exit code ${dependabotResultCode}`);
+        }
+      }
+
+      // If flamegraph is enabled, upload the report to the pipeline timeline so the use can download it
+      const flamegraphPath = path.join(process.cwd(), 'flamegraph.html');
+      if (options?.flamegraph && fs.existsSync(flamegraphPath)) {
+        section(`Processing Dependabot flame graph report`);
+        const jobFlamegraphPath = path.join(process.cwd(), `dependabot-${operation.job.id}-flamegraph.html`);
+        fs.renameSync(flamegraphPath, jobFlamegraphPath);
+        command('task.uploadfile', {}, jobFlamegraphPath);
+      }
+
+      // Process the job output
+      const operationResults = Array<IDependabotUpdateOperationResult>();
+      if (fs.existsSync(jobOutputPath)) {
+        const jobOutputs = readJobScenarioOutputFile(jobOutputPath);
+        if (jobOutputs?.length > 0) {
+          section(`Processing job outputs from '${jobOutputPath}'`);
+          for (const output of jobOutputs) {
+            // Documentation on the scenario model can be found here:
+            // https://github.com/dependabot/cli/blob/main/internal/model/scenario.go
+            const type = output['type'];
+            const data = output['expect']?.['data'];
+            var operationResult = {
+              success: true,
+              error: null,
+              output: {
+                type: type,
+                data: data,
+              },
+            };
+            try {
+              operationResult.success = await this.outputProcessor.process(operation, type, data);
+            } catch (e) {
+              operationResult.success = false;
+              operationResult.error = e;
+            } finally {
+              operationResults.push(operationResult);
+            }
           }
         }
       }
-    }
 
-    return operationResults.length > 0 ? operationResults : undefined;
-    //} finally {
-    //  endgroup();
-    //}
+      return operationResults.length > 0 ? operationResults : undefined;
+    } finally {
+      endgroup();
+    }
   }
 
   // Get the dependabot tool path and install if missing
