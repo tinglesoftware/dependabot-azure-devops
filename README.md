@@ -154,26 +154,28 @@ Experiments vary depending on the package ecyosystem used; They can be enabled u
 > Dependabot experinment names are not [publicly] documented. For convenience, some known experiments are listed below; However, **be aware that this may be out-of-date at the time of reading.**
 
 <details>
-<summary>List of known experiments from dependabot-core@0.278.0</summary>
+<summary>List of known experiments from dependabot-core@0.280.0</summary>
 
-|Package Ecosystem|Experiment Name|Value Type|Description|
+|Package Ecosystem|Experiment Name|Value Type|More Information|
 |--|--|--|--|
-| All | dedup_branch_names | true/false | |
-| All | grouped_updates_experimental_rules | true/false | |
-| All | grouped_security_updates_disabled | true/false | |
-| All | record_ecosystem_versions | true/false | |
-| All | record_update_job_unknown_error | true/false | |
-| All | dependency_change_validation | true/false | |
-| All | add_deprecation_warn_to_pr_message | true/false | |
-| All | threaded_metadata | true/false | |
-| Bundler | bundler_v1_unsupported_error | true/false | |
+| All | dedup_branch_names | true/false | https://github.com/dependabot/dependabot-core/pull/10519 |
+| All | grouped_updates_experimental_rules | true/false | https://github.com/dependabot/dependabot-core/pull/7581 |
+| All | grouped_security_updates_disabled | true/false | https://github.com/dependabot/dependabot-core/pull/8529 |
+| All | record_ecosystem_versions | true/false | https://github.com/dependabot/dependabot-core/pull/7517 |
+| All | record_update_job_unknown_error | true/false | https://github.com/dependabot/dependabot-core/pull/8144 |
+| All | dependency_change_validation | true/false | https://github.com/dependabot/dependabot-core/pull/9888 |
+| All | add_deprecation_warn_to_pr_message | true/false | https://github.com/dependabot/dependabot-core/pull/10421 |
+| All | threaded_metadata | true/false | https://github.com/dependabot/dependabot-core/pull/9485 |
+| Bundler | bundler_v1_unsupported_error | true/false | https://github.com/dependabot/dependabot-core/pull/10601 |
+| Composer | composer_v1_deprecation_warning | true/false | https://github.com/dependabot/dependabot-core/pull/10716 |
+| Composer | composer_v1_unsupported_error | true/false | https://github.com/dependabot/dependabot-core/pull/10716 |
 | Go | tidy | true/false | |
 | Go | vendor | true/false | |
 | Go | goprivate | string | |
-| NPM and Yarn | enable_pnpm_yarn_dynamic_engine | true/false | |
+| NPM | npm_fallback_version_above_v6 | true/false | https://github.com/dependabot/dependabot-core/pull/10757 |
 | NuGet | nuget_native_analysis | true/false | https://github.com/dependabot/dependabot-core/pull/10025 |
 | NuGet | nuget_native_updater | true/false | https://github.com/dependabot/dependabot-core/pull/10521 |
-| NuGet | nuget_dependency_solver | true/false | https://github.com/dependabot/dependabot-core/pull/10343 |
+| NuGet | nuget_legacy_dependency_solver | true/false | https://github.com/dependabot/dependabot-core/pull/10671 |
 
 > To find the latest list of Dependabot experiments, search the `dependabot-core` GitHub repository using queries like ["enabled?(x)"](https://github.com/search?q=repo%3Adependabot%2Fdependabot-core+%2Fenabled%5CW%5C%28.*%5C%29%2F&type=code) and ["options.fetch(x)"](https://github.com/search?q=repo%3Adependabot%2Fdependabot-core+%2Foptions%5C.fetch%5C%28.*%2C%2F&type=code). 
 
