@@ -4,13 +4,13 @@ import { DependabotCli } from './utils/dependabot-cli/DependabotCli';
 import { DependabotJobBuilder } from './utils/dependabot-cli/DependabotJobBuilder';
 import {
   DependabotOutputProcessor,
-  parseProjectDependencyListProperty,
   parsePullRequestProperties,
 } from './utils/dependabot-cli/DependabotOutputProcessor';
 import { IDependabotUpdateOperationResult } from './utils/dependabot-cli/interfaces/IDependabotUpdateOperationResult';
 import { IDependabotUpdate } from './utils/dependabot/interfaces/IDependabotConfig';
 import parseDependabotConfigFile from './utils/dependabot/parseConfigFile';
 import parseTaskInputConfiguration from './utils/getSharedVariables';
+import { getSecurityAdvisories, ISecurityAdvisory } from './utils/github/getSecurityAdvisories';
 
 async function run() {
   let dependabot: DependabotCli = undefined;
@@ -32,6 +32,19 @@ async function run() {
     const dependabotConfig = await parseDependabotConfigFile(taskInputs);
     if (!dependabotConfig) {
       throw new Error('Failed to parse dependabot.yaml configuration file from the target repository');
+    }
+
+    // Print a warning about the required workarounds for security-only updates, if any update is configured as such
+    // TODO: If and when Dependabot supports a better way to do security-only updates, remove this.
+    if (dependabotConfig.updates?.some((u) => u['open-pull-requests-limit'] === 0)) {
+      warning(
+        'Security-only updates have a performance overhead due to limitations in Dependabot CLI. For more info, see: https://github.com/tinglesoftware/dependabot-azure-devops/blob/main/docs/migrations/v1-to-v2.md#security-only-updates',
+      );
+      warning(
+        'To work around the Dependabot CLI limitations, vulnerable dependencies will first be discovered using an "ignore everything" update job. ' +
+          'After discovery has completed, security advisories for the dependencies will be checked before finally performing the requested security-only update job. ' +
+          'Because of these required extra steps, the task will take longer to complete than usual due to the need to discover dependencies multiple times.',
+      );
     }
 
     // Initialise the DevOps API clients
@@ -88,20 +101,34 @@ async function run() {
     // Loop through the [targeted] update blocks in dependabot.yaml and perform updates
     for (const update of updates) {
       const updateId = updates.indexOf(update).toString();
-
-      // Parse the last dependency list snapshot (if any) from the project properties.
-      // This is required when doing a security-only update as dependabot requires the list of vulnerable dependencies to be updated.
-      // Automatic discovery of vulnerable dependencies during a security-only update is not currently supported by dependabot-updater.
-      const dependencyList = parseProjectDependencyListProperty(
-        await prAuthorClient.getProjectProperties(taskInputs.projectId),
-        taskInputs.repository,
-        update['package-ecosystem'],
-      );
+      const packageEcosystem = update['package-ecosystem'];
 
       // Parse the Dependabot metadata for the existing pull requests that are related to this update
       // Dependabot will use this to determine if we need to create new pull requests or update/close existing ones
-      const existingPullRequests = parsePullRequestProperties(prAuthorActivePullRequests, update['package-ecosystem']);
+      const existingPullRequests = parsePullRequestProperties(prAuthorActivePullRequests, packageEcosystem);
       const existingPullRequestDependencies = Object.entries(existingPullRequests).map(([id, deps]) => deps);
+
+      // If this is a security-only update (i.e. 'open-pull-requests-limit: 0'), then we first need to discover the dependencies
+      // that need updating and check each one for security advisories. This is because Dependabot requires the list of vulnerable dependencies
+      // to be supplied in the job definition of security-only update job, it will not automatically discover them like a versioned update does.
+      // https://docs.github.com/en/code-security/dependabot/dependabot-security-updates/configuring-dependabot-security-updates#overriding-the-default-behavior-with-a-configuration-file
+      let securityAdvisories: ISecurityAdvisory[] = undefined;
+      let dependencyNamesToUpdate: string[] = undefined;
+      const securityUpdatesOnly = update['open-pull-requests-limit'] === 0;
+      if (securityUpdatesOnly) {
+        const discoveredDependencyListOutputs = await dependabot.update(
+          DependabotJobBuilder.newDiscoverDependencyListJob(taskInputs, updateId, update, dependabotConfig.registries),
+          dependabotUpdaterOptions,
+        );
+        dependencyNamesToUpdate = discoveredDependencyListOutputs
+          ?.find((x) => x.output.type == 'update_dependency_list')
+          ?.output?.data?.dependencies?.map((d) => d.name);
+        securityAdvisories = await getSecurityAdvisories(
+          taskInputs.githubAccessToken,
+          packageEcosystem,
+          dependencyNamesToUpdate || [],
+        );
+      }
 
       // Run an update job for "all dependencies"; this will create new pull requests for dependencies that need updating
       failedTasks += handleUpdateOperationResults(
@@ -111,8 +138,9 @@ async function run() {
             updateId,
             update,
             dependabotConfig.registries,
-            dependencyList?.['dependencies'],
+            dependencyNamesToUpdate,
             existingPullRequestDependencies,
+            securityAdvisories,
           ),
           dependabotUpdaterOptions,
         ),

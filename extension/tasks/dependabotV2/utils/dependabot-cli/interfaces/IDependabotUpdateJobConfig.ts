@@ -34,7 +34,7 @@ export interface IDependabotUpdateJobConfig {
       'updated-at'?: string;
       'version-requirement'?: string;
     }[];
-    'security-updates-only': boolean;
+    'security-updates-only'?: boolean;
     'security-advisories'?: {
       'dependency-name': string;
       'affected-versions': string[];
