@@ -440,9 +440,18 @@ export class AzureDevOpsWebApiClient {
       const userVote = await this.restApiPut(
         `${this.organisationApiUrl}/${pr.project}/_apis/git/repositories/${pr.repository}/pullrequests/${pr.pullRequestId}/reviewers/${userId}`,
         {
-          vote: 10, // 10 - approved 5 - approved with suggestions 0 - no vote -5 - waiting for author -10 - rejected
-          isReapprove: false, // don't re-approve if already approved
+          // Vote 10 = "approved"; 5 = "approved with suggestions"; 0 = "no vote"; -5 = "waiting for author"; -10 = "rejected"
+          vote: 10, 
+          // Reapprove must be set to true after the 2023 August 23 update; 
+          // Approval of a previous PR iteration does not count in later iterations, which means we must (re)approve every after push to the source branch
+          // See: https://learn.microsoft.com/en-us/azure/devops/release-notes/2023/sprint-226-update#new-branch-policy-preventing-users-to-approve-their-own-changes
+          //      https://github.com/tinglesoftware/dependabot-azure-devops/issues/1069
+          isReapprove: true, // don't re-approve if already approved
         },
+        // API version 7.1 is required to use the 'isReapprove' parameter
+        // See: https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-reviewers/create-pull-request-reviewer?view=azure-devops-rest-7.1&tabs=HTTP#request-body
+        //      https://learn.microsoft.com/en-us/azure/devops/integrate/concepts/rest-api-versioning?view=azure-devops#supported-versions
+        "7.1" 
       );
       if (userVote?.vote != 10) {
         throw new Error('Failed to approve pull request, vote was not recorded');
