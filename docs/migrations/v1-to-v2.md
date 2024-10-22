@@ -20,6 +20,11 @@ The task now uses [Dependabot CLI](https://github.com/dependabot/cli) to perform
 > [!WARNING]
 > **It is strongly recommended that you complete (or abandon) all active Depedabot pull requests created in V1 before migrating to V2.** Due to changes in Dependabot dependency metadata, V2 pull requests are not compatible with V1 (and vice versa). Migrating to V2 before completing existing pull requests will lead to duplication of pull requests.
 
+### Security-only updates
+Security-only updates (i.e. `open-pull-requests-limit: 0`) incur a performance overhead due to [limitations in Dependabot CLI (#360)](https://github.com/dependabot/cli/issues/360). To work around this, vulnerable dependencies will first be discovered using an "ignore everything" update job; After which, security advisories for the discovered dependencies will be checked against the [GitHub Advisory Database](https://github.com/advisories) before finally performing the requested security-only update job. Because of these required extra steps, the task will take longer to complete than usual.
+
+Currently the [`securityAdvisoriesFile`](../../README.md#configuring-security-advisories-and-known-vulnerabilities) task input is not supported, but is expected to be supported before GA.
+
 ### New pipeline agent requirements; "Go" must be installed
 Dependabot CLI requires [Go](https://go.dev/doc/install) (1.22+) and [Docker](https://docs.docker.com/engine/install/) (with Linux containers).
 If you use [Microsoft-hosted agents](https://learn.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=azure-devops&tabs=yaml#software), we recommend using the [ubuntu-latest](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md) image, which meets all task requirements.
@@ -66,13 +71,10 @@ The following environment variables have been removed entirely; the feature is n
 
 ## Todo before general availability
 Before removing the preview flag from V2 `task.json`, we need to:
- - [x] Open an issue in Dependabot-CLI, enquire how security-advisories are expected to be provided **before** knowing the list of dependencies. (https://github.com/dependabot/cli/issues/360)
- - [ ] Convert GitHub security advisory client in `vulnerabilities.rb` to TypeScript code
- - [ ] Implement `security-advisories` config once the answer the above is known
- - [x] Review `task.json`, add documentation for new V2 inputs
- - [x] Update `\docs\extension.md` with V2 docs
- - [x] Update `\extension\README.MD` with V2 docs
- - [x] Update `\README.MD` with V2 docs
- - [ ] Do a general code tidy-up pass (check all "TODO" comments)
+ - [ ] Fix PR description text "@���" encoding issues
+ - [ ] Add "superseded by X" close reason when PR is closed during a PR update
+ - [ ] Add documentation for required permissions and PAT scopes
+ - [ ] Add support for 'securityAdvisoriesFile' task input
  - [ ] Add unit tests for V2 utils scripts
+ - [ ] General code tidy-up (check all "TODO" comments)
  - [ ] Investigate https://zod.dev/

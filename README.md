@@ -23,11 +23,11 @@ In this repository you'll find:
 - [Configuring experiments](#configuring-experiments)
 - [Configuring assignees and reviewers](#configuring-assignees-and-reviewers)
 - [Unsupported features and configurations](#unsupported-features-and-configurations)
-   * [Extension Task](#extension-task)
+   * [Dependabot Task](#dependabot-task)
       + [dependabot@V2](#dependabotv2)
       + [dependabot@V1](#dependabotv1)
-   * [Updater Docker image](#updater-docker-image)
-   * [Server](#server)
+   * [Dependabot Updater Docker image](#dependabot-updater-docker-image)
+   * [Dependabot Server](#dependabot-server)
 - [Migration Guide](#migration-guide)
 - [Contributing](#contributing)
    * [Reporting issues and feature requests](#reporting-issues-and-feature-requests)
@@ -154,7 +154,7 @@ Experiments vary depending on the package ecyosystem used; They can be enabled u
 > Dependabot experinment names are not [publicly] documented. For convenience, some known experiments are listed below; However, **be aware that this may be out-of-date at the time of reading.**
 
 <details>
-<summary>List of known experiments from dependabot-core@0.280.0</summary>
+<summary>List of known experiments from dependabot-core@0.281.0</summary>
 
 |Package Ecosystem|Experiment Name|Value Type|More Information|
 |--|--|--|--|
@@ -166,6 +166,7 @@ Experiments vary depending on the package ecyosystem used; They can be enabled u
 | All | dependency_change_validation | true/false | https://github.com/dependabot/dependabot-core/pull/9888 |
 | All | add_deprecation_warn_to_pr_message | true/false | https://github.com/dependabot/dependabot-core/pull/10421 |
 | All | threaded_metadata | true/false | https://github.com/dependabot/dependabot-core/pull/9485 |
+| All | lead_security_dependency | true/false | https://github.com/dependabot/dependabot-core/pull/10727 |
 | Bundler | bundler_v1_unsupported_error | true/false | https://github.com/dependabot/dependabot-core/pull/10601 |
 | Composer | composer_v1_deprecation_warning | true/false | https://github.com/dependabot/dependabot-core/pull/10716 |
 | Composer | composer_v1_unsupported_error | true/false | https://github.com/dependabot/dependabot-core/pull/10716 |
@@ -194,12 +195,13 @@ Reviewers can be any of the following values:
 - Team name
 
 ## Unsupported features and configurations
-We aim to support all [official configuration options](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file), but there are some limitations for:
+We aim to support all [official configuration options](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file), but there are some limitations:
 
-### Extension Task
+### Dependabot Task
 
 #### `dependabot@V2`
 - [`schedule`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#scheduleinterval) is ignored, use [pipeline scheduled triggers](https://learn.microsoft.com/en-us/azure/devops/pipelines/process/scheduled-triggers?view=azure-devops&tabs=yaml#scheduled-triggers) instead.
+- [`securityAdvisoriesFile`](#configuring-security-advisories-and-known-vulnerabilities) task input is not yet supported.
 
 #### `dependabot@V1`
 - [`schedule`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#scheduleinterval) is ignored, use [pipeline scheduled triggers](https://learn.microsoft.com/en-us/azure/devops/pipelines/process/scheduled-triggers?view=azure-devops&tabs=yaml#scheduled-triggers) instead.
@@ -209,11 +211,11 @@ We aim to support all [official configuration options](https://docs.github.com/e
 - [`assignees`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#assignees) and [`reviewers`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#reviewers) must be a list of user guids or email addresses; group/team names are not supported.
 - Private feed/registry authentication may not work with all package ecyosystems. Support is _slightly_ improved when task input `useUpdateScriptVNext: true` is set, but not still not fully supported. See [problems with authentication](https://github.com/tinglesoftware/dependabot-azure-devops/discussions/1317) for more.
 
-### Updater Docker image
+### Dependabot Updater Docker Image
 - `DEPENDABOT_ASSIGNEES` and `DEPENDABOT_REVIEWERS` must be a list of user guids; email addresses and group/team names are not supported.
 - Private feed/registry authentication may not work with all package ecyosystems. See [problems with authentication](https://github.com/tinglesoftware/dependabot-azure-devops/discussions/1317) for more.
 
-### Server
+### Dependabot Server
 
 - [`directories`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#directories) are not supported.
 - [`groups`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#groups) are not supported.
