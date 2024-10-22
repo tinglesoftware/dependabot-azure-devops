@@ -10,7 +10,7 @@ import { IDependabotUpdateOperationResult } from './utils/dependabot-cli/interfa
 import { IDependabotUpdate } from './utils/dependabot/interfaces/IDependabotConfig';
 import parseDependabotConfigFile from './utils/dependabot/parseConfigFile';
 import parseTaskInputConfiguration from './utils/getSharedVariables';
-import { getSecurityAdvisories, ISecurityAdvisory } from './utils/github/getSecurityAdvisories';
+import { getSecurityAdvisories, IDependency, ISecurityAdvisory } from './utils/github/getSecurityAdvisories';
 
 async function run() {
   let dependabot: DependabotCli = undefined;
@@ -118,11 +118,9 @@ async function run() {
         );
 
         // Get the list of security advisories that apply to the discovered dependencies
-        const dependenciesToCheckForSecurityAdvisories = discoveredDependencyListOutputs
+        const dependenciesToCheckForSecurityAdvisories: IDependency[] = discoveredDependencyListOutputs
           ?.find((x) => x.output.type == 'update_dependency_list')
-          ?.output?.data?.dependencies?.map((d) => {
-            d.name, d.version;
-          });
+          ?.output?.data?.dependencies?.map((d) => ({ name: d.name, version: d.version }));
         securityAdvisories = await getSecurityAdvisories(
           taskInputs.githubAccessToken,
           packageEcosystem,
@@ -134,20 +132,28 @@ async function run() {
       }
 
       // Run an update job for "all dependencies"; this will create new pull requests for dependencies that need updating
-      failedTasks += handleUpdateOperationResults(
-        await dependabot.update(
-          DependabotJobBuilder.updateAllDependenciesJob(
-            taskInputs,
-            updateId,
-            update,
-            dependabotConfig.registries,
-            dependencyNamesToUpdate,
-            existingPullRequestDependencies,
-            securityAdvisories,
+      const dependenciesHaveVulnerabilities = (dependencyNamesToUpdate.length && securityAdvisories.length);
+      if (!securityUpdatesOnly || dependenciesHaveVulnerabilities)
+      {
+        failedTasks += handleUpdateOperationResults(
+          await dependabot.update(
+            DependabotJobBuilder.updateAllDependenciesJob(
+              taskInputs,
+              updateId,
+              update,
+              dependabotConfig.registries,
+              dependencyNamesToUpdate,
+              existingPullRequestDependencies,
+              securityAdvisories,
+            ),
+            dependabotUpdaterOptions,
           ),
-          dependabotUpdaterOptions,
-        ),
-      );
+        );
+      }
+      else
+      {
+        console.info('Nothing to update; dependencies are not affected by any known vulnerability')
+      }
 
       // If there are existing pull requests, run an update job for each one; this will resolve merge conflicts and close pull requests that are no longer needed
       const numberOfPullRequestsToUpdate = Object.keys(existingPullRequests).length;

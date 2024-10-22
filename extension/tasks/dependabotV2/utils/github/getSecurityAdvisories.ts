@@ -18,6 +18,14 @@ const GITHUB_ECOSYSTEM: { [key: string]: string } = {
 };
 
 /**
+ * Dependency object
+ */
+export interface IDependency {
+  name: string;
+  version?: string;
+}
+
+/**
  * Security advisory object
  */
 export interface ISecurityAdvisory {
@@ -40,7 +48,7 @@ export interface ISecurityAdvisory {
 export async function getSecurityAdvisories(
   accessToken: string,
   packageEcosystem: string,
-  dependencies: { name: string; version?: string }[],
+  dependencies: IDependency[],
 ): Promise<ISecurityAdvisory[]> {
   const ecosystem = GITHUB_ECOSYSTEM[packageEcosystem];
   const query = `
@@ -64,7 +72,7 @@ export async function getSecurityAdvisories(
   // GitHub API doesn't support querying multiple dependencies at once, so we need to make a request for each dependency individually.
   // To speed up the process, we can make the requests in parallel, 100 at a time. We batch the requests to avoid hitting the rate limit too quickly.
   // https://docs.github.com/en/graphql/overview/rate-limits-and-node-limits-for-the-graphql-api
-  console.log(`Checking security advisories for ${dependencies.length} dependencies...`);
+  console.info(`Checking security advisories for ${dependencies.length} dependencies...`);
   const dependencyNames = dependencies.map((dependency) => dependency.name);
   const securityAdvisories = await batchSecurityAdvisoryQuery(100, dependencyNames, async (dependencyName) => {
     const variables = {
@@ -127,8 +135,8 @@ export async function getSecurityAdvisories(
   });
 
   const vulnerableDependencyCount = new Set(affectedAdvisories.map((advisory) => advisory['dependency-name'])).size;
-  console.log(
-    `Found ${vulnerableDependencyCount} vulnerable dependencies affected by ${affectedAdvisories.length} security advisories`,
+  console.info(
+    `Found ${affectedAdvisories.length} vulnerabilities; affecting ${vulnerableDependencyCount} dependencies`,
   );
   return affectedAdvisories;
 }
