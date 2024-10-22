@@ -28,7 +28,7 @@ export class AzureDevOpsWebApiClient {
   private authenticatedUserId: string;
   private resolvedUserIds: Record<string, string>;
 
-  public static API_VERSION = '7.1';
+  public static API_VERSION = '5.0'; // this is the same version used by dependabot-core
 
   constructor(organisationApiUrl: string, accessToken: string) {
     this.organisationApiUrl = organisationApiUrl.replace(/\/$/, ''); // trim trailing slash
