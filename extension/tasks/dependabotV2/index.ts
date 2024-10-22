@@ -65,7 +65,8 @@ async function run() {
       : null;
 
     // Fetch the active pull requests created by the author user
-    const prAuthorActivePullRequests = await prAuthorClient.getActivePullRequestProperties(
+    const existingBranchNames = await prAuthorClient.getBranchNames(taskInputs.project, taskInputs.repository);
+    const existingPullRequests = await prAuthorClient.getActivePullRequestProperties(
       taskInputs.project,
       taskInputs.repository,
       await prAuthorClient.getUserId(),
@@ -74,7 +75,13 @@ async function run() {
     // Initialise the Dependabot updater
     dependabot = new DependabotCli(
       DependabotCli.CLI_IMAGE_LATEST, // TODO: Add config for this?
-      new DependabotOutputProcessor(taskInputs, prAuthorClient, prApproverClient, prAuthorActivePullRequests),
+      new DependabotOutputProcessor(
+        taskInputs,
+        prAuthorClient,
+        prApproverClient,
+        existingPullRequests,
+        existingBranchNames,
+      ),
       taskInputs.debug,
     );
 
@@ -105,6 +112,7 @@ async function run() {
     // Loop through the [targeted] update blocks in dependabot.yaml and perform updates
     for (const update of updates) {
       const updateId = updates.indexOf(update).toString();
+      const packageEcosystem = update['package-ecosystem'];
 
       // Parse the last dependency list snapshot (if any) from the project properties.
       // This is required when doing a security-only update as dependabot requires the list of vulnerable dependencies to be updated.
@@ -112,13 +120,18 @@ async function run() {
       const dependencyList = parseProjectDependencyListProperty(
         await prAuthorClient.getProjectProperties(taskInputs.projectId),
         taskInputs.repository,
-        update['package-ecosystem'],
+        packageEcosystem,
       );
 
       // Parse the Dependabot metadata for the existing pull requests that are related to this update
       // Dependabot will use this to determine if we need to create new pull requests or update/close existing ones
-      const existingPullRequests = parsePullRequestProperties(prAuthorActivePullRequests, update['package-ecosystem']);
-      const existingPullRequestDependencies = Object.entries(existingPullRequests).map(([id, deps]) => deps);
+      const existingPullRequestsForPackageEcosystem = parsePullRequestProperties(
+        existingPullRequests,
+        packageEcosystem,
+      );
+      const existingPullRequestDependenciesForPackageEcosystem = Object.entries(
+        existingPullRequestsForPackageEcosystem,
+      ).map(([id, deps]) => deps);
 
       // Run an update job for "all dependencies"; this will create new pull requests for dependencies that need updating
       failedTasks += handleUpdateOperationResults(
@@ -129,17 +142,17 @@ async function run() {
             update,
             dependabotConfig.registries,
             dependencyList?.['dependencies'],
-            existingPullRequestDependencies,
+            existingPullRequestDependenciesForPackageEcosystem,
           ),
           dependabotUpdaterOptions,
         ),
       );
 
       // If there are existing pull requests, run an update job for each one; this will resolve merge conflicts and close pull requests that are no longer needed
-      const numberOfPullRequestsToUpdate = Object.keys(existingPullRequests).length;
+      const numberOfPullRequestsToUpdate = Object.keys(existingPullRequestsForPackageEcosystem).length;
       if (numberOfPullRequestsToUpdate > 0) {
         if (!taskInputs.skipPullRequests) {
-          for (const pullRequestId in existingPullRequests) {
+          for (const pullRequestId in existingPullRequestsForPackageEcosystem) {
             failedTasks += handleUpdateOperationResults(
               await dependabot.update(
                 DependabotJobBuilder.newUpdatePullRequestJob(
@@ -147,8 +160,8 @@ async function run() {
                   pullRequestId,
                   update,
                   dependabotConfig.registries,
-                  existingPullRequestDependencies,
-                  existingPullRequests[pullRequestId],
+                  existingPullRequestDependenciesForPackageEcosystem,
+                  existingPullRequestsForPackageEcosystem[pullRequestId],
                 ),
                 dependabotUpdaterOptions,
               ),

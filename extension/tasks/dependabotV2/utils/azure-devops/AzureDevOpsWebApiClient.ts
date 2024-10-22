@@ -98,6 +98,30 @@ export class AzureDevOpsWebApiClient {
   }
 
   /**
+   * Get the list of branch names for a repository.
+   * Requires scope "Code (Read)" (vso.code).
+   * @param project
+   * @param repository
+   * @returns
+   */
+  public async getBranchNames(project: string, repository: string): Promise<string[]> {
+    try {
+      const refs = await this.restApiGet(
+        `${this.organisationApiUrl}/${project}/_apis/git/repositories/${repository}/refs`,
+      );
+      if (!refs) {
+        throw new Error(`Repository '${project}/${repository}' not found`);
+      }
+
+      return refs.value?.map((r) => normalizeBranchName(r.name)) || [];
+    } catch (e) {
+      error(`Failed to list branch names for '${project}/${repository}': ${e}`);
+      console.debug(e); // Dump the error stack trace to help with debugging
+      return undefined;
+    }
+  }
+
+  /**
    * Get the properties for all active pull request created by the supplied user.
    * Requires scope "Code (Read)" (vso.code).
    * @param project
