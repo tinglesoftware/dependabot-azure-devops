@@ -16,6 +16,7 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
   private readonly prAuthorClient: AzureDevOpsWebApiClient;
   private readonly prApproverClient: AzureDevOpsWebApiClient;
   private readonly existingPullRequests: IPullRequestProperties[];
+  private readonly existingBranchNames: string[];
   private readonly taskInputs: ISharedVariables;
 
   // Custom properties used to store dependabot metadata in projects.
@@ -35,11 +36,13 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
     prAuthorClient: AzureDevOpsWebApiClient,
     prApproverClient: AzureDevOpsWebApiClient,
     existingPullRequests: IPullRequestProperties[],
+    existingBranchNames: string[],
   ) {
     this.taskInputs = taskInputs;
     this.prAuthorClient = prAuthorClient;
     this.prApproverClient = prApproverClient;
     this.existingPullRequests = existingPullRequests;
+    this.existingBranchNames = existingBranchNames;
   }
 
   /**
@@ -95,7 +98,6 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
           return true;
         }
 
-        // Create a new pull request
         const changedFiles = getPullRequestChangedFilesForOutputData(data);
         const dependencies = getPullRequestDependenciesPropertyValueForOutputData(data);
         const targetBranch =
@@ -108,6 +110,24 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
           dependencies['dependencies'] || dependencies,
           update.config['pull-request-branch-name']?.separator,
         );
+
+        // Check if the source branch already exists or conflicts with an existing branch
+        const existingBranch = this.existingBranchNames?.find((branch) => sourceBranch == branch) || [];
+        if (existingBranch.length) {
+          error(
+            `Unable to create pull request as source branch '${sourceBranch}' already exists; Delete the existing branch and try again.`,
+          );
+          return false;
+        }
+        const conflictingBranches = this.existingBranchNames?.filter((branch) => sourceBranch.startsWith(branch)) || [];
+        if (conflictingBranches.length) {
+          error(
+            `Unable to create pull request as source branch '${sourceBranch}' would conflict with existing branch(es) '${conflictingBranches.join(', ')}'; Delete the conflicting branch(es) and try again.`,
+          );
+          return false;
+        }
+
+        // Create a new pull request
         const newPullRequestId = await this.prAuthorClient.createPullRequest({
           project: project,
           repository: repository,
