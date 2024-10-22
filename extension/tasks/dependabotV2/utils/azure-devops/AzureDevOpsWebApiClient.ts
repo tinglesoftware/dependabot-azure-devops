@@ -595,7 +595,7 @@ export class AzureDevOpsWebApiClient {
       .map((key) => `${key}=${params[key]}`)
       .join('&');
     const fullUrl = `${url}?api-version=${apiVersion}${queryString ? `&${queryString}` : ''}`;
-    return await this.restApiRequest('GET', url, () =>
+    return await this.restApiRequest('GET', fullUrl, () =>
       this.connection.rest.client.get(fullUrl, {
         Accept: 'application/json',
       }),
@@ -608,7 +608,7 @@ export class AzureDevOpsWebApiClient {
     apiVersion: string = AzureDevOpsWebApiClient.API_VERSION,
   ): Promise<any | undefined> {
     const fullUrl = `${url}?api-version=${apiVersion}`;
-    return await this.restApiRequest('POST', url, () =>
+    return await this.restApiRequest('POST', fullUrl, () =>
       this.connection.rest.client.post(fullUrl, JSON.stringify(data), {
         'Content-Type': 'application/json',
       }),
@@ -621,7 +621,7 @@ export class AzureDevOpsWebApiClient {
     apiVersion: string = AzureDevOpsWebApiClient.API_VERSION,
   ): Promise<any | undefined> {
     const fullUrl = `${url}?api-version=${apiVersion}`;
-    return await this.restApiRequest('PUT', url, () =>
+    return await this.restApiRequest('PUT', fullUrl, () =>
       this.connection.rest.client.put(fullUrl, JSON.stringify(data), {
         'Content-Type': 'application/json',
       }),
@@ -635,7 +635,7 @@ export class AzureDevOpsWebApiClient {
     apiVersion: string = AzureDevOpsWebApiClient.API_VERSION,
   ): Promise<any | undefined> {
     const fullUrl = `${url}?api-version=${apiVersion}`;
-    return await this.restApiRequest('PATCH', url, () =>
+    return await this.restApiRequest('PATCH', fullUrl, () =>
       this.connection.rest.client.patch(fullUrl, JSON.stringify(data), {
         'Content-Type': contentType || 'application/json',
       }),
