@@ -36,15 +36,13 @@ async function run() {
       taskInputs.hostname,
       taskInputs.virtualDirectory,
       taskInputs.organization,
-      taskInputs.projectId,
       taskInputs.project,
       taskInputs.repository,
       taskInputs.githubAccessToken,
       taskInputs.systemAccessUser,
       taskInputs.systemAccessToken,
-      taskInputs.authorEmail,
-      taskInputs.authorName,
       taskInputs.autoApproveUserToken,
+      taskInputs.authorEmail,
     );
 
     // Parse dependabot.yaml configuration file
