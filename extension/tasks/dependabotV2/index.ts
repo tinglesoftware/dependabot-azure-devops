@@ -136,8 +136,8 @@ async function run() {
       // that need updating and check each one for security advisories. This is because Dependabot requires the list of vulnerable dependencies
       // to be supplied in the job definition of security-only update job, it will not automatically discover them like a versioned update does.
       // https://docs.github.com/en/code-security/dependabot/dependabot-security-updates/configuring-dependabot-security-updates#overriding-the-default-behavior-with-a-configuration-file
-      let securityAdvisories: ISecurityAdvisory[] = undefined;
-      let dependencyNamesToUpdate: string[] = undefined;
+      let securityAdvisories: ISecurityAdvisory[] = [];
+      let dependencyNamesToUpdate: string[] = [];
       const securityUpdatesOnly = update['open-pull-requests-limit'] === 0;
       if (securityUpdatesOnly) {
         // Run an update job to discover all dependencies
