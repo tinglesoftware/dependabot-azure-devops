@@ -1,5 +1,6 @@
 import { debug, error, setResult, TaskResult, warning, which } from 'azure-pipelines-task-lib/task';
 import { AzureDevOpsWebApiClient } from './utils/azure-devops/AzureDevOpsWebApiClient';
+import { setSecrets } from './utils/azure-devops/formattingCommands';
 import { DependabotCli } from './utils/dependabot-cli/DependabotCli';
 import { DependabotJobBuilder } from './utils/dependabot-cli/DependabotJobBuilder';
 import {
@@ -27,6 +28,22 @@ async function run() {
     if (!taskInputs) {
       throw new Error('Failed to parse task input configuration');
     }
+
+    // Mask environment, organisation, and project specific variables from the logs.
+    // Most user's environments are private and they're less likely to share diagnostic info when it exposes information about their environment or organisation.
+    // Although not exhaustive, this will mask the most common information that could be used to identify the user's environment.
+    setSecrets(
+      taskInputs.hostname,
+      taskInputs.virtualDirectory,
+      taskInputs.organization,
+      taskInputs.project,
+      taskInputs.repository,
+      taskInputs.githubAccessToken,
+      taskInputs.systemAccessUser,
+      taskInputs.systemAccessToken,
+      taskInputs.autoApproveUserToken,
+      taskInputs.authorEmail,
+    );
 
     // Parse dependabot.yaml configuration file
     const dependabotConfig = await parseDependabotConfigFile(taskInputs);
@@ -56,7 +73,8 @@ async function run() {
       : null;
 
     // Fetch the active pull requests created by the author user
-    const prAuthorActivePullRequests = await prAuthorClient.getActivePullRequestProperties(
+    const existingBranchNames = await prAuthorClient.getBranchNames(taskInputs.project, taskInputs.repository);
+    const existingPullRequests = await prAuthorClient.getActivePullRequestProperties(
       taskInputs.project,
       taskInputs.repository,
       await prAuthorClient.getUserId(),
@@ -65,7 +83,13 @@ async function run() {
     // Initialise the Dependabot updater
     dependabot = new DependabotCli(
       DependabotCli.CLI_IMAGE_LATEST, // TODO: Add config for this?
-      new DependabotOutputProcessor(taskInputs, prAuthorClient, prApproverClient, prAuthorActivePullRequests),
+      new DependabotOutputProcessor(
+        taskInputs,
+        prAuthorClient,
+        prApproverClient,
+        existingPullRequests,
+        existingBranchNames,
+      ),
       taskInputs.debug,
     );
 
@@ -100,8 +124,13 @@ async function run() {
 
       // Parse the Dependabot metadata for the existing pull requests that are related to this update
       // Dependabot will use this to determine if we need to create new pull requests or update/close existing ones
-      const existingPullRequests = parsePullRequestProperties(prAuthorActivePullRequests, packageEcosystem);
-      const existingPullRequestDependencies = Object.entries(existingPullRequests).map(([id, deps]) => deps);
+      const existingPullRequestsForPackageEcosystem = parsePullRequestProperties(
+        existingPullRequests,
+        packageEcosystem,
+      );
+      const existingPullRequestDependenciesForPackageEcosystem = Object.entries(
+        existingPullRequestsForPackageEcosystem,
+      ).map(([id, deps]) => deps);
 
       // If this is a security-only update (i.e. 'open-pull-requests-limit: 0'), then we first need to discover the dependencies
       // that need updating and check each one for security advisories. This is because Dependabot requires the list of vulnerable dependencies
@@ -132,9 +161,8 @@ async function run() {
       }
 
       // Run an update job for "all dependencies"; this will create new pull requests for dependencies that need updating
-      const dependenciesHaveVulnerabilities = (dependencyNamesToUpdate.length && securityAdvisories.length);
-      if (!securityUpdatesOnly || dependenciesHaveVulnerabilities)
-      {
+      const dependenciesHaveVulnerabilities = dependencyNamesToUpdate.length && securityAdvisories.length;
+      if (!securityUpdatesOnly || dependenciesHaveVulnerabilities) {
         failedTasks += handleUpdateOperationResults(
           await dependabot.update(
             DependabotJobBuilder.updateAllDependenciesJob(
@@ -143,23 +171,21 @@ async function run() {
               update,
               dependabotConfig.registries,
               dependencyNamesToUpdate,
-              existingPullRequestDependencies,
+              existingPullRequestDependenciesForPackageEcosystem,
               securityAdvisories,
             ),
             dependabotUpdaterOptions,
           ),
         );
-      }
-      else
-      {
-        console.info('Nothing to update; dependencies are not affected by any known vulnerability')
+      } else {
+        console.info('Nothing to update; dependencies are not affected by any known vulnerability');
       }
 
       // If there are existing pull requests, run an update job for each one; this will resolve merge conflicts and close pull requests that are no longer needed
-      const numberOfPullRequestsToUpdate = Object.keys(existingPullRequests).length;
+      const numberOfPullRequestsToUpdate = Object.keys(existingPullRequestsForPackageEcosystem).length;
       if (numberOfPullRequestsToUpdate > 0) {
         if (!taskInputs.skipPullRequests) {
-          for (const pullRequestId in existingPullRequests) {
+          for (const pullRequestId in existingPullRequestsForPackageEcosystem) {
             failedTasks += handleUpdateOperationResults(
               await dependabot.update(
                 DependabotJobBuilder.updatePullRequestJob(
@@ -167,8 +193,8 @@ async function run() {
                   pullRequestId,
                   update,
                   dependabotConfig.registries,
-                  existingPullRequestDependencies,
-                  existingPullRequests[pullRequestId],
+                  existingPullRequestDependenciesForPackageEcosystem,
+                  existingPullRequestsForPackageEcosystem[pullRequestId],
                 ),
                 dependabotUpdaterOptions,
               ),

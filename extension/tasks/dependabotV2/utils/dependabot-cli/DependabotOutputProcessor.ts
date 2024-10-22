@@ -2,6 +2,7 @@ import { GitPullRequestMergeStrategy, VersionControlChangeType } from 'azure-dev
 import { error, warning } from 'azure-pipelines-task-lib/task';
 import * as path from 'path';
 import { AzureDevOpsWebApiClient } from '../azure-devops/AzureDevOpsWebApiClient';
+import { section } from '../azure-devops/formattingCommands';
 import { IFileChange } from '../azure-devops/interfaces/IFileChange';
 import { IPullRequestProperties } from '../azure-devops/interfaces/IPullRequest';
 import { ISharedVariables } from '../getSharedVariables';
@@ -16,6 +17,7 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
   private readonly prAuthorClient: AzureDevOpsWebApiClient;
   private readonly prApproverClient: AzureDevOpsWebApiClient;
   private readonly existingPullRequests: IPullRequestProperties[];
+  private readonly existingBranchNames: string[];
   private readonly taskInputs: ISharedVariables;
 
   // Custom properties used to store dependabot metadata in projects.
@@ -35,11 +37,13 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
     prAuthorClient: AzureDevOpsWebApiClient,
     prApproverClient: AzureDevOpsWebApiClient,
     existingPullRequests: IPullRequestProperties[],
+    existingBranchNames: string[],
   ) {
     this.taskInputs = taskInputs;
     this.prAuthorClient = prAuthorClient;
     this.prApproverClient = prApproverClient;
     this.existingPullRequests = existingPullRequests;
+    this.existingBranchNames = existingBranchNames;
   }
 
   /**
@@ -50,7 +54,8 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
    * @returns
    */
   public async process(update: IDependabotUpdateOperation, type: string, data: any): Promise<boolean> {
-    console.debug(`Processing output '${type}' with data:`, data);
+    section(`Processing '${type}'`);
+    console.debug('Data:', data);
     const project = this.taskInputs.project;
     const repository = this.taskInputs.repository;
     switch (type) {
@@ -95,7 +100,6 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
           return true;
         }
 
-        // Create a new pull request
         const changedFiles = getPullRequestChangedFilesForOutputData(data);
         const dependencies = getPullRequestDependenciesPropertyValueForOutputData(data);
         const targetBranch =
@@ -108,6 +112,24 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
           dependencies['dependencies'] || dependencies,
           update.config['pull-request-branch-name']?.separator,
         );
+
+        // Check if the source branch already exists or conflicts with an existing branch
+        const existingBranch = this.existingBranchNames?.find((branch) => sourceBranch == branch) || [];
+        if (existingBranch.length) {
+          error(
+            `Unable to create pull request as source branch '${sourceBranch}' already exists; Delete the existing branch and try again.`,
+          );
+          return false;
+        }
+        const conflictingBranches = this.existingBranchNames?.filter((branch) => sourceBranch.startsWith(branch)) || [];
+        if (conflictingBranches.length) {
+          error(
+            `Unable to create pull request as source branch '${sourceBranch}' would conflict with existing branch(es) '${conflictingBranches.join(', ')}'; Delete the conflicting branch(es) and try again.`,
+          );
+          return false;
+        }
+
+        // Create a new pull request
         const newPullRequestId = await this.prAuthorClient.createPullRequest({
           project: project,
           repository: repository,
