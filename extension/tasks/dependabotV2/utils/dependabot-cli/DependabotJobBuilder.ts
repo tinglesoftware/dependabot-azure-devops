@@ -19,7 +19,7 @@ export class DependabotJobBuilder {
    * @param registries
    * @returns
    */
-  public static newDiscoverDependencyListJob(
+  public static listAllDependenciesJob(
     taskInputs: ISharedVariables,
     id: string,
     update: IDependabotUpdate,
@@ -49,7 +49,7 @@ export class DependabotJobBuilder {
    * @param securityAdvisories
    * @returns
    */
-  public static newUpdateAllJob(
+  public static updateAllDependenciesJob(
     taskInputs: ISharedVariables,
     id: string,
     update: IDependabotUpdate,
@@ -67,7 +67,6 @@ export class DependabotJobBuilder {
       registries,
       false,
       undefined,
-      // TODO: To make this more accurate, we should be evaluating the dependency name AND version against the security advisories, but that requires a lot of complex dependabot-core logic to do correctly
       securityUpdatesOnly
         ? dependencyNamesToUpdate?.filter((d) => securityAdvisories?.find((a) => a['dependency-name'] == d))
         : dependencyNamesToUpdate,
@@ -85,7 +84,7 @@ export class DependabotJobBuilder {
    * @param pullRequestToUpdate
    * @returns
    */
-  public static newUpdatePullRequestJob(
+  public static updatePullRequestJob(
     taskInputs: ISharedVariables,
     id: string,
     update: IDependabotUpdate,

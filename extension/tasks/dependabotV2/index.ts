@@ -111,24 +111,32 @@ async function run() {
       let dependencyNamesToUpdate: string[] = undefined;
       const securityUpdatesOnly = update['open-pull-requests-limit'] === 0;
       if (securityUpdatesOnly) {
+        // Run an update job to discover all dependencies
         const discoveredDependencyListOutputs = await dependabot.update(
-          DependabotJobBuilder.newDiscoverDependencyListJob(taskInputs, updateId, update, dependabotConfig.registries),
+          DependabotJobBuilder.listAllDependenciesJob(taskInputs, updateId, update, dependabotConfig.registries),
           dependabotUpdaterOptions,
         );
-        dependencyNamesToUpdate = discoveredDependencyListOutputs
+
+        // Get the list of security advisories that apply to the discovered dependencies
+        const dependenciesToCheckForSecurityAdvisories = discoveredDependencyListOutputs
           ?.find((x) => x.output.type == 'update_dependency_list')
-          ?.output?.data?.dependencies?.map((d) => d.name);
+          ?.output?.data?.dependencies?.map((d) => {
+            d.name, d.version;
+          });
         securityAdvisories = await getSecurityAdvisories(
           taskInputs.githubAccessToken,
           packageEcosystem,
-          dependencyNamesToUpdate || [],
+          dependenciesToCheckForSecurityAdvisories || [],
         );
+
+        // Only update dependencies that have security advisories
+        dependencyNamesToUpdate = Array.from(new Set(securityAdvisories.map((a) => a['dependency-name'])));
       }
 
       // Run an update job for "all dependencies"; this will create new pull requests for dependencies that need updating
       failedTasks += handleUpdateOperationResults(
         await dependabot.update(
-          DependabotJobBuilder.newUpdateAllJob(
+          DependabotJobBuilder.updateAllDependenciesJob(
             taskInputs,
             updateId,
             update,
@@ -148,7 +156,7 @@ async function run() {
           for (const pullRequestId in existingPullRequests) {
             failedTasks += handleUpdateOperationResults(
               await dependabot.update(
-                DependabotJobBuilder.newUpdatePullRequestJob(
+                DependabotJobBuilder.updatePullRequestJob(
                   taskInputs,
                   pullRequestId,
                   update,

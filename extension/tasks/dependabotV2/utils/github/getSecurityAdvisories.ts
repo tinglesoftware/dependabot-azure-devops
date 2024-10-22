@@ -40,7 +40,7 @@ export interface ISecurityAdvisory {
 export async function getSecurityAdvisories(
   accessToken: string,
   packageEcosystem: string,
-  dependencyNames: string[],
+  dependencies: { name: string; version?: string }[],
 ): Promise<ISecurityAdvisory[]> {
   const ecosystem = GITHUB_ECOSYSTEM[packageEcosystem];
   const query = `
@@ -62,10 +62,11 @@ export async function getSecurityAdvisories(
   `;
 
   // GitHub API doesn't support querying multiple dependencies at once, so we need to make a request for each dependency individually.
-  // To speed up the process, we can make the requests in parallel. We batch the requests to avoid hitting the rate limit too quickly.
+  // To speed up the process, we can make the requests in parallel, 100 at a time. We batch the requests to avoid hitting the rate limit too quickly.
   // https://docs.github.com/en/graphql/overview/rate-limits-and-node-limits-for-the-graphql-api
-  console.log(`Fetching security advisories for ${dependencyNames.length} dependencies...`);
-  const securityAdvisories = await batch(100, dependencyNames, async (dependencyName) => {
+  console.log(`Checking security advisories for ${dependencies.length} dependencies...`);
+  const dependencyNames = dependencies.map((dependency) => dependency.name);
+  const securityAdvisories = await batchSecurityAdvisoryQuery(100, dependencyNames, async (dependencyName) => {
     const variables = {
       ecosystem: ecosystem,
       package: dependencyName,
@@ -107,16 +108,46 @@ export async function getSecurityAdvisories(
     });
   });
 
-  console.log(`Found ${securityAdvisories.length} security advisories`);
-  return securityAdvisories;
+  // Filter out advisories that are not relevant the version of the dependency we are using
+  const affectedAdvisories = securityAdvisories.filter((advisory) => {
+    const dependency = dependencies.find((d) => d.name === advisory['dependency-name']);
+    if (!dependency) {
+      return false;
+    }
+    const isAffected =
+      advisory['affected-versions'].length > 0 &&
+      advisory['affected-versions'].find((range) => versionIsInRange(dependency.version, range));
+    const isPatched =
+      advisory['patched-versions'].length > 0 &&
+      advisory['patched-versions'].find((range) => versionIsInRange(dependency.version, range));
+    const isUnaffected =
+      advisory['unaffected-versions'].length > 0 &&
+      advisory['unaffected-versions'].find((range) => versionIsInRange(dependency.version, range));
+    return (isAffected && !isPatched) || isUnaffected;
+  });
+
+  const vulnerableDependencyCount = new Set(affectedAdvisories.map((advisory) => advisory['dependency-name'])).size;
+  console.log(
+    `Found ${vulnerableDependencyCount} vulnerable dependencies affected by ${affectedAdvisories.length} security advisories`,
+  );
+  return affectedAdvisories;
 }
 
-async function batch(batchSize: number, items: string[], callback: (item: string) => Promise<ISecurityAdvisory[]>) {
+async function batchSecurityAdvisoryQuery(
+  batchSize: number,
+  items: string[],
+  action: (item: string) => Promise<ISecurityAdvisory[]>,
+) {
   const results: ISecurityAdvisory[] = [];
   for (let i = 0; i < items.length; i += batchSize) {
     const batch = items.slice(i, i + batchSize);
-    const batchResults = await Promise.all(batch.map(callback));
+    const batchResults = await Promise.all(batch.map(action));
     results.push(...batchResults.flat());
   }
   return results;
+}
+
+function versionIsInRange(version: string, range: string): boolean {
+  // TODO: Parse the major/minor/patch version and do a proper comparison, taking in to considerations version ranges (e.g. ">=1.0.0")
+  return true;
 }
