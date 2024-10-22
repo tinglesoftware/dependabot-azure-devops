@@ -138,7 +138,7 @@
       "label": "Auto-approve pull requests",
       "defaultValue": false,
       "required": false,
-      "helpMarkDown": "When set to `true`, pull requests will automatically be approved by the specified user. Defaults to `false`."
+      "helpMarkDown": "When set to `true`, pull requests will automatically be approved by the specified user. Defaults to `false`. Requires [Azure DevOps REST API 7.1](https://learn.microsoft.com/en-us/azure/devops/integrate/concepts/rest-api-versioning?view=azure-devops#supported-versions)"
     },
     {
       "name": "autoApproveUserToken",
