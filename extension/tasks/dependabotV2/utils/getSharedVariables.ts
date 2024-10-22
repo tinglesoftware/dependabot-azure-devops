@@ -89,14 +89,21 @@ export default function getSharedVariables(): ISharedVariables {
   let hostname: string = extractHostname(formattedOrganizationUrl);
   let port: string = formattedOrganizationUrl.port;
   let virtualDirectory: string = extractVirtualDirectory(formattedOrganizationUrl);
+  if (!virtualDirectory) {
+    tl.debug(`No virtual directory detected; Running for Azure DevOps Services.`);
+  } else {
+    tl.debug(`Virtual directory detected; Running for an on-premises Azure DevOps Server.`);
+  }
   let organization: string = extractOrganization(organizationUrl);
   let projectId: string = tl.getVariable('System.TeamProjectId');
   let project: string = encodeURI(tl.getVariable('System.TeamProject')); // encode special characters like spaces
   let repository: string = tl.getInput('targetRepositoryName');
   let repositoryOverridden = typeof repository === 'string';
   if (!repositoryOverridden) {
-    tl.debug('No custom repository provided. The Pipeline Repository Name shall be used.');
     repository = tl.getVariable('Build.Repository.Name');
+    tl.debug(`No custom repository provided; Running update for local repository.`);
+  } else {
+    tl.debug(`Custom repository provided; Running update for remote repository.`);
   }
   repository = encodeURI(repository); // encode special characters like spaces
 

@@ -2,6 +2,7 @@ import { GitPullRequestMergeStrategy, VersionControlChangeType } from 'azure-dev
 import { error, warning } from 'azure-pipelines-task-lib/task';
 import * as path from 'path';
 import { AzureDevOpsWebApiClient } from '../azure-devops/AzureDevOpsWebApiClient';
+import { section } from '../azure-devops/formattingCommands';
 import { IFileChange } from '../azure-devops/interfaces/IFileChange';
 import { IPullRequestProperties } from '../azure-devops/interfaces/IPullRequest';
 import { ISharedVariables } from '../getSharedVariables';
@@ -50,7 +51,8 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
    * @returns
    */
   public async process(update: IDependabotUpdateOperation, type: string, data: any): Promise<boolean> {
-    console.debug(`Processing output '${type}' with data:`, data);
+    section(`Processing '${type}'`);
+    console.debug('Data:', data);
     const project = this.taskInputs.project;
     const repository = this.taskInputs.repository;
     switch (type) {
