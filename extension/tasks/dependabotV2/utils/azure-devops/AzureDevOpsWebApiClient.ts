@@ -28,7 +28,7 @@ export class AzureDevOpsWebApiClient {
   private authenticatedUserId: string;
   private resolvedUserIds: Record<string, string>;
 
-  public static API_VERSION = '7.1';
+  public static API_VERSION = '5.0'; // this is the same version used by dependabot-core
 
   constructor(organisationApiUrl: string, accessToken: string) {
     this.organisationApiUrl = organisationApiUrl.replace(/\/$/, ''); // trim trailing slash
@@ -464,9 +464,18 @@ export class AzureDevOpsWebApiClient {
       const userVote = await this.restApiPut(
         `${this.organisationApiUrl}/${pr.project}/_apis/git/repositories/${pr.repository}/pullrequests/${pr.pullRequestId}/reviewers/${userId}`,
         {
-          vote: 10, // 10 - approved 5 - approved with suggestions 0 - no vote -5 - waiting for author -10 - rejected
-          isReapprove: false, // don't re-approve if already approved
+          // Vote 10 = "approved"; 5 = "approved with suggestions"; 0 = "no vote"; -5 = "waiting for author"; -10 = "rejected"
+          vote: 10,
+          // Reapprove must be set to true after the 2023 August 23 update;
+          // Approval of a previous PR iteration does not count in later iterations, which means we must (re)approve every after push to the source branch
+          // See: https://learn.microsoft.com/en-us/azure/devops/release-notes/2023/sprint-226-update#new-branch-policy-preventing-users-to-approve-their-own-changes
+          //      https://github.com/tinglesoftware/dependabot-azure-devops/issues/1069
+          isReapprove: true,
         },
+        // API version 7.1 is required to use the 'isReapprove' parameter
+        // See: https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-reviewers/create-pull-request-reviewer?view=azure-devops-rest-7.1&tabs=HTTP#request-body
+        //      https://learn.microsoft.com/en-us/azure/devops/integrate/concepts/rest-api-versioning?view=azure-devops#supported-versions
+        '7.1',
       );
       if (userVote?.vote != 10) {
         throw new Error('Failed to approve pull request, vote was not recorded');
@@ -619,7 +628,7 @@ export class AzureDevOpsWebApiClient {
       .map((key) => `${key}=${params[key]}`)
       .join('&');
     const fullUrl = `${url}?api-version=${apiVersion}${queryString ? `&${queryString}` : ''}`;
-    return await this.restApiRequest('GET', url, () =>
+    return await this.restApiRequest('GET', fullUrl, () =>
       this.connection.rest.client.get(fullUrl, {
         Accept: 'application/json',
       }),
@@ -632,7 +641,7 @@ export class AzureDevOpsWebApiClient {
     apiVersion: string = AzureDevOpsWebApiClient.API_VERSION,
   ): Promise<any | undefined> {
     const fullUrl = `${url}?api-version=${apiVersion}`;
-    return await this.restApiRequest('POST', url, () =>
+    return await this.restApiRequest('POST', fullUrl, () =>
       this.connection.rest.client.post(fullUrl, JSON.stringify(data), {
         'Content-Type': 'application/json',
       }),
@@ -645,7 +654,7 @@ export class AzureDevOpsWebApiClient {
     apiVersion: string = AzureDevOpsWebApiClient.API_VERSION,
   ): Promise<any | undefined> {
     const fullUrl = `${url}?api-version=${apiVersion}`;
-    return await this.restApiRequest('PUT', url, () =>
+    return await this.restApiRequest('PUT', fullUrl, () =>
       this.connection.rest.client.put(fullUrl, JSON.stringify(data), {
         'Content-Type': 'application/json',
       }),
@@ -659,7 +668,7 @@ export class AzureDevOpsWebApiClient {
     apiVersion: string = AzureDevOpsWebApiClient.API_VERSION,
   ): Promise<any | undefined> {
     const fullUrl = `${url}?api-version=${apiVersion}`;
-    return await this.restApiRequest('PATCH', url, () =>
+    return await this.restApiRequest('PATCH', fullUrl, () =>
       this.connection.rest.client.patch(fullUrl, JSON.stringify(data), {
         'Content-Type': contentType || 'application/json',
       }),

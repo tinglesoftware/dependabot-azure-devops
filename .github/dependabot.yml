@@ -27,6 +27,7 @@ updates:
         patterns: ['opentelemetry-*']
       rubocop:
         patterns: ['*rubocop*']
+        exclude-patterns: ['rubocop-rspec']
       sentry:
         patterns: ['sentry-*']
 
