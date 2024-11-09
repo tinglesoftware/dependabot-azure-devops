@@ -7,10 +7,11 @@
   "helpMarkDown": "For help please visit https://github.com/tinglesoftware/dependabot-azure-devops/issues",
   "helpUrl": "https://github.com/tinglesoftware/dependabot-azure-devops/issues",
   "releaseNotes": "https://github.com/tinglesoftware/dependabot-azure-devops/releases",
-  "category": "Utility",
+  "author": "Tingle Software",
+  "category": "Azure Pipelines",
   "visibility": ["Build", "Release"],
   "runsOn": ["Agent", "DeploymentGroup"],
-  "author": "Tingle Software",
+  "minimumAgentVersion": "3.232.1",
   "demands": [],
   "version": {
     "Major": 2,
@@ -18,8 +19,7 @@
     "Patch": 0
   },
   "preview": true,
-  "instanceNameFormat": "Dependabot",
-  "minimumAgentVersion": "3.232.1",
+  "instanceNameFormat": "Dependabot update",
   "groups": [
     {
       "name": "pull_requests",
@@ -229,11 +229,9 @@
       "helpMarkDown": "Comma-seperated list of key/value pairs representing the enabled Dependabot experiments e.g. `experiments: 'tidy=true,vendor=true,goprivate=*'`. Available options vary depending on the package ecosystem. See [configuring experiments](https://github.com/tinglesoftware/dependabot-azure-devops/#configuring-experiments) for more details."
     }
   ],
-  "dataSourceBindings": [],
   "execution": {
     "Node20_1": {
-      "target": "index.js",
-      "argumentFormat": ""
+      "target": "index.js"
     }
   }
 }
