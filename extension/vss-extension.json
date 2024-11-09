@@ -24,10 +24,6 @@
     "vulnerabilities",
     "security"
   ],
-  "branding": {
-    "color": "rgb(3, 102, 214)",
-    "theme": "dark"
-  },
   "icons": {
     "default": "images/icon.png"
   },
