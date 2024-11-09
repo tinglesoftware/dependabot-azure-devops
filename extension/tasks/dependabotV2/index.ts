@@ -10,7 +10,7 @@ import {
 } from './utils/dependabot-cli/DependabotOutputProcessor';
 import { IDependabotUpdateOperationResult } from './utils/dependabot-cli/interfaces/IDependabotUpdateOperationResult';
 import { IDependabotUpdate } from './utils/dependabot/interfaces/IDependabotConfig';
-import parseDependabotConfigFile from './utils/dependabot/parseConfigFile';
+import { parseConfigFile as parseDependabotConfigFile } from './utils/dependabot/parseConfigFile';
 import parseTaskInputConfiguration from './utils/getSharedVariables';
 
 async function run() {

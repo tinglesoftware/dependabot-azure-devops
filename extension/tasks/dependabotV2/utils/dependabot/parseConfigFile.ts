@@ -19,7 +19,7 @@ import { IDependabotConfig, IDependabotRegistry, IDependabotUpdate } from './int
  * @param taskInputs the input variables of the task
  * @returns {IDependabotConfig} config - the dependabot configuration
  */
-export default async function parseConfigFile(taskInputs: ISharedVariables): Promise<IDependabotConfig> {
+async function parseConfigFile(taskInputs: ISharedVariables): Promise<IDependabotConfig> {
   const possibleFilePaths = [
     '/.azuredevops/dependabot.yml',
     '/.azuredevops/dependabot.yaml',
@@ -189,10 +189,24 @@ function parseUpdates(config: any): IDependabotUpdate[] {
       dependabotUpdate['open-pull-requests-limit'] = 5;
     }
 
-    if (!dependabotUpdate.directory && dependabotUpdate.directories.length === 0) {
+    if (!dependabotUpdate.directory && !dependabotUpdate.directories?.length) {
       throw new Error(
         "The values 'directory' and 'directories' in dependency update config is missing, you must specify at least one",
       );
+    }
+
+    // replace placholders in config values where the user is likely to use pipeline variables
+    if (dependabotUpdate.assignees) {
+      dependabotUpdate.assignees = dependabotUpdate.assignees.map((a) => convertPlaceholder(a));
+    }
+    if (dependabotUpdate.reviewers) {
+      dependabotUpdate.reviewers = dependabotUpdate.reviewers.map((a) => convertPlaceholder(a));
+    }
+    if (dependabotUpdate.milestone) {
+      dependabotUpdate.milestone = convertPlaceholder(dependabotUpdate.milestone);
+    }
+    if (dependabotUpdate['target-branch']) {
+      dependabotUpdate['target-branch'] = convertPlaceholder(dependabotUpdate['target-branch']);
     }
 
     updates.push(dependabotUpdate);
@@ -336,3 +350,5 @@ const KnownRegistryTypes = [
   'rubygems-server',
   'terraform-registry',
 ];
+
+export { parseConfigFile, parseRegistries, parseUpdates, validateConfiguration };
