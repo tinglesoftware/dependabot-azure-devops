@@ -195,7 +195,7 @@ function parseUpdates(config: any): IDependabotUpdate[] {
       );
     }
 
-    // replace placholders in config values where the user is likely to use pipeline variables
+    // replace placeholders in config values where the user is likely to use pipeline variables
     if (dependabotUpdate.assignees) {
       dependabotUpdate.assignees = dependabotUpdate.assignees.map((a) => convertPlaceholder(a));
     }
