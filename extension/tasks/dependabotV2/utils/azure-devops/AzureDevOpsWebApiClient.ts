@@ -682,24 +682,37 @@ export class AzureDevOpsWebApiClient {
     payload: any,
     requestAsync: () => Promise<IHttpClientResponse>,
   ): Promise<any | undefined> {
+    // Send the request, ready the response
     if (this.debug) console.debug(`🌎 🠊 [${method}] ${url}`);
     const response = await requestAsync();
     const body = await response.readBody();
     if (this.debug) console.debug(`🌎 🠈 [${response.message.statusCode}] ${response.message.statusMessage}`);
+
     try {
+      // Check that the request was successful
       if (response.message.statusCode < 200 || response.message.statusCode > 299) {
         throw new Error(
           `HTTP ${method} '${url}' failed: ${response.message.statusCode} ${response.message.statusMessage}`,
         );
       }
+
+      // Parse the response
       return JSON.parse(body);
     } catch (e) {
+      // In debug mode, log the error, request, and response for debugging
       if (this.debug) {
-        // Log the error, request, and response for debugging purposes
-        if (e) console.debug('ERROR:', e);
-        if (payload) console.debug('REQUEST:', payload);
-        if (body) console.debug('RESPONSE:', body);
+        if (payload) {
+          console.debug('REQUEST:', JSON.stringify(payload, null, 2));
+        }
+        if (body) {
+          try {
+            console.debug('RESPONSE:', JSON.stringify(JSON.parse(body), null, 2));
+          } catch {
+            console.debug('RESPONSE:', body); // If the response is not JSON, just log the raw body
+          }
+        }
       }
+
       throw e;
     }
   }
