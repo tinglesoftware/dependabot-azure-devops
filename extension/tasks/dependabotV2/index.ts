@@ -56,11 +56,13 @@ async function run() {
     const prAuthorClient = new AzureDevOpsWebApiClient(
       taskInputs.organizationUrl.toString(),
       taskInputs.systemAccessToken,
+      taskInputs.debug,
     );
     const prApproverClient = taskInputs.autoApprove
       ? new AzureDevOpsWebApiClient(
           taskInputs.organizationUrl.toString(),
           taskInputs.autoApproveUserToken || taskInputs.systemAccessToken,
+          taskInputs.debug,
         )
       : null;
 
@@ -79,8 +81,9 @@ async function run() {
         taskInputs,
         prAuthorClient,
         prApproverClient,
-        existingPullRequests,
         existingBranchNames,
+        existingPullRequests,
+        taskInputs.debug,
       ),
       taskInputs.debug,
     );
