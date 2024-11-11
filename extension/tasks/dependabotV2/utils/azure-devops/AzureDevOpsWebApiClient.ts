@@ -189,7 +189,7 @@ export class AzureDevOpsWebApiClient {
       if (pr.assignees?.length > 0) {
         for (const assignee of pr.assignees) {
           const identityId = isGuid(assignee) ? assignee : await this.resolveIdentityId(assignee);
-          if (identityId) {
+          if (identityId && !allReviewers.some((r) => r.id === identityId)) {
             allReviewers.push({
               id: identityId,
               isRequired: true,
@@ -203,7 +203,7 @@ export class AzureDevOpsWebApiClient {
       if (pr.reviewers?.length > 0) {
         for (const reviewer of pr.reviewers) {
           const identityId = isGuid(reviewer) ? reviewer : await this.resolveIdentityId(reviewer);
-          if (identityId) {
+          if (identityId && !allReviewers.some((r) => r.id === identityId)) {
             allReviewers.push({
               id: identityId,
             });
