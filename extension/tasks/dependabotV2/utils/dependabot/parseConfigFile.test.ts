@@ -1,6 +1,5 @@
-// write tests for the parseUpdates function
-
 import * as tl from 'azure-pipelines-task-lib/task';
+
 import { parseUpdates } from './parseConfigFile';
 
 describe('parseUpdates', () => {
