@@ -190,6 +190,7 @@ module TingleSoftware
         # GitHub native implementation modifies some of the names in the config file
         # https://docs.github.com/en/github/administering-a-repository/configuration-options-for-dependency-updates#package-ecosystem
         {
+          "dotnet-sdk" => "dotnet_sdk",
           "github-actions" => "github_actions",
           "gitsubmodule" => "submodules",
           "gomod" => "go_modules",
