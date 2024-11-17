@@ -444,7 +444,7 @@ function getPullRequestDescription(packageManager: string, body: string, depende
   let header = '';
   let footer = '';
 
-  // Fix up GitHub mentions encoding issues by removing instances of the zero-width space '\u200B'
+  // Fix up GitHub mentions encoding issues by removing instances of the zero-width space '\u200B' as it does not render correctly in Azure DevOps.
   // https://github.com/dependabot/dependabot-core/issues/9572
   // https://github.com/dependabot/dependabot-core/blob/313fcff149b3126cb78b38d15f018907d729f8cc/common/lib/dependabot/pull_request_creator/message_builder/link_and_mention_sanitizer.rb#L245-L252
   const description = (body || '').replace(new RegExp(decodeURIComponent('%EF%BF%BD%EF%BF%BD%EF%BF%BD'), 'g'), '');
@@ -459,7 +459,8 @@ function getPullRequestDescription(packageManager: string, body: string, depende
     header += compatibilityScoreBadges.join(' ') + '\n\n';
   }
 
-  // Build the full pull request description, trimming leading and trailing newlines
+  // Build the full pull request description.
+  // The header/footer must not be truncated. If the description is too long, we truncate the body.
   const maxDescriptionLength = 4000;
   const maxDescriptionLengthAfterHeaderAndFooter = maxDescriptionLength - header.length - footer.length;
   return `${header}${description.substring(0, maxDescriptionLengthAfterHeaderAndFooter)}${footer}`;
