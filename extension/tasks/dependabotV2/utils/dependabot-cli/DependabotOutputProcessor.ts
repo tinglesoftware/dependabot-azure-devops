@@ -196,8 +196,7 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
         if (newPullRequestId > 0) {
           this.createdPullRequestIds.push(newPullRequestId);
           return true;
-        }
-        else {
+        } else {
           return false;
         }
 

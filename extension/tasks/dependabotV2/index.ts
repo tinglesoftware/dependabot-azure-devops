@@ -138,8 +138,8 @@ async function run() {
 
       // Run an update job for "all dependencies"; this will create new pull requests for dependencies that need updating
       const openPullRequestsLimit = update['open-pull-requests-limit'];
-      const openPullRequests = Object.entries(existingPullRequestsForPackageEcosystem).length
-      const hasReachedOpenPullRequestLimit = (openPullRequestsLimit > 0 && openPullRequests >= openPullRequestsLimit);
+      const openPullRequests = Object.entries(existingPullRequestsForPackageEcosystem).length;
+      const hasReachedOpenPullRequestLimit = openPullRequestsLimit > 0 && openPullRequests >= openPullRequestsLimit;
       if (!hasReachedOpenPullRequestLimit) {
         failedTasks += handleUpdateOperationResults(
           await dependabot.update(
@@ -154,7 +154,7 @@ async function run() {
             dependabotUpdaterOptions,
           ),
         );
-      }else {
+      } else {
         warning(
           `Skipping update for ${packageEcosystem} packages as the open pull requests limit (${openPullRequestsLimit}) has already been reached`,
         );
