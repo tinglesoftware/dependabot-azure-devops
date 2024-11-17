@@ -138,8 +138,8 @@ async function run() {
 
       // Run an update job for "all dependencies"; this will create new pull requests for dependencies that need updating
       const openPullRequestsLimit = update['open-pull-requests-limit'];
-      const openPullRequests = Object.entries(existingPullRequestsForPackageEcosystem).length;
-      const hasReachedOpenPullRequestLimit = openPullRequestsLimit > 0 && openPullRequests >= openPullRequestsLimit;
+      const openPullRequestsCount = Object.entries(existingPullRequestsForPackageEcosystem).length;
+      const hasReachedOpenPullRequestLimit = openPullRequestsLimit > 0 && openPullRequestsCount >= openPullRequestsLimit;
       if (!hasReachedOpenPullRequestLimit) {
         failedTasks += handleUpdateOperationResults(
           await dependabot.update(

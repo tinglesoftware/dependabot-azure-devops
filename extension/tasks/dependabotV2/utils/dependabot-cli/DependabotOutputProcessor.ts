@@ -101,8 +101,8 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
 
         // Skip if active pull request limit reached.
         const openPullRequestsLimit = update.config['open-pull-requests-limit'];
-        const openPullRequests = this.createdPullRequestIds.length + this.existingPullRequests.length;
-        if (openPullRequestsLimit > 0 && openPullRequests >= openPullRequestsLimit) {
+        const openPullRequestsCount = this.createdPullRequestIds.length + this.existingPullRequests.length;
+        if (openPullRequestsLimit > 0 && openPullRequestsCount >= openPullRequestsLimit) {
           warning(
             `Skipping pull request creation of '${title}' as the open pull requests limit (${openPullRequestsLimit}) has been reached`,
           );
