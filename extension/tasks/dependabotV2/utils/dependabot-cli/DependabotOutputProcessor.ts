@@ -39,7 +39,7 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
     prAuthorClient: AzureDevOpsWebApiClient,
     prApproverClient: AzureDevOpsWebApiClient,
     existingBranchNames: string[],
-    existingPullRequests: IPullRequestProperties[]
+    existingPullRequests: IPullRequestProperties[],
     debug: boolean = false,
   ) {
     this.taskInputs = taskInputs;
