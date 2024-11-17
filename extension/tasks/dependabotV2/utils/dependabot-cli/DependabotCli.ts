@@ -23,7 +23,7 @@ export class DependabotCli {
 
   public static readonly CLI_IMAGE_LATEST = 'github.com/dependabot/cli/cmd/dependabot@latest';
 
-  constructor(cliToolImage: string, outputProcessor: IDependabotUpdateOutputProcessor, debug: boolean) {
+  constructor(cliToolImage: string, outputProcessor: IDependabotUpdateOutputProcessor, debug: boolean = false) {
     this.jobsPath = path.join(os.tmpdir(), 'dependabot-jobs');
     this.toolImage = cliToolImage;
     this.outputProcessor = outputProcessor;

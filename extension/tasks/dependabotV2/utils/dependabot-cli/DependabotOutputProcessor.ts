@@ -16,9 +16,10 @@ import { IDependabotUpdateOutputProcessor } from './interfaces/IDependabotUpdate
 export class DependabotOutputProcessor implements IDependabotUpdateOutputProcessor {
   private readonly prAuthorClient: AzureDevOpsWebApiClient;
   private readonly prApproverClient: AzureDevOpsWebApiClient;
-  private readonly existingPullRequests: IPullRequestProperties[];
   private readonly existingBranchNames: string[];
+  private readonly existingPullRequests: IPullRequestProperties[];
   private readonly taskInputs: ISharedVariables;
+  private readonly debug: boolean;
 
   // Custom properties used to store dependabot metadata in projects.
   // https://learn.microsoft.com/en-us/rest/api/azure/devops/core/projects/set-project-properties
@@ -36,14 +37,16 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
     taskInputs: ISharedVariables,
     prAuthorClient: AzureDevOpsWebApiClient,
     prApproverClient: AzureDevOpsWebApiClient,
-    existingPullRequests: IPullRequestProperties[],
     existingBranchNames: string[],
+    existingPullRequests: IPullRequestProperties[],
+    debug: boolean = false,
   ) {
     this.taskInputs = taskInputs;
     this.prAuthorClient = prAuthorClient;
     this.prApproverClient = prApproverClient;
-    this.existingPullRequests = existingPullRequests;
     this.existingBranchNames = existingBranchNames;
+    this.existingPullRequests = existingPullRequests;
+    this.debug = debug;
   }
 
   /**
@@ -54,10 +57,13 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
    * @returns
    */
   public async process(update: IDependabotUpdateOperation, type: string, data: any): Promise<boolean> {
-    section(`Processing '${type}'`);
-    console.debug('Data:', data);
     const project = this.taskInputs.project;
     const repository = this.taskInputs.repository;
+
+    section(`Processing '${type}'`);
+    if (this.debug) {
+      console.debug(JSON.stringify(data, null, 2));
+    }
     switch (type) {
       // Documentation on the 'data' model for each output type can be found here:
       // See: https://github.com/dependabot/cli/blob/main/internal/model/update.go
@@ -65,7 +71,6 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
       case 'update_dependency_list':
         // Store the dependency list snapshot in project properties, if configured
         if (this.taskInputs.storeDependencyList) {
-          console.info(`Updating the dependency list snapshot for project '${project}'...`);
           return await this.prAuthorClient.updateProjectProperty(
             this.taskInputs.projectId,
             DependabotOutputProcessor.PROJECT_PROPERTY_NAME_DEPENDENCY_LIST,

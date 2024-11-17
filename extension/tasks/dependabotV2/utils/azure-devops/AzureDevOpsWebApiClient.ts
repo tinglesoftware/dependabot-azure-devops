@@ -23,18 +23,19 @@ import {
 export class AzureDevOpsWebApiClient {
   private readonly organisationApiUrl: string;
   private readonly identityApiUrl: string;
-  private readonly accessToken: string;
   private readonly connection: WebApi;
+  private readonly debug: boolean;
+
   private authenticatedUserId: string;
   private resolvedUserIds: Record<string, string>;
 
   public static API_VERSION = '5.0'; // this is the same version used by dependabot-core
 
-  constructor(organisationApiUrl: string, accessToken: string) {
+  constructor(organisationApiUrl: string, accessToken: string, debug: boolean = false) {
     this.organisationApiUrl = organisationApiUrl.replace(/\/$/, ''); // trim trailing slash
     this.identityApiUrl = getIdentityApiUrl(organisationApiUrl).replace(/\/$/, ''); // trim trailing slash
-    this.accessToken = accessToken;
     this.connection = new WebApi(organisationApiUrl, getPersonalAccessTokenHandler(accessToken));
+    this.debug = debug;
     this.resolvedUserIds = {};
   }
 
@@ -628,7 +629,7 @@ export class AzureDevOpsWebApiClient {
       .map((key) => `${key}=${params[key]}`)
       .join('&');
     const fullUrl = `${url}?api-version=${apiVersion}${queryString ? `&${queryString}` : ''}`;
-    return await this.restApiRequest('GET', fullUrl, () =>
+    return await this.restApiRequest('GET', fullUrl, undefined, () =>
       this.connection.rest.client.get(fullUrl, {
         Accept: 'application/json',
       }),
@@ -641,7 +642,7 @@ export class AzureDevOpsWebApiClient {
     apiVersion: string = AzureDevOpsWebApiClient.API_VERSION,
   ): Promise<any | undefined> {
     const fullUrl = `${url}?api-version=${apiVersion}`;
-    return await this.restApiRequest('POST', fullUrl, () =>
+    return await this.restApiRequest('POST', fullUrl, data, () =>
       this.connection.rest.client.post(fullUrl, JSON.stringify(data), {
         'Content-Type': 'application/json',
       }),
@@ -654,7 +655,7 @@ export class AzureDevOpsWebApiClient {
     apiVersion: string = AzureDevOpsWebApiClient.API_VERSION,
   ): Promise<any | undefined> {
     const fullUrl = `${url}?api-version=${apiVersion}`;
-    return await this.restApiRequest('PUT', fullUrl, () =>
+    return await this.restApiRequest('PUT', fullUrl, data, () =>
       this.connection.rest.client.put(fullUrl, JSON.stringify(data), {
         'Content-Type': 'application/json',
       }),
@@ -668,7 +669,7 @@ export class AzureDevOpsWebApiClient {
     apiVersion: string = AzureDevOpsWebApiClient.API_VERSION,
   ): Promise<any | undefined> {
     const fullUrl = `${url}?api-version=${apiVersion}`;
-    return await this.restApiRequest('PATCH', fullUrl, () =>
+    return await this.restApiRequest('PATCH', fullUrl, data, () =>
       this.connection.rest.client.patch(fullUrl, JSON.stringify(data), {
         'Content-Type': contentType || 'application/json',
       }),
@@ -678,21 +679,40 @@ export class AzureDevOpsWebApiClient {
   private async restApiRequest(
     method: string,
     url: string,
-    request: () => Promise<IHttpClientResponse>,
+    payload: any,
+    requestAsync: () => Promise<IHttpClientResponse>,
   ): Promise<any | undefined> {
-    console.debug(`🌎 🠊 [${method}] ${url}`);
-    const response = await request();
+    // Send the request, ready the response
+    if (this.debug) console.debug(`🌎 🠊 [${method}] ${url}`);
+    const response = await requestAsync();
     const body = await response.readBody();
-    console.debug(`🌎 🠈 [${response.message.statusCode}] ${response.message.statusMessage}`);
+    if (this.debug) console.debug(`🌎 🠈 [${response.message.statusCode}] ${response.message.statusMessage}`);
+
     try {
+      // Check that the request was successful
       if (response.message.statusCode < 200 || response.message.statusCode > 299) {
-        throw new Error(`Request to '${url}' failed: ${response.message.statusCode} ${response.message.statusMessage}`);
+        throw new Error(
+          `HTTP ${method} '${url}' failed: ${response.message.statusCode} ${response.message.statusMessage}`,
+        );
       }
+
+      // Parse the response
       return JSON.parse(body);
     } catch (e) {
-      if (body) {
-        console.debug(body);
+      // In debug mode, log the error, request, and response for debugging
+      if (this.debug) {
+        if (payload) {
+          console.debug('REQUEST:', JSON.stringify(payload, null, 2));
+        }
+        if (body) {
+          try {
+            console.debug('RESPONSE:', JSON.stringify(JSON.parse(body), null, 2));
+          } catch {
+            console.debug('RESPONSE:', body); // If the response is not JSON, just log the raw body
+          }
+        }
       }
+
       throw e;
     }
   }
