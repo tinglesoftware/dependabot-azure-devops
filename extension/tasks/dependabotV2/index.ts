@@ -137,19 +137,28 @@ async function run() {
       ).map(([id, deps]) => deps);
 
       // Run an update job for "all dependencies"; this will create new pull requests for dependencies that need updating
-      failedTasks += handleUpdateOperationResults(
-        await dependabot.update(
-          DependabotJobBuilder.newUpdateAllJob(
-            taskInputs,
-            updateId,
-            update,
-            dependabotConfig.registries,
-            dependencyList?.['dependencies'],
-            existingPullRequestDependenciesForPackageEcosystem,
+      const openPullRequestsLimit = update['open-pull-requests-limit'];
+      const openPullRequests = Object.entries(existingPullRequestsForPackageEcosystem).length
+      const hasReachedOpenPullRequestLimit = (openPullRequestsLimit > 0 && openPullRequests >= openPullRequestsLimit);
+      if (!hasReachedOpenPullRequestLimit) {
+        failedTasks += handleUpdateOperationResults(
+          await dependabot.update(
+            DependabotJobBuilder.newUpdateAllJob(
+              taskInputs,
+              updateId,
+              update,
+              dependabotConfig.registries,
+              dependencyList?.['dependencies'],
+              existingPullRequestDependenciesForPackageEcosystem,
+            ),
+            dependabotUpdaterOptions,
           ),
-          dependabotUpdaterOptions,
-        ),
-      );
+        );
+      }else {
+        warning(
+          `Skipping update for ${packageEcosystem} packages as the open pull requests limit (${openPullRequestsLimit}) has already been reached`,
+        );
+      }
 
       // If there are existing pull requests, run an update job for each one; this will resolve merge conflicts and close pull requests that are no longer needed
       const numberOfPullRequestsToUpdate = Object.keys(existingPullRequestsForPackageEcosystem).length;
@@ -172,7 +181,7 @@ async function run() {
           }
         } else {
           warning(
-            `Skipping update of ${numberOfPullRequestsToUpdate} existing pull request(s) as 'skipPullRequests' is set to 'true'`,
+            `Skipping update of ${numberOfPullRequestsToUpdate} existing ${packageEcosystem} package pull request(s) as 'skipPullRequests' is set to 'true'`,
           );
         }
       }

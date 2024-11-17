@@ -18,6 +18,7 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
   private readonly prApproverClient: AzureDevOpsWebApiClient;
   private readonly existingBranchNames: string[];
   private readonly existingPullRequests: IPullRequestProperties[];
+  private readonly createdPullRequestIds: number[];
   private readonly taskInputs: ISharedVariables;
   private readonly debug: boolean;
 
@@ -38,7 +39,7 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
     prAuthorClient: AzureDevOpsWebApiClient,
     prApproverClient: AzureDevOpsWebApiClient,
     existingBranchNames: string[],
-    existingPullRequests: IPullRequestProperties[],
+    existingPullRequests: IPullRequestProperties[]
     debug: boolean = false,
   ) {
     this.taskInputs = taskInputs;
@@ -46,6 +47,7 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
     this.prApproverClient = prApproverClient;
     this.existingBranchNames = existingBranchNames;
     this.existingPullRequests = existingPullRequests;
+    this.createdPullRequestIds = [];
     this.debug = debug;
   }
 
@@ -91,16 +93,18 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
         return true;
 
       case 'create_pull_request':
+        const title = data['pr-title'];
         if (this.taskInputs.skipPullRequests) {
-          warning(`Skipping pull request creation as 'skipPullRequests' is set to 'true'`);
+          warning(`Skipping pull request creation of '${title}' as 'skipPullRequests' is set to 'true'`);
           return true;
         }
 
         // Skip if active pull request limit reached.
-        const openPullRequestLimit = update.config['open-pull-requests-limit'];
-        if (openPullRequestLimit > 0 && this.existingPullRequests.length >= openPullRequestLimit) {
+        const openPullRequestsLimit = update.config['open-pull-requests-limit'];
+        const openPullRequests = this.createdPullRequestIds.length + this.existingPullRequests.length;
+        if (openPullRequestsLimit > 0 && openPullRequests >= openPullRequestsLimit) {
           warning(
-            `Skipping pull request creation as the maximum number of active pull requests (${openPullRequestLimit}) has been reached`,
+            `Skipping pull request creation of '${title}' as the open pull requests limit (${openPullRequestsLimit}) has been reached`,
           );
           return true;
         }
@@ -122,14 +126,14 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
         const existingBranch = this.existingBranchNames?.find((branch) => sourceBranch == branch) || [];
         if (existingBranch.length) {
           error(
-            `Unable to create pull request as source branch '${sourceBranch}' already exists; Delete the existing branch and try again.`,
+            `Unable to create pull request '${title}' as source branch '${sourceBranch}' already exists; Delete the existing branch and try again.`,
           );
           return false;
         }
         const conflictingBranches = this.existingBranchNames?.filter((branch) => sourceBranch.startsWith(branch)) || [];
         if (conflictingBranches.length) {
           error(
-            `Unable to create pull request as source branch '${sourceBranch}' would conflict with existing branch(es) '${conflictingBranches.join(', ')}'; Delete the conflicting branch(es) and try again.`,
+            `Unable to create pull request '${title}' as source branch '${sourceBranch}' would conflict with existing branch(es) '${conflictingBranches.join(', ')}'; Delete the conflicting branch(es) and try again.`,
           );
           return false;
         }
@@ -188,7 +192,14 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
           });
         }
 
-        return newPullRequestId > 0;
+        // Store the new pull request ID, so we can keep track of the total number of open pull requests
+        if (newPullRequestId > 0) {
+          this.createdPullRequestIds.push(newPullRequestId);
+          return true;
+        }
+        else {
+          return false;
+        }
 
       case 'update_pull_request':
         if (this.taskInputs.skipPullRequests) {
@@ -203,7 +214,7 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
         );
         if (!pullRequestToUpdate) {
           error(
-            `Could not find pull request to update for package manager '${update.job['package-manager']}' and dependencies '${data['dependency-names'].join(', ')}'`,
+            `Could not find pull request to update for package manager '${update.job['package-manager']}' with dependencies '${data['dependency-names'].join(', ')}'`,
           );
           return false;
         }
@@ -249,7 +260,7 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
         );
         if (!pullRequestToClose) {
           error(
-            `Could not find pull request to close for package manager '${update.job['package-manager']}' and dependencies '${data['dependency-names'].join(', ')}'`,
+            `Could not find pull request to close for package manager '${update.job['package-manager']}' with dependencies '${data['dependency-names'].join(', ')}'`,
           );
           return false;
         }
