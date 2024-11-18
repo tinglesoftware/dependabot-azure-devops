@@ -132,6 +132,7 @@ $package_manager = ENV["DEPENDABOT_PACKAGE_MANAGER"] || "bundler"
 # https://docs.github.com/en/github/administering-a-repository/configuration-options-for-dependency-updates#package-ecosystem
 # [Hash<String, String>]
 PACKAGE_ECOSYSTEM_MAPPING = {
+  "dotnet-sdk" => "dotnet_sdk",
   "github-actions" => "github_actions",
   "gitsubmodule" => "submodules",
   "gomod" => "go_modules",

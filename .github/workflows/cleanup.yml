@@ -16,6 +16,7 @@ jobs:
           - { ecosystem: cargo }
           - { ecosystem: composer }
           - { ecosystem: docker }
+          - { ecosystem: dotnet-sdk }
           - { ecosystem: elm }
           - { ecosystem: gitsubmodule }
           - { ecosystem: github-actions }

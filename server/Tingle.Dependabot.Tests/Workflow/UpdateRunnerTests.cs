@@ -309,6 +309,7 @@ public class UpdateRunnerTests
 
     public static TheoryData<string, string> ConvertEcosystemToPackageManagerValues => new()
     {
+        { "dotnet-sdk", "dotnet_sdk" },
         { "github-actions", "github_actions" },
         { "gitsubmodule", "submodules" },
         { "gomod", "go_modules" },
