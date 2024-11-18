@@ -17,7 +17,6 @@ GEMSPECS = %w(
   go_modules/dependabot-go_modules.gemspec
   terraform/dependabot-terraform.gemspec
   docker/dependabot-docker.gemspec
-  dotnet_sdk/dependabot-dotnet_sdk.gemspec
   git_submodules/dependabot-git_submodules.gemspec
   github_actions/dependabot-github_actions.gemspec
   nuget/dependabot-nuget.gemspec
