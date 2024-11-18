@@ -38,7 +38,7 @@ updates:
       time: '02:00'
     groups:
       dotnet-docker:
-        patterns: ["dotnet/*"]
+        patterns: ['dotnet/*']
 
   - package-ecosystem: 'nuget'
     directory: '/'

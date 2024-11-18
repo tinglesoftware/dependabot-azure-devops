@@ -61,6 +61,7 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
   public async process(update: IDependabotUpdateOperation, type: string, data: any): Promise<boolean> {
     const project = this.taskInputs.project;
     const repository = this.taskInputs.repository;
+    const packageManager = update?.job?.['package-manager'];
 
     section(`Processing '${type}'`);
     if (this.debug) {
@@ -79,7 +80,7 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
             function (existingValue: string) {
               const repoDependencyLists = JSON.parse(existingValue || '{}');
               repoDependencyLists[repository] = repoDependencyLists[repository] || {};
-              repoDependencyLists[repository][update.job['package-manager']] = {
+              repoDependencyLists[repository][packageManager] = {
                 'dependencies': data['dependencies'],
                 'dependency-files': data['dependency_files'],
                 'last-updated': new Date().toISOString(),
@@ -154,7 +155,7 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
             name: this.taskInputs.authorName || DependabotOutputProcessor.PR_DEFAULT_AUTHOR_NAME,
           },
           title: data['pr-title'],
-          description: data['pr-body'],
+          description: getPullRequestDescription(packageManager, data['pr-body'], data['dependencies']),
           commitMessage: data['commit-message'],
           autoComplete: this.taskInputs.setAutoComplete
             ? {
@@ -180,7 +181,7 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
           labels: update.config.labels?.map((label) => label?.trim()) || [],
           workItems: update.config.milestone ? [update.config.milestone] : [],
           changes: changedFiles,
-          properties: buildPullRequestProperties(update.job['package-manager'], dependencies),
+          properties: buildPullRequestProperties(packageManager, dependencies),
         });
 
         // Auto-approve the pull request, if required
@@ -207,13 +208,10 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
         }
 
         // Find the pull request to update
-        const pullRequestToUpdate = this.getPullRequestForDependencyNames(
-          update.job['package-manager'],
-          data['dependency-names'],
-        );
+        const pullRequestToUpdate = this.getPullRequestForDependencyNames(packageManager, data['dependency-names']);
         if (!pullRequestToUpdate) {
           error(
-            `Could not find pull request to update for package manager '${update.job['package-manager']}' with dependencies '${data['dependency-names'].join(', ')}'`,
+            `Could not find pull request to update for package manager '${packageManager}' with dependencies '${data['dependency-names'].join(', ')}'`,
           );
           return false;
         }
@@ -253,13 +251,10 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
         }
 
         // Find the pull request to close
-        const pullRequestToClose = this.getPullRequestForDependencyNames(
-          update.job['package-manager'],
-          data['dependency-names'],
-        );
+        const pullRequestToClose = this.getPullRequestForDependencyNames(packageManager, data['dependency-names']);
         if (!pullRequestToClose) {
           error(
-            `Could not find pull request to close for package manager '${update.job['package-manager']}' with dependencies '${data['dependency-names'].join(', ')}'`,
+            `Could not find pull request to close for package manager '${packageManager}' with dependencies '${data['dependency-names'].join(', ')}'`,
           );
           return false;
         }
@@ -443,4 +438,30 @@ function getDependencyNames(dependencies: any): string[] {
 function areEqual(a: string[], b: string[]): boolean {
   if (a.length !== b.length) return false;
   return a.every((name) => b.includes(name));
+}
+
+function getPullRequestDescription(packageManager: string, body: string, dependencies: any[]): string {
+  let header = '';
+  let footer = '';
+
+  // Fix up GitHub mentions encoding issues by removing instances of the zero-width space '\u200B' as it does not render correctly in Azure DevOps.
+  // https://github.com/dependabot/dependabot-core/issues/9572
+  // https://github.com/dependabot/dependabot-core/blob/313fcff149b3126cb78b38d15f018907d729f8cc/common/lib/dependabot/pull_request_creator/message_builder/link_and_mention_sanitizer.rb#L245-L252
+  const description = (body || '').replace(new RegExp(decodeURIComponent('%EF%BF%BD%EF%BF%BD%EF%BF%BD'), 'g'), '');
+
+  // If there is exactly one dependency, add a compatibility score badge to the description header.
+  // Compatibility scores are intended for single dependency security updates, not group updates.
+  // https://docs.github.com/en/github/managing-security-vulnerabilities/about-dependabot-security-updates#about-compatibility-scores
+  if (dependencies.length === 1) {
+    const compatibilityScoreBadges = dependencies.map((dep) => {
+      return `![Dependabot compatibility score](https://dependabot-badges.githubapp.com/badges/compatibility_score?dependency-name=${dep['name']}&package-manager=${packageManager}&previous-version=${dep['previous-version']}&new-version=${dep['version']})`;
+    });
+    header += compatibilityScoreBadges.join(' ') + '\n\n';
+  }
+
+  // Build the full pull request description.
+  // The header/footer must not be truncated. If the description is too long, we truncate the body.
+  const maxDescriptionLength = 4000;
+  const maxDescriptionLengthAfterHeaderAndFooter = maxDescriptionLength - header.length - footer.length;
+  return `${header}${description.substring(0, maxDescriptionLengthAfterHeaderAndFooter)}${footer}`;
 }
