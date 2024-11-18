@@ -211,7 +211,7 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
         const pullRequestToUpdate = this.getPullRequestForDependencyNames(packageManager, data['dependency-names']);
         if (!pullRequestToUpdate) {
           error(
-            `Could not find pull request to update for package manager '${packageManager}' and dependencies '${data['dependency-names'].join(', ')}'`,
+            `Could not find pull request to update for package manager '${packageManager}' with dependencies '${data['dependency-names'].join(', ')}'`,
           );
           return false;
         }
@@ -254,7 +254,7 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
         const pullRequestToClose = this.getPullRequestForDependencyNames(packageManager, data['dependency-names']);
         if (!pullRequestToClose) {
           error(
-            `Could not find pull request to close for package manager '${packageManager}' and dependencies '${data['dependency-names'].join(', ')}'`,
+            `Could not find pull request to close for package manager '${packageManager}' with dependencies '${data['dependency-names'].join(', ')}'`,
           );
           return false;
         }
