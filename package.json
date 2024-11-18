@@ -3,11 +3,15 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
+    "prepare": "husky",
+    "postinstall": "npm --prefix extension install",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
   "devDependencies": {
+    "husky": "^9.1.6",
     "prettier": "3.3.3",
-    "prettier-plugin-organize-imports": "4.1.0"
+    "prettier-plugin-organize-imports": "4.1.0",
+    "pretty-quick": "^4.0.0"
   }
 }
