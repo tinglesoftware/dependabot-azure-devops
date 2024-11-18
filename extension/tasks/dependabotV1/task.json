@@ -7,10 +7,11 @@
   "helpMarkDown": "For help please visit https://github.com/tinglesoftware/dependabot-azure-devops/issues",
   "helpUrl": "https://github.com/tinglesoftware/dependabot-azure-devops/issues",
   "releaseNotes": "https://github.com/tinglesoftware/dependabot-azure-devops/releases",
-  "category": "Utility",
+  "author": "Tingle Software",
+  "category": "Azure Pipelines",
   "visibility": ["Build", "Release"],
   "runsOn": ["Agent", "DeploymentGroup"],
-  "author": "Tingle Software",
+  "minimumAgentVersion": "3.232.1",
   "demands": [],
   "version": {
     "Major": 1,
@@ -19,8 +20,7 @@
   },
   "deprecated": true,
   "deprecationMessage": "This task version is deprecated and is no longer maintained. Please upgrade to the latest version to continue receiving fixes and features. More details: https://github.com/tinglesoftware/dependabot-azure-devops/discussions/1317.",
-  "instanceNameFormat": "Dependabot",
-  "minimumAgentVersion": "3.232.1",
+  "instanceNameFormat": "Dependabot update",
   "groups": [
     {
       "name": "security_updates",
@@ -255,11 +255,9 @@
       "helpMarkDown": "Ensure that the host ssh socket is forwarded to the container to authenticate with ssh"
     }
   ],
-  "dataSourceBindings": [],
   "execution": {
     "Node20_1": {
-      "target": "index.js",
-      "argumentFormat": ""
+      "target": "index.js"
     }
   }
 }

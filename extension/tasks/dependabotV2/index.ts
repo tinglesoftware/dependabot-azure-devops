@@ -64,11 +64,13 @@ async function run() {
     const prAuthorClient = new AzureDevOpsWebApiClient(
       taskInputs.organizationUrl.toString(),
       taskInputs.systemAccessToken,
+      taskInputs.debug,
     );
     const prApproverClient = taskInputs.autoApprove
       ? new AzureDevOpsWebApiClient(
           taskInputs.organizationUrl.toString(),
           taskInputs.autoApproveUserToken || taskInputs.systemAccessToken,
+          taskInputs.debug,
         )
       : null;
 
@@ -87,8 +89,9 @@ async function run() {
         taskInputs,
         prAuthorClient,
         prApproverClient,
-        existingPullRequests,
         existingBranchNames,
+        existingPullRequests,
+        taskInputs.debug,
       ),
       taskInputs.debug,
     );
@@ -161,24 +164,34 @@ async function run() {
       }
 
       // Run an update job for "all dependencies"; this will create new pull requests for dependencies that need updating
-      const dependenciesHaveVulnerabilities = dependencyNamesToUpdate.length && securityAdvisories.length;
-      if (!securityUpdatesOnly || dependenciesHaveVulnerabilities) {
-        failedTasks += handleUpdateOperationResults(
-          await dependabot.update(
-            DependabotJobBuilder.updateAllDependenciesJob(
-              taskInputs,
-              updateId,
-              update,
-              dependabotConfig.registries,
-              dependencyNamesToUpdate,
-              existingPullRequestDependenciesForPackageEcosystem,
-              securityAdvisories,
+      const openPullRequestsLimit = update['open-pull-requests-limit'];
+      const openPullRequestsCount = Object.entries(existingPullRequestsForPackageEcosystem).length;
+      const hasReachedOpenPullRequestLimit =
+        openPullRequestsLimit > 0 && openPullRequestsCount >= openPullRequestsLimit;
+      if (!hasReachedOpenPullRequestLimit) {
+        const dependenciesHaveVulnerabilities = dependencyNamesToUpdate.length && securityAdvisories.length;
+        if (!securityUpdatesOnly || dependenciesHaveVulnerabilities) {
+          failedTasks += handleUpdateOperationResults(
+            await dependabot.update(
+              DependabotJobBuilder.updateAllDependenciesJob(
+                taskInputs,
+                updateId,
+                update,
+                dependabotConfig.registries,
+                dependencyNamesToUpdate,
+                existingPullRequestDependenciesForPackageEcosystem,
+                securityAdvisories,
+              ),
+              dependabotUpdaterOptions,
             ),
-            dependabotUpdaterOptions,
-          ),
-        );
+          );
+        } else {
+          console.info('Nothing to update; dependencies are not affected by any known vulnerability');
+        }
       } else {
-        console.info('Nothing to update; dependencies are not affected by any known vulnerability');
+        warning(
+          `Skipping update for ${packageEcosystem} packages as the open pull requests limit (${openPullRequestsLimit}) has already been reached`,
+        );
       }
 
       // If there are existing pull requests, run an update job for each one; this will resolve merge conflicts and close pull requests that are no longer needed
@@ -202,7 +215,7 @@ async function run() {
           }
         } else {
           warning(
-            `Skipping update of ${numberOfPullRequestsToUpdate} existing pull request(s) as 'skipPullRequests' is set to 'true'`,
+            `Skipping update of ${numberOfPullRequestsToUpdate} existing ${packageEcosystem} package pull request(s) as 'skipPullRequests' is set to 'true'`,
           );
         }
       }

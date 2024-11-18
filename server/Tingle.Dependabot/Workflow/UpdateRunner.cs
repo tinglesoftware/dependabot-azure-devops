@@ -474,6 +474,7 @@ internal partial class UpdateRunner
 
         return ecosystem switch
         {
+            "dotnet-sdk" => "dotnet_sdk",
             "github-actions" => "github_actions",
             "gitsubmodule" => "submodules",
             "gomod" => "go_modules",

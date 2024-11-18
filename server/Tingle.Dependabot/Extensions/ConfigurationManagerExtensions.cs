@@ -16,26 +16,24 @@ public static class ConfigurationManagerExtensions
         var section = manager.GetSection("AzureAppConfig");
         var endpoint = section.GetValue<Uri?>("Endpoint");
         var label = section.GetValue<string?>("Label") ?? environment.EnvironmentName;
-        if (endpoint is not null)
+        if (endpoint is null) return manager;
+
+        var refreshInterval = section.GetValue<TimeSpan?>("RefreshInterval") ?? TimeSpan.FromHours(1);
+        manager.AddAzureAppConfiguration(options =>
         {
-            var cacheExpiration = section.GetValue<TimeSpan?>("CacheExpiration") ?? TimeSpan.FromHours(1);
-            var cacheExpirationInterval = section.GetValue<TimeSpan?>("CacheExpirationInterval") ?? TimeSpan.FromMinutes(30);
-            manager.AddAzureAppConfiguration(options =>
-            {
-                options.Connect(endpoint: endpoint, credential: new DefaultAzureCredential())
-                       .Select("*", label)
-                       .ConfigureRefresh(o =>
-                       {
-                           o.Register("Refresh", label, refreshAll: true) // key to use to trigger refresh
-                            .SetCacheExpiration(cacheExpiration);
-                       })
-                       .UseFeatureFlags(o =>
-                       {
-                           o.Label = label;
-                           o.CacheExpirationInterval = cacheExpirationInterval;
-                       });
-            });
-        }
+            options.Connect(endpoint: endpoint, credential: new DefaultAzureCredential())
+                .Select("*", label)
+                .ConfigureRefresh(o =>
+                {
+                    o.Register("Refresh", label, refreshAll: true); // key to use to trigger refresh
+                    o.SetRefreshInterval(refreshInterval);
+                })
+                .UseFeatureFlags(o =>
+                {
+                    o.Label = label;
+                    o.SetRefreshInterval(refreshInterval);
+                });
+        });
 
         return manager;
     }

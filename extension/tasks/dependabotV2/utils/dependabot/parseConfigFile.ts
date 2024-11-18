@@ -158,6 +158,8 @@ function parseUpdates(config: any): IDependabotUpdate[] {
       switch (ecosystem) {
         case 'devcontainer':
           return 'devcontainers';
+        case 'dotnet-sdk':
+          return 'dotnet_sdk';
         case 'github-actions':
           return 'github_actions';
         case 'gitsubmodule':

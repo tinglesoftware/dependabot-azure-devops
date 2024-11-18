@@ -40,12 +40,12 @@ jobs:
           fetch-depth: 0 # Required for GitVersion
 
       - name: Install GitVersion
-        uses: gittools/actions/gitversion/setup@v3.0.0
+        uses: gittools/actions/gitversion/setup@v3.0.1
         with:
           versionSpec: '6.x'
 
       - name: Determine Version
-        uses: gittools/actions/gitversion/execute@v3.0.0
+        uses: gittools/actions/gitversion/execute@v3.0.1
         id: gitversion
         with:
           useConfigFile: true
@@ -53,7 +53,7 @@ jobs:
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.x'
+          dotnet-version: '9.x'
 
       - name: Test
         run: dotnet test -c Release --collect "Code coverage"

@@ -16,9 +16,11 @@ import { IDependabotUpdateOutputProcessor } from './interfaces/IDependabotUpdate
 export class DependabotOutputProcessor implements IDependabotUpdateOutputProcessor {
   private readonly prAuthorClient: AzureDevOpsWebApiClient;
   private readonly prApproverClient: AzureDevOpsWebApiClient;
-  private readonly existingPullRequests: IPullRequestProperties[];
   private readonly existingBranchNames: string[];
+  private readonly existingPullRequests: IPullRequestProperties[];
+  private readonly createdPullRequestIds: number[];
   private readonly taskInputs: ISharedVariables;
+  private readonly debug: boolean;
 
   // Custom properties used to store dependabot metadata in projects.
   // https://learn.microsoft.com/en-us/rest/api/azure/devops/core/projects/set-project-properties
@@ -36,14 +38,17 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
     taskInputs: ISharedVariables,
     prAuthorClient: AzureDevOpsWebApiClient,
     prApproverClient: AzureDevOpsWebApiClient,
-    existingPullRequests: IPullRequestProperties[],
     existingBranchNames: string[],
+    existingPullRequests: IPullRequestProperties[],
+    debug: boolean = false,
   ) {
     this.taskInputs = taskInputs;
     this.prAuthorClient = prAuthorClient;
     this.prApproverClient = prApproverClient;
-    this.existingPullRequests = existingPullRequests;
     this.existingBranchNames = existingBranchNames;
+    this.existingPullRequests = existingPullRequests;
+    this.createdPullRequestIds = [];
+    this.debug = debug;
   }
 
   /**
@@ -54,10 +59,14 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
    * @returns
    */
   public async process(update: IDependabotUpdateOperation, type: string, data: any): Promise<boolean> {
-    section(`Processing '${type}'`);
-    console.debug('Data:', data);
     const project = this.taskInputs.project;
     const repository = this.taskInputs.repository;
+    const packageManager = update?.job?.['package-manager'];
+
+    section(`Processing '${type}'`);
+    if (this.debug) {
+      console.debug(JSON.stringify(data, null, 2));
+    }
     switch (type) {
       // Documentation on the 'data' model for each output type can be found here:
       // See: https://github.com/dependabot/cli/blob/main/internal/model/update.go
@@ -65,14 +74,13 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
       case 'update_dependency_list':
         // Store the dependency list snapshot in project properties, if configured
         if (this.taskInputs.storeDependencyList) {
-          console.info(`Updating the dependency list snapshot for project '${project}'...`);
           return await this.prAuthorClient.updateProjectProperty(
             this.taskInputs.projectId,
             DependabotOutputProcessor.PROJECT_PROPERTY_NAME_DEPENDENCY_LIST,
             function (existingValue: string) {
               const repoDependencyLists = JSON.parse(existingValue || '{}');
               repoDependencyLists[repository] = repoDependencyLists[repository] || {};
-              repoDependencyLists[repository][update.job['package-manager']] = {
+              repoDependencyLists[repository][packageManager] = {
                 'dependencies': data['dependencies'],
                 'dependency-files': data['dependency_files'],
                 'last-updated': new Date().toISOString(),
@@ -86,16 +94,18 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
         return true;
 
       case 'create_pull_request':
+        const title = data['pr-title'];
         if (this.taskInputs.skipPullRequests) {
-          warning(`Skipping pull request creation as 'skipPullRequests' is set to 'true'`);
+          warning(`Skipping pull request creation of '${title}' as 'skipPullRequests' is set to 'true'`);
           return true;
         }
 
         // Skip if active pull request limit reached.
-        const openPullRequestLimit = update.config['open-pull-requests-limit'];
-        if (openPullRequestLimit > 0 && this.existingPullRequests.length >= openPullRequestLimit) {
+        const openPullRequestsLimit = update.config['open-pull-requests-limit'];
+        const openPullRequestsCount = this.createdPullRequestIds.length + this.existingPullRequests.length;
+        if (openPullRequestsLimit > 0 && openPullRequestsCount >= openPullRequestsLimit) {
           warning(
-            `Skipping pull request creation as the maximum number of active pull requests (${openPullRequestLimit}) has been reached`,
+            `Skipping pull request creation of '${title}' as the open pull requests limit (${openPullRequestsLimit}) has been reached`,
           );
           return true;
         }
@@ -117,14 +127,14 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
         const existingBranch = this.existingBranchNames?.find((branch) => sourceBranch == branch) || [];
         if (existingBranch.length) {
           error(
-            `Unable to create pull request as source branch '${sourceBranch}' already exists; Delete the existing branch and try again.`,
+            `Unable to create pull request '${title}' as source branch '${sourceBranch}' already exists; Delete the existing branch and try again.`,
           );
           return false;
         }
         const conflictingBranches = this.existingBranchNames?.filter((branch) => sourceBranch.startsWith(branch)) || [];
         if (conflictingBranches.length) {
           error(
-            `Unable to create pull request as source branch '${sourceBranch}' would conflict with existing branch(es) '${conflictingBranches.join(', ')}'; Delete the conflicting branch(es) and try again.`,
+            `Unable to create pull request '${title}' as source branch '${sourceBranch}' would conflict with existing branch(es) '${conflictingBranches.join(', ')}'; Delete the conflicting branch(es) and try again.`,
           );
           return false;
         }
@@ -145,7 +155,7 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
             name: this.taskInputs.authorName || DependabotOutputProcessor.PR_DEFAULT_AUTHOR_NAME,
           },
           title: data['pr-title'],
-          description: data['pr-body'],
+          description: getPullRequestDescription(packageManager, data['pr-body'], data['dependencies']),
           commitMessage: data['commit-message'],
           autoComplete: this.taskInputs.setAutoComplete
             ? {
@@ -171,7 +181,7 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
           labels: update.config.labels?.map((label) => label?.trim()) || [],
           workItems: update.config.milestone ? [update.config.milestone] : [],
           changes: changedFiles,
-          properties: buildPullRequestProperties(update.job['package-manager'], dependencies),
+          properties: buildPullRequestProperties(packageManager, dependencies),
         });
 
         // Auto-approve the pull request, if required
@@ -183,7 +193,13 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
           });
         }
 
-        return newPullRequestId > 0;
+        // Store the new pull request ID, so we can keep track of the total number of open pull requests
+        if (newPullRequestId > 0) {
+          this.createdPullRequestIds.push(newPullRequestId);
+          return true;
+        } else {
+          return false;
+        }
 
       case 'update_pull_request':
         if (this.taskInputs.skipPullRequests) {
@@ -192,13 +208,10 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
         }
 
         // Find the pull request to update
-        const pullRequestToUpdate = this.getPullRequestForDependencyNames(
-          update.job['package-manager'],
-          data['dependency-names'],
-        );
+        const pullRequestToUpdate = this.getPullRequestForDependencyNames(packageManager, data['dependency-names']);
         if (!pullRequestToUpdate) {
           error(
-            `Could not find pull request to update for package manager '${update.job['package-manager']}' and dependencies '${data['dependency-names'].join(', ')}'`,
+            `Could not find pull request to update for package manager '${packageManager}' with dependencies '${data['dependency-names'].join(', ')}'`,
           );
           return false;
         }
@@ -238,13 +251,10 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
         }
 
         // Find the pull request to close
-        const pullRequestToClose = this.getPullRequestForDependencyNames(
-          update.job['package-manager'],
-          data['dependency-names'],
-        );
+        const pullRequestToClose = this.getPullRequestForDependencyNames(packageManager, data['dependency-names']);
         if (!pullRequestToClose) {
           error(
-            `Could not find pull request to close for package manager '${update.job['package-manager']}' and dependencies '${data['dependency-names'].join(', ')}'`,
+            `Could not find pull request to close for package manager '${packageManager}' with dependencies '${data['dependency-names'].join(', ')}'`,
           );
           return false;
         }
@@ -428,4 +438,30 @@ function getDependencyNames(dependencies: any): string[] {
 function areEqual(a: string[], b: string[]): boolean {
   if (a.length !== b.length) return false;
   return a.every((name) => b.includes(name));
+}
+
+function getPullRequestDescription(packageManager: string, body: string, dependencies: any[]): string {
+  let header = '';
+  let footer = '';
+
+  // Fix up GitHub mentions encoding issues by removing instances of the zero-width space '\u200B' as it does not render correctly in Azure DevOps.
+  // https://github.com/dependabot/dependabot-core/issues/9572
+  // https://github.com/dependabot/dependabot-core/blob/313fcff149b3126cb78b38d15f018907d729f8cc/common/lib/dependabot/pull_request_creator/message_builder/link_and_mention_sanitizer.rb#L245-L252
+  const description = (body || '').replace(new RegExp(decodeURIComponent('%EF%BF%BD%EF%BF%BD%EF%BF%BD'), 'g'), '');
+
+  // If there is exactly one dependency, add a compatibility score badge to the description header.
+  // Compatibility scores are intended for single dependency security updates, not group updates.
+  // https://docs.github.com/en/github/managing-security-vulnerabilities/about-dependabot-security-updates#about-compatibility-scores
+  if (dependencies.length === 1) {
+    const compatibilityScoreBadges = dependencies.map((dep) => {
+      return `![Dependabot compatibility score](https://dependabot-badges.githubapp.com/badges/compatibility_score?dependency-name=${dep['name']}&package-manager=${packageManager}&previous-version=${dep['previous-version']}&new-version=${dep['version']})`;
+    });
+    header += compatibilityScoreBadges.join(' ') + '\n\n';
+  }
+
+  // Build the full pull request description.
+  // The header/footer must not be truncated. If the description is too long, we truncate the body.
+  const maxDescriptionLength = 4000;
+  const maxDescriptionLengthAfterHeaderAndFooter = maxDescriptionLength - header.length - footer.length;
+  return `${header}${description.substring(0, maxDescriptionLengthAfterHeaderAndFooter)}${footer}`;
 }

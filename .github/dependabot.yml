@@ -36,6 +36,9 @@ updates:
     schedule:
       interval: 'weekly'
       time: '02:00'
+    groups:
+      dotnet-docker:
+        patterns: ['dotnet/*']
 
   - package-ecosystem: 'nuget'
     directory: '/'
