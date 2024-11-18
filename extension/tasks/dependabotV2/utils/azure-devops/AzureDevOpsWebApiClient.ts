@@ -197,7 +197,7 @@ export class AzureDevOpsWebApiClient {
               isFlagged: true,
             });
           } else {
-            warning(` ! Unable to resolve assignee identity '${assignee}'`);
+            warning(`Unable to resolve assignee identity '${assignee}'`);
           }
         }
       }
@@ -209,7 +209,7 @@ export class AzureDevOpsWebApiClient {
               id: identityId,
             });
           } else {
-            warning(` ! Unable to resolve reviewer identity '${reviewer}'`);
+            warning(`Unable to resolve reviewer identity '${reviewer}'`);
           }
         }
       }
