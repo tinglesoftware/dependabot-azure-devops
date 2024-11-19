@@ -65,4 +65,9 @@ codespell --write-changes   # to automatically fix misspellings
 
 ## Automatically run quality checks on commit
 
-If you'd like spelling, formatting, and linting checks to be run automatically on commit, enable the [Husky](https://typicode.github.io/husky/how-to.html) git hooks using `npx husky`; When enabled, your local commits will be rejected if any of the quality checks fail.
+If you'd like spelling, formatting, and linting checks to be run automatically on commit, enable the [Husky](https://typicode.github.io/husky/how-to.html) git hooks using:
+```bash
+npx husky
+```
+
+When enabled, your local commits will be rejected if any of the quality checks fail; Unit tests are **not** run due to their long execution time, you must still them manually.
