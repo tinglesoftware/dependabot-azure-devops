@@ -3,7 +3,6 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "prepare": "husky",
     "postinstall": "npm --prefix extension install",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
