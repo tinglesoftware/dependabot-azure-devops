@@ -9,6 +9,7 @@ Thank you for contributing to the Dependabot for Azure DevOps project.
   - [Static code analyzers and linters](#static-code-analyzers-and-linters)
   - [Formatters](#formatters)
   - [Spelling](#spelling)
+  - [Automatically run quality checks on commit](#automatically-run-quality-checks-on-commit)
 
 # Contribution workflow
 
