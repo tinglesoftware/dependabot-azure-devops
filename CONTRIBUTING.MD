@@ -70,4 +70,4 @@ If you'd like spelling, formatting, and linting checks to be run automatically o
 npx husky
 ```
 
-When enabled, your local commits will be rejected if any of the quality checks fail; Unit tests are **not** run due to their long execution time, you must still them manually.
+When enabled, your local commits will be rejected if any of the quality checks fail; Unit tests are **not** run due to their long execution time, you must still run them manually.
