@@ -85,5 +85,3 @@ updates:
         patterns: ['*jest*']
       js-yaml:
         patterns: ['*js-yaml*']
-      js-ts-types:
-        patterns: ['@types/*']
