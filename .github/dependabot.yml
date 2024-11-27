@@ -30,6 +30,8 @@ updates:
         exclude-patterns: ['rubocop-rspec']
       sentry:
         patterns: ['sentry-*']
+    ignore:
+      - dependency-name: 'dependabot-omnibus'
 
   - package-ecosystem: 'docker'
     directories: ['**/*']
