@@ -38,8 +38,7 @@ module Dependabot
     def_delegators :client,
                    :mark_job_as_processed,
                    :record_ecosystem_versions,
-                   :increment_metric,
-                   :record_ecosystem_meta
+                   :increment_metric
 
     sig { void }
     def wait_for_calls_to_finish
