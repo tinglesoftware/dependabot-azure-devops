@@ -5,7 +5,7 @@ import {
   IDependabotUpdate,
 } from '../dependabot/interfaces/IDependabotConfig';
 import { ISharedVariables } from '../getSharedVariables';
-import { ISecurityAdvisory } from '../github/getSecurityAdvisories';
+import { ISecurityVulnerability } from '../github/ISecurityVulnerability';
 import { IDependabotUpdateOperation } from './interfaces/IDependabotUpdateOperation';
 
 /**
@@ -46,7 +46,7 @@ export class DependabotJobBuilder {
    * @param registries
    * @param dependencyNamesToUpdate
    * @param existingPullRequests
-   * @param securityAdvisories
+   * @param securityVulnerabilities
    * @returns
    */
   public static updateAllDependenciesJob(
@@ -56,7 +56,7 @@ export class DependabotJobBuilder {
     registries: Record<string, IDependabotRegistry>,
     dependencyNamesToUpdate?: string[],
     existingPullRequests?: any[],
-    securityAdvisories?: ISecurityAdvisory[],
+    securityVulnerabilities?: ISecurityVulnerability[],
   ): IDependabotUpdateOperation {
     const packageEcosystem = update['package-ecosystem'];
     const securityUpdatesOnly = update['open-pull-requests-limit'] == 0;
@@ -68,10 +68,10 @@ export class DependabotJobBuilder {
       false,
       undefined,
       securityUpdatesOnly
-        ? dependencyNamesToUpdate?.filter((d) => securityAdvisories?.find((a) => a['dependency-name'] == d))
+        ? dependencyNamesToUpdate?.filter((d) => securityVulnerabilities?.find((v) => v.package.name == d))
         : dependencyNamesToUpdate,
       existingPullRequests,
-      securityAdvisories,
+      securityVulnerabilities,
     );
   }
 
@@ -118,7 +118,7 @@ function buildUpdateJobConfig(
   updateDependencyGroupName?: string | undefined,
   updateDependencyNames?: string[] | undefined,
   existingPullRequests?: any[],
-  securityAdvisories?: ISecurityAdvisory[],
+  securityVulnerabilities?: ISecurityVulnerability[],
 ) {
   return {
     config: update,
@@ -133,7 +133,7 @@ function buildUpdateJobConfig(
       'allowed-updates': mapAllowedUpdatesFromDependabotConfigToJobConfig(update.allow),
       'ignore-conditions': mapIgnoreConditionsFromDependabotConfigToJobConfig(update.ignore),
       'security-updates-only': update['open-pull-requests-limit'] == 0,
-      'security-advisories': mapSecurityAdvisories(securityAdvisories),
+      'security-advisories': mapSecurityAdvisories(securityVulnerabilities),
       'source': mapSourceFromDependabotConfigToJobConfig(taskInputs, update),
       'existing-pull-requests': existingPullRequests?.filter((pr) => !pr['dependency-group-name']),
       'existing-group-pull-requests': existingPullRequests?.filter((pr) => pr['dependency-group-name']),
@@ -220,21 +220,27 @@ function mapIgnoreConditionsFromDependabotConfigToJobConfig(ignoreConditions: ID
   });
 }
 
-function mapSecurityAdvisories(securityAdvisories: ISecurityAdvisory[]): any[] {
-  if (!securityAdvisories) {
+function mapSecurityAdvisories(securityVulnerabilities: ISecurityVulnerability[]): any[] {
+  if (!securityVulnerabilities) {
     return undefined;
   }
-  return securityAdvisories.map((advisory) => {
+
+  // A single security advisory can cause a vulnerability in multiple versions of a package.
+  // We need to map each unique security advisory to a list of affected-versions and patched-versions.
+  const vulnerabilitiesGroupedByPackageNameAndAdvisoryId = new Map<string, ISecurityVulnerability[]>();
+  for (const vuln of securityVulnerabilities) {
+    const key = `${vuln.package.name}/${vuln.advisory.identifiers.map((i) => `${i.type}:${i.value}`).join('/')}`;
+    if (!vulnerabilitiesGroupedByPackageNameAndAdvisoryId.has(key)) {
+      vulnerabilitiesGroupedByPackageNameAndAdvisoryId.set(key, []);
+    }
+    vulnerabilitiesGroupedByPackageNameAndAdvisoryId.get(key).push(vuln);
+  }
+  return Array.from(vulnerabilitiesGroupedByPackageNameAndAdvisoryId.values()).map((vulns) => {
     return {
-      'dependency-name': advisory['dependency-name'],
-      'affected-versions': advisory['affected-versions'],
-      'patched-versions': advisory['patched-versions'],
-      'unaffected-versions': advisory['unaffected-versions'],
-      // TODO: These are not currently used by dependabot-core, but should be required so that dependabot can process "fixed vulnerabilities" correctly
-      'title': advisory['title'],
-      'description': advisory['description'],
-      'source-name': advisory['source-name'],
-      'source-url': advisory['source-url'],
+      'dependency-name': vulns[0].package.name,
+      'affected-versions': vulns.map((v) => v.vulnerableVersionRange).filter((v) => v && v.length > 0),
+      'patched-versions': vulns.map((v) => v.firstPatchedVersion).filter((v) => v && v.length > 0),
+      'unaffected-versions': [],
     };
   });
 }

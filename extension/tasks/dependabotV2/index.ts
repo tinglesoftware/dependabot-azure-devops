@@ -11,7 +11,10 @@ import { IDependabotUpdateOperationResult } from './utils/dependabot-cli/interfa
 import { IDependabotUpdate } from './utils/dependabot/interfaces/IDependabotConfig';
 import parseDependabotConfigFile from './utils/dependabot/parseConfigFile';
 import parseTaskInputConfiguration from './utils/getSharedVariables';
-import { getSecurityAdvisories, IDependency, ISecurityAdvisory } from './utils/github/getSecurityAdvisories';
+import { GitHubGraphClient } from './utils/github/GitHubGraphClient';
+import { IPackage } from './utils/github/IPackage';
+import { ISecurityVulnerability } from './utils/github/ISecurityVulnerability';
+import { getGhsaPackageEcosystemFromDependabotPackageEcosystem } from './utils/github/PackageEcosystem';
 
 async function run() {
   let dependabot: DependabotCli = undefined;
@@ -135,10 +138,10 @@ async function run() {
       ).map(([id, deps]) => deps);
 
       // If this is a security-only update (i.e. 'open-pull-requests-limit: 0'), then we first need to discover the dependencies
-      // that need updating and check each one for security advisories. This is because Dependabot requires the list of vulnerable dependencies
+      // that need updating and check each one for vulnerabilities. This is because Dependabot requires the list of vulnerable dependencies
       // to be supplied in the job definition of security-only update job, it will not automatically discover them like a versioned update does.
       // https://docs.github.com/en/code-security/dependabot/dependabot-security-updates/configuring-dependabot-security-updates#overriding-the-default-behavior-with-a-configuration-file
-      let securityAdvisories: ISecurityAdvisory[] = [];
+      let securityVulnerabilities: ISecurityVulnerability[] = [];
       let dependencyNamesToUpdate: string[] = [];
       const securityUpdatesOnly = update['open-pull-requests-limit'] === 0;
       if (securityUpdatesOnly) {
@@ -148,18 +151,20 @@ async function run() {
           dependabotUpdaterOptions,
         );
 
-        // Get the list of security advisories that apply to the discovered dependencies
-        const dependenciesToCheckForSecurityAdvisories: IDependency[] = discoveredDependencyListOutputs
+        // Get the list of vulnerabilities that apply to the discovered dependencies
+        const ghsaClient = new GitHubGraphClient(taskInputs.githubAccessToken);
+        const packagesToCheckForVulnerabilities: IPackage[] = discoveredDependencyListOutputs
           ?.find((x) => x.output.type == 'update_dependency_list')
           ?.output?.data?.dependencies?.map((d) => ({ name: d.name, version: d.version }));
-        securityAdvisories = await getSecurityAdvisories(
-          taskInputs.githubAccessToken,
-          packageEcosystem,
-          dependenciesToCheckForSecurityAdvisories || [],
-        );
+        if (packagesToCheckForVulnerabilities?.length) {
+          securityVulnerabilities = await ghsaClient.getSecurityVulnerabilitiesAsync(
+            getGhsaPackageEcosystemFromDependabotPackageEcosystem(packageEcosystem),
+            packagesToCheckForVulnerabilities || [],
+          );
 
-        // Only update dependencies that have security advisories
-        dependencyNamesToUpdate = Array.from(new Set(securityAdvisories.map((a) => a['dependency-name'])));
+          // Only update dependencies that have vulnerabilities
+          dependencyNamesToUpdate = Array.from(new Set(securityVulnerabilities.map((v) => v.package.name)));
+        }
       }
 
       // Run an update job for "all dependencies"; this will create new pull requests for dependencies that need updating
@@ -168,7 +173,7 @@ async function run() {
       const hasReachedOpenPullRequestLimit =
         openPullRequestsLimit > 0 && openPullRequestsCount >= openPullRequestsLimit;
       if (!hasReachedOpenPullRequestLimit) {
-        const dependenciesHaveVulnerabilities = dependencyNamesToUpdate.length && securityAdvisories.length;
+        const dependenciesHaveVulnerabilities = dependencyNamesToUpdate.length && securityVulnerabilities.length;
         if (!securityUpdatesOnly || dependenciesHaveVulnerabilities) {
           failedTasks += handleUpdateOperationResults(
             await dependabot.update(
@@ -179,7 +184,7 @@ async function run() {
                 dependabotConfig.registries,
                 dependencyNamesToUpdate,
                 existingPullRequestDependenciesForPackageEcosystem,
-                securityAdvisories,
+                securityVulnerabilities,
               ),
               dependabotUpdaterOptions,
             ),
