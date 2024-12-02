@@ -98,7 +98,6 @@ async function run() {
 
     const dependabotUpdaterOptions = {
       sourceProvider: 'azure',
-      sourceLocalPath: taskInputs.repositorySourcePath,
       azureDevOpsAccessToken: taskInputs.systemAccessToken,
       gitHubAccessToken: taskInputs.githubAccessToken,
       collectorImage: undefined, // TODO: Add config for this?

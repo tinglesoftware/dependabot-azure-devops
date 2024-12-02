@@ -134,7 +134,7 @@
       "name": "authorEmail",
       "type": "string",
       "groupName": "pull_requests",
-      "label": "Git commit uthor email address",
+      "label": "Git commit author email address",
       "defaultValue": "",
       "required": false,
       "helpMarkDown": "The email address to use for the change commit author. Can be used to associate the committer with an existing account, to provide a profile picture. Defaults to `noreply@github.com`."

@@ -9,6 +9,7 @@ Thank you for contributing to the Dependabot for Azure DevOps project.
   - [Static code analyzers and linters](#static-code-analyzers-and-linters)
   - [Formatters](#formatters)
   - [Spelling](#spelling)
+  - [Automatically run quality checks on commit](#automatically-run-quality-checks-on-commit)
 
 # Contribution workflow
 
@@ -61,3 +62,12 @@ pip install codespell
 codespell                   # to check for misspellings
 codespell --write-changes   # to automatically fix misspellings
 ```
+
+## Automatically run quality checks on commit
+
+If you'd like spelling, formatting, and linting checks to be run automatically on commit, enable the [Husky](https://typicode.github.io/husky/how-to.html) git hooks using:
+```bash
+npx husky
+```
+
+When enabled, your local commits will be rejected if any of the quality checks fail; Unit tests are **not** run due to their long execution time, you must still run them manually.
