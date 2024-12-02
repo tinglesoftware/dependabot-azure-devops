@@ -1,6 +1,6 @@
 import { debug, error, setResult, TaskResult, warning, which } from 'azure-pipelines-task-lib/task';
 import { AzureDevOpsWebApiClient } from './utils/azure-devops/AzureDevOpsWebApiClient';
-import { setSecrets } from './utils/azure-devops/formattingCommands';
+import { section, setSecrets } from './utils/azure-devops/formattingCommands';
 import { DependabotCli } from './utils/dependabot-cli/DependabotCli';
 import { DependabotJobBuilder } from './utils/dependabot-cli/DependabotJobBuilder';
 import {
@@ -152,11 +152,15 @@ async function run() {
         );
 
         // Get the list of vulnerabilities that apply to the discovered dependencies
+        section(`GHSA dependency vulnerability check`);
         const ghsaClient = new GitHubGraphClient(taskInputs.githubAccessToken);
         const packagesToCheckForVulnerabilities: IPackage[] = discoveredDependencyListOutputs
           ?.find((x) => x.output.type == 'update_dependency_list')
           ?.output?.data?.dependencies?.map((d) => ({ name: d.name, version: d.version }));
         if (packagesToCheckForVulnerabilities?.length) {
+          console.info(
+            `Detected ${packagesToCheckForVulnerabilities.length} dependencies; Checking for vulnerabilities...`,
+          );
           securityVulnerabilities = await ghsaClient.getSecurityVulnerabilitiesAsync(
             getGhsaPackageEcosystemFromDependabotPackageEcosystem(packageEcosystem),
             packagesToCheckForVulnerabilities || [],
@@ -164,6 +168,12 @@ async function run() {
 
           // Only update dependencies that have vulnerabilities
           dependencyNamesToUpdate = Array.from(new Set(securityVulnerabilities.map((v) => v.package.name)));
+          console.info(
+            `Detected ${securityVulnerabilities.length} vulnerabilities affecting ${dependencyNamesToUpdate.length} dependencies`,
+          );
+          console.log(dependencyNamesToUpdate);
+        } else {
+          console.info('No vulnerabilities detected in any dependencies');
         }
       }
 
