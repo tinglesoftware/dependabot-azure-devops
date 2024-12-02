@@ -222,6 +222,7 @@ async function run() {
                   dependabotConfig.registries,
                   existingPullRequestDependenciesForPackageEcosystem,
                   existingPullRequestsForPackageEcosystem[pullRequestId],
+                  securityVulnerabilities,
                 ),
                 dependabotUpdaterOptions,
               ),

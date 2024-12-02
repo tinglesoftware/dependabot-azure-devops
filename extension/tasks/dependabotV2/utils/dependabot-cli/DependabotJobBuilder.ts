@@ -82,6 +82,7 @@ export class DependabotJobBuilder {
    * @param registries
    * @param existingPullRequests
    * @param pullRequestToUpdate
+   * @param securityVulnerabilities
    * @returns
    */
   public static updatePullRequestJob(
@@ -91,6 +92,7 @@ export class DependabotJobBuilder {
     registries: Record<string, IDependabotRegistry>,
     existingPullRequests: any[],
     pullRequestToUpdate: any,
+    securityVulnerabilities?: ISecurityVulnerability[],
   ): IDependabotUpdateOperation {
     const dependencyGroupName = pullRequestToUpdate['dependency-group-name'];
     const dependencyNames = (dependencyGroupName ? pullRequestToUpdate['dependencies'] : pullRequestToUpdate)?.map(
@@ -105,6 +107,7 @@ export class DependabotJobBuilder {
       dependencyGroupName,
       dependencyNames,
       existingPullRequests,
+      securityVulnerabilities?.filter((v) => dependencyNames.includes(v.package.name)),
     );
   }
 }
