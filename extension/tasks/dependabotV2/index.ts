@@ -171,7 +171,9 @@ async function run() {
           console.info(
             `Detected ${securityVulnerabilities.length} vulnerabilities affecting ${dependencyNamesToUpdate.length} dependencies`,
           );
-          console.log(dependencyNamesToUpdate);
+          if (dependencyNamesToUpdate.length) {
+            console.log(dependencyNamesToUpdate);
+          }
         } else {
           console.info('No vulnerabilities detected in any dependencies');
         }
