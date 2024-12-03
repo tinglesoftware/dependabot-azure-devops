@@ -1,5 +1,5 @@
 import { GitPullRequestMergeStrategy, VersionControlChangeType } from 'azure-devops-node-api/interfaces/GitInterfaces';
-import { error, warning } from 'azure-pipelines-task-lib/task';
+import { debug, error, warning } from 'azure-pipelines-task-lib/task';
 import * as path from 'path';
 import { AzureDevOpsWebApiClient } from '../azure-devops/AzureDevOpsWebApiClient';
 import { section } from '../azure-devops/formattingCommands';
@@ -65,7 +65,7 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
 
     section(`Processing '${type}'`);
     if (this.debug) {
-      console.debug(JSON.stringify(data, null, 2));
+      debug(JSON.stringify(data, null, 2));
     }
     switch (type) {
       // Documentation on the 'data' model for each output type can be found here:

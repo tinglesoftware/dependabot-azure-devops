@@ -264,7 +264,7 @@ function logComponentOutput(
 
         // Log output from all other components
         default:
-          console.log(line);
+          console.info(line);
           break;
       }
     });

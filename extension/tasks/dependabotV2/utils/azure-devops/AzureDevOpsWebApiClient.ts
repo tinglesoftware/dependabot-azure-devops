@@ -7,7 +7,7 @@ import {
   PullRequestAsyncStatus,
   PullRequestStatus,
 } from 'azure-devops-node-api/interfaces/GitInterfaces';
-import { error, warning } from 'azure-pipelines-task-lib/task';
+import { debug, error, warning } from 'azure-pipelines-task-lib/task';
 import { IHttpClientResponse } from 'typed-rest-client/Interfaces';
 import {
   IAbandonPullRequest,
@@ -683,10 +683,10 @@ export class AzureDevOpsWebApiClient {
     requestAsync: () => Promise<IHttpClientResponse>,
   ): Promise<any | undefined> {
     // Send the request, ready the response
-    if (this.debug) console.debug(`🌎 🠊 [${method}] ${url}`);
+    if (this.debug) debug(`🌎 🠊 [${method}] ${url}`);
     const response = await requestAsync();
     const body = await response.readBody();
-    if (this.debug) console.debug(`🌎 🠈 [${response.message.statusCode}] ${response.message.statusMessage}`);
+    if (this.debug) debug(`🌎 🠈 [${response.message.statusCode}] ${response.message.statusMessage}`);
 
     try {
       // Check that the request was successful
@@ -702,13 +702,13 @@ export class AzureDevOpsWebApiClient {
       // In debug mode, log the error, request, and response for debugging
       if (this.debug) {
         if (payload) {
-          console.debug('REQUEST:', JSON.stringify(payload, null, 2));
+          debug(`REQUEST: ${JSON.stringify(payload, null, 2)}`);
         }
         if (body) {
           try {
-            console.debug('RESPONSE:', JSON.stringify(JSON.parse(body), null, 2));
+            debug(`RESPONSE: ${JSON.stringify(JSON.parse(body), null, 2)}`);
           } catch {
-            console.debug('RESPONSE:', body); // If the response is not JSON, just log the raw body
+            debug(`RESPONSE: ${body}`); // If the response is not JSON, just log the raw body
           }
         }
       }
