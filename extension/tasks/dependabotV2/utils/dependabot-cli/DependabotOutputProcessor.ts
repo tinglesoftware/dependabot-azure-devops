@@ -65,7 +65,7 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
 
     section(`Processing '${type}'`);
     if (this.debug) {
-      debug(JSON.stringify(data, null, 2));
+      debug(JSON.stringify(data));
     }
     switch (type) {
       // Documentation on the 'data' model for each output type can be found here:

@@ -702,14 +702,10 @@ export class AzureDevOpsWebApiClient {
       // In debug mode, log the error, request, and response for debugging
       if (this.debug) {
         if (payload) {
-          debug(`REQUEST: ${JSON.stringify(payload, null, 2)}`);
+          debug(`REQUEST: ${JSON.stringify(payload)}`);
         }
         if (body) {
-          try {
-            debug(`RESPONSE: ${JSON.stringify(JSON.parse(body), null, 2)}`);
-          } catch {
-            debug(`RESPONSE: ${body}`); // If the response is not JSON, just log the raw body
-          }
+          debug(`RESPONSE: ${body}`);
         }
       }
 
