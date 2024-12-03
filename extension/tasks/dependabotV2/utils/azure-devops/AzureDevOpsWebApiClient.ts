@@ -418,7 +418,7 @@ export class AzureDevOpsWebApiClient {
               comment:
                 pullRequest.mergeStatus === PullRequestAsyncStatus.Conflicts
                   ? 'Resolve merge conflicts'
-                  : `Rebase with '${targetBranchName}'`,
+                  : `Rebase '${sourceBranchName}' onto '${targetBranchName}'`,
               author: pr.author,
               changes: pr.changes.map((change) => {
                 return {
