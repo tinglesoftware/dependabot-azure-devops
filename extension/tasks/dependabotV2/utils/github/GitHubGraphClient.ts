@@ -1,6 +1,8 @@
 import axios from 'axios';
 import * as semver from 'semver';
 
+import { warning } from 'azure-pipelines-task-lib/task';
+
 import { IPackage } from './IPackage';
 import { ISecurityVulnerability } from './ISecurityVulnerability';
 import { PackageEcosystem } from './PackageEcosystem';
@@ -193,7 +195,7 @@ export class GitHubGraphClient {
             results.push(...batchResults.flat());
           }
         } catch (error) {
-          console.warn(`Request batch [${i}-${i + batchSize}] failed; The data may be incomplete. ${error}`);
+          warning(`Request batch [${i}-${i + batchSize}] failed; The data may be incomplete. ${error}`);
         }
       }
     }
