@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as os from 'os';
 import * as path from 'path';
+import { Writable } from 'stream';
 import { endgroup, group, section } from '../azure-devops/formattingCommands';
 import { IDependabotUpdateJobConfig } from './interfaces/IDependabotUpdateJobConfig';
 import { IDependabotUpdateOperation } from './interfaces/IDependabotUpdateOperation';
@@ -18,7 +19,7 @@ export class DependabotCli {
   private readonly toolImage: string;
   private readonly outputProcessor: IDependabotUpdateOutputProcessor;
   private readonly debug: boolean;
-
+  private readonly outputLogStream: Writable;
   private toolPath: string;
 
   public static readonly CLI_IMAGE_LATEST = 'github.com/dependabot/cli/cmd/dependabot@latest';
@@ -27,6 +28,8 @@ export class DependabotCli {
     this.jobsPath = path.join(os.tmpdir(), 'dependabot-jobs');
     this.toolImage = cliToolImage;
     this.outputProcessor = outputProcessor;
+    this.outputLogStream = new Writable();
+    this.outputLogStream._write = this.logOutput;
     this.debug = debug;
     this.ensureJobsPathExists();
   }
@@ -105,8 +108,10 @@ export class DependabotCli {
         section(`Processing job from '${jobInputPath}'`);
         const dependabotTool = tool(dependabotPath).arg(dependabotArguments);
         const dependabotResultCode = await dependabotTool.execAsync({
-          failOnStdErr: false,
+          outStream: this.outputLogStream,
+          errStream: this.outputLogStream,
           ignoreReturnCode: true,
+          failOnStdErr: false,
           env: {
             DEPENDABOT_JOB_ID: jobId.replace(/-/g, '_'), // replace hyphens with underscores
             LOCAL_GITHUB_ACCESS_TOKEN: options?.gitHubAccessToken, // avoid rate-limiting when pulling images from GitHub container registries
@@ -193,6 +198,31 @@ export class DependabotCli {
     if (!fs.existsSync(this.jobsPath)) {
       fs.mkdirSync(this.jobsPath);
     }
+  }
+
+  // Log output from Dependabot based on the sub-component it originates from
+  private logOutput(chunk: any, encoding: BufferEncoding, callback: (error?: Error | null) => void): void {
+    chunk
+      .toString()
+      .split('\n')
+      .map((line: string) => line.trim())
+      .filter((line: string) => line)
+      .forEach((line: string) => {
+        const component = line.split('|')?.[0]?.trim();
+        switch (component) {
+          // Don't log highly verbose components that are not useful to the user unless debugging
+          case 'collector':
+          case 'proxy':
+            debug(line);
+            break;
+
+          // Log output from all other components
+          default:
+            console.log(line);
+            break;
+        }
+      });
+    callback();
   }
 
   // Clean up the jobs directory and its contents
