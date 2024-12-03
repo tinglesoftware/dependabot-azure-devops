@@ -29,7 +29,7 @@ export class DependabotCli {
     this.toolImage = cliToolImage;
     this.outputProcessor = outputProcessor;
     this.outputLogStream = new Writable();
-    this.outputLogStream._write = this.logOutput;
+    this.outputLogStream._write = (chunk, encoding, callback) => logComponentOutput(debug, chunk, encoding, callback);
     this.debug = debug;
     this.ensureJobsPathExists();
   }
@@ -200,31 +200,6 @@ export class DependabotCli {
     }
   }
 
-  // Log output from Dependabot based on the sub-component it originates from
-  private logOutput(chunk: any, encoding: BufferEncoding, callback: (error?: Error | null) => void): void {
-    chunk
-      .toString()
-      .split('\n')
-      .map((line: string) => line.trim())
-      .filter((line: string) => line)
-      .forEach((line: string) => {
-        const component = line.split('|')?.[0]?.trim();
-        switch (component) {
-          // Don't log highly verbose components that are not useful to the user unless debugging
-          case 'collector':
-          case 'proxy':
-            debug(line);
-            break;
-
-          // Log output from all other components
-          default:
-            console.log(line);
-            break;
-        }
-      });
-    callback();
-  }
-
   // Clean up the jobs directory and its contents
   public cleanup(): void {
     if (fs.existsSync(this.jobsPath)) {
@@ -262,4 +237,36 @@ function readJobScenarioOutputFile(path: string): any[] {
   }
 
   return scenario['output'] || [];
+}
+
+// Log output from Dependabot based on the sub-component it originates from
+function logComponentOutput(
+  verbose: boolean,
+  chunk: any,
+  encoding: BufferEncoding,
+  callback: (error?: Error | null) => void,
+): void {
+  chunk
+    .toString()
+    .split('\n')
+    .map((line: string) => line.trim())
+    .filter((line: string) => line)
+    .forEach((line: string) => {
+      const component = line.split('|')?.[0]?.trim();
+      switch (component) {
+        // Don't log highly verbose components that are not useful to the user, unless debugging
+        case 'collector':
+        case 'proxy':
+          if (verbose) {
+            debug(line);
+          }
+          break;
+
+        // Log output from all other components
+        default:
+          console.log(line);
+          break;
+      }
+    });
+  callback();
 }
