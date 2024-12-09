@@ -17,10 +17,10 @@
   <ItemGroup>
     <PackageReference Include="AspNetCore.Authentication.ApiKey" Version="8.0.1" />
     <PackageReference Include="AspNetCore.Authentication.Basic" Version="8.0.0" />
-    <PackageReference Include="Azure.Extensions.AspNetCore.DataProtection.Keys" Version="1.2.4" />
+    <PackageReference Include="Azure.Extensions.AspNetCore.DataProtection.Keys" Version="1.3.0" />
     <PackageReference Include="Azure.Identity" Version="1.13.1" />
     <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.18.2" /> <!-- Allows for faster updates -->
-    <PackageReference Include="Azure.Monitor.Query" Version="1.5.0" />
+    <PackageReference Include="Azure.Monitor.Query" Version="1.6.0" />
     <PackageReference Include="Azure.ResourceManager.AppContainers" Version="1.3.0" />
     <PackageReference Include="DistributedLock.FileSystem" Version="1.0.3" />
     <PackageReference Include="Macross.Json.Extensions" Version="3.0.0" />
