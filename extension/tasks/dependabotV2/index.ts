@@ -1,17 +1,20 @@
 import { debug, error, setResult, TaskResult, warning, which } from 'azure-pipelines-task-lib/task';
 import { AzureDevOpsWebApiClient } from './utils/azure-devops/AzureDevOpsWebApiClient';
-import { setSecrets } from './utils/azure-devops/formattingCommands';
+import { section, setSecrets } from './utils/azure-devops/formattingCommands';
 import { DependabotCli } from './utils/dependabot-cli/DependabotCli';
 import { DependabotJobBuilder } from './utils/dependabot-cli/DependabotJobBuilder';
 import {
   DependabotOutputProcessor,
-  parseProjectDependencyListProperty,
   parsePullRequestProperties,
 } from './utils/dependabot-cli/DependabotOutputProcessor';
 import { IDependabotUpdateOperationResult } from './utils/dependabot-cli/interfaces/IDependabotUpdateOperationResult';
 import { IDependabotUpdate } from './utils/dependabot/interfaces/IDependabotConfig';
 import parseDependabotConfigFile from './utils/dependabot/parseConfigFile';
 import parseTaskInputConfiguration from './utils/getSharedVariables';
+import { GitHubGraphClient } from './utils/github/GitHubGraphClient';
+import { IPackage } from './utils/github/IPackage';
+import { ISecurityVulnerability } from './utils/github/ISecurityVulnerability';
+import { getGhsaPackageEcosystemFromDependabotPackageEcosystem } from './utils/github/PackageEcosystem';
 
 async function run() {
   let dependabot: DependabotCli = undefined;
@@ -49,6 +52,14 @@ async function run() {
     const dependabotConfig = await parseDependabotConfigFile(taskInputs);
     if (!dependabotConfig) {
       throw new Error('Failed to parse dependabot.yaml configuration file from the target repository');
+    }
+
+    // Print a warning about the required workarounds for security-only updates, if any update is configured as such
+    // TODO: If and when Dependabot supports a better way to do security-only updates, remove this.
+    if (dependabotConfig.updates?.some((u) => u['open-pull-requests-limit'] === 0)) {
+      warning(
+        'Security-only updates incur a slight performance overhead due to limitations in Dependabot CLI. For more info, see: https://github.com/tinglesoftware/dependabot-azure-devops/blob/main/docs/migrations/v1-to-v2.md#security-only-updates',
+      );
     }
 
     // Initialise the DevOps API clients
@@ -116,15 +127,6 @@ async function run() {
       const updateId = updates.indexOf(update).toString();
       const packageEcosystem = update['package-ecosystem'];
 
-      // Parse the last dependency list snapshot (if any) from the project properties.
-      // This is required when doing a security-only update as dependabot requires the list of vulnerable dependencies to be updated.
-      // Automatic discovery of vulnerable dependencies during a security-only update is not currently supported by dependabot-updater.
-      const dependencyList = parseProjectDependencyListProperty(
-        await prAuthorClient.getProjectProperties(taskInputs.projectId),
-        taskInputs.repository,
-        packageEcosystem,
-      );
-
       // Parse the Dependabot metadata for the existing pull requests that are related to this update
       // Dependabot will use this to determine if we need to create new pull requests or update/close existing ones
       const existingPullRequestsForPackageEcosystem = parsePullRequestProperties(
@@ -135,25 +137,73 @@ async function run() {
         existingPullRequestsForPackageEcosystem,
       ).map(([id, deps]) => deps);
 
+      // If this is a security-only update (i.e. 'open-pull-requests-limit: 0'), then we first need to discover the dependencies
+      // that need updating and check each one for vulnerabilities. This is because Dependabot requires the list of vulnerable dependencies
+      // to be supplied in the job definition of security-only update job, it will not automatically discover them like a versioned update does.
+      // https://docs.github.com/en/code-security/dependabot/dependabot-security-updates/configuring-dependabot-security-updates#overriding-the-default-behavior-with-a-configuration-file
+      let securityVulnerabilities: ISecurityVulnerability[] = [];
+      let dependencyNamesToUpdate: string[] = [];
+      const securityUpdatesOnly = update['open-pull-requests-limit'] === 0;
+      if (securityUpdatesOnly) {
+        // Run an update job to discover all dependencies
+        const discoveredDependencyListOutputs = await dependabot.update(
+          DependabotJobBuilder.listAllDependenciesJob(taskInputs, updateId, update, dependabotConfig.registries),
+          dependabotUpdaterOptions,
+        );
+
+        // Get the list of vulnerabilities that apply to the discovered dependencies
+        section(`GHSA dependency vulnerability check`);
+        const ghsaClient = new GitHubGraphClient(taskInputs.githubAccessToken);
+        const packagesToCheckForVulnerabilities: IPackage[] = discoveredDependencyListOutputs
+          ?.find((x) => x.output.type == 'update_dependency_list')
+          ?.output?.data?.dependencies?.map((d) => ({ name: d.name, version: d.version }));
+        if (packagesToCheckForVulnerabilities?.length) {
+          console.info(
+            `Detected ${packagesToCheckForVulnerabilities.length} dependencies; Checking for vulnerabilities...`,
+          );
+          securityVulnerabilities = await ghsaClient.getSecurityVulnerabilitiesAsync(
+            getGhsaPackageEcosystemFromDependabotPackageEcosystem(packageEcosystem),
+            packagesToCheckForVulnerabilities || [],
+          );
+
+          // Only update dependencies that have vulnerabilities
+          dependencyNamesToUpdate = Array.from(new Set(securityVulnerabilities.map((v) => v.package.name)));
+          console.info(
+            `Detected ${securityVulnerabilities.length} vulnerabilities affecting ${dependencyNamesToUpdate.length} dependencies`,
+          );
+          if (dependencyNamesToUpdate.length) {
+            console.log(dependencyNamesToUpdate);
+          }
+        } else {
+          console.info('No vulnerabilities detected in any dependencies');
+        }
+      }
+
       // Run an update job for "all dependencies"; this will create new pull requests for dependencies that need updating
       const openPullRequestsLimit = update['open-pull-requests-limit'];
       const openPullRequestsCount = Object.entries(existingPullRequestsForPackageEcosystem).length;
       const hasReachedOpenPullRequestLimit =
         openPullRequestsLimit > 0 && openPullRequestsCount >= openPullRequestsLimit;
       if (!hasReachedOpenPullRequestLimit) {
-        failedTasks += handleUpdateOperationResults(
-          await dependabot.update(
-            DependabotJobBuilder.newUpdateAllJob(
-              taskInputs,
-              updateId,
-              update,
-              dependabotConfig.registries,
-              dependencyList?.['dependencies'],
-              existingPullRequestDependenciesForPackageEcosystem,
+        const dependenciesHaveVulnerabilities = dependencyNamesToUpdate.length && securityVulnerabilities.length;
+        if (!securityUpdatesOnly || dependenciesHaveVulnerabilities) {
+          failedTasks += handleUpdateOperationResults(
+            await dependabot.update(
+              DependabotJobBuilder.updateAllDependenciesJob(
+                taskInputs,
+                updateId,
+                update,
+                dependabotConfig.registries,
+                dependencyNamesToUpdate,
+                existingPullRequestDependenciesForPackageEcosystem,
+                securityVulnerabilities,
+              ),
+              dependabotUpdaterOptions,
             ),
-            dependabotUpdaterOptions,
-          ),
-        );
+          );
+        } else {
+          console.info('Nothing to update; dependencies are not affected by any known vulnerability');
+        }
       } else {
         warning(
           `Skipping update for ${packageEcosystem} packages as the open pull requests limit (${openPullRequestsLimit}) has already been reached`,
@@ -167,13 +217,14 @@ async function run() {
           for (const pullRequestId in existingPullRequestsForPackageEcosystem) {
             failedTasks += handleUpdateOperationResults(
               await dependabot.update(
-                DependabotJobBuilder.newUpdatePullRequestJob(
+                DependabotJobBuilder.updatePullRequestJob(
                   taskInputs,
                   pullRequestId,
                   update,
                   dependabotConfig.registries,
                   existingPullRequestDependenciesForPackageEcosystem,
                   existingPullRequestsForPackageEcosystem[pullRequestId],
+                  securityVulnerabilities,
                 ),
                 dependabotUpdaterOptions,
               ),
