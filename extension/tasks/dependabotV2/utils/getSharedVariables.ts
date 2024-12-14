@@ -1,4 +1,5 @@
 import * as tl from 'azure-pipelines-task-lib/task';
+import { DEFAULT_EXPERIMENTS } from './dependabot/experiments';
 import extractHostname from './extractHostname';
 import extractOrganization from './extractOrganization';
 import extractVirtualDirectory from './extractVirtualDirectory';
@@ -139,6 +140,14 @@ export default function getSharedVariables(): ISharedVariables {
       },
       {} as Record<string, string | boolean>,
     );
+
+  // If no experiments are defined, use the default experiments
+  if (!experiments) {
+    experiments = DEFAULT_EXPERIMENTS;
+    tl.debug('No experiments provided; Using default experiments.');
+  }
+
+  console.log('Experiments:', experiments);
 
   let debug: boolean = tl.getVariable('System.Debug')?.match(/true/i) ? true : false;
 
