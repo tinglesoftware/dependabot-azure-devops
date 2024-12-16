@@ -10,8 +10,8 @@
    * [Running the task locally](#running-the-task-locally)
    * [Running the unit tests](#running-the-unit-tests)
 - [Architecture](#architecture)
-   * [Task V2 high-level update process diagram](#task-v2-high-level-update-process-diagram)
-
+   * [dependabot@2 versioned update process diagram](#dependabot2-versioned-update-process-diagram)
+   * [dependabot@2 hsecurity-only update process diagram](#dependabot2-security-only-update-process-diagram)
 
 # Using the extension
 
@@ -65,8 +65,8 @@ npm start
 
 To run a specific task version:
 ```bash
-npm run start:V1 # runs dependabotV1 task
-npm run start:V2 # runs dependabotV2 task
+npm run start:V1 # runs dependabot@1 task
+npm run start:V2 # runs dependabot@2 task
 ```
 
 ## Running the unit tests
@@ -78,8 +78,8 @@ npm test
 
 # Architecture
 
-## Task V2 high-level update process diagram
-High-level sequence diagram illustrating how the `dependabotV2` task performs updates using [dependabot-cli](https://github.com/dependabot/cli). For more technical details, see [how dependabot-cli works](https://github.com/dependabot/cli?tab=readme-ov-file#how-it-works).
+## dependabot2 versioned update process diagram
+High-level sequence diagram illustrating how the `dependabot@2` task performs versioned updates using [dependabot-cli](https://github.com/dependabot/cli). For more technical details, see [how dependabot-cli works](https://github.com/dependabot/cli?tab=readme-ov-file#how-it-works).
 
 ```mermaid
  sequenceDiagram
@@ -127,4 +127,35 @@ High-level sequence diagram illustrating how the `dependabotV2` task performs up
       end
     end
 
+```
+
+## dependabot2 security-only update process diagram
+High-level sequence diagram illustrating how the `dependabot@2` task performs security-only updates using [dependabot-cli](https://github.com/dependabot/cli).
+
+```mermaid
+ sequenceDiagram
+    participant ext as TaskV2
+    participant cli as Dependabot CLI
+    participant gha as GitHub Advisory Database
+
+    ext->>ext: Write `list-dependencies-job.yml`
+    Note right of ext: The job file contains `ignore: [ 'dependency-name': '*' ]`.<br>This will make Dependabot to discover all dependencies, but not update anything.<br>We can then extract the dependency list from the "depenedency_list" output.
+    ext->>+cli: Execute `dependabot update -f list-dependencies-job.yml -o output.yml`
+    cli->>cli: Run update job
+    cli->>cli: Write `output.yaml`
+    cli-->>-ext: Update completed
+
+    ext->>ext: Read and parse `output.yaml`, extract "dependency_list"
+    loop for each dependency
+      ext->>gha: Check security advisories for dependency
+    end
+    ext->>ext: Filter dependency list to only ones containing security advisories
+    ext->>ext: Write `security-only-update-job.yml`
+    Note right of ext: The job file contains the list of `dependency-names` and `security-advisories`.<br>This will make Dependanbot only update the dependencies named in the job file.
+    ext->>+cli: Execute `dependabot update -f security-only-update-job-job.yml -o output.yml`
+    cli->>cli: Run update job
+    cli->>cli: Write `output.yaml`
+    cli-->>-ext: Update completed
+    ext->>ext: Read and parse `output.yaml`
+    Note right of ext: Normal update logic resumes from this point.<br/>Outputs are parsed, pull requests are created/updated/closed based on the outputs
 ```
