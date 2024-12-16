@@ -148,7 +148,14 @@ function buildUpdateJobConfig(
               'prefix-development': update['commit-message']?.['prefix-development'],
               'include-scope': update['commit-message']?.['include'],
             },
-      'experiments': taskInputs.experiments,
+      'experiments': Object.keys(taskInputs.experiments || {}).reduce(
+        (acc, key) => {
+          // Replace '-' with '_' in the experiment keys to match the dependabot-core models
+          acc[key.replace(/-/g, '_')] = taskInputs.experiments[key];
+          return acc;
+        },
+        {} as Record<string, string | boolean>,
+      ),
       'max-updater-run-time': undefined, // TODO: add config for this?
       'reject-external-code': update['insecure-external-code-execution']?.toLocaleLowerCase() == 'allow',
       'repo-private': undefined, // TODO: add config for this?
