@@ -20,19 +20,21 @@ An example of a YAML pipeline:
 trigger: none # Disable CI trigger
 
 schedules:
-- cron: '0 2 * * *' # daily at 2am UTC
+- cron: '0 0 * * 0' # weekly on sunday at midnight UTC
   always: true # run even when there are no code changes
   branches:
     include:
       - master
   batch: true
-  displayName: Daily
+  displayName: Weekly
 
 pool:
   vmImage: 'ubuntu-latest' # requires macos or ubuntu (windows is not supported)
 
 steps:
 - task: dependabot@2
+  inputs:
+    mergeStrategy: 'squash'
 ```
 
 ## Task Requirements
@@ -44,8 +46,8 @@ Dependabot uses Docker containers, which may take time to install if not already
 
 ## Task Parameters
 
-<details>
-<summary>dependabot@V2</summary>
+<details open>
+<summary>dependabot@2</summary>
 
 |Input|Description|
 |--|--|
@@ -67,12 +69,12 @@ Dependabot uses Docker containers, which may take time to install if not already
 |storeDependencyList|**_Optional_**. Determines if the last know dependency list information should be stored in the parent DevOps project properties. If enabled, the authenticated user must have the "Project & Team (Write)" permission for the project. Defaults to `false`.|
 |targetRepositoryName|**_Optional_**. The name of the repository to target for processing. If this value is not supplied then the Build Repository Name is used. Supplying this value allows creation of a single pipeline that runs Dependabot against multiple repositories by running a `dependabot` task for each repository to update.|
 |targetUpdateIds|**_Optional_**. A semicolon (`;`) delimited list of update identifiers run. Index are zero-based and in the order written in the configuration file. When not present, all the updates are run. This is meant to be used in scenarios where you want to run updates a different times from the same configuration file given you cannot schedule them independently in the pipeline.|
-|experiments|**_Optional_**. Comma separated list of Dependabot experiments; available options depend on the ecosystem. Example: `tidy=true,vendor=true,goprivate=*`. See: [Configuring experiments](https://github.com/tinglesoftware/dependabot-azure-devops/#configuring-experiments)|
+|experiments|**_Optional_**. Comma separated list of Dependabot experiments; available options depend on the ecosystem. Example: `tidy=true,vendor=true,goprivate=*`. If specified, this overrides the [default experiments](https://github.com/tinglesoftware/dependabot-azure-devops/blob/main/extension/tasks/dependabotV2/utils/dependabot/experiments.ts). See: [Configuring experiments](https://github.com/tinglesoftware/dependabot-azure-devops/#configuring-experiments)|
 
 </details>
 
 <details>
-<summary>dependabot@V1 <strong>(Deprecated)</strong></summary>
+<summary>dependabot@1 <strong>(deprecated)</strong></summary>
 
 |Input|Description|
 |--|--|

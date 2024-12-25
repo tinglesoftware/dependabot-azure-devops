@@ -1,6 +1,6 @@
 
 > [!WARNING]
-> **:construction: Work in progress;** `dependabot@V2` is still under development and this document may change without notice up until general availability (GA).
+> **:construction: Work in progress;** `dependabot@2` is still under development and this document may change without notice up until general availability (GA).
 
 # Table of Contents
 - [Summary of changes V1 → V2](#summary-of-changes-v1-v2)
@@ -10,10 +10,10 @@
 # Summary of changes V1 → V2
 V2 is a complete re-write of the Dependabot task; It aims to:
 
-- Resolve the [numerous private feed/registry authentication issues](https://github.com/tinglesoftware/dependabot-azure-devops/discussions/1317) that currently exist in V1;
+- Resolve the [private feed/registry authentication issues](https://github.com/tinglesoftware/dependabot-azure-devops/discussions/1317) that exist in V1;
 - More closely align the update logic with the GitHub-hosted Dependabot service;
 
-The task now uses [Dependabot CLI](https://github.com/dependabot/cli) to perform dependency updates, which is the _[currently]_ recommended approach for running Dependabot. See [extension task architecture](../extension.md#architecture) for more details on the technical changes and impact to the update process.
+The task now uses [Dependabot CLI](https://github.com/dependabot/cli) to perform dependency updates, which is the _current_ recommended approach for running Dependabot. See [extension task architecture](../extension.md#architecture) for more details on the technical changes and impact to the update process.
 
 # Breaking changes V1 → V2
 
@@ -62,12 +62,12 @@ The following environment variables have been removed entirely; the feature is n
 
 | Removed Environment Variable | Reason |
 |--|--|
-|`DEPENDABOT_PR_NAME_PREFIX_STYLE`| Feature is not supported; It is not an official configuration |
-|`DEPENDABOT_COMPATIBILITY_SCORE_BADGE`| Feature is not supported; It is not an official configuration |
-|`DEPENDABOT_MESSAGE_HEADER`| Feature is not supported; It is not an official configuration |
-|`DEPENDABOT_MESSAGE_FOOTER`| Feature is not supported; It is not an official configuration |
-|`DEPENDABOT_SIGNATURE_KEY`| Feature is not supported; It is not an official configuration |
-|`DEPENDABOT_JOB_ID`| Set automatically by extension |
+|`DEPENDABOT_COMPATIBILITY_SCORE_BADGE`| Feature is now enabled by default, no configuration required. |
+|`DEPENDABOT_PR_NAME_PREFIX_STYLE`| Feature is not supported; It is not an official configuration. Use [`commit-message.prefix`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#commit-message) instead. |
+|`DEPENDABOT_MESSAGE_HEADER`| Feature is not supported; It is not an official configuration. |
+|`DEPENDABOT_MESSAGE_FOOTER`| Feature is not supported; It is not an official configuration. |
+|`DEPENDABOT_SIGNATURE_KEY`| Feature is not supported; It is not an official configuration. |
+|`DEPENDABOT_JOB_ID`| Set automatically, no configuration required. |
 
 ## Todo before general availability
 Before removing the preview flag from V2 `task.json`, we need to:
