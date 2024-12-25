@@ -10,7 +10,6 @@ using Tingle.Dependabot.PeriodicTasks;
 using Tingle.EventBus;
 using Tingle.EventBus.Transports.InMemory;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Tingle.Dependabot.Tests.PeriodicTasks;
 
@@ -38,7 +37,7 @@ public class UpdateJobsCleanerTaskTests(ITestOutputHelper outputHelper)
                 Resources = new(0.25, 0.2),
                 AuthKey = Guid.NewGuid().ToString("n"),
                 Status = UpdateJobStatus.Succeeded,
-            });
+            }, TestContext.Current.CancellationToken);
             await context.UpdateJobs.AddAsync(new UpdateJob
             {
                 Id = Guid.NewGuid().ToString(),
@@ -52,7 +51,7 @@ public class UpdateJobsCleanerTaskTests(ITestOutputHelper outputHelper)
                 Resources = new(0.25, 0.2),
                 AuthKey = Guid.NewGuid().ToString("n"),
                 Status = UpdateJobStatus.Succeeded,
-            });
+            }, TestContext.Current.CancellationToken);
             await context.UpdateJobs.AddAsync(new UpdateJob
             {
                 Id = targetId,
@@ -66,13 +65,14 @@ public class UpdateJobsCleanerTaskTests(ITestOutputHelper outputHelper)
                 Resources = new(0.25, 0.2),
                 AuthKey = Guid.NewGuid().ToString("n"),
                 Status = UpdateJobStatus.Running,
-            });
-            await context.SaveChangesAsync();
+            }, TestContext.Current.CancellationToken);
+            await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-            await pt.CleanupAsync();
+            await pt.CleanupAsync(TestContext.Current.CancellationToken);
 
             // Ensure the message was published
-            var evt_context = Assert.IsType<EventContext<UpdateJobCheckStateEvent>>(Assert.Single(await harness.PublishedAsync()));
+            var evt_context = Assert.IsType<EventContext<UpdateJobCheckStateEvent>>(
+                Assert.Single(await harness.PublishedAsync(cancellationToken: TestContext.Current.CancellationToken)));
             var inner = evt_context.Event;
             Assert.NotNull(inner);
             Assert.Equal(targetId, inner.JobId);
@@ -96,7 +96,7 @@ public class UpdateJobsCleanerTaskTests(ITestOutputHelper outputHelper)
                 Directories = null,
                 Resources = new(0.25, 0.2),
                 AuthKey = Guid.NewGuid().ToString("n"),
-            });
+            }, TestContext.Current.CancellationToken);
             await context.UpdateJobs.AddAsync(new UpdateJob
             {
                 Id = Guid.NewGuid().ToString(),
@@ -109,7 +109,7 @@ public class UpdateJobsCleanerTaskTests(ITestOutputHelper outputHelper)
                 Directories = null,
                 Resources = new(0.25, 0.2),
                 AuthKey = Guid.NewGuid().ToString("n"),
-            });
+            }, TestContext.Current.CancellationToken);
             await context.UpdateJobs.AddAsync(new UpdateJob
             {
                 Id = Guid.NewGuid().ToString(),
@@ -122,11 +122,11 @@ public class UpdateJobsCleanerTaskTests(ITestOutputHelper outputHelper)
                 Directories = ["**/*"],
                 Resources = new(0.25, 0.2),
                 AuthKey = Guid.NewGuid().ToString("n"),
-            });
-            await context.SaveChangesAsync();
+            }, TestContext.Current.CancellationToken);
+            await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-            await pt.CleanupAsync();
-            Assert.Equal(1, await context.UpdateJobs.CountAsync());
+            await pt.CleanupAsync(TestContext.Current.CancellationToken);
+            Assert.Equal(1, await context.UpdateJobs.CountAsync(TestContext.Current.CancellationToken));
         });
     }
 

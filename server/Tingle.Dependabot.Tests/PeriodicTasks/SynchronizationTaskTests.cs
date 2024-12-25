@@ -9,7 +9,6 @@ using Tingle.Dependabot.Workflow;
 using Tingle.EventBus;
 using Tingle.EventBus.Transports.InMemory;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Tingle.Dependabot.Tests.PeriodicTasks;
 
@@ -22,10 +21,11 @@ public class SynchronizationTaskTests(ITestOutputHelper outputHelper)
     {
         await TestAsync(async (harness, pt) =>
         {
-            await pt.SyncAsync();
+            await pt.SyncAsync(TestContext.Current.CancellationToken);
 
             // Ensure the message was published
-            var evt_context = Assert.IsType<EventContext<ProcessSynchronization>>(Assert.Single(await harness.PublishedAsync()));
+            var evt_context = Assert.IsType<EventContext<ProcessSynchronization>>(
+                Assert.Single(await harness.PublishedAsync(cancellationToken: TestContext.Current.CancellationToken)));
             var inner = evt_context.Event;
             Assert.NotNull(inner);
             Assert.Null(inner.RepositoryId);

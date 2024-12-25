@@ -13,7 +13,6 @@ using Tingle.Dependabot.Models;
 using Tingle.EventBus;
 using Tingle.EventBus.Transports.InMemory;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Tingle.Dependabot.Tests;
 
@@ -28,18 +27,18 @@ public class WebhooksControllerIntegrationTests(ITestOutputHelper outputHelper)
         {
             // without Authorization header
             var request = new HttpRequestMessage(HttpMethod.Post, "/webhooks/azure");
-            var response = await client.SendAsync(request);
+            var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
             Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-            Assert.Empty(await response.Content.ReadAsStringAsync());
-            Assert.Empty(await harness.PublishedAsync());
+            Assert.Empty(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+            Assert.Empty(await harness.PublishedAsync(cancellationToken: TestContext.Current.CancellationToken));
 
             // password does not match what is on record
             request = new HttpRequestMessage(HttpMethod.Post, "/webhooks/azure");
             request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"{ProjectId}:burp-bump5")));
-            response = await client.SendAsync(request);
+            response = await client.SendAsync(request, TestContext.Current.CancellationToken);
             Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-            Assert.Empty(await response.Content.ReadAsStringAsync());
-            Assert.Empty(await harness.PublishedAsync());
+            Assert.Empty(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+            Assert.Empty(await harness.PublishedAsync(cancellationToken: TestContext.Current.CancellationToken));
         });
     }
 
@@ -51,14 +50,14 @@ public class WebhooksControllerIntegrationTests(ITestOutputHelper outputHelper)
             var request = new HttpRequestMessage(HttpMethod.Post, "/webhooks/azure");
             request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"{ProjectId}:burp-bump")));
             request.Content = new StringContent("", Encoding.UTF8, "application/json");
-            var response = await client.SendAsync(request);
+            var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-            var body = await response.Content.ReadAsStringAsync();
+            var body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
             Assert.Contains("\"type\":\"https://tools.ietf.org/html/rfc9110#section-15.5.1\"", body);
             Assert.Contains("\"title\":\"One or more validation errors occurred.\"", body);
             Assert.Contains("\"status\":400", body);
             Assert.Contains("\"errors\":{\"\":[\"A non-empty request body is required.\"],\"model\":[\"The model field is required.\"]}", body);
-            Assert.Empty(await harness.PublishedAsync());
+            Assert.Empty(await harness.PublishedAsync(cancellationToken: TestContext.Current.CancellationToken));
         });
     }
 
@@ -70,16 +69,16 @@ public class WebhooksControllerIntegrationTests(ITestOutputHelper outputHelper)
             var request = new HttpRequestMessage(HttpMethod.Post, "/webhooks/azure");
             request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"{ProjectId}:burp-bump")));
             request.Content = new StringContent("{}", Encoding.UTF8, "application/json");
-            var response = await client.SendAsync(request);
+            var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-            var body = await response.Content.ReadAsStringAsync();
+            var body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
             Assert.Contains("\"type\":\"https://tools.ietf.org/html/rfc9110#section-15.5.1\"", body);
             Assert.Contains("\"title\":\"One or more validation errors occurred.\"", body);
             Assert.Contains("\"status\":400", body);
             Assert.Contains("\"SubscriptionId\":[\"The SubscriptionId field is required.\"]", body);
             Assert.Contains("\"EventType\":[\"The EventType field is required.\"]", body);
             Assert.Contains("\"Resource\":[\"The Resource field is required.\"]", body);
-            Assert.Empty(await harness.PublishedAsync());
+            Assert.Empty(await harness.PublishedAsync(cancellationToken: TestContext.Current.CancellationToken));
         });
     }
 
@@ -92,13 +91,13 @@ public class WebhooksControllerIntegrationTests(ITestOutputHelper outputHelper)
             var request = new HttpRequestMessage(HttpMethod.Post, "/webhooks/azure");
             request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"{ProjectId}:burp-bump")));
             request.Content = new StreamContent(stream);
-            var response = await client.SendAsync(request);
+            var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
             Assert.Equal(HttpStatusCode.UnsupportedMediaType, response.StatusCode);
-            var body = await response.Content.ReadAsStringAsync();
+            var body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
             Assert.Contains("\"type\":\"https://tools.ietf.org/html/rfc9110#section-15.5.16\"", body);
             Assert.Contains("\"title\":\"Unsupported Media Type\"", body);
             Assert.Contains("\"status\":415", body);
-            Assert.Empty(await harness.PublishedAsync());
+            Assert.Empty(await harness.PublishedAsync(cancellationToken: TestContext.Current.CancellationToken));
         });
     }
 
@@ -112,12 +111,13 @@ public class WebhooksControllerIntegrationTests(ITestOutputHelper outputHelper)
             request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"{ProjectId}:burp-bump")));
             request.Content = new StreamContent(stream);
             request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json", "utf-8");
-            var response = await client.SendAsync(request);
+            var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-            Assert.Empty(await response.Content.ReadAsStringAsync());
+            Assert.Empty(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
 
             // Ensure the message was published
-            var context = Assert.IsType<EventContext<ProcessSynchronization>>(Assert.Single(await harness.PublishedAsync(TimeSpan.FromSeconds(1f))));
+            var context = Assert.IsType<EventContext<ProcessSynchronization>>(
+                Assert.Single(await harness.PublishedAsync(TimeSpan.FromSeconds(1f), TestContext.Current.CancellationToken)));
             var inner = context.Event;
             Assert.NotNull(inner);
             Assert.Null(inner.RepositoryId);
@@ -136,10 +136,10 @@ public class WebhooksControllerIntegrationTests(ITestOutputHelper outputHelper)
             request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"{ProjectId}:burp-bump")));
             request.Content = new StreamContent(stream);
             request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json", "utf-8");
-            var response = await client.SendAsync(request);
+            var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-            Assert.Empty(await response.Content.ReadAsStringAsync());
-            Assert.Empty(await harness.PublishedAsync());
+            Assert.Empty(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+            Assert.Empty(await harness.PublishedAsync(cancellationToken: TestContext.Current.CancellationToken));
         });
     }
 
@@ -153,10 +153,10 @@ public class WebhooksControllerIntegrationTests(ITestOutputHelper outputHelper)
             request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"{ProjectId}:burp-bump")));
             request.Content = new StreamContent(stream);
             request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json", "utf-8");
-            var response = await client.SendAsync(request);
+            var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-            Assert.Empty(await response.Content.ReadAsStringAsync());
-            Assert.Empty(await harness.PublishedAsync());
+            Assert.Empty(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+            Assert.Empty(await harness.PublishedAsync(cancellationToken: TestContext.Current.CancellationToken));
         });
     }
 
@@ -170,10 +170,10 @@ public class WebhooksControllerIntegrationTests(ITestOutputHelper outputHelper)
             request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"{ProjectId}:burp-bump")));
             request.Content = new StreamContent(stream);
             request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json", "utf-8");
-            var response = await client.SendAsync(request);
+            var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-            Assert.Empty(await response.Content.ReadAsStringAsync());
-            Assert.Empty(await harness.PublishedAsync());
+            Assert.Empty(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+            Assert.Empty(await harness.PublishedAsync(cancellationToken: TestContext.Current.CancellationToken));
         });
     }
 

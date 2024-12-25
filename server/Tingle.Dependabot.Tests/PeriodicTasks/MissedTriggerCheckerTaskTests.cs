@@ -10,7 +10,6 @@ using Tingle.Dependabot.PeriodicTasks;
 using Tingle.EventBus;
 using Tingle.EventBus.Transports.InMemory;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Tingle.Dependabot.Tests.PeriodicTasks;
 
@@ -28,10 +27,11 @@ public class MissedTriggerCheckerTaskTests(ITestOutputHelper outputHelper)
         var lastUpdate1 = DateTimeOffset.Parse("2023-01-23T03:30:00+00:00");
         await TestAsync(lastUpdate0, lastUpdate1, async (harness, context, pt) =>
         {
-            await pt.CheckAsync(referencePoint);
+            await pt.CheckAsync(referencePoint, TestContext.Current.CancellationToken);
 
             // Ensure the message was published
-            var evt_context = Assert.IsType<EventContext<TriggerUpdateJobsEvent>>(Assert.Single(await harness.PublishedAsync()));
+            var evt_context = Assert.IsType<EventContext<TriggerUpdateJobsEvent>>(
+                Assert.Single(await harness.PublishedAsync(cancellationToken: TestContext.Current.CancellationToken)));
             var inner = evt_context.Event;
             Assert.NotNull(inner);
             Assert.Equal(RepositoryId, inner.RepositoryId);
@@ -48,10 +48,11 @@ public class MissedTriggerCheckerTaskTests(ITestOutputHelper outputHelper)
         var lastUpdate1 = (DateTimeOffset?)null;
         await TestAsync(lastUpdate0, lastUpdate1, async (harness, context, pt) =>
         {
-            await pt.CheckAsync(referencePoint);
+            await pt.CheckAsync(referencePoint, TestContext.Current.CancellationToken);
 
             // Ensure the message was published
-            var evt_context = Assert.IsType<EventContext<TriggerUpdateJobsEvent>>(Assert.Single(await harness.PublishedAsync()));
+            var evt_context = Assert.IsType<EventContext<TriggerUpdateJobsEvent>>(
+                Assert.Single(await harness.PublishedAsync(cancellationToken: TestContext.Current.CancellationToken)));
             var inner = evt_context.Event;
             Assert.NotNull(inner);
             Assert.Equal(RepositoryId, inner.RepositoryId);
@@ -68,10 +69,10 @@ public class MissedTriggerCheckerTaskTests(ITestOutputHelper outputHelper)
         var lastUpdate1 = DateTimeOffset.Parse("2023-01-24T03:30:00+00:00");
         await TestAsync(lastUpdate0, lastUpdate1, async (harness, context, pt) =>
         {
-            await pt.CheckAsync(referencePoint);
+            await pt.CheckAsync(referencePoint, TestContext.Current.CancellationToken);
 
             // Ensure nothing was published
-            Assert.Empty(await harness.PublishedAsync());
+            Assert.Empty(await harness.PublishedAsync(cancellationToken: TestContext.Current.CancellationToken));
         });
     }
 
