@@ -128,11 +128,10 @@ function buildUpdateJobConfig(
     job: {
       'id': id,
       'package-manager': update['package-ecosystem'],
-      'update-subdependencies': true, // TODO: add config for this?
       'updating-a-pull-request': updatingPullRequest || false,
       'dependency-group-to-refresh': updateDependencyGroupName,
       'dependency-groups': mapGroupsFromDependabotConfigToJobConfig(update.groups),
-      'dependencies': updateDependencyNames,
+      'dependencies': updateDependencyNames.length ? updateDependencyNames : undefined,
       'allowed-updates': mapAllowedUpdatesFromDependabotConfigToJobConfig(update.allow),
       'ignore-conditions': mapIgnoreConditionsFromDependabotConfigToJobConfig(update.ignore),
       'security-updates-only': update['open-pull-requests-limit'] == 0,
@@ -148,15 +147,7 @@ function buildUpdateJobConfig(
               'prefix-development': update['commit-message']?.['prefix-development'],
               'include-scope': update['commit-message']?.['include'],
             },
-      'experiments': Object.keys(taskInputs.experiments || {}).reduce(
-        (acc, key) => {
-          // Replace '-' with '_' in the experiment keys to match the dependabot-core models
-          acc[key.replace(/-/g, '_')] = taskInputs.experiments[key];
-          return acc;
-        },
-        {} as Record<string, string | boolean>,
-      ),
-      'max-updater-run-time': undefined, // TODO: add config for this?
+      'experiments': taskInputs.experiments,
       'reject-external-code': update['insecure-external-code-execution']?.toLocaleLowerCase() == 'allow',
       'repo-private': undefined, // TODO: add config for this?
       'repo-contents-path': undefined, // TODO: add config for this?
@@ -164,6 +155,12 @@ function buildUpdateJobConfig(
       'lockfile-only': update['versioning-strategy'] === 'lockfile-only',
       'vendor-dependencies': update.vendor,
       'debug': taskInputs.debug,
+      // The following options don't appear to be used by dependabot-core yet/anymore, but do appear in GitHub dependabot job logs.
+      // They are added here for completeness and so that we mimic the GitHub dependabot config as closely as possible.
+      // It is possible that these options might become live in a future dependabot-core release.
+      'max-updater-run-time': 2700,
+      'proxy-log-response-body-on-auth-failure': true,
+      'update-subdependencies': false,
     },
     credentials: mapRegistryCredentialsFromDependabotConfigToJobConfig(taskInputs, registries),
   };
@@ -182,8 +179,10 @@ function mapSourceFromDependabotConfigToJobConfig(taskInputs: ISharedVariables, 
   };
 }
 
-export function mapGroupsFromDependabotConfigToJobConfig(dependencyGroups: Record<string, IDependabotGroup>): any[] {
-  if (!dependencyGroups) {
+function mapGroupsFromDependabotConfigToJobConfig(
+  dependencyGroups: Record<string, IDependabotGroup>,
+): any[] | undefined {
+  if (!dependencyGroups || !Object.keys(dependencyGroups).length) {
     return undefined;
   }
   return Object.keys(dependencyGroups)
@@ -209,13 +208,18 @@ export function mapGroupsFromDependabotConfigToJobConfig(dependencyGroups: Recor
 function mapAllowedUpdatesFromDependabotConfigToJobConfig(allowedUpdates: IDependabotAllowCondition[]): any[] {
   if (!allowedUpdates) {
     // If no allow conditions are specified, update all dependencies by default
-    return [{ 'dependency-type': 'all' }];
+    return [
+      {
+        'dependency-type': 'direct',
+        'update-type': 'all',
+      },
+    ];
   }
   return allowedUpdates.map((allow) => {
     return {
       'dependency-name': allow['dependency-name'],
       'dependency-type': allow['dependency-type'],
-      //'update-type': allow["update-type"] // TODO: This is missing from dependabot.ymal docs, but is used in the dependabot-core job model!?
+      'update-type': allow['update-type'],
     };
   });
 }
