@@ -196,7 +196,7 @@ function mapGroupsFromDependabotConfigToJobConfig(dependencyGroups: Record<strin
         'name': name,
         'applies-to': group['applies-to'],
         'rules': {
-          'patterns': group['patterns'] || ['*'],
+          'patterns': group['patterns']?.length ? group['patterns'] : ['*'],
           'exclude-patterns': group['exclude-patterns'],
           'dependency-type': group['dependency-type'],
           'update-types': group['update-types'],
