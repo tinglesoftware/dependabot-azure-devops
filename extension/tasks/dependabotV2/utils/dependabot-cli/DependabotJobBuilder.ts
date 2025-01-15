@@ -182,23 +182,28 @@ function mapSourceFromDependabotConfigToJobConfig(taskInputs: ISharedVariables, 
   };
 }
 
-function mapGroupsFromDependabotConfigToJobConfig(dependencyGroups: Record<string, IDependabotGroup>): any[] {
+export function mapGroupsFromDependabotConfigToJobConfig(dependencyGroups: Record<string, IDependabotGroup>): any[] {
   if (!dependencyGroups) {
     return undefined;
   }
-  return Object.keys(dependencyGroups).map((name) => {
-    const group = dependencyGroups[name];
-    return {
-      'name': name,
-      'applies-to': group['applies-to'],
-      'rules': {
-        'patterns': group['patterns'],
-        'exclude-patterns': group['exclude-patterns'],
-        'dependency-type': group['dependency-type'],
-        'update-types': group['update-types'],
-      },
-    };
-  });
+  return Object.keys(dependencyGroups)
+    .map((name) => {
+      const group = dependencyGroups[name];
+      if (!group) {
+        return;
+      }
+      return {
+        'name': name,
+        'applies-to': group['applies-to'],
+        'rules': {
+          'patterns': group['patterns']?.length ? group['patterns'] : ['*'],
+          'exclude-patterns': group['exclude-patterns'],
+          'dependency-type': group['dependency-type'],
+          'update-types': group['update-types'],
+        },
+      };
+    })
+    .filter((g) => g);
 }
 
 function mapAllowedUpdatesFromDependabotConfigToJobConfig(allowedUpdates: IDependabotAllowCondition[]): any[] {
