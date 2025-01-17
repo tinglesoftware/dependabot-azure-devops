@@ -179,7 +179,7 @@ function mapSourceFromDependabotConfigToJobConfig(taskInputs: ISharedVariables, 
   };
 }
 
-function mapGroupsFromDependabotConfigToJobConfig(
+export function mapGroupsFromDependabotConfigToJobConfig(
   dependencyGroups: Record<string, IDependabotGroup>,
 ): any[] | undefined {
   if (!dependencyGroups || !Object.keys(dependencyGroups).length) {
