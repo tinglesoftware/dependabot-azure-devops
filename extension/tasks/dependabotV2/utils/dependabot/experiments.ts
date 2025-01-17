@@ -11,5 +11,5 @@ export const DEFAULT_EXPERIMENTS: Record<string, string | boolean> = {
   'nuget-use-direct-discovery': true,
   'enable-file-parser-python-local': true,
   'lead-security-dependency': true,
-  'enable-record-ecosystem-meta': true,
+  'enable-record-ecosystem-meta': false, // this experiment currently does not work, and will produce timeouts
 };
