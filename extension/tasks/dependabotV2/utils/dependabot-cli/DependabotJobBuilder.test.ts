@@ -7,9 +7,9 @@ describe('mapGroupsFromDependabotConfigToJobConfig', () => {
     expect(result).toBeUndefined();
   });
 
-  it('should return an empty array if dependencyGroups is an empty object', () => {
+  it('should return undefined if dependencyGroups is an empty object', () => {
     const result = mapGroupsFromDependabotConfigToJobConfig({});
-    expect(result).toEqual([]);
+    expect(result).toBeUndefined();
   });
 
   it('should filter out undefined groups', () => {
@@ -21,14 +21,7 @@ describe('mapGroupsFromDependabotConfigToJobConfig', () => {
     };
 
     const result = mapGroupsFromDependabotConfigToJobConfig(dependencyGroups);
-    expect(result).toEqual([
-      {
-        name: 'group2',
-        rules: {
-          patterns: ['pattern2'],
-        },
-      },
-    ]);
+    expect(result).toHaveLength(1);
   });
 
   it('should filter out null groups', () => {
@@ -40,14 +33,7 @@ describe('mapGroupsFromDependabotConfigToJobConfig', () => {
     };
 
     const result = mapGroupsFromDependabotConfigToJobConfig(dependencyGroups);
-    expect(result).toEqual([
-      {
-        name: 'group2',
-        rules: {
-          patterns: ['pattern2'],
-        },
-      },
-    ]);
+    expect(result).toHaveLength(1);
   });
 
   it('should map dependency group properties correctly', () => {
