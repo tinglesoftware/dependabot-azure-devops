@@ -11,5 +11,9 @@ export const DEFAULT_EXPERIMENTS: Record<string, string | boolean> = {
   'nuget-use-direct-discovery': true,
   'enable-file-parser-python-local': true,
   'lead-security-dependency': true,
-  'enable-record-ecosystem-meta': false, // this experiment currently does not work, and will produce timeouts
+  // NOTE: 'enable-record-ecosystem-meta' is not currently implemented in Dependabot-CLI.
+  //       This experiment is primarily for GitHub analytics and doesn't add much value in the DevOps implementation.
+  //       See: https://github.com/dependabot/dependabot-core/pull/10905
+  // TODO: Revsit this if/when Dependabot-CLI supports it.
+  //'enable-record-ecosystem-meta': true,
 };
