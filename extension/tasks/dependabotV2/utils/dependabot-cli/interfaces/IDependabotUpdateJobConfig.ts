@@ -40,11 +40,6 @@ export interface IDependabotUpdateJobConfig {
       'affected-versions': string[];
       'patched-versions': string[];
       'unaffected-versions': string[];
-      // TODO: The below configs are not in the dependabot-cli model, but are in the dependabot-core model
-      'title'?: string;
-      'description'?: string;
-      'source-name'?: string;
-      'source-url'?: string;
     }[];
     'source': {
       'provider': string;
@@ -72,7 +67,7 @@ export interface IDependabotUpdateJobConfig {
     'commit-message-options'?: {
       'prefix'?: string;
       'prefix-development'?: string;
-      'include-scope'?: string;
+      'include-scope'?: boolean;
     };
     'experiments'?: Record<string, string | boolean>;
     'max-updater-run-time'?: number;
