@@ -15,6 +15,7 @@ export const DEFAULT_EXPERIMENTS: Record<string, string | boolean> = {
   'npm-v6-deprecation-warning': true,
   'npm-v6-unsupported-error': true,
   'python-3-8-deprecation-warning': true,
+  'python-3-8-unsupported-error': true,
   'lead-security-dependency': true,
   // NOTE: 'enable-record-ecosystem-meta' is not currently implemented in Dependabot-CLI.
   //       This experiment is primarily for GitHub analytics and doesn't add much value in the DevOps implementation.
