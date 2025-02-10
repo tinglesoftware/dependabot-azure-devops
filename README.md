@@ -163,6 +163,7 @@ By default, the enabled experiments will mirror the GitHub-hosted version of Dep
 | All | add_deprecation_warn_to_pr_message | true/false | https://github.com/dependabot/dependabot-core/pull/10421 |
 | All | threaded_metadata | true/false | https://github.com/dependabot/dependabot-core/pull/9485 |
 | All | enable_shared_helpers_command_timeout | true/false | https://github.com/dependabot/dependabot-core/pull/11125 |
+| All | allow_refresh_for_existing_pr_dependencies | true/false | https://github.com/dependabot/dependabot-core/pull/11382 |
 | Go | tidy | true/false | |
 | Go | vendor | true/false | |
 | Go | goprivate | string | |

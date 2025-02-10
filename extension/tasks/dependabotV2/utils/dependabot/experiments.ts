@@ -25,4 +25,5 @@ export const DEFAULT_EXPERIMENTS: Record<string, string | boolean> = {
   'enable-fix-for-pnpm-no-change-error': true,
   'enable-engine-version-detection': true,
   'avoid-duplicate-updates-package-json': true,
+  'allow-refresh-for-existing-pr-dependencies': true,
 };
