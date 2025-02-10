@@ -158,10 +158,9 @@ export function buildUpdateJobConfig(
       'vendor-dependencies': update.vendor,
       'debug': taskInputs.debug,
 
-      // TODO: Investigate if these options are needed or are obsolete
-      // The following options don't appear to be used by dependabot-core yet/anymore, but do appear in GitHub dependabot job logs.
-      // They are added here for completeness and so that we mimic the GitHub dependabot config as closely as possible.
-      // It is possible that these options might become live in a future dependabot-core release.
+      // TODO: Investigate if these options are needed or are now obsolete.
+      //       These options don't appear to be used by dependabot-core yet/anymore,
+      //       but do appear in GitHub Dependabot job logs seen in the wild.
       //'max-updater-run-time': 2700,
       //'proxy-log-response-body-on-auth-failure': true,
       //'update-subdependencies': false,
@@ -213,8 +212,8 @@ export function mapAllowedUpdatesFromDependabotConfigToJobConfig(
   allowedUpdates: IDependabotAllowCondition[],
   securityOnlyUpdate?: boolean,
 ): any[] {
-  // If no allow conditions are specified, update direct dependencies by default
-  // NOTE: 'update-type' appears to be a deprecated config, but still appears in the dependabot-core model and GitHub dependabot job logs.
+  // If no allow conditions are specified, update direct dependencies by default; This is what GitHub does.
+  // NOTE: 'update-type' appears to be a deprecated config, but still appears in the dependabot-core model and GitHub Dependabot job logs.
   //       See: https://github.com/dependabot/dependabot-core/blob/b3a0c1f86c20729494097ebc695067099f5b4ada/updater/lib/dependabot/job.rb#L253C1-L257C78
   if (!allowedUpdates) {
     return [
