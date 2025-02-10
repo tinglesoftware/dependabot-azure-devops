@@ -149,7 +149,22 @@ export function buildUpdateJobConfig(
               'include-scope':
                 update['commit-message']?.['include']?.toLocaleLowerCase()?.trim() == 'scope' ? true : undefined,
             },
-      'experiments': taskInputs.experiments,
+      'experiments': Object.keys(taskInputs.experiments || {}).reduce(
+        (acc, key) => {
+          // Experiment values are known to be either 'true', 'false', or a string value.
+          // If the value is 'true' or 'false', convert it to a boolean type so that dependabot-core handles it correctly.
+          const value = taskInputs.experiments[key];
+          if (typeof value === 'string' && value?.toLocaleLowerCase() === 'true') {
+            acc[key] = true;
+          } else if (typeof value === 'string' && value?.toLocaleLowerCase() === 'false') {
+            acc[key] = false;
+          } else {
+            acc[key] = value;
+          }
+          return acc;
+        },
+        {} as Record<string, string | boolean>,
+      ),
       'reject-external-code': update['insecure-external-code-execution']?.toLocaleLowerCase()?.trim() == 'allow',
       'repo-private': undefined, // TODO: add config for this?
       'repo-contents-path': undefined, // TODO: add config for this?
