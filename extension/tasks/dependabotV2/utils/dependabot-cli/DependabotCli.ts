@@ -91,7 +91,10 @@ export class DependabotCli {
         dependabotArguments.push('--proxy-image', options.proxyImage);
       }
       if (options?.updaterImage) {
-        dependabotArguments.push('--updater-image', options.updaterImage);
+        dependabotArguments.push(
+          '--updater-image',
+          options.updaterImage.replace(/\{ecosystem\}/i, operation.config['package-ecosystem']),
+        );
       }
       if (options?.timeoutDurationMinutes) {
         dependabotArguments.push('--timeout', `${options.timeoutDurationMinutes}m`);
