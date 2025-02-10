@@ -164,6 +164,7 @@ By default, the enabled experiments will mirror the GitHub-hosted version of Dep
 | All | threaded_metadata | true/false | https://github.com/dependabot/dependabot-core/pull/9485 |
 | All | enable_shared_helpers_command_timeout | true/false | https://github.com/dependabot/dependabot-core/pull/11125 |
 | All | allow_refresh_for_existing_pr_dependencies | true/false | https://github.com/dependabot/dependabot-core/pull/11382 |
+| Bun | enable_bun_ecosystem | true/false | https://github.com/dependabot/dependabot-core/pull/11446 |
 | Go | tidy | true/false | |
 | Go | vendor | true/false | |
 | Go | goprivate | string | |
