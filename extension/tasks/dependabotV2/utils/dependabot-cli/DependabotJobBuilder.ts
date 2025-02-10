@@ -1,6 +1,7 @@
 import {
   IDependabotAllowCondition,
   IDependabotGroup,
+  IDependabotIgnoreCondition,
   IDependabotRegistry,
   IDependabotUpdate,
 } from '../dependabot/interfaces/IDependabotConfig';
@@ -149,22 +150,7 @@ export function buildUpdateJobConfig(
               'include-scope':
                 update['commit-message']?.['include']?.toLocaleLowerCase()?.trim() == 'scope' ? true : undefined,
             },
-      'experiments': Object.keys(taskInputs.experiments || {}).reduce(
-        (acc, key) => {
-          // Experiment values are known to be either 'true', 'false', or a string value.
-          // If the value is 'true' or 'false', convert it to a boolean type so that dependabot-core handles it correctly.
-          const value = taskInputs.experiments[key];
-          if (typeof value === 'string' && value?.toLocaleLowerCase() === 'true') {
-            acc[key] = true;
-          } else if (typeof value === 'string' && value?.toLocaleLowerCase() === 'false') {
-            acc[key] = false;
-          } else {
-            acc[key] = value;
-          }
-          return acc;
-        },
-        {} as Record<string, string | boolean>,
-      ),
+      'experiments': mapExperiments(taskInputs.experiments),
       'reject-external-code': update['insecure-external-code-execution']?.toLocaleLowerCase()?.trim() == 'allow',
       'repo-private': undefined, // TODO: add config for this?
       'repo-contents-path': undefined, // TODO: add config for this?
@@ -248,7 +234,7 @@ export function mapAllowedUpdatesFromDependabotConfigToJobConfig(
 }
 
 export function mapIgnoreConditionsFromDependabotConfigToJobConfig(
-  ignoreConditions: IDependabotAllowCondition[],
+  ignoreConditions: IDependabotIgnoreCondition[],
 ): any[] {
   if (!ignoreConditions) {
     return undefined;
@@ -355,4 +341,23 @@ export function mapRegistryCredentialsFromDependabotConfigToJobConfig(
   }
 
   return registryCredentials;
+}
+
+export function mapExperiments(experiments: Record<string, string | boolean>): Record<string, string | boolean> {
+  return Object.keys(experiments || {}).reduce(
+    (acc, key) => {
+      // Experiment values are known to be either 'true', 'false', or a string value.
+      // If the value is 'true' or 'false', convert it to a boolean type so that dependabot-core handles it correctly.
+      const value = experiments[key];
+      if (typeof value === 'string' && value?.toLocaleLowerCase() === 'true') {
+        acc[key] = true;
+      } else if (typeof value === 'string' && value?.toLocaleLowerCase() === 'false') {
+        acc[key] = false;
+      } else {
+        acc[key] = value;
+      }
+      return acc;
+    },
+    {} as Record<string, string | boolean>,
+  );
 }

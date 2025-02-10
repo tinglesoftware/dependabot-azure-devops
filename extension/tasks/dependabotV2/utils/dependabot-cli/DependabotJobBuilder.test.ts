@@ -1,5 +1,10 @@
-import { IDependabotGroup } from '../dependabot/interfaces/IDependabotConfig';
-import { mapGroupsFromDependabotConfigToJobConfig } from './DependabotJobBuilder';
+import { IDependabotGroup, IDependabotIgnoreCondition } from '../dependabot/interfaces/IDependabotConfig';
+import {
+  mapAllowedUpdatesFromDependabotConfigToJobConfig,
+  mapExperiments,
+  mapGroupsFromDependabotConfigToJobConfig,
+  mapIgnoreConditionsFromDependabotConfigToJobConfig,
+} from './DependabotJobBuilder';
 
 describe('mapGroupsFromDependabotConfigToJobConfig', () => {
   it('should return undefined if dependencyGroups is undefined', () => {
@@ -78,5 +83,139 @@ describe('mapGroupsFromDependabotConfigToJobConfig', () => {
         },
       },
     ]);
+  });
+});
+
+describe('mapAllowedUpdatesFromDependabotConfigToJobConfig', () => {
+  it('should allow direct dependency updates if rules are undefined', () => {
+    const result = mapAllowedUpdatesFromDependabotConfigToJobConfig(undefined);
+    expect(result).toEqual([
+      {
+        'dependency-type': 'direct',
+        'update-type': 'all',
+      },
+    ]);
+  });
+
+  it('should allow direct dependency security updates if rules are undefined and securityOnlyUpdate is true', () => {
+    const result = mapAllowedUpdatesFromDependabotConfigToJobConfig(undefined, true);
+    expect(result).toEqual([
+      {
+        'dependency-type': 'direct',
+        'update-type': 'security',
+      },
+    ]);
+  });
+});
+
+describe('mapIgnoreConditionsFromDependabotConfigToJobConfig', () => {
+  it('should return undefined if rules are undefined', () => {
+    const result = mapIgnoreConditionsFromDependabotConfigToJobConfig(undefined);
+    expect(result).toBeUndefined();
+  });
+
+  it('should handle single version string correctly', () => {
+    const ignoreConditions: IDependabotIgnoreCondition[] = [
+      {
+        'dependency-name': 'dep1',
+        'versions': ['>1.0.0'],
+      },
+    ];
+
+    const result = mapIgnoreConditionsFromDependabotConfigToJobConfig(ignoreConditions);
+    expect(result).toEqual([
+      {
+        'dependency-name': 'dep1',
+        'version-requirement': '>1.0.0',
+      },
+    ]);
+  });
+
+  it('should handle multiple version strings correctly', () => {
+    const ignoreConditions: IDependabotIgnoreCondition[] = [
+      {
+        'dependency-name': 'dep1',
+        'versions': ['>1.0.0', '<2.0.0'],
+      },
+    ];
+
+    const result = mapIgnoreConditionsFromDependabotConfigToJobConfig(ignoreConditions);
+    expect(result).toEqual([
+      {
+        'dependency-name': 'dep1',
+        'version-requirement': '>1.0.0, <2.0.0',
+      },
+    ]);
+  });
+
+  it('should handle empty versions array correctly', () => {
+    const ignoreConditions: IDependabotIgnoreCondition[] = [
+      {
+        'dependency-name': 'dep1',
+        'versions': [],
+      },
+    ];
+
+    const result = mapIgnoreConditionsFromDependabotConfigToJobConfig(ignoreConditions);
+    expect(result).toEqual([
+      {
+        'dependency-name': 'dep1',
+        'version-requirement': '',
+      },
+    ]);
+  });
+});
+
+describe('mapExperiments', () => {
+  it('should return an empty object if experiments is undefined', () => {
+    const result = mapExperiments(undefined);
+    expect(result).toEqual({});
+  });
+
+  it('should return an empty object if experiments is an empty object', () => {
+    const result = mapExperiments({});
+    expect(result).toEqual({});
+  });
+
+  it('should convert string experiment value "true" to boolean `true`', () => {
+    const experiments = {
+      experiment1: 'true',
+    };
+    const result = mapExperiments(experiments);
+    expect(result).toEqual({
+      experiment1: true,
+    });
+  });
+
+  it('should convert string experiment value "false" to boolean `false`', () => {
+    const experiments = {
+      experiment1: 'false',
+    };
+    const result = mapExperiments(experiments);
+    expect(result).toEqual({
+      experiment1: false,
+    });
+  });
+
+  it('should keep boolean experiment values as is', () => {
+    const experiments = {
+      experiment1: true,
+      experiment2: false,
+    };
+    const result = mapExperiments(experiments);
+    expect(result).toEqual({
+      experiment1: true,
+      experiment2: false,
+    });
+  });
+
+  it('should keep string experiment values other than "true" or "false" as is', () => {
+    const experiments = {
+      experiment1: 'someString',
+    };
+    const result = mapExperiments(experiments);
+    expect(result).toEqual({
+      experiment1: 'someString',
+    });
   });
 });
