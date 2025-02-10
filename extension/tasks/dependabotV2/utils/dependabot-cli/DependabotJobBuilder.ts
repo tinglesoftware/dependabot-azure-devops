@@ -132,7 +132,7 @@ export function buildUpdateJobConfig(
       'updating-a-pull-request': updatingPullRequest || false,
       'dependency-group-to-refresh': updateDependencyGroupName,
       'dependency-groups': mapGroupsFromDependabotConfigToJobConfig(update.groups),
-      'dependencies': updateDependencyNames.length ? updateDependencyNames : undefined,
+      'dependencies': updateDependencyNames?.length ? updateDependencyNames : undefined,
       'allowed-updates': mapAllowedUpdatesFromDependabotConfigToJobConfig(update.allow, securityOnlyUpdate),
       'ignore-conditions': mapIgnoreConditionsFromDependabotConfigToJobConfig(update.ignore),
       'security-updates-only': securityOnlyUpdate,
