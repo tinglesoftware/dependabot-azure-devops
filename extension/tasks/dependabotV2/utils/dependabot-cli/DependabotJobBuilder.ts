@@ -1,6 +1,7 @@
 import {
   IDependabotAllowCondition,
   IDependabotGroup,
+  IDependabotIgnoreCondition,
   IDependabotRegistry,
   IDependabotUpdate,
 } from '../dependabot/interfaces/IDependabotConfig';
@@ -112,7 +113,7 @@ export class DependabotJobBuilder {
   }
 }
 
-function buildUpdateJobConfig(
+export function buildUpdateJobConfig(
   id: string,
   taskInputs: ISharedVariables,
   update: IDependabotUpdate,
@@ -122,20 +123,20 @@ function buildUpdateJobConfig(
   updateDependencyNames?: string[] | undefined,
   existingPullRequests?: any[],
   securityVulnerabilities?: ISecurityVulnerability[],
-) {
+): IDependabotUpdateOperation {
+  const securityOnlyUpdate = update['open-pull-requests-limit'] == 0;
   return {
     config: update,
     job: {
       'id': id,
       'package-manager': update['package-ecosystem'],
-      'update-subdependencies': true, // TODO: add config for this?
       'updating-a-pull-request': updatingPullRequest || false,
       'dependency-group-to-refresh': updateDependencyGroupName,
       'dependency-groups': mapGroupsFromDependabotConfigToJobConfig(update.groups),
-      'dependencies': updateDependencyNames,
-      'allowed-updates': mapAllowedUpdatesFromDependabotConfigToJobConfig(update.allow),
+      'dependencies': updateDependencyNames?.length ? updateDependencyNames : undefined,
+      'allowed-updates': mapAllowedUpdatesFromDependabotConfigToJobConfig(update.allow, securityOnlyUpdate),
       'ignore-conditions': mapIgnoreConditionsFromDependabotConfigToJobConfig(update.ignore),
-      'security-updates-only': update['open-pull-requests-limit'] == 0,
+      'security-updates-only': securityOnlyUpdate,
       'security-advisories': mapSecurityAdvisories(securityVulnerabilities),
       'source': mapSourceFromDependabotConfigToJobConfig(taskInputs, update),
       'existing-pull-requests': existingPullRequests?.filter((pr) => !pr['dependency-group-name']),
@@ -146,30 +147,30 @@ function buildUpdateJobConfig(
           : {
               'prefix': update['commit-message']?.['prefix'],
               'prefix-development': update['commit-message']?.['prefix-development'],
-              'include-scope': update['commit-message']?.['include'],
+              'include-scope':
+                update['commit-message']?.['include']?.toLocaleLowerCase()?.trim() == 'scope' ? true : undefined,
             },
-      'experiments': Object.keys(taskInputs.experiments || {}).reduce(
-        (acc, key) => {
-          // Replace '-' with '_' in the experiment keys to match the dependabot-core models
-          acc[key.replace(/-/g, '_')] = taskInputs.experiments[key];
-          return acc;
-        },
-        {} as Record<string, string | boolean>,
-      ),
-      'max-updater-run-time': undefined, // TODO: add config for this?
-      'reject-external-code': update['insecure-external-code-execution']?.toLocaleLowerCase() == 'allow',
+      'experiments': mapExperiments(taskInputs.experiments),
+      'reject-external-code': update['insecure-external-code-execution']?.toLocaleLowerCase()?.trim() == 'allow',
       'repo-private': undefined, // TODO: add config for this?
       'repo-contents-path': undefined, // TODO: add config for this?
       'requirements-update-strategy': mapVersionStrategyToRequirementsUpdateStrategy(update['versioning-strategy']),
       'lockfile-only': update['versioning-strategy'] === 'lockfile-only',
       'vendor-dependencies': update.vendor,
       'debug': taskInputs.debug,
+
+      // TODO: Investigate if these options are needed or are now obsolete.
+      //       These options don't appear to be used by dependabot-core yet/anymore,
+      //       but do appear in GitHub Dependabot job logs seen in the wild.
+      //'max-updater-run-time': 2700,
+      //'proxy-log-response-body-on-auth-failure': true,
+      //'update-subdependencies': false,
     },
     credentials: mapRegistryCredentialsFromDependabotConfigToJobConfig(taskInputs, registries),
   };
 }
 
-function mapSourceFromDependabotConfigToJobConfig(taskInputs: ISharedVariables, update: IDependabotUpdate): any {
+export function mapSourceFromDependabotConfigToJobConfig(taskInputs: ISharedVariables, update: IDependabotUpdate): any {
   return {
     'provider': 'azure',
     'api-endpoint': taskInputs.apiEndpointUrl,
@@ -182,8 +183,10 @@ function mapSourceFromDependabotConfigToJobConfig(taskInputs: ISharedVariables, 
   };
 }
 
-export function mapGroupsFromDependabotConfigToJobConfig(dependencyGroups: Record<string, IDependabotGroup>): any[] {
-  if (!dependencyGroups) {
+export function mapGroupsFromDependabotConfigToJobConfig(
+  dependencyGroups: Record<string, IDependabotGroup>,
+): any[] | undefined {
+  if (!dependencyGroups || !Object.keys(dependencyGroups).length) {
     return undefined;
   }
   return Object.keys(dependencyGroups)
@@ -206,36 +209,53 @@ export function mapGroupsFromDependabotConfigToJobConfig(dependencyGroups: Recor
     .filter((g) => g);
 }
 
-function mapAllowedUpdatesFromDependabotConfigToJobConfig(allowedUpdates: IDependabotAllowCondition[]): any[] {
+export function mapAllowedUpdatesFromDependabotConfigToJobConfig(
+  allowedUpdates: IDependabotAllowCondition[],
+  securityOnlyUpdate?: boolean,
+): any[] {
+  // If no allow conditions are specified, update direct dependencies by default; This is what GitHub does.
+  // NOTE: 'update-type' appears to be a deprecated config, but still appears in the dependabot-core model and GitHub Dependabot job logs.
+  //       See: https://github.com/dependabot/dependabot-core/blob/b3a0c1f86c20729494097ebc695067099f5b4ada/updater/lib/dependabot/job.rb#L253C1-L257C78
   if (!allowedUpdates) {
-    // If no allow conditions are specified, update all dependencies by default
-    return [{ 'dependency-type': 'all' }];
+    return [
+      {
+        'dependency-type': 'direct',
+        'update-type': securityOnlyUpdate ? 'security' : 'all',
+      },
+    ];
   }
   return allowedUpdates.map((allow) => {
     return {
       'dependency-name': allow['dependency-name'],
       'dependency-type': allow['dependency-type'],
-      //'update-type': allow["update-type"] // TODO: This is missing from dependabot.ymal docs, but is used in the dependabot-core job model!?
+      'update-type': allow['update-type'],
     };
   });
 }
 
-function mapIgnoreConditionsFromDependabotConfigToJobConfig(ignoreConditions: IDependabotAllowCondition[]): any[] {
+export function mapIgnoreConditionsFromDependabotConfigToJobConfig(
+  ignoreConditions: IDependabotIgnoreCondition[],
+): any[] {
   if (!ignoreConditions) {
     return undefined;
   }
   return ignoreConditions.map((ignore) => {
     return {
+      'source': ignore['source'],
+      'updated-at': ignore['updated-at'],
       'dependency-name': ignore['dependency-name'],
-      //'source': ignore["source"], // TODO: This is missing from dependabot.ymal docs, but is used in the dependabot-core job model!?
       'update-types': ignore['update-types'],
-      //'updated-at': ignore["updated-at"], // TODO: This is missing from dependabot.ymal docs, but is used in the dependabot-core job model!?
-      'version-requirement': (<string[]>ignore['versions'])?.join(', '), // TODO: Test this, not sure how this should be parsed...
+
+      // The dependabot.yml config docs are not very clear about acceptable values; after scanning dependabot-core and dependabot-cli,
+      // this could either be a single version string (e.g. '>1.0.0'), or multiple version strings separated by commas (e.g. '>1.0.0, <2.0.0')
+      'version-requirement': Array.isArray(ignore['versions'])
+        ? (<string[]>ignore['versions'])?.join(', ')
+        : <string>ignore['versions'],
     };
   });
 }
 
-function mapSecurityAdvisories(securityVulnerabilities: ISecurityVulnerability[]): any[] {
+export function mapSecurityAdvisories(securityVulnerabilities: ISecurityVulnerability[]): any[] {
   if (!securityVulnerabilities) {
     return undefined;
   }
@@ -260,7 +280,7 @@ function mapSecurityAdvisories(securityVulnerabilities: ISecurityVulnerability[]
   });
 }
 
-function mapVersionStrategyToRequirementsUpdateStrategy(versioningStrategy: string): string | undefined {
+export function mapVersionStrategyToRequirementsUpdateStrategy(versioningStrategy: string): string | undefined {
   if (!versioningStrategy) {
     return undefined;
   }
@@ -280,7 +300,7 @@ function mapVersionStrategyToRequirementsUpdateStrategy(versioningStrategy: stri
   }
 }
 
-function mapRegistryCredentialsFromDependabotConfigToJobConfig(
+export function mapRegistryCredentialsFromDependabotConfigToJobConfig(
   taskInputs: ISharedVariables,
   registries: Record<string, IDependabotRegistry>,
 ): any[] {
@@ -321,4 +341,23 @@ function mapRegistryCredentialsFromDependabotConfigToJobConfig(
   }
 
   return registryCredentials;
+}
+
+export function mapExperiments(experiments: Record<string, string | boolean>): Record<string, string | boolean> {
+  return Object.keys(experiments || {}).reduce(
+    (acc, key) => {
+      // Experiment values are known to be either 'true', 'false', or a string value.
+      // If the value is 'true' or 'false', convert it to a boolean type so that dependabot-core handles it correctly.
+      const value = experiments[key];
+      if (typeof value === 'string' && value?.toLocaleLowerCase() === 'true') {
+        acc[key] = true;
+      } else if (typeof value === 'string' && value?.toLocaleLowerCase() === 'false') {
+        acc[key] = false;
+      } else {
+        acc[key] = value;
+      }
+      return acc;
+    },
+    {} as Record<string, string | boolean>,
+  );
 }
