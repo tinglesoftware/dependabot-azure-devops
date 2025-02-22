@@ -16,17 +16,17 @@ import { IDependabotUpdateOutputProcessor } from './interfaces/IDependabotUpdate
  */
 export class DependabotCli {
   private readonly jobsPath: string;
-  private readonly toolImage: string;
+  private readonly toolPackage: string;
   private readonly outputProcessor: IDependabotUpdateOutputProcessor;
   private readonly debug: boolean;
   private readonly outputLogStream: Writable;
   private toolPath: string;
 
-  public static readonly CLI_IMAGE_LATEST = 'github.com/dependabot/cli/cmd/dependabot@latest';
+  public static readonly CLI_PACKAGE_LATEST = 'github.com/dependabot/cli/cmd/dependabot@latest';
 
-  constructor(cliToolImage: string, outputProcessor: IDependabotUpdateOutputProcessor, debug: boolean = false) {
+  constructor(toolPackage: string, outputProcessor: IDependabotUpdateOutputProcessor, debug: boolean = false) {
     this.jobsPath = path.join(os.tmpdir(), 'dependabot-jobs');
-    this.toolImage = cliToolImage;
+    this.toolPackage = toolPackage;
     this.outputProcessor = outputProcessor;
     this.outputLogStream = new Writable();
     this.outputLogStream._write = (chunk, encoding, callback) => logComponentOutput(debug, chunk, encoding, callback);
@@ -91,7 +91,17 @@ export class DependabotCli {
         dependabotArguments.push('--proxy-image', options.proxyImage);
       }
       if (options?.updaterImage) {
-        dependabotArguments.push('--updater-image', options.updaterImage);
+        // If the updater image is provided but does not contain the "{ecosystem}" placeholder, tell the user they've misconfigured it
+        if (!options.updaterImage.includes('{ecosystem}')) {
+          throw new Error(
+            `Dependabot Updater image '${options.updaterImage}' is invalid. ` +
+              `Please ensure the image contains a "{ecosystem}" placeholder to denote the package ecosystem; e.g. "ghcr.io/dependabot/dependabot-updater-{ecosystem}:latest"`,
+          );
+        }
+        dependabotArguments.push(
+          '--updater-image',
+          options.updaterImage.replace(/\{ecosystem\}/i, operation.config['package-ecosystem']),
+        );
       }
       if (options?.timeoutDurationMinutes) {
         dependabotArguments.push('--timeout', `${options.timeoutDurationMinutes}m`);
@@ -183,7 +193,7 @@ export class DependabotCli {
     debug('Dependabot CLI install was not found, installing now with `go install dependabot`...');
     section('Installing Dependabot CLI');
     const goTool: ToolRunner = tool(which('go', true));
-    goTool.arg(['install', this.toolImage]);
+    goTool.arg(['install', this.toolPackage]);
     await goTool.execAsync();
 
     // Depending on how Go is configured on the host agent, the "go/bin" path may not be in the PATH environment variable.

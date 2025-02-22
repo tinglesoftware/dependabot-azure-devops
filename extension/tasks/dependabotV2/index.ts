@@ -87,7 +87,7 @@ async function run() {
 
     // Initialise the Dependabot updater
     dependabot = new DependabotCli(
-      DependabotCli.CLI_IMAGE_LATEST, // TODO: Add config for this?
+      taskInputs.dependabotCliPackage || DependabotCli.CLI_PACKAGE_LATEST,
       new DependabotOutputProcessor(
         taskInputs,
         prAuthorClient,
@@ -106,7 +106,7 @@ async function run() {
       collectorImage: undefined, // TODO: Add config for this?
       collectorConfigPath: undefined, // TODO: Add config for this?
       proxyImage: undefined, // TODO: Add config for this?
-      updaterImage: undefined, // TODO: Add config for this?
+      updaterImage: taskInputs.dependabotUpdaterImage,
       timeoutDuration: undefined, // TODO: Add config for this?
       flamegraph: taskInputs.debug,
     };

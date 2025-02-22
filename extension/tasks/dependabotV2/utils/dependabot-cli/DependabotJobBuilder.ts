@@ -30,7 +30,7 @@ export class DependabotJobBuilder {
       config: update,
       job: {
         'id': `discover-${id}-${update['package-ecosystem']}-dependency-list`,
-        'package-manager': update['package-ecosystem'],
+        'package-manager': mapPackageEcosystemToPackageManager(update['package-ecosystem']),
         'ignore-conditions': [{ 'dependency-name': '*' }],
         'source': mapSourceFromDependabotConfigToJobConfig(taskInputs, update),
         'experiments': taskInputs.experiments,
@@ -59,10 +59,9 @@ export class DependabotJobBuilder {
     existingPullRequests?: any[],
     securityVulnerabilities?: ISecurityVulnerability[],
   ): IDependabotUpdateOperation {
-    const packageEcosystem = update['package-ecosystem'];
     const securityUpdatesOnly = update['open-pull-requests-limit'] == 0;
     return buildUpdateJobConfig(
-      `update-${id}-${packageEcosystem}-${securityUpdatesOnly ? 'security-only' : 'all'}`,
+      `update-${id}-${update['package-ecosystem']}-${securityUpdatesOnly ? 'security-only' : 'all'}`,
       taskInputs,
       update,
       registries,
@@ -129,7 +128,7 @@ export function buildUpdateJobConfig(
     config: update,
     job: {
       'id': id,
-      'package-manager': update['package-ecosystem'],
+      'package-manager': mapPackageEcosystemToPackageManager(update['package-ecosystem']),
       'updating-a-pull-request': updatingPullRequest || false,
       'dependency-group-to-refresh': updateDependencyGroupName,
       'dependency-groups': mapGroupsFromDependabotConfigToJobConfig(update.groups),
@@ -360,4 +359,39 @@ export function mapExperiments(experiments: Record<string, string | boolean>): R
     },
     {} as Record<string, string | boolean>,
   );
+}
+
+export function mapPackageEcosystemToPackageManager(ecosystem: string) {
+  // Map the dependabot config "package ecyosystem" to the equlivent dependabot-core/cli "package manager".
+  // Config values: https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#package-ecosystem-
+  // Core/CLI values: https://github.com/dependabot/dependabot-core/blob/main/common/lib/dependabot/config/file.rb#L60-L81
+  switch (ecosystem?.toLocaleLowerCase()) {
+    case 'devcontainer':
+      return 'devcontainers';
+    case 'dotnet-sdk':
+      return 'dotnet_sdk';
+    case 'github-actions':
+      return 'github_actions';
+    case 'gitsubmodule':
+      return 'submodules';
+    case 'gomod':
+      return 'go_modules';
+    case 'mix':
+      return 'hex';
+    case 'npm':
+      return 'npm_and_yarn';
+    // Additional aliases, for convenience
+    case 'pipenv':
+      return 'pip';
+    case 'pip-compile':
+      return 'pip';
+    case 'poetry':
+      return 'pip';
+    case 'pnpm':
+      return 'npm_and_yarn';
+    case 'yarn':
+      return 'npm_and_yarn';
+    default:
+      return ecosystem;
+  }
 }

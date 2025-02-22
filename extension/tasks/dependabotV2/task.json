@@ -221,10 +221,26 @@
       "helpMarkDown": "A semicolon (`;`) delimited list of update identifiers run. Index are zero-based and in the order written in the configuration file. When not present, all the updates are run. This is meant to be used in scenarios where you want to run updates a different times from the same configuration file given you cannot schedule them independently in the pipeline."
     },
     {
+      "name": "dependabotCliPackage",
+      "type": "string",
+      "groupName": "advanced",
+      "label": "Dependabot CLI package",
+      "required": false,
+      "helpMarkDown": "The [Dependabot CLI package](https://pkg.go.dev/github.com/dependabot/cli) to use for updates. This is intended to be used in scenarios where 'latest' has issues and you want to pin a known working version, or use a custom package. Defaults to `github.com/dependabot/cli/cmd/dependabot@latest`"
+    },
+    {
+      "name": "dependabotUpdaterImage",
+      "type": "string",
+      "groupName": "advanced",
+      "label": "Dependabot Updater image",
+      "required": false,
+      "helpMarkDown": "The [Dependabot CLI container image](https://github.com/dependabot/dependabot-core/pkgs/container/dependabot-updater-bundler) to use for updates. The image must contain a '{ecosystem}' placeholder, which will be substituted with the package ecosystem for each update operation. This is intended to be used in scenarios where 'latest' has issues and you want to pin a known working version, or use a custom package. Defaults to `ghcr.io/dependabot/dependabot-updater-{ecosystem}:latest`"
+    },
+    {
       "name": "experiments",
       "type": "string",
       "groupName": "advanced",
-      "label": "Dependabot updater experiments",
+      "label": "Dependabot Updater experiments",
       "required": false,
       "helpMarkDown": "Comma-seperated list of key/value pairs representing the enabled Dependabot experiments e.g. `experiments: 'tidy=true,vendor=true,goprivate=*'`. Available options vary depending on the package ecosystem. If specified, this overrides the [default experiments](https://github.com/tinglesoftware/dependabot-azure-devops/blob/main/extension/tasks/dependabotV2/utils/dependabot/experiments.ts). See [configuring experiments](https://github.com/tinglesoftware/dependabot-azure-devops/#configuring-experiments) for more details."
     }
