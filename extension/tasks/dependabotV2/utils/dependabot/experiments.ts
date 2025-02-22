@@ -14,8 +14,6 @@ export const DEFAULT_EXPERIMENTS: Record<string, string | boolean> = {
   'npm-fallback-version-above-v6': true,
   'npm-v6-deprecation-warning': true,
   'npm-v6-unsupported-error': true,
-  'python-3-8-deprecation-warning': true,
-  'python-3-8-unsupported-error': true,
   'lead-security-dependency': true,
   // NOTE: 'enable-record-ecosystem-meta' is not currently implemented in Dependabot-CLI.
   //       This experiment is primarily for GitHub analytics and doesn't add much value in the DevOps implementation.
@@ -23,8 +21,9 @@ export const DEFAULT_EXPERIMENTS: Record<string, string | boolean> = {
   // TODO: Revsit this if/when Dependabot-CLI supports it.
   //'enable-record-ecosystem-meta': true,
   'enable-shared-helpers-command-timeout': true,
-  'enable-fix-for-pnpm-no-change-error': true,
   'enable-engine-version-detection': true,
   'avoid-duplicate-updates-package-json': true,
   'allow-refresh-for-existing-pr-dependencies': true,
+  'enable-bun-ecosystem': true,
+  'exclude-local-composer-packages': true,
 };
