@@ -27,7 +27,8 @@ export default async function parseConfigFile(taskInputs: ISharedVariables): Pro
     '/.github/dependabot.yml',
   ];
 
-  let contents: null | string;
+  let configPath: null | string;
+  let configContents: null | string;
 
   /*
    * The configuration file can be available locally if the repository is cloned.
@@ -54,7 +55,8 @@ export default async function parseConfigFile(taskInputs: ISharedVariables): Pro
         });
         if (response.status === 200) {
           tl.debug(`Found configuration file at '${url}'`);
-          contents = response.data;
+          configContents = response.data;
+          configPath = fp;
           break;
         }
       } catch (error) {
@@ -78,7 +80,8 @@ export default async function parseConfigFile(taskInputs: ISharedVariables): Pro
       var filePath = path.join(rootDir, fp);
       if (fs.existsSync(filePath)) {
         tl.debug(`Found configuration file cloned at ${filePath}`);
-        contents = fs.readFileSync(filePath, 'utf-8');
+        configContents = fs.readFileSync(filePath, 'utf-8');
+        configPath = filePath;
         break;
       } else {
         tl.debug(`No configuration file cloned at ${filePath}`);
@@ -87,13 +90,13 @@ export default async function parseConfigFile(taskInputs: ISharedVariables): Pro
   }
 
   // Ensure we have file contents. Otherwise throw a well readable error.
-  if (!contents || typeof contents !== 'string') {
+  if (!configContents || typeof configContents !== 'string') {
     throw new Error(`Configuration file not found at possible locations: ${possibleFilePaths.join(', ')}`);
   } else {
     tl.debug('Configuration file contents read.');
   }
 
-  let config: any = load(contents);
+  let config: any = load(configContents);
 
   // Ensure the config object parsed is an object
   if (config === null || typeof config !== 'object') {
@@ -120,7 +123,7 @@ export default async function parseConfigFile(taskInputs: ISharedVariables): Pro
     throw new Error('Only version 2 of dependabot is supported. Version specified: ' + version);
   }
 
-  const updates = parseUpdates(config);
+  const updates = parseUpdates(config, configPath);
   const registries = parseRegistries(config);
   validateConfiguration(updates, registries);
 
@@ -131,7 +134,7 @@ export default async function parseConfigFile(taskInputs: ISharedVariables): Pro
   };
 }
 
-function parseUpdates(config: any): IDependabotUpdate[] {
+function parseUpdates(config: any, configPath: string): IDependabotUpdate[] {
   var updates: IDependabotUpdate[] = [];
 
   // Check the updates parsed
@@ -155,10 +158,26 @@ function parseUpdates(config: any): IDependabotUpdate[] {
       dependabotUpdate['open-pull-requests-limit'] = 5;
     }
 
+    // either 'directory' or 'directories' must be specified
     if (!dependabotUpdate.directory && dependabotUpdate.directories.length === 0) {
       throw new Error(
         "The values 'directory' and 'directories' in dependency update config is missing, you must specify at least one",
       );
+    }
+
+    // populate the 'ignore' conditions 'source' and 'updated-at' properties, if missing
+    // NOTE: 'source' and 'updated-at' are not documented in the dependabot.yml config docs, but are defined in the dependabot-core and dependabot-cli models.
+    //       Currently they don't appear to add much value to the update process, but are populated here for completeness.
+    if (dependabotUpdate.ignore) {
+      dependabotUpdate.ignore.forEach((ignoreCondition) => {
+        if (!ignoreCondition['source']) {
+          ignoreCondition['source'] = configPath;
+        }
+        if (!ignoreCondition['updated-at']) {
+          // we don't know the last updated time, so we use the current time
+          ignoreCondition['updated-at'] = new Date().toISOString();
+        }
+      });
     }
 
     updates.push(dependabotUpdate);
