@@ -91,6 +91,13 @@ export class DependabotCli {
         dependabotArguments.push('--proxy-image', options.proxyImage);
       }
       if (options?.updaterImage) {
+        // If the updater image is provided but does not contain the "{ecosystem}" placeholder, tell the user they've misconfigured it
+        if (!options.updaterImage.includes('{ecosystem}')) {
+          throw new Error(
+            `Dependabot Updater image '${options.updaterImage}' is invalid. ` +
+              `Please ensure the image contains a "{ecosystem}" placeholder to denote the package ecosystem; e.g. "ghcr.io/dependabot/dependabot-updater-{ecosystem}:latest"`,
+          );
+        }
         dependabotArguments.push(
           '--updater-image',
           options.updaterImage.replace(/\{ecosystem\}/i, operation.config['package-ecosystem']),
