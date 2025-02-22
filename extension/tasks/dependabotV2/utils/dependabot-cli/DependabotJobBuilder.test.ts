@@ -60,9 +60,9 @@ describe('mapSourceFromDependabotConfigToJobConfig', () => {
 
   it('should map source correctly for Azure DevOps Server', () => {
     const taskInputs: ISharedVariables = {
-      apiEndpointUrl: 'https://azdo.my-org.com:8443/tfs',
-      hostname: 'azdo.my-org.com',
-      organization: 'my-org',
+      apiEndpointUrl: 'https://my-org.com:8443/tfs',
+      hostname: 'my-org.com',
+      organization: 'my-collection',
       project: 'my-project',
       repository: 'my-repo',
       virtualDirectory: 'tfs',
@@ -97,9 +97,9 @@ describe('mapSourceFromDependabotConfigToJobConfig', () => {
     const result = mapSourceFromDependabotConfigToJobConfig(taskInputs, update);
     expect(result).toMatchObject({
       'provider': 'azure',
-      'api-endpoint': 'https://azdo.my-org.com:8443/tfs',
-      'hostname': 'azdo.my-org.com',
-      'repo': 'tfs/my-org/my-project/_git/my-repo',
+      'api-endpoint': 'https://my-org.com:8443/tfs',
+      'hostname': 'my-org.com',
+      'repo': 'tfs/my-collection/my-project/_git/my-repo',
     });
   });
 });
