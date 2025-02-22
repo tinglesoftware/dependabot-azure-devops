@@ -171,11 +171,14 @@ export function buildUpdateJobConfig(
 }
 
 export function mapSourceFromDependabotConfigToJobConfig(taskInputs: ISharedVariables, update: IDependabotUpdate): any {
+  const isDevOpsServices = !taskInputs.virtualDirectory?.length; // Azure DevOps Services does not use a virtual directory
   return {
     'provider': 'azure',
     'api-endpoint': taskInputs.apiEndpointUrl,
     'hostname': taskInputs.hostname,
-    'repo': `${taskInputs.organization}/${taskInputs.project}/_git/${taskInputs.repository}`,
+    'repo': isDevOpsServices
+      ? `${taskInputs.organization}/${taskInputs.project}/_git/${taskInputs.repository}`
+      : `${taskInputs.virtualDirectory}/${taskInputs.organization}/${taskInputs.project}/_git/${taskInputs.repository}`,
     'branch': update['target-branch'],
     'commit': undefined, // use latest commit of target branch
     'directory': update.directory,
