@@ -37,7 +37,7 @@ export interface IDependabotUpdate {
   'groups'?: Record<string, IDependabotGroup>;
   'ignore'?: IDependabotIgnoreCondition[];
   'insecure-external-code-execution'?: string;
-  'labels': string[];
+  'labels'?: string[];
   'milestone'?: string;
   'open-pull-requests-limit'?: number;
   'pull-request-branch-name'?: IDependabotPullRequestBranchName;

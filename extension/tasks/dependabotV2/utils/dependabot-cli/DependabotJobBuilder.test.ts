@@ -1,10 +1,108 @@
-import { IDependabotGroup, IDependabotIgnoreCondition } from '../dependabot/interfaces/IDependabotConfig';
+import {
+  IDependabotGroup,
+  IDependabotIgnoreCondition,
+  IDependabotUpdate,
+} from '../dependabot/interfaces/IDependabotConfig';
+import { ISharedVariables } from '../getSharedVariables';
 import {
   mapAllowedUpdatesFromDependabotConfigToJobConfig,
   mapExperiments,
   mapGroupsFromDependabotConfigToJobConfig,
   mapIgnoreConditionsFromDependabotConfigToJobConfig,
+  mapSourceFromDependabotConfigToJobConfig,
 } from './DependabotJobBuilder';
+
+describe('mapSourceFromDependabotConfigToJobConfig', () => {
+  it('should map source correctly for Azure DevOps Services', () => {
+    const taskInputs: ISharedVariables = {
+      apiEndpointUrl: 'https://dev.azure.com',
+      hostname: 'dev.azure.com',
+      organization: 'my-org',
+      project: 'my-project',
+      repository: 'my-repo',
+      virtualDirectory: '',
+      port: '',
+      organizationUrl: undefined,
+      protocol: '',
+      projectId: '',
+      repositoryOverridden: false,
+      githubAccessToken: '',
+      systemAccessUser: '',
+      systemAccessToken: '',
+      storeDependencyList: false,
+      setAutoComplete: false,
+      mergeStrategy: '',
+      autoCompleteIgnoreConfigIds: [],
+      autoApprove: false,
+      autoApproveUserToken: '',
+      experiments: undefined,
+      debug: false,
+      targetUpdateIds: [],
+      securityAdvisoriesFile: '',
+      skipPullRequests: false,
+      commentPullRequests: false,
+      abandonUnwantedPullRequests: false,
+    };
+    const update: IDependabotUpdate = {
+      'package-ecosystem': 'nuget',
+      'directory': '/',
+      'directories': [],
+    };
+
+    const result = mapSourceFromDependabotConfigToJobConfig(taskInputs, update);
+    expect(result).toMatchObject({
+      'provider': 'azure',
+      'api-endpoint': 'https://dev.azure.com',
+      'hostname': 'dev.azure.com',
+      'repo': 'my-org/my-project/_git/my-repo',
+    });
+  });
+
+  it('should map source correctly for Azure DevOps Server', () => {
+    const taskInputs: ISharedVariables = {
+      apiEndpointUrl: 'https://my-org.com:8443/tfs',
+      hostname: 'my-org.com',
+      organization: 'my-collection',
+      project: 'my-project',
+      repository: 'my-repo',
+      virtualDirectory: 'tfs',
+      port: '8443',
+      organizationUrl: undefined,
+      protocol: '',
+      projectId: '',
+      repositoryOverridden: false,
+      githubAccessToken: '',
+      systemAccessUser: '',
+      systemAccessToken: '',
+      storeDependencyList: false,
+      setAutoComplete: false,
+      mergeStrategy: '',
+      autoCompleteIgnoreConfigIds: [],
+      autoApprove: false,
+      autoApproveUserToken: '',
+      experiments: undefined,
+      debug: false,
+      targetUpdateIds: [],
+      securityAdvisoriesFile: '',
+      skipPullRequests: false,
+      commentPullRequests: false,
+      abandonUnwantedPullRequests: false,
+    };
+    const update: IDependabotUpdate = {
+      'package-ecosystem': 'nuget',
+      'directory': '/',
+      'directories': [],
+    };
+
+    const result = mapSourceFromDependabotConfigToJobConfig(taskInputs, update);
+    expect(result).toMatchObject({
+      'provider': 'azure',
+      'api-endpoint': 'https://my-org.com:8443/tfs',
+      'hostname': 'my-org.com',
+      'repo': 'tfs/my-collection/my-project/_git/my-repo',
+    });
+  });
+});
 
 describe('mapGroupsFromDependabotConfigToJobConfig', () => {
   it('should return undefined if dependencyGroups is undefined', () => {
