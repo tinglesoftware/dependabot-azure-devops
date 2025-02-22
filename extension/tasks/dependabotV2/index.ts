@@ -87,7 +87,7 @@ async function run() {
 
     // Initialise the Dependabot updater
     dependabot = new DependabotCli(
-      taskInputs.dependabotCliImage || DependabotCli.CLI_IMAGE_LATEST,
+      taskInputs.dependabotCliPackage || DependabotCli.CLI_PACKAGE_LATEST,
       new DependabotOutputProcessor(
         taskInputs,
         prAuthorClient,

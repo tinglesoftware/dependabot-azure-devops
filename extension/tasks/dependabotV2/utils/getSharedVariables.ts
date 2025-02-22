@@ -73,8 +73,8 @@ export interface ISharedVariables {
   /** Determines whether to abandon unwanted pull requests */
   abandonUnwantedPullRequests: boolean;
 
-  /** The dependabot-cli go module image to use for updates. e.g. github.com/dependabot/cli/cmd/dependabot@latest */
-  dependabotCliImage?: string;
+  /** The dependabot-cli go package to use for updates. e.g. github.com/dependabot/cli/cmd/dependabot@latest */
+  dependabotCliPackage?: string;
   /** The dependabot-updater docker image to use for updates. e.g. ghcr.io/dependabot/dependabot-updater-{ecosystem}:latest */
   dependabotUpdaterImage?: string;
 }
@@ -165,7 +165,7 @@ export default function getSharedVariables(): ISharedVariables {
   let commentPullRequests: boolean = tl.getBoolInput('commentPullRequests', false);
   let abandonUnwantedPullRequests: boolean = tl.getBoolInput('abandonUnwantedPullRequests', true);
 
-  let dependabotCliImage: string | undefined = tl.getInput('dependabotCliImage');
+  let dependabotCliPackage: string | undefined = tl.getInput('dependabotCliPackage');
   let dependabotUpdaterImage: string | undefined = tl.getInput('dependabotUpdaterImage');
 
   return {
@@ -209,7 +209,7 @@ export default function getSharedVariables(): ISharedVariables {
     commentPullRequests,
     abandonUnwantedPullRequests,
 
-    dependabotCliImage,
+    dependabotCliPackage,
     dependabotUpdaterImage,
   };
 }
