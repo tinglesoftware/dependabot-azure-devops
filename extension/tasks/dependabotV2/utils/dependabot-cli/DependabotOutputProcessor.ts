@@ -277,7 +277,7 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
 
       case 'record_ecosystem_versions':
         // No action required
-        break;
+        return true;
 
       case 'record_update_job_error':
         error(`Update job error: ${data['error-type']} ${JSON.stringify(data['error-details'])}`);
