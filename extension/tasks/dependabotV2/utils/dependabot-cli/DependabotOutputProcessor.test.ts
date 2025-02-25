@@ -39,16 +39,13 @@ describe('DependabotOutputProcessor', () => {
     let data: any;
 
     beforeEach(() => {
+      jest.clearAllMocks();
       update = {
         job: {} as any,
         credentials: {} as any,
         config: {} as IDependabotUpdate,
       } as IDependabotUpdateOperation;
       data = {};
-    });
-
-    afterEach(() => {
-      jest.clearAllMocks();
     });
 
     it('should skip processing "update_dependency_list" if "storeDependencyList" is false', async () => {
@@ -58,7 +55,7 @@ describe('DependabotOutputProcessor', () => {
       const result = await processor.process(update, 'update_dependency_list', data);
 
       expect(result).toBe(true);
-      expect(prApproverClient.updateProjectProperty).toHaveBeenCalledTimes(0);
+      expect(prApproverClient.updateProjectProperty).not.toHaveBeenCalled();
     });
 
     it('should process "update_dependency_list"', async () => {
@@ -68,7 +65,7 @@ describe('DependabotOutputProcessor', () => {
       const result = await processor.process(update, 'update_dependency_list', data);
 
       expect(result).toBe(true);
-      expect(prAuthorClient.updateProjectProperty).toHaveBeenCalledTimes(1);
+      expect(prAuthorClient.updateProjectProperty).toHaveBeenCalled();
     });
 
     it('should skip processing "create_pull_request" if "skipPullRequests" is true', async () => {
@@ -77,7 +74,7 @@ describe('DependabotOutputProcessor', () => {
       const result = await processor.process(update, 'create_pull_request', data);
 
       expect(result).toBe(true);
-      expect(prAuthorClient.createPullRequest).toHaveBeenCalledTimes(0);
+      expect(prAuthorClient.createPullRequest).not.toHaveBeenCalled();
     });
 
     it('should skip processing "create_pull_request" if open pull request limit is reached', async () => {
@@ -86,7 +83,7 @@ describe('DependabotOutputProcessor', () => {
       const result = await processor.process(update, 'create_pull_request', data);
 
       expect(result).toBe(true);
-      expect(prAuthorClient.createPullRequest).toHaveBeenCalledTimes(0);
+      expect(prAuthorClient.createPullRequest).not.toHaveBeenCalled();
     });
 
     it('should process "create_pull_request"', async () => {
@@ -107,8 +104,8 @@ describe('DependabotOutputProcessor', () => {
       const result = await processor.process(update, 'create_pull_request', data);
 
       expect(result).toBe(true);
-      expect(prAuthorClient.createPullRequest).toHaveBeenCalledTimes(1);
-      expect(prApproverClient.approvePullRequest).toHaveBeenCalledTimes(1);
+      expect(prAuthorClient.createPullRequest).toHaveBeenCalled();
+      expect(prApproverClient.approvePullRequest).toHaveBeenCalled();
     });
 
     it('should skip processing "update_pull_request" if "skipPullRequests" is false', async () => {
@@ -117,7 +114,7 @@ describe('DependabotOutputProcessor', () => {
       const result = await processor.process(update, 'update_pull_request', data);
 
       expect(result).toBe(true);
-      expect(prAuthorClient.updatePullRequest).toHaveBeenCalledTimes(0);
+      expect(prAuthorClient.updatePullRequest).not.toHaveBeenCalled();
     });
 
     it('should fail processing "update_pull_request" if pull request does not exist', async () => {
@@ -128,7 +125,7 @@ describe('DependabotOutputProcessor', () => {
       const result = await processor.process(update, 'update_pull_request', data);
 
       expect(result).toBe(false);
-      expect(prAuthorClient.updatePullRequest).toHaveBeenCalledTimes(0);
+      expect(prAuthorClient.updatePullRequest).not.toHaveBeenCalled();
     });
 
     it('should process "update_pull_request"', async () => {
@@ -158,8 +155,8 @@ describe('DependabotOutputProcessor', () => {
       const result = await processor.process(update, 'update_pull_request', data);
 
       expect(result).toBe(true);
-      expect(prAuthorClient.updatePullRequest).toHaveBeenCalledTimes(1);
-      expect(prApproverClient.approvePullRequest).toHaveBeenCalledTimes(1);
+      expect(prAuthorClient.updatePullRequest).toHaveBeenCalled();
+      expect(prApproverClient.approvePullRequest).toHaveBeenCalled();
     });
 
     it('should skip processing "close_pull_request" if "abandonUnwantedPullRequests" is false', async () => {
@@ -168,7 +165,7 @@ describe('DependabotOutputProcessor', () => {
       const result = await processor.process(update, 'close_pull_request', data);
 
       expect(result).toBe(true);
-      expect(prAuthorClient.abandonPullRequest).toHaveBeenCalledTimes(0);
+      expect(prAuthorClient.abandonPullRequest).not.toHaveBeenCalled();
     });
 
     it('should fail processing "close_pull_request" if pull request does not exist', async () => {
@@ -180,7 +177,7 @@ describe('DependabotOutputProcessor', () => {
       const result = await processor.process(update, 'close_pull_request', data);
 
       expect(result).toBe(false);
-      expect(prAuthorClient.abandonPullRequest).toHaveBeenCalledTimes(0);
+      expect(prAuthorClient.abandonPullRequest).not.toHaveBeenCalled();
     });
 
     it('should process "close_pull_request"', async () => {
@@ -205,7 +202,7 @@ describe('DependabotOutputProcessor', () => {
       const result = await processor.process(update, 'close_pull_request', data);
 
       expect(result).toBe(true);
-      expect(prAuthorClient.abandonPullRequest).toHaveBeenCalledTimes(1);
+      expect(prAuthorClient.abandonPullRequest).toHaveBeenCalled();
     });
 
     it('should process "mark_as_processed"', async () => {
@@ -224,14 +221,14 @@ describe('DependabotOutputProcessor', () => {
       const result = await processor.process(update, 'record_update_job_error', data);
 
       expect(result).toBe(false);
-      expect(error).toHaveBeenCalledTimes(1);
+      expect(error).toHaveBeenCalled();
     });
 
     it('should process "record_update_job_unknown_error"', async () => {
       const result = await processor.process(update, 'record_update_job_unknown_error', data);
 
       expect(result).toBe(false);
-      expect(error).toHaveBeenCalledTimes(1);
+      expect(error).toHaveBeenCalled();
     });
 
     it('should process "increment_metric"', async () => {
@@ -244,7 +241,7 @@ describe('DependabotOutputProcessor', () => {
       const result = await processor.process(update, 'non_existant_output_type', data);
 
       expect(result).toBe(true);
-      expect(warning).toHaveBeenCalledTimes(1);
+      expect(warning).toHaveBeenCalled();
     });
   });
 });

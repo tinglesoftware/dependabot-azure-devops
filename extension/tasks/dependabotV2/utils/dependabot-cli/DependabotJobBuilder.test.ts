@@ -14,40 +14,21 @@ import {
 
 describe('mapSourceFromDependabotConfigToJobConfig', () => {
   it('should map source correctly for Azure DevOps Services', () => {
-    const taskInputs: ISharedVariables = {
+    const taskInputs = {
       apiEndpointUrl: 'https://dev.azure.com',
       hostname: 'dev.azure.com',
       organization: 'my-org',
       project: 'my-project',
       repository: 'my-repo',
       virtualDirectory: '',
-      port: '',
-      organizationUrl: undefined,
-      protocol: '',
-      projectId: '',
-      repositoryOverridden: false,
-      githubAccessToken: '',
-      systemAccessUser: '',
-      systemAccessToken: '',
-      storeDependencyList: false,
-      setAutoComplete: false,
-      mergeStrategy: '',
-      autoCompleteIgnoreConfigIds: [],
-      autoApprove: false,
-      autoApproveUserToken: '',
-      experiments: undefined,
-      debug: false,
-      targetUpdateIds: [],
-      securityAdvisoriesFile: '',
-      skipPullRequests: false,
-      commentPullRequests: false,
-      abandonUnwantedPullRequests: false,
-    };
-    const update: IDependabotUpdate = {
+      port: '443',
+      protocol: 'https',
+    } as ISharedVariables;
+    const update = {
       'package-ecosystem': 'nuget',
       'directory': '/',
       'directories': [],
-    };
+    } as IDependabotUpdate;
 
     const result = mapSourceFromDependabotConfigToJobConfig(taskInputs, update);
     expect(result).toMatchObject({
@@ -59,7 +40,7 @@ describe('mapSourceFromDependabotConfigToJobConfig', () => {
   });
 
   it('should map source correctly for Azure DevOps Server', () => {
-    const taskInputs: ISharedVariables = {
+    const taskInputs = {
       apiEndpointUrl: 'https://my-org.com:8443/tfs',
       hostname: 'my-org.com',
       organization: 'my-collection',
@@ -67,32 +48,13 @@ describe('mapSourceFromDependabotConfigToJobConfig', () => {
       repository: 'my-repo',
       virtualDirectory: 'tfs',
       port: '8443',
-      organizationUrl: undefined,
-      protocol: '',
-      projectId: '',
-      repositoryOverridden: false,
-      githubAccessToken: '',
-      systemAccessUser: '',
-      systemAccessToken: '',
-      storeDependencyList: false,
-      setAutoComplete: false,
-      mergeStrategy: '',
-      autoCompleteIgnoreConfigIds: [],
-      autoApprove: false,
-      autoApproveUserToken: '',
-      experiments: undefined,
-      debug: false,
-      targetUpdateIds: [],
-      securityAdvisoriesFile: '',
-      skipPullRequests: false,
-      commentPullRequests: false,
-      abandonUnwantedPullRequests: false,
-    };
-    const update: IDependabotUpdate = {
+      protocol: 'https',
+    } as ISharedVariables;
+    const update = {
       'package-ecosystem': 'nuget',
       'directory': '/',
       'directories': [],
-    };
+    } as IDependabotUpdate;
 
     const result = mapSourceFromDependabotConfigToJobConfig(taskInputs, update);
     expect(result).toMatchObject({

@@ -16,9 +16,6 @@ describe('AzureDevOpsWebApiClient', () => {
 
   beforeEach(() => {
     client = new AzureDevOpsWebApiClient(organisationApiUrl, accessToken);
-  });
-
-  afterEach(() => {
     jest.clearAllMocks();
   });
 
