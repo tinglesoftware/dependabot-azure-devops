@@ -13,10 +13,10 @@ export enum PackageEcosystem {
   Swift = 'SWIFT',
 }
 
-export function getGhsaPackageEcosystemFromDependabotPackageEcosystem(
-  dependabotPackageEcosystem: string,
+export function getGhsaPackageEcosystemFromDependabotPackageManager(
+  dependabotPackageManager: string,
 ): PackageEcosystem {
-  switch (dependabotPackageEcosystem) {
+  switch (dependabotPackageManager) {
     case 'composer':
       return PackageEcosystem.Composer;
     case 'elm':
@@ -42,6 +42,6 @@ export function getGhsaPackageEcosystemFromDependabotPackageEcosystem(
     case 'swift':
       return PackageEcosystem.Swift;
     default:
-      throw new Error(`Unknown dependabot package ecosystem: ${dependabotPackageEcosystem}`);
+      throw new Error(`Unknown dependabot package manager: ${dependabotPackageManager}`);
   }
 }
