@@ -34,7 +34,7 @@ export class AzureDevOpsWebApiClient {
   constructor(organisationApiUrl: string, accessToken: string, debug: boolean = false) {
     this.organisationApiUrl = organisationApiUrl.replace(/\/$/, ''); // trim trailing slash
     this.identityApiUrl = getIdentityApiUrl(organisationApiUrl).replace(/\/$/, ''); // trim trailing slash
-    this.connection = new WebApi(organisationApiUrl, getPersonalAccessTokenHandler(accessToken));
+    this.connection = new WebApi(organisationApiUrl, getPersonalAccessTokenHandler(accessToken, true));
     this.debug = debug;
     this.resolvedUserIds = {};
   }
