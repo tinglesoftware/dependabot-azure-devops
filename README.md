@@ -70,8 +70,13 @@ Dependabot for Azure DevOps must be explicitly configured to run in your organis
 
 - [Hosted Server](./docs/server.md) - Ideal if you have a large number of projects and repositories or prefer to run Dependabot as a managed service instead of using pipeline agents. See [why should I use the server?](./docs/server.md#why-should-i-use-the-server) for more info.
 
-> [!NOTE]
-> A hosted version is available to sponsors (most, but not all). It includes hassle free runs where the infrastructure is maintained for you. Much like the GitHub hosted version. Alternatively, you can run and host your own [self-hosted server](./docs/server.md). Once you sponsor, you can send out an email to a maintainer or wait till they reach out. This is meant to ease the burden until GitHub/Azure/Microsoft can get it working natively (which could also be never) and hopefully for free.
+### Other Guides
+
+You can also read guides written by others:
+
+- <https://rios.engineer/automate-net-dependency-management-in-azure-devops-with-githubs-dependabot/>
+
+> If you have written a good piece, you can share it then we can add it here.
 
 ## Using a configuration file
 
