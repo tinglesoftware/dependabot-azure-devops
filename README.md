@@ -33,7 +33,6 @@ In this repository you'll find:
 - [Contributing](#contributing)
   - [Reporting issues and feature requests](#reporting-issues-and-feature-requests)
   - [Submitting pull requests](#submitting-pull-requests)
-- [Acknowledgements](#acknowledgements)
 
 ## Getting started
 
@@ -254,13 +253,3 @@ Use the [discussions page](https://github.com/tinglesoftware/dependabot-azure-de
 ### Submitting pull requests
 
 Please refer to the [contributing guidelines](./CONTRIBUTING.MD) for more information on how to get started.
-
-## Acknowledgements
-
-The work in this repository is based on inspired and occasionally guided by some predecessors in the same area:
-
-1. Official Script support: [code](https://github.com/dependabot/dependabot-script)
-2. Andrew Craven's work: [blog](https://medium.com/@acraven/updating-dependencies-in-azure-devops-repos-773cbbb6029d), [code](https://github.com/acraven/azure-dependabot)
-3. Chris' work: [code](https://github.com/chris5287/dependabot-for-azuredevops)
-4. andrcun's work on GitLab: [code](https://gitlab.com/dependabot-gitlab/dependabot)
-5. WeWork's work for GitLab: [code](https://github.com/wemake-services/kira-dependencies)
