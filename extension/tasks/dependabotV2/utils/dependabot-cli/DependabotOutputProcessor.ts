@@ -1,6 +1,7 @@
 import { GitPullRequestMergeStrategy, VersionControlChangeType } from 'azure-devops-node-api/interfaces/GitInterfaces';
 import { debug, error, warning } from 'azure-pipelines-task-lib/task';
 import * as path from 'path';
+import { z } from 'zod';
 import { AzureDevOpsWebApiClient } from '../azure-devops/AzureDevOpsWebApiClient';
 import { section } from '../azure-devops/formattingCommands';
 import { IFileChange } from '../azure-devops/interfaces/IFileChange';
@@ -9,6 +10,32 @@ import { ISharedVariables } from '../getSharedVariables';
 import { getBranchNameForUpdate } from './getBranchName';
 import { IDependabotUpdateOperation } from './interfaces/IDependabotUpdateOperation';
 import { IDependabotUpdateOutputProcessor } from './interfaces/IDependabotUpdateOutputProcessor';
+
+export const DependabotDependenciesSchema = z.object({
+  'dependencies': z.array(
+    z.object({
+      name: z.string(), // e.g. 'django' or 'GraphQL.Server.Ui.Voyager'
+      requirements: z.array(
+        z.object({
+          file: z.string(), // e.g. 'requirements.txt' or '/Root.csproj'
+          groups: z.array(z.string()), // e.g. ['dependencies']
+          requirement: z.string(), // e.g. '==3.2.0' or '8.1.0'
+          // others keys like 'source' are not clear on format/type
+        }),
+      ),
+      version: z.string(), // e.g. '5.0.1' or '8.1.0'
+    }),
+  ),
+  'dependency_files': z.array(z.string()), // e.g. ['/requirements.txt'] or ['/Root.csproj']
+  // TODO: consider changing to date
+  'last-updated': z.string().optional(), // e.g. '2021-09-01T00:00:00Z'
+});
+export type DependabotDependencies = z.infer<typeof DependabotDependenciesSchema>;
+export const DependabotStoredDependencyListsSchema = z.record(
+  z.string({ description: 'Repository name' }),
+  z.record(z.string({ description: 'Package manager' }), DependabotDependenciesSchema),
+);
+export type DependabotStoredDependencyLists = z.infer<typeof DependabotStoredDependencyListsSchema>;
 
 /**
  * Processes dependabot update outputs using the DevOps API
@@ -73,16 +100,18 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
 
       case 'update_dependency_list':
         // Store the dependency list snapshot in project properties, if configured
+        const parsedData = DependabotDependenciesSchema.parse(data);
         if (this.taskInputs.storeDependencyList) {
           return await this.prAuthorClient.updateProjectProperty(
             this.taskInputs.project,
             DependabotOutputProcessor.PROJECT_PROPERTY_NAME_DEPENDENCY_LIST,
             function (existingValue: string) {
-              const repoDependencyLists = JSON.parse(existingValue || '{}');
+              const repoDependencyLists = DependabotStoredDependencyListsSchema.parse(
+                JSON.parse(existingValue || '{}'),
+              );
               repoDependencyLists[repository] = repoDependencyLists[repository] || {};
               repoDependencyLists[repository][packageManager] = {
-                'dependencies': data['dependencies'],
-                'dependency-files': data['dependency_files'],
+                ...parsedData,
                 'last-updated': new Date().toISOString(),
               };
 

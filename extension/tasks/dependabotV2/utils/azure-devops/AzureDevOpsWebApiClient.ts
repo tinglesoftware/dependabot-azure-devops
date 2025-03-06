@@ -595,7 +595,7 @@ export class AzureDevOpsWebApiClient {
   public async updateProjectProperty(
     project: string,
     name: string,
-    valueBuilder: (existingValue: string) => string,
+    valueBuilder: (existingValue: string | undefined) => string,
   ): Promise<boolean> {
     try {
       // Get the existing project property value
@@ -608,7 +608,7 @@ export class AzureDevOpsWebApiClient {
         {
           op: 'add',
           path: '/' + name,
-          value: valueBuilder(propertyValue || ''),
+          value: valueBuilder(propertyValue),
         },
       ]);
 
