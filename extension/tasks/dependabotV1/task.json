@@ -201,7 +201,7 @@
       "groupName": "advanced",
       "label": "Target Repository Name",
       "required": false,
-      "helpMarkDown": "The name of the repository to target for processing. If this value is not supplied then the Build Repository Name is used. Supplying this value allows creation of a single pipeline that runs Dependabot against multiple repositories."
+      "helpMarkDown": "The name of the repository to target for processing. If this value is not supplied then the Build Repository Name is used. Supplying this value allows creation of a single pipeline that runs Dependabot against multiple repositories in a project."
     },
     {
       "name": "targetUpdateIds",
