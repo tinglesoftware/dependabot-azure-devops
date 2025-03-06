@@ -100,9 +100,23 @@ export default function getSharedVariables(): ISharedVariables {
     tl.debug(`Virtual directory detected; Running for an on-premises Azure DevOps Server.`);
   }
   let organization: string = extractOrganization(organizationUrl);
-  let project: string = tl.getVariable('System.TeamProjectId');
+  let project: string = tl.getInput('targetProjectName');
+  let projectOverridden = typeof project === 'string';
+  if (!projectOverridden) {
+    // We use the projectId as the default because we are sure it works in all APIs but the Name is allowed too.
+    // In a future PR we could change to `System.TeamProject` which is the name and has better readability.
+    project = tl.getVariable('System.TeamProjectId');
+    tl.debug(`No custom project provided; Running update for current project.`);
+  } else {
+    tl.debug(`Custom project provided; Running update for specified project.`);
+  }
+  project = encodeURI(project); // encode special characters like spaces
+
   let repository: string = tl.getInput('targetRepositoryName');
   let repositoryOverridden = typeof repository === 'string';
+  if (projectOverridden && !repositoryOverridden) {
+    throw new Error(`Target repository must be provided when target project is overridden`);
+  }
   if (!repositoryOverridden) {
     repository = tl.getVariable('Build.Repository.Name');
     tl.debug(`No custom repository provided; Running update for local repository.`);

@@ -204,6 +204,14 @@
       "helpMarkDown": "Determines if the last know dependency list information should be stored in the parent DevOps project properties. If enabled, the authenticated user must have the `Project & Team (Write)` permission for the project. Enabling this option improves performance when doing security-only updates. Defaults to `false`."
     },
     {
+      "name": "targetProjectName",
+      "type": "string",
+      "groupName": "advanced",
+      "label": "Target Project Name or ID",
+      "required": false,
+      "helpMarkDown": "The name or ID of the project to target for processing. If this value is not supplied then the Build Project ID is used. Supplying this value allows creation of a single pipeline that runs Dependabot against multiple projects in the same organization. Ensure the PAT provided also has access to the project specified."
+    },
+    {
       "name": "targetRepositoryName",
       "type": "string",
       "groupName": "advanced",
