@@ -12,5 +12,6 @@
     "prettier": "3.5.3",
     "prettier-plugin-organize-imports": "4.1.0",
     "pretty-quick": "^4.0.0"
-  }
+  },
+  "packageManager": "npm@10.9.2"
 }
