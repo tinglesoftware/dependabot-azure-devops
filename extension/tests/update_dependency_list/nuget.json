@@ -1,0 +1,437 @@
+{
+  "data": {
+    "dependencies": [
+      {
+        "name": "Azure.Core",
+        "requirements": [],
+        "version": "1.35.0"
+      },
+      {
+        "name": "Azure.Identity",
+        "requirements": [],
+        "version": "1.10.3"
+      },
+      {
+        "name": "BananaCakePop.Middleware",
+        "requirements": [],
+        "version": "16.0.3"
+      },
+      {
+        "name": "GraphQL.Server.Ui.Voyager",
+        "requirements": [
+          {
+            "file": "/Root.csproj",
+            "groups": ["dependencies"],
+            "requirement": "8.1.0",
+            "source": null
+          }
+        ],
+        "version": "8.1.0"
+      },
+      {
+        "name": "GreenDonut",
+        "requirements": [],
+        "version": "13.9.14"
+      },
+      {
+        "name": "HotChocolate.Abstractions",
+        "requirements": [],
+        "version": "13.9.14"
+      },
+      {
+        "name": "HotChocolate.AspNetCore",
+        "requirements": [
+          {
+            "file": "/Root.csproj",
+            "groups": ["dependencies"],
+            "requirement": "13.9.14",
+            "source": null
+          }
+        ],
+        "version": "13.9.14"
+      },
+      {
+        "name": "HotChocolate.Authorization",
+        "requirements": [],
+        "version": "13.9.14"
+      },
+      {
+        "name": "HotChocolate.Data",
+        "requirements": [],
+        "version": "13.9.14"
+      },
+      {
+        "name": "HotChocolate.Data.EntityFramework",
+        "requirements": [
+          {
+            "file": "/Root.csproj",
+            "groups": ["dependencies"],
+            "requirement": "13.9.14",
+            "source": null
+          }
+        ],
+        "version": "13.9.14"
+      },
+      {
+        "name": "HotChocolate.Execution",
+        "requirements": [],
+        "version": "13.9.14"
+      },
+      {
+        "name": "HotChocolate.Execution.Abstractions",
+        "requirements": [],
+        "version": "13.9.14"
+      },
+      {
+        "name": "HotChocolate.Fetching",
+        "requirements": [],
+        "version": "13.9.14"
+      },
+      {
+        "name": "HotChocolate.Language",
+        "requirements": [],
+        "version": "13.9.14"
+      },
+      {
+        "name": "HotChocolate.Language.SyntaxTree",
+        "requirements": [],
+        "version": "13.9.14"
+      },
+      {
+        "name": "HotChocolate.Language.Utf8",
+        "requirements": [],
+        "version": "13.9.14"
+      },
+      {
+        "name": "HotChocolate.Language.Visitors",
+        "requirements": [],
+        "version": "13.9.14"
+      },
+      {
+        "name": "HotChocolate.Language.Web",
+        "requirements": [],
+        "version": "13.9.14"
+      },
+      {
+        "name": "HotChocolate.Subscriptions",
+        "requirements": [],
+        "version": "13.9.14"
+      },
+      {
+        "name": "HotChocolate.Subscriptions.InMemory",
+        "requirements": [],
+        "version": "13.9.14"
+      },
+      {
+        "name": "HotChocolate.Transport.Sockets",
+        "requirements": [],
+        "version": "13.9.14"
+      },
+      {
+        "name": "HotChocolate.Types",
+        "requirements": [],
+        "version": "13.9.14"
+      },
+      {
+        "name": "HotChocolate.Types.CursorPagination",
+        "requirements": [],
+        "version": "13.9.14"
+      },
+      {
+        "name": "HotChocolate.Types.Mutations",
+        "requirements": [],
+        "version": "13.9.14"
+      },
+      {
+        "name": "HotChocolate.Types.OffsetPagination",
+        "requirements": [],
+        "version": "13.9.14"
+      },
+      {
+        "name": "HotChocolate.Types.Scalars.Upload",
+        "requirements": [],
+        "version": "13.9.14"
+      },
+      {
+        "name": "HotChocolate.Types.Shared",
+        "requirements": [],
+        "version": "13.9.14"
+      },
+      {
+        "name": "HotChocolate.Utilities",
+        "requirements": [],
+        "version": "13.9.14"
+      },
+      {
+        "name": "HotChocolate.Utilities.DependencyInjection",
+        "requirements": [],
+        "version": "13.9.14"
+      },
+      {
+        "name": "HotChocolate.Validation",
+        "requirements": [],
+        "version": "13.9.14"
+      },
+      {
+        "name": "Microsoft.Bcl.AsyncInterfaces",
+        "requirements": [],
+        "version": "1.1.1"
+      },
+      {
+        "name": "Microsoft.Data.SqlClient",
+        "requirements": [],
+        "version": "5.1.5"
+      },
+      {
+        "name": "Microsoft.EntityFrameworkCore",
+        "requirements": [],
+        "version": "8.0.10"
+      },
+      {
+        "name": "Microsoft.EntityFrameworkCore.Abstractions",
+        "requirements": [],
+        "version": "8.0.10"
+      },
+      {
+        "name": "Microsoft.EntityFrameworkCore.Analyzers",
+        "requirements": [],
+        "version": "8.0.10"
+      },
+      {
+        "name": "Microsoft.EntityFrameworkCore.Relational",
+        "requirements": [],
+        "version": "8.0.10"
+      },
+      {
+        "name": "Microsoft.EntityFrameworkCore.SqlServer",
+        "requirements": [
+          {
+            "file": "/Root.csproj",
+            "groups": ["dependencies"],
+            "requirement": "8.0.10",
+            "source": null
+          }
+        ],
+        "version": "8.0.10"
+      },
+      {
+        "name": "Microsoft.EntityFrameworkCore.SqlServer.Abstractions",
+        "requirements": [],
+        "version": "8.0.10"
+      },
+      {
+        "name": "Microsoft.EntityFrameworkCore.SqlServer.HierarchyId",
+        "requirements": [
+          {
+            "file": "/Root.csproj",
+            "groups": ["dependencies"],
+            "requirement": "8.0.10",
+            "source": null
+          }
+        ],
+        "version": "8.0.10"
+      },
+      {
+        "name": "Microsoft.Extensions.Caching.Abstractions",
+        "requirements": [],
+        "version": "8.0.0"
+      },
+      {
+        "name": "Microsoft.Extensions.Caching.Memory",
+        "requirements": [],
+        "version": "8.0.1"
+      },
+      {
+        "name": "Microsoft.Extensions.Configuration.Abstractions",
+        "requirements": [],
+        "version": "8.0.0"
+      },
+      {
+        "name": "Microsoft.Extensions.DependencyInjection",
+        "requirements": [
+          {
+            "file": "/Root.csproj",
+            "groups": ["dependencies"],
+            "requirement": "8.0.1",
+            "source": null
+          }
+        ],
+        "version": "8.0.1"
+      },
+      {
+        "name": "Microsoft.Extensions.DependencyInjection.Abstractions",
+        "requirements": [
+          {
+            "file": "/Root.csproj",
+            "groups": ["dependencies"],
+            "requirement": "8.0.2",
+            "source": null
+          }
+        ],
+        "version": "8.0.2"
+      },
+      {
+        "name": "Microsoft.Extensions.Logging",
+        "requirements": [],
+        "version": "8.0.1"
+      },
+      {
+        "name": "Microsoft.Extensions.Logging.Abstractions",
+        "requirements": [],
+        "version": "8.0.2"
+      },
+      {
+        "name": "Microsoft.Extensions.ObjectPool",
+        "requirements": [],
+        "version": "8.0.11"
+      },
+      {
+        "name": "Microsoft.Extensions.Options",
+        "requirements": [],
+        "version": "8.0.2"
+      },
+      {
+        "name": "Microsoft.Extensions.Primitives",
+        "requirements": [],
+        "version": "8.0.0"
+      },
+      {
+        "name": "Microsoft.Identity.Client",
+        "requirements": [],
+        "version": "4.56.0"
+      },
+      {
+        "name": "Microsoft.Identity.Client.Extensions.Msal",
+        "requirements": [],
+        "version": "4.56.0"
+      },
+      {
+        "name": "Microsoft.IdentityModel.Abstractions",
+        "requirements": [],
+        "version": "6.35.0"
+      },
+      {
+        "name": "Microsoft.IdentityModel.JsonWebTokens",
+        "requirements": [],
+        "version": "6.35.0"
+      },
+      {
+        "name": "Microsoft.IdentityModel.Logging",
+        "requirements": [],
+        "version": "6.35.0"
+      },
+      {
+        "name": "Microsoft.IdentityModel.Protocols",
+        "requirements": [],
+        "version": "6.35.0"
+      },
+      {
+        "name": "Microsoft.IdentityModel.Protocols.OpenIdConnect",
+        "requirements": [],
+        "version": "6.35.0"
+      },
+      {
+        "name": "Microsoft.IdentityModel.Tokens",
+        "requirements": [],
+        "version": "6.35.0"
+      },
+      {
+        "name": "Microsoft.SqlServer.Server",
+        "requirements": [],
+        "version": "1.0.0"
+      },
+      {
+        "name": "Microsoft.SqlServer.Types",
+        "requirements": [],
+        "version": "160.1000.6"
+      },
+      {
+        "name": "Microsoft.Win32.SystemEvents",
+        "requirements": [],
+        "version": "6.0.0"
+      },
+      {
+        "name": "System.Collections.Immutable",
+        "requirements": [],
+        "version": "8.0.0"
+      },
+      {
+        "name": "System.Configuration.ConfigurationManager",
+        "requirements": [],
+        "version": "6.0.1"
+      },
+      {
+        "name": "System.Diagnostics.DiagnosticSource",
+        "requirements": [],
+        "version": "8.0.1"
+      },
+      {
+        "name": "System.Drawing.Common",
+        "requirements": [],
+        "version": "6.0.0"
+      },
+      {
+        "name": "System.IdentityModel.Tokens.Jwt",
+        "requirements": [],
+        "version": "6.35.0"
+      },
+      {
+        "name": "System.IO.Hashing",
+        "requirements": [],
+        "version": "7.0.0"
+      },
+      {
+        "name": "System.IO.Pipelines",
+        "requirements": [],
+        "version": "8.0.0"
+      },
+      {
+        "name": "System.Memory.Data",
+        "requirements": [],
+        "version": "1.0.2"
+      },
+      {
+        "name": "System.Runtime.Caching",
+        "requirements": [],
+        "version": "6.0.0"
+      },
+      {
+        "name": "System.Security.Cryptography.ProtectedData",
+        "requirements": [],
+        "version": "6.0.0"
+      },
+      {
+        "name": "System.Security.Permissions",
+        "requirements": [],
+        "version": "6.0.0"
+      },
+      {
+        "name": "System.Text.Encodings.Web",
+        "requirements": [],
+        "version": "8.0.0"
+      },
+      {
+        "name": "System.Text.Json",
+        "requirements": [],
+        "version": "8.0.5"
+      },
+      {
+        "name": "System.Threading.Channels",
+        "requirements": [],
+        "version": "8.0.0"
+      },
+      {
+        "name": "System.Windows.Extensions",
+        "requirements": [],
+        "version": "6.0.0"
+      },
+      {
+        "name": "Yarp.ReverseProxy",
+        "requirements": [],
+        "version": "2.1.0"
+      }
+    ],
+    "dependency_files": ["/Root.csproj"]
+  },
+  "type": "update_dependency_list"
+}
