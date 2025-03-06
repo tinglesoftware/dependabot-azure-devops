@@ -105,9 +105,9 @@ export default function getSharedVariables(): ISharedVariables {
   let project: string = tl.getInput('targetProjectName');
   let projectOverridden = typeof project === 'string';
   if (!projectOverridden) {
-    // We use the projectId as the default because we are sure it works in all APIs but the Name is allowed too.
-    // In a future PR we could change to `System.TeamProject` which is the name and has better readability.
-    project = tl.getVariable('System.TeamProjectId');
+    // We use the project name because it is very readable.
+    // It may not work in all APIs and if it fails, we can switch from `System.TeamProject` to `System.TeamProjectId`.
+    project = tl.getVariable('System.TeamProject');
     tl.debug(`No custom project provided; Running update for current project.`);
   } else {
     tl.debug(`Custom project provided; Running update for specified project.`);
