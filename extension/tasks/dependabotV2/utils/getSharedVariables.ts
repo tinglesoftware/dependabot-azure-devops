@@ -21,8 +21,6 @@ export interface ISharedVariables {
   /** Organization name */
   organization: string;
   /** Project ID */
-  projectId: string;
-  /** Project name */
   project: string;
   /** Repository name */
   repository: string;
@@ -99,8 +97,7 @@ export default function getSharedVariables(): ISharedVariables {
     tl.debug(`Virtual directory detected; Running for an on-premises Azure DevOps Server.`);
   }
   let organization: string = extractOrganization(organizationUrl);
-  let projectId: string = tl.getVariable('System.TeamProjectId');
-  let project: string = encodeURI(tl.getVariable('System.TeamProject')); // encode special characters like spaces
+  let project: string = tl.getVariable('System.TeamProjectId');
   let repository: string = tl.getInput('targetRepositoryName');
   let repositoryOverridden = typeof repository === 'string';
   if (!repositoryOverridden) {
@@ -175,7 +172,6 @@ export default function getSharedVariables(): ISharedVariables {
     port,
     virtualDirectory,
     organization,
-    projectId,
     project,
     repository,
     repositoryOverridden,

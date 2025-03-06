@@ -75,7 +75,7 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
         // Store the dependency list snapshot in project properties, if configured
         if (this.taskInputs.storeDependencyList) {
           return await this.prAuthorClient.updateProjectProperty(
-            this.taskInputs.projectId,
+            this.taskInputs.project,
             DependabotOutputProcessor.PROJECT_PROPERTY_NAME_DEPENDENCY_LIST,
             function (existingValue: string) {
               const repoDependencyLists = JSON.parse(existingValue || '{}');
