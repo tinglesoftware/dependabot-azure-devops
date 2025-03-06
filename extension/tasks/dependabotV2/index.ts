@@ -105,6 +105,7 @@ async function run() {
       gitHubAccessToken: taskInputs.githubAccessToken,
       collectorImage: undefined, // TODO: Add config for this?
       collectorConfigPath: undefined, // TODO: Add config for this?
+      proxyCertPath: taskInputs.proxyCertPath,
       proxyImage: undefined, // TODO: Add config for this?
       updaterImage: taskInputs.dependabotUpdaterImage,
       timeoutDuration: undefined, // TODO: Add config for this?

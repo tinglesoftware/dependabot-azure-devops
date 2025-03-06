@@ -49,6 +49,7 @@ export class DependabotCli {
       gitHubAccessToken?: string;
       collectorImage?: string;
       collectorConfigPath?: string;
+      proxyCertPath?: string;
       proxyImage?: string;
       updaterImage?: string;
       timeoutDurationMinutes?: number;
@@ -86,6 +87,9 @@ export class DependabotCli {
       }
       if (options?.collectorConfigPath && fs.existsSync(options.collectorConfigPath)) {
         dependabotArguments.push('--collector-config', options.collectorConfigPath);
+      }
+      if (options?.proxyCertPath && fs.existsSync(options.proxyCertPath)) {
+        dependabotArguments.push('--proxy-cert', options.proxyCertPath);
       }
       if (options?.proxyImage) {
         dependabotArguments.push('--proxy-image', options.proxyImage);

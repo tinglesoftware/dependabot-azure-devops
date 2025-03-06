@@ -75,6 +75,9 @@ export interface ISharedVariables {
   dependabotCliPackage?: string;
   /** The dependabot-updater docker image to use for updates. e.g. ghcr.io/dependabot/dependabot-updater-{ecosystem}:latest */
   dependabotUpdaterImage?: string;
+
+  /* Path to a certificate the proxy will trust */
+  proxyCertPath?: string;
 }
 
 /**
@@ -165,6 +168,8 @@ export default function getSharedVariables(): ISharedVariables {
   let dependabotCliPackage: string | undefined = tl.getInput('dependabotCliPackage');
   let dependabotUpdaterImage: string | undefined = tl.getInput('dependabotUpdaterImage');
 
+  let proxyCertPath: string | undefined = tl.getInput('proxyCertPath');
+
   return {
     organizationUrl: formattedOrganizationUrl,
     protocol,
@@ -207,5 +212,7 @@ export default function getSharedVariables(): ISharedVariables {
 
     dependabotCliPackage,
     dependabotUpdaterImage,
+
+    proxyCertPath,
   };
 }
