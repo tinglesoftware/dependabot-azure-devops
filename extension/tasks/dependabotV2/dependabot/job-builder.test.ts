@@ -232,22 +232,22 @@ describe('mapCooldownFromDependabotConfigToJobConfig', () => {
 
   it('should map cooldown properties correctly', () => {
     const cooldown = {
-      'default-days': 7,
-      'semver-major-days': 14,
-      'semver-minor-days': 7,
-      'semver-patch-days': 1,
-      'include': ['dependencies'],
-      'exclude': ['devDependencies'],
+      'default-days': 3,
+      'semver-major-days': 7,
+      'semver-minor-days': 5,
+      'semver-patch-days': 2,
+      'include': ['dependency-name-1', 'dependency-name-2'],
+      'exclude': ['dependency-name-3', 'dependency-name-4'],
     } as IDependabotCooldown;
 
     const result = mapCooldownFromDependabotConfigToJobConfig(cooldown);
     expect(result).toEqual({
-      'default-days': 7,
-      'semver-major-days': 14,
-      'semver-minor-days': 7,
-      'semver-patch-days': 1,
-      'include': ['dependencies'],
-      'exclude': ['devDependencies'],
+      'default-days': 3,
+      'semver-major-days': 7,
+      'semver-minor-days': 5,
+      'semver-patch-days': 2,
+      'include': ['dependency-name-1', 'dependency-name-2'],
+      'exclude': ['dependency-name-3', 'dependency-name-4'],
     });
   });
 });
