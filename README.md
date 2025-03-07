@@ -12,9 +12,6 @@ In this repository you'll find:
 1. Dependabot Server, [source code](./server/) and [docs](./docs/server.md).
 1. Dependabot Updater image, [Dockerfile](./updater/Dockerfile), [source code](./updater/) and [docs](./docs/updater.md). **(deprecated)**
 
-> [!IMPORTANT]
-> The Azure pipelines task is currently undergoing a major version increment (V1 → V2); See the [migration guide](./docs/migrations/v1-to-v2.md#summary-of-changes-v1--v2) for more details and progress updates.
-
 ## Table of Contents
 
 - [Getting started](#getting-started)

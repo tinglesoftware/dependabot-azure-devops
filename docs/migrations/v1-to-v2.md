@@ -1,7 +1,4 @@
 
-> [!WARNING]
-> **:construction: Work in progress;** `dependabot@2` is still under development and this document may change without notice up until general availability (GA).
-
 # Table of Contents
 - [Summary of changes V1 → V2](#summary-of-changes-v1-v2)
 - [Breaking changes V1 → V2](#breaking-changes-v1-v2)
@@ -68,12 +65,3 @@ The following environment variables have been removed entirely; the feature is n
 |`DEPENDABOT_MESSAGE_FOOTER`| Feature is not supported; It is not an official configuration. |
 |`DEPENDABOT_SIGNATURE_KEY`| Feature is not supported; It is not an official configuration. |
 |`DEPENDABOT_JOB_ID`| Set automatically, no configuration required. |
-
-## Todo before general availability
-Before removing the preview flag from V2 `task.json`, we need to:
- - [ ] Add "superseded by X" close reason when PR is closed during a PR update
- - [ ] Add documentation for required permissions and PAT scopes
- - [ ] Add support for 'securityAdvisoriesFile' task input
- - [ ] Add unit tests for V2 utils scripts
- - [ ] General code tidy-up (check all "TODO" comments)
- - [ ] Investigate https://zod.dev/
