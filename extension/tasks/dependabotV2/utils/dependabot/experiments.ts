@@ -12,8 +12,6 @@ export const DEFAULT_EXPERIMENTS: Record<string, string | boolean> = {
   'nuget-use-direct-discovery': true,
   'enable-file-parser-python-local': true,
   'npm-fallback-version-above-v6': true,
-  'npm-v6-deprecation-warning': true,
-  'npm-v6-unsupported-error': true,
   'lead-security-dependency': true,
   // NOTE: 'enable-record-ecosystem-meta' is not currently implemented in Dependabot-CLI.
   //       This experiment is primarily for GitHub analytics and doesn't add much value in the DevOps implementation.

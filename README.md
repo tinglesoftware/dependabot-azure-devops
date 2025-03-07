@@ -178,13 +178,12 @@ By default, the enabled experiments will mirror the GitHub-hosted version of Dep
 | All | allow_refresh_for_existing_pr_dependencies | true/false | <https://github.com/dependabot/dependabot-core/pull/11382> |
 | Bun | enable_bun_ecosystem | true/false | <https://github.com/dependabot/dependabot-core/pull/11446> |
 | Composer | exclude_local_composer_packages | true/false| <https://github.com/dependabot/dependabot-core/pull/11527> |
+| Docker | docker_tag_component_comparison | true/false | https://github.com/dependabot/dependabot-core/pull/11679 |
 | Go | tidy | true/false | |
 | Go | vendor | true/false | |
 | Go | goprivate | string | |
 | NPM | enable_corepack_for_npm_and_yarn | true/false | <https://github.com/dependabot/dependabot-core/pull/10985> |
 | NPM | npm_fallback_version_above_v6 | true/false | <https://github.com/dependabot/dependabot-core/pull/10757> |
-| NPM | npm_v6_deprecation_warning | true/false | <https://github.com/dependabot/dependabot-core/pull/11112> |
-| NPM | npm_v6_unsupported_error | true/false | <https://github.com/dependabot/dependabot-core/pull/11112> |
 | NPM | enable_engine_version_detection | true/false | <https://github.com/dependabot/dependabot-core/pull/11392> |
 | NPM | avoid_duplicate_updates_package_json | true/false | <https://github.com/dependabot/dependabot-core/pull/11423> |
 | NuGet | nuget_native_analysis | true/false | <https://github.com/dependabot/dependabot-core/pull/10025> |
@@ -192,6 +191,8 @@ By default, the enabled experiments will mirror the GitHub-hosted version of Dep
 | NuGet | nuget_legacy_dependency_solver | true/false | <https://github.com/dependabot/dependabot-core/pull/10671> |
 | NuGet | nuget_use_direct_discovery | true/false | <https://github.com/dependabot/dependabot-core/pull/10597> |
 | NuGet | nuget_install_dotnet_sdks | true/false | <https://github.com/dependabot/dependabot-core/pull/11090> |
+| Python | enable_cooldown_for_python | true/false | https://github.com/dependabot/dependabot-core/pull/11693 |
+| Python & UV | enable_file_parser_python_local | true/false | https://github.com/dependabot/dependabot-core/pull/11040 |
 
 > [!NOTE]
 > Dependabot experiment names are not [publicly] documented and these may be out-of-date at the time of reading. To find the latest list of experiments, search the `dependabot-core` GitHub repository using queries like ["enabled?(x)"](https://github.com/search?q=repo%3Adependabot%2Fdependabot-core+%2Fenabled%5CW%5C%28.*%5C%29%2F&type=code) and ["options.fetch(x)"](https://github.com/search?q=repo%3Adependabot%2Fdependabot-core+%2Foptions%5C.fetch%5C%28.*%2C%2F&type=code).
