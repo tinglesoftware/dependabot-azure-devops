@@ -58,6 +58,10 @@ Dependabot for Azure DevOps must be explicitly configured to run in your organis
   pool:
     vmImage: 'ubuntu-latest' # requires macos or ubuntu (windows is not supported)
 
+  # Uncomment the lines below to have secrets protected in the logs
+  # variables:
+  #  System.Secrets: true
+
   steps:
   - task: dependabot@2
     inputs:
