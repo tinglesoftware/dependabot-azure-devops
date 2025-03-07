@@ -191,8 +191,8 @@ By default, the enabled experiments will mirror the GitHub-hosted version of Dep
 | NuGet | nuget_legacy_dependency_solver | true/false | <https://github.com/dependabot/dependabot-core/pull/10671> |
 | NuGet | nuget_use_direct_discovery | true/false | <https://github.com/dependabot/dependabot-core/pull/10597> |
 | NuGet | nuget_install_dotnet_sdks | true/false | <https://github.com/dependabot/dependabot-core/pull/11090> |
-| Python | enable_cooldown_for_python | true/false | https://github.com/dependabot/dependabot-core/pull/11693 |
-| Python & UV | enable_file_parser_python_local | true/false | https://github.com/dependabot/dependabot-core/pull/11040 |
+| Pip | enable_cooldown_for_python | true/false | https://github.com/dependabot/dependabot-core/pull/11693 |
+| Pip & UV | enable_file_parser_python_local | true/false | https://github.com/dependabot/dependabot-core/pull/11040 |
 
 > [!NOTE]
 > Dependabot experiment names are not [publicly] documented and these may be out-of-date at the time of reading. To find the latest list of experiments, search the `dependabot-core` GitHub repository using queries like ["enabled?(x)"](https://github.com/search?q=repo%3Adependabot%2Fdependabot-core+%2Fenabled%5CW%5C%28.*%5C%29%2F&type=code) and ["options.fetch(x)"](https://github.com/search?q=repo%3Adependabot%2Fdependabot-core+%2Foptions%5C.fetch%5C%28.*%2C%2F&type=code).
