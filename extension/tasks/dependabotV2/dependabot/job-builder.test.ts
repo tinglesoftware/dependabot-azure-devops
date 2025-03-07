@@ -1,7 +1,9 @@
+import { IDependabotCooldown } from '../utils/dependabot/interfaces/IDependabotConfig';
 import { ISharedVariables } from '../utils/shared-variables';
 import { IDependabotGroup, IDependabotIgnoreCondition, IDependabotUpdate } from './config';
 import {
   mapAllowedUpdatesFromDependabotConfigToJobConfig,
+  mapCooldownFromDependabotConfigToJobConfig,
   mapExperiments,
   mapGroupsFromDependabotConfigToJobConfig,
   mapIgnoreConditionsFromDependabotConfigToJobConfig,
@@ -219,6 +221,34 @@ describe('mapIgnoreConditionsFromDependabotConfigToJobConfig', () => {
         'version-requirement': '',
       },
     ]);
+  });
+});
+
+describe('mapCooldownFromDependabotConfigToJobConfig', () => {
+  it('should return undefined if cooldown is undefined', () => {
+    const result = mapCooldownFromDependabotConfigToJobConfig(undefined);
+    expect(result).toBeUndefined();
+  });
+
+  it('should map cooldown properties correctly', () => {
+    const cooldown = {
+      'default-days': 7,
+      'semver-major-days': 14,
+      'semver-minor-days': 7,
+      'semver-patch-days': 1,
+      'include': ['dependencies'],
+      'exclude': ['devDependencies'],
+    } as IDependabotCooldown;
+
+    const result = mapCooldownFromDependabotConfigToJobConfig(cooldown);
+    expect(result).toEqual({
+      'default-days': 7,
+      'semver-major-days': 14,
+      'semver-minor-days': 7,
+      'semver-patch-days': 1,
+      'include': ['dependencies'],
+      'exclude': ['devDependencies'],
+    });
   });
 });
 
