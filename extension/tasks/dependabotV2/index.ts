@@ -35,18 +35,20 @@ async function run() {
     // Mask environment, organisation, and project specific variables from the logs.
     // Most user's environments are private and they're less likely to share diagnostic info when it exposes information about their environment or organisation.
     // Although not exhaustive, this will mask the most common information that could be used to identify the user's environment.
-    setSecrets(
-      taskInputs.hostname,
-      taskInputs.virtualDirectory,
-      taskInputs.organization,
-      taskInputs.project,
-      taskInputs.repository,
-      taskInputs.githubAccessToken,
-      taskInputs.systemAccessUser,
-      taskInputs.systemAccessToken,
-      taskInputs.autoApproveUserToken,
-      taskInputs.authorEmail,
-    );
+    if (taskInputs.secrets) {
+      setSecrets(
+        taskInputs.hostname,
+        taskInputs.virtualDirectory,
+        taskInputs.organization,
+        taskInputs.project,
+        taskInputs.repository,
+        taskInputs.githubAccessToken,
+        taskInputs.systemAccessUser,
+        taskInputs.systemAccessToken,
+        taskInputs.autoApproveUserToken,
+        taskInputs.authorEmail,
+      );
+    }
 
     // Parse dependabot.yaml configuration file
     const dependabotConfig = await parseDependabotConfigFile(taskInputs);
