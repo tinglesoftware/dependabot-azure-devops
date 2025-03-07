@@ -58,6 +58,8 @@ export interface ISharedVariables {
 
   /** Determines if verbose log messages are logged */
   debug: boolean;
+  /** Determines if secrets are protected */
+  secrets: boolean;
 
   /** List of update identifiers to run */
   targetUpdateIds: number[];
@@ -169,6 +171,7 @@ export default function getSharedVariables(): ISharedVariables {
   console.log('Experiments:', experiments);
 
   let debug: boolean = tl.getVariable('System.Debug')?.match(/true/i) ? true : false;
+  let secrets: boolean = tl.getVariable('System.Secrets')?.match(/true/i) ? true : false;
 
   // Get the target identifiers
   let targetUpdateIds = tl.getDelimitedInput('targetUpdateIds', ';', false).map(Number);
@@ -216,6 +219,7 @@ export default function getSharedVariables(): ISharedVariables {
     experiments,
 
     debug,
+    secrets,
 
     targetUpdateIds,
     securityAdvisoriesFile,
