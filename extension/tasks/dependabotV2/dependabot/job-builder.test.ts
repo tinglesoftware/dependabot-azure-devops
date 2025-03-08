@@ -1,16 +1,12 @@
-import {
-  IDependabotGroup,
-  IDependabotIgnoreCondition,
-  IDependabotUpdate,
-} from '../dependabot/interfaces/IDependabotConfig';
-import { ISharedVariables } from '../getSharedVariables';
+import { ISharedVariables } from '../utils/shared-variables';
+import { IDependabotGroup, IDependabotIgnoreCondition, IDependabotUpdate } from './config';
 import {
   mapAllowedUpdatesFromDependabotConfigToJobConfig,
   mapExperiments,
   mapGroupsFromDependabotConfigToJobConfig,
   mapIgnoreConditionsFromDependabotConfigToJobConfig,
   mapSourceFromDependabotConfigToJobConfig,
-} from './DependabotJobBuilder';
+} from './job-builder';
 
 describe('mapSourceFromDependabotConfigToJobConfig', () => {
   it('should map source correctly for Azure DevOps Services', () => {

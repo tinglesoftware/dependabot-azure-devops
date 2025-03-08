@@ -1,4 +1,10 @@
-import { debug, getEndpointAuthorization, getInput, loc } from 'azure-pipelines-task-lib/task';
+import {
+  debug,
+  getEndpointAuthorization,
+  getEndpointAuthorizationParameter,
+  getInput,
+  loc,
+} from 'azure-pipelines-task-lib/task';
 
 /**
  * Extract access token from Github endpoint
@@ -36,7 +42,7 @@ function getGithubEndPointToken(githubEndpoint: string): string {
  *
  * @returns the Github access token
  */
-export default function getGithubAccessToken() {
+export function getGithubAccessToken() {
   let gitHubAccessToken: string = getInput('gitHubAccessToken');
   if (gitHubAccessToken) {
     debug('gitHubAccessToken provided, using for authenticating');
@@ -50,4 +56,29 @@ export default function getGithubAccessToken() {
   }
 
   return gitHubAccessToken;
+}
+
+/**
+ * Prepare the access token for Azure DevOps Repos.
+ *
+ *
+ * If the user has not provided one, we use the one from the SystemVssConnection
+ *
+ * @returns Azure DevOps Access Token
+ */
+export function getAzureDevOpsAccessToken() {
+  let systemAccessToken: string = getInput('azureDevOpsAccessToken');
+  if (systemAccessToken) {
+    debug('azureDevOpsAccessToken provided, using for authenticating');
+    return systemAccessToken;
+  }
+
+  let serviceConnectionName: string = getInput('azureDevOpsServiceConnection');
+  if (serviceConnectionName) {
+    debug('TFS connection supplied. A token shall be extracted from it.');
+    return getEndpointAuthorizationParameter(serviceConnectionName, 'apitoken', false);
+  }
+
+  debug("No custom token provided. The SystemVssConnection's AccessToken shall be used.");
+  return getEndpointAuthorizationParameter('SystemVssConnection', 'AccessToken', false);
 }

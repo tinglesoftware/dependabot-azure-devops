@@ -1,21 +1,19 @@
 import { debug, error, setResult, TaskResult, warning, which } from 'azure-pipelines-task-lib/task';
-import { AzureDevOpsWebApiClient } from './utils/azure-devops/AzureDevOpsWebApiClient';
-import { section, setSecrets } from './utils/azure-devops/formattingCommands';
-import { IPullRequestProperties } from './utils/azure-devops/interfaces/IPullRequest';
-import { DependabotCli } from './utils/dependabot-cli/DependabotCli';
-import { DependabotJobBuilder, mapPackageEcosystemToPackageManager } from './utils/dependabot-cli/DependabotJobBuilder';
+import { AzureDevOpsWebApiClient } from './azure-devops/client';
+import { section, setSecrets } from './azure-devops/formatting';
+import { IPullRequestProperties } from './azure-devops/models';
+import { DependabotCli } from './dependabot/cli';
+import { IDependabotConfig, IDependabotUpdate, parseConfigFile } from './dependabot/config';
+import { DependabotJobBuilder, mapPackageEcosystemToPackageManager } from './dependabot/job-builder';
+import { IDependabotUpdateOperationResult } from './dependabot/models';
+import { DependabotOutputProcessor, parsePullRequestProperties } from './dependabot/output-processor';
 import {
-  DependabotOutputProcessor,
-  parsePullRequestProperties,
-} from './utils/dependabot-cli/DependabotOutputProcessor';
-import { IDependabotUpdateOperationResult } from './utils/dependabot-cli/interfaces/IDependabotUpdateOperationResult';
-import { IDependabotConfig, IDependabotUpdate } from './utils/dependabot/interfaces/IDependabotConfig';
-import parseDependabotConfigFile from './utils/dependabot/parseConfigFile';
-import parseTaskInputConfiguration, { ISharedVariables } from './utils/getSharedVariables';
-import { GitHubGraphClient } from './utils/github/GitHubGraphClient';
-import { IPackage } from './utils/github/IPackage';
-import { ISecurityVulnerability } from './utils/github/ISecurityVulnerability';
-import { getGhsaPackageEcosystemFromDependabotPackageManager } from './utils/github/PackageEcosystem';
+  getGhsaPackageEcosystemFromDependabotPackageManager,
+  GitHubGraphClient,
+  IPackage,
+  ISecurityVulnerability,
+} from './github';
+import parseTaskInputConfiguration, { ISharedVariables } from './utils/shared-variables';
 
 async function run() {
   let dependabotCli: DependabotCli = undefined;
@@ -51,7 +49,7 @@ async function run() {
     }
 
     // Parse dependabot.yaml configuration file
-    const dependabotConfig = await parseDependabotConfigFile(taskInputs);
+    const dependabotConfig = await parseConfigFile(taskInputs);
     if (!dependabotConfig) {
       throw new Error('Failed to parse dependabot.yaml configuration file from the target repository');
     }

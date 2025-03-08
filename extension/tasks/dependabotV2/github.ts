@@ -3,10 +3,6 @@ import * as semver from 'semver';
 
 import { warning } from 'azure-pipelines-task-lib/task';
 
-import { IPackage } from './IPackage';
-import { ISecurityVulnerability } from './ISecurityVulnerability';
-import { PackageEcosystem } from './PackageEcosystem';
-
 const GHSA_GRAPHQL_API = 'https://api.github.com/graphql';
 
 const GHSA_SECURITY_VULNERABILITIES_QUERY = `
@@ -52,6 +48,107 @@ const GHSA_SECURITY_VULNERABILITIES_QUERY = `
     }
   }
 `;
+
+export enum PackageEcosystem {
+  Composer = 'COMPOSER',
+  Erlang = 'ERLANG',
+  Actions = 'ACTIONS',
+  Go = 'GO',
+  Maven = 'MAVEN',
+  Npm = 'NPM',
+  Nuget = 'NUGET',
+  Pip = 'PIP',
+  Pub = 'PUB',
+  Rubygems = 'RUBYGEMS',
+  Rust = 'RUST',
+  Swift = 'SWIFT',
+}
+
+export interface IPackage {
+  name: string;
+  version?: string;
+}
+
+export interface ISecurityVulnerability {
+  ecosystem: PackageEcosystem;
+  package: IPackage;
+  advisory: ISecurityAdvisory;
+  vulnerableVersionRange: string;
+  firstPatchedVersion: string;
+}
+
+export enum SecurityAdvisoryIdentifierType {
+  Cve = 'CVE',
+  Ghsa = 'GHSA',
+}
+
+export enum SecurityAdvisorySeverity {
+  Low = 'LOW',
+  Moderate = 'MODERATE',
+  High = 'HIGH',
+  Critical = 'CRITICAL',
+}
+
+export interface ISecurityAdvisory {
+  identifiers: {
+    type: SecurityAdvisoryIdentifierType | string;
+    value: string;
+  }[];
+  severity: SecurityAdvisorySeverity;
+  summary: string;
+  description: string;
+  references: string[];
+  cvss: {
+    score: number;
+    vectorString: string;
+  };
+  epss: {
+    percentage: number;
+    percentile: number;
+  };
+  cwes: {
+    id: string;
+    name: string;
+    description: string;
+  }[];
+  publishedAt: string;
+  updatedAt: string;
+  withdrawnAt: string;
+  permalink: string;
+}
+
+export function getGhsaPackageEcosystemFromDependabotPackageManager(
+  dependabotPackageManager: string,
+): PackageEcosystem {
+  switch (dependabotPackageManager) {
+    case 'composer':
+      return PackageEcosystem.Composer;
+    case 'elm':
+      return PackageEcosystem.Erlang;
+    case 'github_actions':
+      return PackageEcosystem.Actions;
+    case 'go_modules':
+      return PackageEcosystem.Go;
+    case 'maven':
+      return PackageEcosystem.Maven;
+    case 'npm_and_yarn':
+      return PackageEcosystem.Npm;
+    case 'nuget':
+      return PackageEcosystem.Nuget;
+    case 'pip':
+      return PackageEcosystem.Pip;
+    case 'pub':
+      return PackageEcosystem.Pub;
+    case 'bundler':
+      return PackageEcosystem.Rubygems;
+    case 'cargo':
+      return PackageEcosystem.Rust;
+    case 'swift':
+      return PackageEcosystem.Swift;
+    default:
+      throw new Error(`Unknown dependabot package manager: ${dependabotPackageManager}`);
+  }
+}
 
 /**
  * GitHub GraphQL client

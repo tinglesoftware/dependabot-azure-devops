@@ -2,8 +2,8 @@ import { jest } from '@jest/globals';
 
 import { VersionControlChangeType } from 'azure-devops-node-api/interfaces/TfvcInterfaces';
 
-import { AzureDevOpsWebApiClient } from './AzureDevOpsWebApiClient';
-import { ICreatePullRequest } from './interfaces/IPullRequest';
+import { AzureDevOpsWebApiClient } from '../azure-devops/client';
+import { ICreatePullRequest } from './models';
 import exp = require('constants');
 
 jest.mock('azure-devops-node-api');
