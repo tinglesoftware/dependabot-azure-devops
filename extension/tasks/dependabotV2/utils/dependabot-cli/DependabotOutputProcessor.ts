@@ -31,11 +31,6 @@ export const DependabotDependenciesSchema = z.object({
   'last-updated': z.string().optional(), // e.g. '2021-09-01T00:00:00Z'
 });
 export type DependabotDependencies = z.infer<typeof DependabotDependenciesSchema>;
-export const DependabotStoredDependencyListsSchema = z.record(
-  z.string({ description: 'Repository name' }),
-  z.record(z.string({ description: 'Package manager' }), DependabotDependenciesSchema),
-);
-export type DependabotStoredDependencyLists = z.infer<typeof DependabotStoredDependencyListsSchema>;
 
 /**
  * Processes dependabot update outputs using the DevOps API
@@ -48,10 +43,6 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
   private readonly createdPullRequestIds: number[];
   private readonly taskInputs: ISharedVariables;
   private readonly debug: boolean;
-
-  // Custom properties used to store dependabot metadata in projects.
-  // https://learn.microsoft.com/en-us/rest/api/azure/devops/core/projects/set-project-properties
-  public static PROJECT_PROPERTY_NAME_DEPENDENCY_LIST = 'Dependabot.DependencyList';
 
   // Custom properties used to store dependabot metadata in pull requests.
   // https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-properties
@@ -99,24 +90,12 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
       // See: https://github.com/dependabot/cli/blob/main/internal/model/update.go
 
       case 'update_dependency_list':
-        // Store the dependency list snapshot in project properties, if configured
-        const parsedData = DependabotDependenciesSchema.parse(data);
+        // Store the dependency list snapshot, if configured
+        const _ = DependabotDependenciesSchema.parse(data);
         if (this.taskInputs.storeDependencyList) {
-          return await this.prAuthorClient.updateProjectProperty(
-            this.taskInputs.project,
-            DependabotOutputProcessor.PROJECT_PROPERTY_NAME_DEPENDENCY_LIST,
-            function (existingValue: string) {
-              const repoDependencyLists = DependabotStoredDependencyListsSchema.parse(
-                JSON.parse(existingValue || '{}'),
-              );
-              repoDependencyLists[repository] = repoDependencyLists[repository] || {};
-              repoDependencyLists[repository][packageManager] = {
-                ...parsedData,
-                'last-updated': new Date().toISOString(),
-              };
-
-              return JSON.stringify(repoDependencyLists);
-            },
+          warning(
+            `Storing dependency list snapshot in project properties is no longer supported
+            due to size limitations. We are looking for alternative solutions.`,
           );
         }
 
@@ -356,16 +335,6 @@ export function buildPullRequestProperties(packageManager: string, dependencies:
       value: JSON.stringify(dependencies),
     },
   ];
-}
-
-export function parseProjectDependencyListProperty(
-  properties: Record<string, string>,
-  repository: string,
-  packageManager: string,
-): any {
-  const dependencyList = properties?.[DependabotOutputProcessor.PROJECT_PROPERTY_NAME_DEPENDENCY_LIST] || '{}';
-  const repoDependencyLists = JSON.parse(dependencyList);
-  return repoDependencyLists[repository]?.[packageManager];
 }
 
 export function parsePullRequestProperties(
