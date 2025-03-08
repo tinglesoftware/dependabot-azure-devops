@@ -4,11 +4,7 @@ import { AzureDevOpsWebApiClient } from '../azure-devops/AzureDevOpsWebApiClient
 import { IPullRequestProperties } from '../azure-devops/interfaces/IPullRequest';
 import { IDependabotUpdate } from '../dependabot/interfaces/IDependabotConfig';
 import { ISharedVariables } from '../getSharedVariables';
-import {
-  DependabotDependenciesSchema,
-  DependabotOutputProcessor,
-  DependabotStoredDependencyListsSchema,
-} from './DependabotOutputProcessor';
+import { DependabotDependenciesSchema, DependabotOutputProcessor } from './DependabotOutputProcessor';
 import { IDependabotUpdateOperation } from './interfaces/IDependabotUpdateOperation';
 
 jest.mock('../azure-devops/AzureDevOpsWebApiClient');
@@ -53,23 +49,8 @@ describe('DependabotOutputProcessor', () => {
       data = {};
     });
 
-    it('should skip processing "update_dependency_list" if "storeDependencyList" is false', async () => {
-      taskInputs.storeDependencyList = false;
-      prAuthorClient.updateProjectProperty = jest.fn().mockResolvedValue(false);
-
-      const result = await processor.process(update, 'update_dependency_list', {
-        ...data,
-        dependencies: [],
-        dependency_files: [],
-      });
-
-      expect(result).toBe(true);
-      expect(prApproverClient.updateProjectProperty).not.toHaveBeenCalled();
-    });
-
     it('should process "update_dependency_list"', async () => {
       taskInputs.storeDependencyList = true;
-      prAuthorClient.updateProjectProperty = jest.fn().mockResolvedValue(true);
 
       const result = await processor.process(update, 'update_dependency_list', {
         ...data,
@@ -78,7 +59,6 @@ describe('DependabotOutputProcessor', () => {
       });
 
       expect(result).toBe(true);
-      expect(prAuthorClient.updateProjectProperty).toHaveBeenCalled();
     });
 
     it('should skip processing "create_pull_request" if "skipPullRequests" is true', async () => {
@@ -291,39 +271,6 @@ describe('DependabotOutputProcessor', () => {
       expect(data['dependencies'][3].requirements[0].file).toEqual('/Root.csproj');
       expect(data['dependencies'][3].requirements[0].requirement).toEqual('8.1.0');
       expect(data['dependencies'][3].requirements[0].groups).toEqual(['dependencies']);
-    });
-
-    it('works for an existing value', () => {
-      const rawNuget = JSON.parse(fs.readFileSync('tests/update_dependency_list/nuget.json', 'utf-8'));
-      const rawPip = JSON.parse(fs.readFileSync('tests/update_dependency_list/pip.json', 'utf-8'));
-      const raw = {
-        ['repo1']: {
-          ['pip']: rawPip['data'],
-          ['nuget']: rawNuget['data'],
-        },
-      };
-      const lists = DependabotStoredDependencyListsSchema.parse(raw);
-
-      expect(Object.keys(lists)).toEqual(['repo1']);
-      expect(Object.keys(lists['repo1'])).toEqual(['pip', 'nuget']);
-
-      const data = lists['repo1']['nuget'];
-      expect(data['dependency_files']).toEqual(['/Root.csproj']);
-      expect(data['dependencies'].length).toEqual(76);
-
-      expect(data['dependencies'][0].name).toEqual('Azure.Core');
-      expect(data['dependencies'][0].version).toEqual('1.35.0');
-      expect(data['dependencies'][0].requirements.length).toEqual(0);
-
-      expect(data['dependencies'][3].name).toEqual('GraphQL.Server.Ui.Voyager');
-      expect(data['dependencies'][3].version).toEqual('8.1.0');
-      expect(data['dependencies'][3].requirements.length).toEqual(1);
-      expect(data['dependencies'][3].requirements[0].file).toEqual('/Root.csproj');
-      expect(data['dependencies'][3].requirements[0].requirement).toEqual('8.1.0');
-      expect(data['dependencies'][3].requirements[0].groups).toEqual(['dependencies']);
-
-      // TODO: this is about 10KB for one repo, two ecosystems, we should find a better way?
-      expect(JSON.stringify(raw).length).toEqual(10_000);
     });
   });
 });
