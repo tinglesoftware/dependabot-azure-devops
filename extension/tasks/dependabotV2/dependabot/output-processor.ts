@@ -2,14 +2,12 @@ import { GitPullRequestMergeStrategy, VersionControlChangeType } from 'azure-dev
 import { debug, error, warning } from 'azure-pipelines-task-lib/task';
 import * as path from 'path';
 import { z } from 'zod';
-import { AzureDevOpsWebApiClient } from '../azure-devops/AzureDevOpsWebApiClient';
-import { section } from '../azure-devops/formattingCommands';
-import { IFileChange } from '../azure-devops/interfaces/IFileChange';
-import { IPullRequestProperties } from '../azure-devops/interfaces/IPullRequest';
-import { ISharedVariables } from '../getSharedVariables';
-import { getBranchNameForUpdate } from './getBranchName';
-import { IDependabotUpdateOperation } from './interfaces/IDependabotUpdateOperation';
-import { IDependabotUpdateOutputProcessor } from './interfaces/IDependabotUpdateOutputProcessor';
+import { AzureDevOpsWebApiClient } from '../azure-devops/client';
+import { section } from '../azure-devops/formatting';
+import { IFileChange, IPullRequestProperties } from '../azure-devops/models';
+import { ISharedVariables } from '../utils/shared-variables';
+import { getBranchNameForUpdate } from './branch-name';
+import { IDependabotUpdateOperation } from './models';
 
 export const DependabotDependenciesSchema = z.object({
   'dependencies': z.array(
@@ -35,7 +33,7 @@ export type DependabotDependencies = z.infer<typeof DependabotDependenciesSchema
 /**
  * Processes dependabot update outputs using the DevOps API
  */
-export class DependabotOutputProcessor implements IDependabotUpdateOutputProcessor {
+export class DependabotOutputProcessor {
   private readonly prAuthorClient: AzureDevOpsWebApiClient;
   private readonly prApproverClient: AzureDevOpsWebApiClient;
   private readonly existingBranchNames: string[];
@@ -71,10 +69,9 @@ export class DependabotOutputProcessor implements IDependabotUpdateOutputProcess
 
   /**
    * Process the appropriate DevOps API actions for the supplied dependabot update output
-   * @param update
-   * @param type
-   * @param data
-   * @returns
+   * @param update The update operation
+   * @param type The output type (e.g. "create-pull-request", "update-pull-request", etc.)
+   * @param data The output data object related to the type
    */
   public async process(update: IDependabotUpdateOperation, type: string, data: any): Promise<boolean> {
     const project = this.taskInputs.project;

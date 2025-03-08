@@ -5,11 +5,9 @@ import * as yaml from 'js-yaml';
 import * as os from 'os';
 import * as path from 'path';
 import { Writable } from 'stream';
-import { endgroup, group, section } from '../azure-devops/formattingCommands';
-import { IDependabotUpdateJobConfig } from './interfaces/IDependabotUpdateJobConfig';
-import { IDependabotUpdateOperation } from './interfaces/IDependabotUpdateOperation';
-import { IDependabotUpdateOperationResult } from './interfaces/IDependabotUpdateOperationResult';
-import { IDependabotUpdateOutputProcessor } from './interfaces/IDependabotUpdateOutputProcessor';
+import { endgroup, group, section } from '../azure-devops/formatting';
+import { IDependabotUpdateJobConfig, IDependabotUpdateOperation, IDependabotUpdateOperationResult } from './models';
+import { DependabotOutputProcessor } from './output-processor';
 
 /**
  * Wrapper class for running updates using dependabot-cli
@@ -17,14 +15,14 @@ import { IDependabotUpdateOutputProcessor } from './interfaces/IDependabotUpdate
 export class DependabotCli {
   private readonly jobsPath: string;
   private readonly toolPackage: string;
-  private readonly outputProcessor: IDependabotUpdateOutputProcessor;
+  private readonly outputProcessor: DependabotOutputProcessor;
   private readonly debug: boolean;
   private readonly outputLogStream: Writable;
   private toolPath: string;
 
   public static readonly CLI_PACKAGE_LATEST = 'github.com/dependabot/cli/cmd/dependabot@latest';
 
-  constructor(toolPackage: string, outputProcessor: IDependabotUpdateOutputProcessor, debug: boolean = false) {
+  constructor(toolPackage: string, outputProcessor: DependabotOutputProcessor, debug: boolean = false) {
     this.jobsPath = path.join(os.tmpdir(), 'dependabot-jobs');
     this.toolPackage = toolPackage;
     this.outputProcessor = outputProcessor;

@@ -1,19 +1,19 @@
+import { IPullRequestProperties } from './azure-devops/models';
+import { DependabotCli } from './dependabot/cli';
+import { IDependabotConfig } from './dependabot/config';
+import { DependabotJobBuilder } from './dependabot/job-builder';
+import { IDependabotUpdateOperationResult } from './dependabot/models';
+import { DependabotOutputProcessor } from './dependabot/output-processor';
+import { GitHubGraphClient } from './github';
 import { performDependabotUpdatesAsync } from './index';
-import { IPullRequestProperties } from './utils/azure-devops/interfaces/IPullRequest';
-import { DependabotCli } from './utils/dependabot-cli/DependabotCli';
-import { DependabotJobBuilder } from './utils/dependabot-cli/DependabotJobBuilder';
-import { DependabotOutputProcessor } from './utils/dependabot-cli/DependabotOutputProcessor';
-import { IDependabotUpdateOperationResult } from './utils/dependabot-cli/interfaces/IDependabotUpdateOperationResult';
-import { IDependabotConfig } from './utils/dependabot/interfaces/IDependabotConfig';
-import { ISharedVariables } from './utils/getSharedVariables';
-import { GitHubGraphClient } from './utils/github/GitHubGraphClient';
+import { ISharedVariables } from './utils/shared-variables';
 
-jest.mock('./utils/dependabot-cli/DependabotCli');
-jest.mock('./utils/dependabot-cli/DependabotJobBuilder');
-jest.mock('./utils/github/GitHubGraphClient');
+jest.mock('./dependabot/cli');
+jest.mock('./dependabot/job-builder');
+jest.mock('./github');
 
-const tsDependabotJobBuilder = require('./utils/dependabot-cli/DependabotJobBuilder');
-const tsDependabotOutputProcessor = require('./utils/dependabot-cli/DependabotOutputProcessor');
+const tsDependabotJobBuilder = require('./dependabot/job-builder');
+const tsDependabotOutputProcessor = require('./dependabot/output-processor');
 
 describe('performDependabotUpdatesAsync', () => {
   let taskInputs: ISharedVariables;

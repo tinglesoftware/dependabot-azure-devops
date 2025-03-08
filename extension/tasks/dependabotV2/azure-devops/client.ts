@@ -15,7 +15,7 @@ import {
   ICreatePullRequest,
   IPullRequestProperties,
   IUpdatePullRequest,
-} from './interfaces/IPullRequest';
+} from './models';
 
 /**
  * Wrapper for DevOps WebApi client with helper methods for easier management of dependabot pull requests

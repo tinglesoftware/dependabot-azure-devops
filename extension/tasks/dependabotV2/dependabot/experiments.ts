@@ -16,7 +16,7 @@ export const DEFAULT_EXPERIMENTS: Record<string, string | boolean> = {
   // NOTE: 'enable-record-ecosystem-meta' is not currently implemented in Dependabot-CLI.
   //       This experiment is primarily for GitHub analytics and doesn't add much value in the DevOps implementation.
   //       See: https://github.com/dependabot/dependabot-core/pull/10905
-  // TODO: Revsit this if/when Dependabot-CLI supports it.
+  // TODO: Revisit this if/when Dependabot-CLI supports it.
   //'enable-record-ecosystem-meta': true,
   'enable-shared-helpers-command-timeout': true,
   'enable-engine-version-detection': true,

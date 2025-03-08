@@ -1,14 +1,14 @@
 import { error, warning } from 'azure-pipelines-task-lib/task';
 import * as fs from 'fs';
-import { AzureDevOpsWebApiClient } from '../azure-devops/AzureDevOpsWebApiClient';
-import { IPullRequestProperties } from '../azure-devops/interfaces/IPullRequest';
-import { IDependabotUpdate } from '../dependabot/interfaces/IDependabotConfig';
-import { ISharedVariables } from '../getSharedVariables';
-import { DependabotDependenciesSchema, DependabotOutputProcessor } from './DependabotOutputProcessor';
-import { IDependabotUpdateOperation } from './interfaces/IDependabotUpdateOperation';
+import { AzureDevOpsWebApiClient } from '../azure-devops/client';
+import { IPullRequestProperties } from '../azure-devops/models';
+import { ISharedVariables } from '../utils/shared-variables';
+import { IDependabotUpdate } from './config';
+import { IDependabotUpdateOperation } from './models';
+import { DependabotDependenciesSchema, DependabotOutputProcessor } from './output-processor';
 
-jest.mock('../azure-devops/AzureDevOpsWebApiClient');
-jest.mock('../getSharedVariables');
+jest.mock('../azure-devops/client');
+jest.mock('../utils/shared-variables');
 jest.mock('azure-pipelines-task-lib/task');
 
 describe('DependabotOutputProcessor', () => {

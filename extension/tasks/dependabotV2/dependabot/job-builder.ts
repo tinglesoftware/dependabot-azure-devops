@@ -1,13 +1,13 @@
+import { ISecurityVulnerability } from '../github';
+import { ISharedVariables } from '../utils/shared-variables';
 import {
   IDependabotAllowCondition,
   IDependabotGroup,
   IDependabotIgnoreCondition,
   IDependabotRegistry,
   IDependabotUpdate,
-} from '../dependabot/interfaces/IDependabotConfig';
-import { ISharedVariables } from '../getSharedVariables';
-import { ISecurityVulnerability } from '../github/ISecurityVulnerability';
-import { IDependabotUpdateOperation } from './interfaces/IDependabotUpdateOperation';
+} from './config';
+import { IDependabotUpdateOperation } from './models';
 
 /**
  * Wrapper class for building dependabot update job objects

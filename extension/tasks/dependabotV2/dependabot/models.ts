@@ -1,3 +1,5 @@
+import { IDependabotUpdate } from './config';
+
 /**
  * Represents the Dependabot CLI update job.yaml configuration file options.
  */
@@ -93,4 +95,23 @@ export interface IDependabotUpdateJobConfig {
     'token'?: string;
     'replaces-base'?: boolean;
   }[];
+}
+
+/**
+ * Represents a single Dependabot CLI update operation
+ */
+export interface IDependabotUpdateOperation extends IDependabotUpdateJobConfig {
+  config: IDependabotUpdate;
+}
+
+/**
+ * Represents the output of a Dependabot CLI update operation
+ */
+export interface IDependabotUpdateOperationResult {
+  success: boolean;
+  error: Error;
+  output: {
+    type: string;
+    data: any;
+  };
 }
