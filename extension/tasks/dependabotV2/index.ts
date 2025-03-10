@@ -289,9 +289,6 @@ export async function performDependabotUpdatesAsync(
   // Log the errors of all failed updateoperations
   failedOperations.forEach((u) => exception(u.error));
 
-  console.log(successfulOperations);
-  console.log(failedOperations);
-
   // Return an overall result based on the success/failure of all the update operations
   if (successfulOperations.length > 0) {
     return failedOperations.length == 0 ? TaskResult.Succeeded : TaskResult.SucceededWithIssues;

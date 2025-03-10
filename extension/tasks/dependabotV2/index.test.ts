@@ -157,7 +157,7 @@ describe('performDependabotUpdatesAsync', () => {
     expect(updateResult).toBe(TaskResult.Succeeded);
   });
 
-  it('should return SucceededWithIssues result when all updates are mixture of success and failure', async () => {
+  it('should return SucceededWithIssues result when updates are mixture of success and failure', async () => {
     dependabotCli.update = jest.fn().mockResolvedValue([
       { success: true, output: {} },
       { success: false, output: {} },
