@@ -1,4 +1,4 @@
-import { IDependabotCooldown } from '../utils/dependabot/interfaces/IDependabotConfig';
+import { IDependabotCooldown } from '../dependabot/config';
 import { ISharedVariables } from '../utils/shared-variables';
 import { IDependabotGroup, IDependabotIgnoreCondition, IDependabotUpdate } from './config';
 import {
