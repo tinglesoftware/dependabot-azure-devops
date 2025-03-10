@@ -44,6 +44,7 @@ export interface IDependabotUpdate {
   'allow'?: IDependabotAllowCondition[];
   'assignees'?: string[];
   'commit-message'?: IDependabotCommitMessage;
+  'cooldown'?: IDependabotCooldown;
   'groups'?: Record<string, IDependabotGroup>;
   'ignore'?: IDependabotIgnoreCondition[];
   'insecure-external-code-execution'?: string;
@@ -105,6 +106,15 @@ export interface IDependabotCommitMessage {
   'prefix'?: string;
   'prefix-development'?: string;
   'include'?: string;
+}
+
+export interface IDependabotCooldown {
+  'default-days'?: number;
+  'semver-major-days'?: number;
+  'semver-minor-days'?: number;
+  'semver-patch-days'?: number;
+  'include'?: string[];
+  'exclude'?: string[];
 }
 
 export interface IDependabotPullRequestBranchName {

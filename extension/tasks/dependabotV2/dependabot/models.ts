@@ -71,6 +71,14 @@ export interface IDependabotUpdateJobConfig {
       'prefix-development'?: string;
       'include-scope'?: boolean;
     };
+    'cooldown'?: {
+      'default-days'?: number;
+      'semver-major-days'?: number;
+      'semver-minor-days'?: number;
+      'semver-patch-days'?: number;
+      'include'?: string[];
+      'exclude'?: string[];
+    };
     'experiments'?: Record<string, string | boolean>;
     'max-updater-run-time'?: number;
     'reject-external-code'?: boolean;

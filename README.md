@@ -226,19 +226,22 @@ We aim to support all [official configuration options](https://docs.github.com/e
 #### `dependabot@1`
 
 - [`schedule`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#scheduleinterval) is ignored, use [pipeline scheduled triggers](https://learn.microsoft.com/en-us/azure/devops/pipelines/process/scheduled-triggers?view=azure-devops&tabs=yaml#scheduled-triggers) instead.
+- [`cooldown`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#cooldown) is not supported.
 - [`directories`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#directories) are only supported if task input `useUpdateScriptVNext: true` is set.
 - [`groups`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#groups) are only supported if task input `useUpdateScriptVNext: true` is set.
 - [`ignore`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#ignore) may not behave to official specifications unless task input `useUpdateScriptVNext: true` is set. If you are having issues, search for related issues such as <https://github.com/tinglesoftware/dependabot-azure-devops/pull/582> before creating a new issue.
 - [`assignees`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#assignees) and [`reviewers`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#reviewers) must be a list of user GUIDs or email addresses; group/team names are not supported.
-- Private feed/registry authentication may not work with all package ecosystems. Support is _slightly_ improved when task input `useUpdateScriptVNext: true` is set, but not still not fully supported. See [problems with authentication](https://github.com/tinglesoftware/dependabot-azure-devops/discussions/1317) for more.
+- Private feed/registry authentication may not work with all package ecosystems. See [problems with authentication](https://github.com/tinglesoftware/dependabot-azure-devops/discussions/1317) for more.
 
 ### Dependabot Updater Docker Image
 
+- [`cooldown`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#cooldown) is not supported.
 - `DEPENDABOT_ASSIGNEES` and `DEPENDABOT_REVIEWERS` must be a list of user GUIDs; email addresses and group/team names are not supported.
 - Private feed/registry authentication may not work with all package ecosystems. See [problems with authentication](https://github.com/tinglesoftware/dependabot-azure-devops/discussions/1317) for more.
 
 ### Dependabot Server
 
+- [`cooldown`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#cooldown) is not supported.
 - [`directories`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#directories) are not supported.
 - [`groups`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#groups) are not supported.
 - [`assignees`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#assignees) and [`reviewers`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#reviewers) must be a list of user GUIDs; email addresses and group/team names are not supported.
