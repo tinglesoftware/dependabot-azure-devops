@@ -124,7 +124,7 @@ async function run() {
     }
 
     // Perform updates for each of the [targeted] update blocks in dependabot.yaml
-    const failedUpdateOperations = await performDependabotUpdatesAsync(
+    const taskResult = await performDependabotUpdatesAsync(
       taskInputs,
       dependabotConfig,
       dependabotUpdatesToPerform,
@@ -134,10 +134,17 @@ async function run() {
     );
 
     setResult(
-      failedUpdateOperations == 0 ? TaskResult.Succeeded : TaskResult.Failed,
-      failedUpdateOperations > 0
-        ? `${failedUpdateOperations} update tasks(s) failed, check logs for more information`
-        : `All update tasks completed successfully`,
+      taskResult,
+      (() => {
+        switch (taskResult) {
+          case TaskResult.Succeeded:
+            return 'All update tasks completed successfully';
+          case TaskResult.SucceededWithIssues:
+            return 'Partial success; some update tasks completed with issues. Check the logs for more information';
+          case TaskResult.Failed:
+            return 'Update tasks failed. Check the logs for more information';
+        }
+      })(),
     );
   } catch (e) {
     setResult(TaskResult.Failed, e?.message);
@@ -155,7 +162,7 @@ async function run() {
  * @param dependabotCli The Dependabot CLI instance.
  * @param dependabotCliUpdateOptions The Dependabot updater options.
  * @param existingPullRequests The existing pull requests.
- * @returns The number of successful and failed update operations.
+ * @returns The result of the update operation
  */
 export async function performDependabotUpdatesAsync(
   taskInputs: ISharedVariables,
@@ -164,8 +171,9 @@ export async function performDependabotUpdatesAsync(
   dependabotCli: DependabotCli,
   dependabotCliUpdateOptions: any,
   existingPullRequests: IPullRequestProperties[],
-): Promise<number> {
-  let failedOperations = 0;
+): Promise<TaskResult> {
+  let successfulOperations: IDependabotUpdateOperationResult[] = [];
+  let failedOperations: IDependabotUpdateOperationResult[] = [];
   for (const update of dependabotUpdates) {
     const updateId = dependabotUpdates.indexOf(update).toString();
     const packageEcosystem = update['package-ecosystem'];
@@ -227,20 +235,20 @@ export async function performDependabotUpdatesAsync(
     if (!hasReachedOpenPullRequestLimit) {
       const dependenciesHaveVulnerabilities = dependencyNamesToUpdate.length && securityVulnerabilities.length;
       if (!securityUpdatesOnly || dependenciesHaveVulnerabilities) {
-        failedOperations += handleUpdateOperationResults(
-          await dependabotCli.update(
-            DependabotJobBuilder.updateAllDependenciesJob(
-              taskInputs,
-              updateId,
-              update,
-              dependabotConfig.registries,
-              dependencyNamesToUpdate,
-              existingPullRequestDependenciesForPackageManager,
-              securityVulnerabilities,
-            ),
-            dependabotCliUpdateOptions,
+        const outputs = await dependabotCli.update(
+          DependabotJobBuilder.updateAllDependenciesJob(
+            taskInputs,
+            updateId,
+            update,
+            dependabotConfig.registries,
+            dependencyNamesToUpdate,
+            existingPullRequestDependenciesForPackageManager,
+            securityVulnerabilities,
           ),
+          dependabotCliUpdateOptions,
         );
+        successfulOperations.push(...(outputs?.filter((u) => u.success) || []));
+        failedOperations.push(...(outputs?.filter((u) => !u.success) || []));
       } else {
         console.info('Nothing to update; dependencies are not affected by any known vulnerability');
       }
@@ -255,20 +263,20 @@ export async function performDependabotUpdatesAsync(
     if (numberOfPullRequestsToUpdate > 0) {
       if (!taskInputs.skipPullRequests) {
         for (const pullRequestId in existingPullRequestsForPackageManager) {
-          failedOperations += handleUpdateOperationResults(
-            await dependabotCli.update(
-              DependabotJobBuilder.updatePullRequestJob(
-                taskInputs,
-                pullRequestId,
-                update,
-                dependabotConfig.registries,
-                existingPullRequestDependenciesForPackageManager,
-                existingPullRequestsForPackageManager[pullRequestId],
-                securityVulnerabilities,
-              ),
-              dependabotCliUpdateOptions,
+          const outputs = await dependabotCli.update(
+            DependabotJobBuilder.updatePullRequestJob(
+              taskInputs,
+              pullRequestId,
+              update,
+              dependabotConfig.registries,
+              existingPullRequestDependenciesForPackageManager,
+              existingPullRequestsForPackageManager[pullRequestId],
+              securityVulnerabilities,
             ),
+            dependabotCliUpdateOptions,
           );
+          successfulOperations.push(...(outputs?.filter((u) => u.success) || []));
+          failedOperations.push(...(outputs?.filter((u) => !u.success) || []));
         }
       } else {
         warning(
@@ -278,33 +286,17 @@ export async function performDependabotUpdatesAsync(
     }
   }
 
-  return failedOperations;
-}
+  // Log the errors of all failed updateoperations
+  failedOperations.forEach((u) => exception(u.error));
 
-/**
- * Handles the results of an update operation.
- * @param outputs The processed outputs of the update operation.
- * @returns The number of failed tasks (i.e. outputs that could not be processed).
- * @remarks
- * If the update operation completed with all outputs processed successfully, it will return 0.
- * If the update operation completed with some outputs processed unsuccessfully, it will return the number of failed outputs.
- */
-function handleUpdateOperationResults(outputs: IDependabotUpdateOperationResult[] | undefined): number {
-  let failedOperations = 0; // assume success, initially
-  if (outputs) {
-    // The update operation completed, but some output tasks may have failed
-    const failedUpdateOutputs = outputs.filter((u) => !u.success);
-    if (failedUpdateOutputs.length > 0) {
-      // At least one output task failed to process
-      failedUpdateOutputs.forEach((u) => exception(u.error));
-      failedOperations += failedUpdateOutputs.length;
-    }
+  // Return an overall result based on the success/failure of all the update operations
+  if (successfulOperations.length > 0) {
+    return failedOperations.length == 0 ? TaskResult.Succeeded : TaskResult.SucceededWithIssues;
+  } else if (failedOperations.length > 0) {
+    return TaskResult.Failed;
   } else {
-    // The update operation critically failed, it produced no output
-    failedOperations++;
+    return TaskResult.Skipped;
   }
-
-  return failedOperations;
 }
 
 function exception(e: Error) {

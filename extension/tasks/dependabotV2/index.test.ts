@@ -1,3 +1,4 @@
+import { TaskResult } from 'azure-pipelines-task-lib';
 import { IPullRequestProperties } from './azure-devops/models';
 import { DependabotCli } from './dependabot/cli';
 import { IDependabotConfig } from './dependabot/config';
@@ -45,7 +46,7 @@ describe('performDependabotUpdatesAsync', () => {
   });
 
   it('should perform "update all" job successfully', async () => {
-    const failedUpdates = await performDependabotUpdatesAsync(
+    const updateResult = await performDependabotUpdatesAsync(
       taskInputs,
       dependabotConfig,
       dependabotConfig.updates,
@@ -54,7 +55,7 @@ describe('performDependabotUpdatesAsync', () => {
       existingPullRequests,
     );
 
-    expect(failedUpdates).toBe(0);
+    expect(updateResult).toBe(TaskResult.Succeeded);
     expect(dependabotCli.update).toHaveBeenCalled();
     expect(DependabotJobBuilder.updateAllDependenciesJob).toHaveBeenCalled();
   });
@@ -77,7 +78,7 @@ describe('performDependabotUpdatesAsync', () => {
 
     jest.spyOn(tsDependabotOutputProcessor, 'parsePullRequestProperties').mockReturnValue('npm_and_yarn');
 
-    const failedUpdates = await performDependabotUpdatesAsync(
+    const updateResult = await performDependabotUpdatesAsync(
       taskInputs,
       dependabotConfig,
       dependabotConfig.updates,
@@ -86,7 +87,7 @@ describe('performDependabotUpdatesAsync', () => {
       existingPullRequests,
     );
 
-    expect(failedUpdates).toBe(0);
+    expect(updateResult).toBe(TaskResult.Succeeded);
     expect(DependabotJobBuilder.updateAllDependenciesJob).not.toHaveBeenCalled();
   });
 
@@ -95,7 +96,7 @@ describe('performDependabotUpdatesAsync', () => {
     const ghsaClient = new GitHubGraphClient('fake-token');
     ghsaClient.getSecurityVulnerabilitiesAsync = jest.fn().mockResolvedValue([]);
 
-    const failedUpdates = await performDependabotUpdatesAsync(
+    const updateResult = await performDependabotUpdatesAsync(
       taskInputs,
       dependabotConfig,
       dependabotConfig.updates,
@@ -104,7 +105,7 @@ describe('performDependabotUpdatesAsync', () => {
       existingPullRequests,
     );
 
-    expect(failedUpdates).toBe(0);
+    expect(updateResult).toBe(TaskResult.Succeeded);
     expect(DependabotJobBuilder.listAllDependenciesJob).toHaveBeenCalled();
   });
 
@@ -126,7 +127,7 @@ describe('performDependabotUpdatesAsync', () => {
 
     jest.spyOn(tsDependabotJobBuilder, 'mapPackageEcosystemToPackageManager').mockReturnValue('npm_and_yarn');
 
-    const failedUpdates = await performDependabotUpdatesAsync(
+    const updateResult = await performDependabotUpdatesAsync(
       taskInputs,
       dependabotConfig,
       dependabotConfig.updates,
@@ -135,7 +136,74 @@ describe('performDependabotUpdatesAsync', () => {
       existingPullRequests,
     );
 
-    expect(failedUpdates).toBe(0);
+    expect(updateResult).toBe(TaskResult.Succeeded);
     expect(DependabotJobBuilder.updatePullRequestJob).toHaveBeenCalled();
+  });
+
+  it('should return Succeeded when all updates are successful', async () => {
+    dependabotCli.update = jest
+      .fn()
+      .mockResolvedValue([{ success: true, output: {} }] as IDependabotUpdateOperationResult[]);
+
+    const updateResult = await performDependabotUpdatesAsync(
+      taskInputs,
+      dependabotConfig,
+      dependabotConfig.updates,
+      dependabotCli,
+      dependabotCliUpdateOptions,
+      existingPullRequests,
+    );
+
+    expect(updateResult).toBe(TaskResult.Succeeded);
+  });
+
+  it('should return SucceededWithIssues result when updates are mixture of success and failure', async () => {
+    dependabotCli.update = jest.fn().mockResolvedValue([
+      { success: true, output: {} },
+      { success: false, output: {} },
+    ] as IDependabotUpdateOperationResult[]);
+
+    const updateResult = await performDependabotUpdatesAsync(
+      taskInputs,
+      dependabotConfig,
+      dependabotConfig.updates,
+      dependabotCli,
+      dependabotCliUpdateOptions,
+      existingPullRequests,
+    );
+
+    expect(updateResult).toBe(TaskResult.SucceededWithIssues);
+  });
+
+  it('should return Failed result when all updates are failure', async () => {
+    dependabotCli.update = jest
+      .fn()
+      .mockResolvedValue([{ success: false, output: {} }] as IDependabotUpdateOperationResult[]);
+
+    const updateResult = await performDependabotUpdatesAsync(
+      taskInputs,
+      dependabotConfig,
+      dependabotConfig.updates,
+      dependabotCli,
+      dependabotCliUpdateOptions,
+      existingPullRequests,
+    );
+
+    expect(updateResult).toBe(TaskResult.Failed);
+  });
+
+  it('should return Skipped result when no updates are performed', async () => {
+    dependabotCli.update = jest.fn().mockResolvedValue([]);
+
+    const updateResult = await performDependabotUpdatesAsync(
+      taskInputs,
+      dependabotConfig,
+      dependabotConfig.updates,
+      dependabotCli,
+      dependabotCliUpdateOptions,
+      existingPullRequests,
+    );
+
+    expect(updateResult).toBe(TaskResult.Skipped);
   });
 });
