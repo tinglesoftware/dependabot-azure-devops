@@ -10,23 +10,26 @@ import { getBranchNameForUpdate } from './branch-name';
 import { IDependabotUpdateOperation } from './models';
 
 export const DependabotDependenciesSchema = z.object({
-  'dependencies': z.array(
-    z.object({
-      name: z.string(), // e.g. 'django' or 'GraphQL.Server.Ui.Voyager'
-      requirements: z.array(
-        z.object({
-          file: z.string(), // e.g. 'requirements.txt' or '/Root.csproj'
-          groups: z.array(z.string()), // e.g. ['dependencies']
-          requirement: z.string(), // e.g. '==3.2.0' or '8.1.0'
-          // others keys like 'source' are not clear on format/type
-        }),
-      ),
-      version: z.string(), // e.g. '5.0.1' or '8.1.0'
-    }),
-  ),
-  'dependency_files': z.array(z.string()), // e.g. ['/requirements.txt'] or ['/Root.csproj']
-  // TODO: consider changing to date
-  'last-updated': z.string().optional(), // e.g. '2021-09-01T00:00:00Z'
+  dependencies: z
+    .array(
+      z.object({
+        name: z.string(), // e.g. 'django' or 'GraphQL.Server.Ui.Voyager'
+        requirements: z
+          .array(
+            z.object({
+              file: z.string(), // e.g. 'requirements.txt' or '/Root.csproj'
+              groups: z.array(z.string()).optional(), // e.g. ['dependencies']
+              requirement: z.string().optional(), // e.g. '==3.2.0' or '8.1.0'
+              // others keys like 'source' are not clear on format/type
+            }),
+          )
+          .optional(),
+        version: z.string().optional(), // e.g. '5.0.1' or '8.1.0'
+      }),
+    )
+    .optional(),
+  dependency_files: z.array(z.string()), // e.g. ['/requirements.txt'] or ['/Root.csproj']
+  last_updated: z.date({ coerce: true }).optional(), // e.g. '2021-09-01T00:00:00Z'
 });
 export type DependabotDependencies = z.infer<typeof DependabotDependenciesSchema>;
 
