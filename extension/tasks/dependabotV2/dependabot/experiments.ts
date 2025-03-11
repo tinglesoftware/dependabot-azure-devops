@@ -13,11 +13,7 @@ export const DEFAULT_EXPERIMENTS: Record<string, string | boolean> = {
   'enable-file-parser-python-local': true,
   'npm-fallback-version-above-v6': true,
   'lead-security-dependency': true,
-  // NOTE: 'enable-record-ecosystem-meta' is not currently implemented in Dependabot-CLI.
-  //       This experiment is primarily for GitHub analytics and doesn't add much value in the DevOps implementation.
-  //       See: https://github.com/dependabot/dependabot-core/pull/10905
-  // TODO: Revisit this if/when Dependabot-CLI supports it.
-  //'enable-record-ecosystem-meta': true,
+  'enable-record-ecosystem-meta': true,
   'enable-shared-helpers-command-timeout': true,
   'enable-engine-version-detection': true,
   'avoid-duplicate-updates-package-json': true,

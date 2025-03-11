@@ -287,6 +287,10 @@ export class DependabotOutputProcessor {
         // No action required
         return true;
 
+      case 'record_ecosystem_meta':
+        // No action required
+        return true;
+
       case 'record_update_job_error':
         error(`Update job error: ${data['error-type']} ${JSON.stringify(data['error-details'])}`);
         return false;
