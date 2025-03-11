@@ -168,6 +168,8 @@ export class DependabotCli {
             } catch (e) {
               operationResult.success = false;
               operationResult.error = e;
+              error(`An unhandled exception occurred while processing '${type}': ${e}`);
+              console.debug(e); // Dump the stack trace to help with debugging
             } finally {
               operationResults.push(operationResult);
             }
