@@ -2,7 +2,8 @@ import { jest } from '@jest/globals';
 
 import { VersionControlChangeType } from 'azure-devops-node-api/interfaces/TfvcInterfaces';
 
-import { AzureDevOpsWebApiClient } from '../azure-devops/client';
+import { IHttpClientResponse } from 'typed-rest-client/Interfaces';
+import { AzureDevOpsWebApiClient, sendRestApiRequestWithRetry } from '../azure-devops/client';
 import { ICreatePullRequest } from './models';
 import exp = require('constants');
 
@@ -88,5 +89,53 @@ describe('AzureDevOpsWebApiClient', () => {
       expect((mockRestApiPost.mock.calls[1] as any)[1].reviewers).toContainEqual({ id: 'user3' });
       expect(pullRequestId).toBe(1);
     });
+  });
+});
+
+describe('sendRestApiRequestWithRetry', () => {
+  let mockRequestAsync: jest.MockedFunction<() => Promise<IHttpClientResponse>>;
+  let mockResponseBody: any;
+  let mockResponse: Partial<IHttpClientResponse>;
+
+  beforeEach(() => {
+    mockRequestAsync = jest.fn();
+    mockResponseBody = {};
+    mockResponse = {
+      readBody: jest.fn(async () => JSON.stringify(mockResponseBody)),
+      message: {
+        statusCode: 200,
+        statusMessage: 'OK',
+      } as any,
+    };
+  });
+
+  it('should send a request and return the response', async () => {
+    mockRequestAsync.mockResolvedValue(mockResponse as IHttpClientResponse);
+    mockResponseBody = { hello: 'world' };
+
+    const result = await sendRestApiRequestWithRetry('GET', 'https://example.com', undefined, mockRequestAsync);
+
+    expect(mockRequestAsync).toHaveBeenCalledTimes(1);
+    expect(mockResponse.readBody).toHaveBeenCalledTimes(1);
+    expect(result).toEqual(mockResponseBody);
+  });
+
+  it('should throw an error if the response status code is not in the 2xx range', async () => {
+    mockRequestAsync.mockResolvedValue(mockResponse as IHttpClientResponse);
+    mockResponse.message.statusCode = 400;
+    mockResponse.message.statusMessage = 'Bad Request';
+
+    await expect(
+      sendRestApiRequestWithRetry('GET', 'https://example.com', undefined, mockRequestAsync),
+    ).rejects.toThrow(/400 Bad Request/i);
+  });
+
+  it('should throw an error if the response cannot be parsed as JSON', async () => {
+    mockRequestAsync.mockResolvedValue(mockResponse as IHttpClientResponse);
+    mockResponse.readBody = jest.fn(async () => 'invalid json');
+
+    await expect(
+      sendRestApiRequestWithRetry('GET', 'https://example.com', undefined, mockRequestAsync),
+    ).rejects.toThrow(/unexpected token .* in JSON/i);
   });
 });

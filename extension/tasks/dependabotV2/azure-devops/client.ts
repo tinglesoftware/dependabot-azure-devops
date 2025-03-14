@@ -577,10 +577,15 @@ export class AzureDevOpsWebApiClient {
       .map((key) => `${key}=${params[key]}`)
       .join('&');
     const fullUrl = `${url}?api-version=${apiVersion}${queryString ? `&${queryString}` : ''}`;
-    return await this.restApiRequest('GET', fullUrl, undefined, () =>
-      this.connection.rest.client.get(fullUrl, {
-        Accept: 'application/json',
-      }),
+    return await sendRestApiRequestWithRetry(
+      'GET',
+      fullUrl,
+      undefined,
+      () =>
+        this.connection.rest.client.get(fullUrl, {
+          Accept: 'application/json',
+        }),
+      this.debug,
     );
   }
 
@@ -590,10 +595,15 @@ export class AzureDevOpsWebApiClient {
     apiVersion: string = AzureDevOpsWebApiClient.API_VERSION,
   ): Promise<any | undefined> {
     const fullUrl = `${url}?api-version=${apiVersion}`;
-    return await this.restApiRequest('POST', fullUrl, data, () =>
-      this.connection.rest.client.post(fullUrl, JSON.stringify(data), {
-        'Content-Type': 'application/json',
-      }),
+    return await sendRestApiRequestWithRetry(
+      'POST',
+      fullUrl,
+      data,
+      () =>
+        this.connection.rest.client.post(fullUrl, JSON.stringify(data), {
+          'Content-Type': 'application/json',
+        }),
+      this.debug,
     );
   }
 
@@ -603,10 +613,15 @@ export class AzureDevOpsWebApiClient {
     apiVersion: string = AzureDevOpsWebApiClient.API_VERSION,
   ): Promise<any | undefined> {
     const fullUrl = `${url}?api-version=${apiVersion}`;
-    return await this.restApiRequest('PUT', fullUrl, data, () =>
-      this.connection.rest.client.put(fullUrl, JSON.stringify(data), {
-        'Content-Type': 'application/json',
-      }),
+    return await sendRestApiRequestWithRetry(
+      'PUT',
+      fullUrl,
+      data,
+      () =>
+        this.connection.rest.client.put(fullUrl, JSON.stringify(data), {
+          'Content-Type': 'application/json',
+        }),
+      this.debug,
     );
   }
 
@@ -617,48 +632,16 @@ export class AzureDevOpsWebApiClient {
     apiVersion: string = AzureDevOpsWebApiClient.API_VERSION,
   ): Promise<any | undefined> {
     const fullUrl = `${url}?api-version=${apiVersion}`;
-    return await this.restApiRequest('PATCH', fullUrl, data, () =>
-      this.connection.rest.client.patch(fullUrl, JSON.stringify(data), {
-        'Content-Type': contentType || 'application/json',
-      }),
+    return await sendRestApiRequestWithRetry(
+      'PATCH',
+      fullUrl,
+      data,
+      () =>
+        this.connection.rest.client.patch(fullUrl, JSON.stringify(data), {
+          'Content-Type': contentType || 'application/json',
+        }),
+      this.debug,
     );
-  }
-
-  private async restApiRequest(
-    method: string,
-    url: string,
-    payload: any,
-    requestAsync: () => Promise<IHttpClientResponse>,
-  ): Promise<any | undefined> {
-    // Send the request, ready the response
-    if (this.debug) debug(`🌎 🠊 [${method}] ${url}`);
-    const response = await requestAsync();
-    const body = await response.readBody();
-    if (this.debug) debug(`🌎 🠈 [${response.message.statusCode}] ${response.message.statusMessage}`);
-
-    try {
-      // Check that the request was successful
-      if (response.message.statusCode < 200 || response.message.statusCode > 299) {
-        throw new Error(
-          `HTTP ${method} '${url}' failed: ${response.message.statusCode} ${response.message.statusMessage}`,
-        );
-      }
-
-      // Parse the response
-      return JSON.parse(body);
-    } catch (e) {
-      // In debug mode, log the error, request, and response for debugging
-      if (this.debug) {
-        if (payload) {
-          debug(`REQUEST: ${JSON.stringify(payload)}`);
-        }
-        if (body) {
-          debug(`RESPONSE: ${body}`);
-        }
-      }
-
-      throw e;
-    }
   }
 }
 
@@ -699,4 +682,42 @@ function getIdentityApiUrl(organisationApiUrl: string): string {
     uri.host = 'vssps.dev.azure.com';
   }
   return uri.toString();
+}
+
+export async function sendRestApiRequestWithRetry(
+  method: string,
+  url: string,
+  payload: any,
+  requestAsync: () => Promise<IHttpClientResponse>,
+  isDebug: boolean = false,
+): Promise<any | undefined> {
+  // Send the request, ready the response
+  if (isDebug) debug(`🌎 🠊 [${method}] ${url}`);
+  const response = await requestAsync();
+  const body = await response.readBody();
+  if (isDebug) debug(`🌎 🠈 [${response.message.statusCode}] ${response.message.statusMessage}`);
+
+  try {
+    // Check that the request was successful
+    if (response.message.statusCode < 200 || response.message.statusCode > 299) {
+      throw new Error(
+        `HTTP ${method} '${url}' failed: ${response.message.statusCode} ${response.message.statusMessage}`,
+      );
+    }
+
+    // Parse the response
+    return JSON.parse(body);
+  } catch (e) {
+    // In debug mode, log the error, request, and response for debugging
+    if (isDebug) {
+      if (payload) {
+        debug(`REQUEST: ${JSON.stringify(payload)}`);
+      }
+      if (body) {
+        debug(`RESPONSE: ${body}`);
+      }
+    }
+
+    throw e;
+  }
 }
