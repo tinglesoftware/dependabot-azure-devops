@@ -1,0 +1,20 @@
+{
+  "data": {
+    "dependencies": [
+      {
+        "name": "requests",
+        "requirements": [
+          {
+            "file": "pyproject.toml",
+            "groups": ["dependencies"],
+            "requirement": "^2.31.0",
+            "source": null
+          }
+        ],
+        "version": null
+      }
+    ],
+    "dependency_files": ["/pyproject.toml"]
+  },
+  "type": "update_dependency_list"
+}
