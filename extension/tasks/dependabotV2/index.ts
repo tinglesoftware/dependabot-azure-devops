@@ -180,7 +180,9 @@ export async function abandonPullRequestsWhereSourceRefIsDeleted(
   }
   for (const pullRequestId in existingPullRequests) {
     const pullRequest = existingPullRequests[pullRequestId];
-    const pullRequestSourceRefName = pullRequest.properties[DEVOPS_PR_PROPERTY_MICROSOFT_GIT_SOURCE_REF_NAME];
+    const pullRequestSourceRefName = pullRequest.properties.find(
+      (x) => x.name === DEVOPS_PR_PROPERTY_MICROSOFT_GIT_SOURCE_REF_NAME,
+    )?.value;
     if (pullRequestSourceRefName && !existingBranchNames.includes(pullRequestSourceRefName)) {
       warning(`Detected source branch for PR #${pullRequest.id} has been deleted; The pull request will be abandoned`);
       await devOpsPrAuthorClient.abandonPullRequest({
