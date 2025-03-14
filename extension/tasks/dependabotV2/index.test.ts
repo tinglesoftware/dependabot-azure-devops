@@ -1,20 +1,109 @@
 import { TaskResult } from 'azure-pipelines-task-lib';
-import { IPullRequestProperties } from './azure-devops/models';
+import { AzureDevOpsWebApiClient } from './azure-devops/client';
+import {
+  DEVOPS_PR_PROPERTY_DEPENDABOT_DEPENDENCIES,
+  DEVOPS_PR_PROPERTY_DEPENDABOT_PACKAGE_MANAGER,
+  DEVOPS_PR_PROPERTY_MICROSOFT_GIT_SOURCE_REF_NAME,
+  IPullRequestProperties,
+} from './azure-devops/models';
 import { DependabotCli } from './dependabot/cli';
 import { IDependabotConfig } from './dependabot/config';
 import { DependabotJobBuilder } from './dependabot/job-builder';
 import { IDependabotUpdateOperationResult } from './dependabot/models';
-import { DependabotOutputProcessor } from './dependabot/output-processor';
 import { GitHubGraphClient } from './github';
-import { performDependabotUpdatesAsync } from './index';
+import { abandonPullRequestsWhereSourceRefIsDeleted, performDependabotUpdatesAsync } from './index';
 import { ISharedVariables } from './utils/shared-variables';
 
+jest.mock('./azure-devops/client');
 jest.mock('./dependabot/cli');
 jest.mock('./dependabot/job-builder');
 jest.mock('./github');
 
 const tsDependabotJobBuilder = require('./dependabot/job-builder');
 const tsDependabotOutputProcessor = require('./dependabot/output-processor');
+
+describe('abandonPullRequestsWhereSourceRefIsDeleted', () => {
+  let taskInputs: ISharedVariables;
+  let devOpsPrAuthorClient: AzureDevOpsWebApiClient;
+  let existingBranchNames: string[];
+  let existingPullRequests: IPullRequestProperties[];
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    taskInputs = {} as ISharedVariables;
+    devOpsPrAuthorClient = new AzureDevOpsWebApiClient('https://dev.azure.com/test-org', 'fake-token', true);
+  });
+
+  it('should abandon pull requests where the source branch has been deleted', async () => {
+    devOpsPrAuthorClient.abandonPullRequest = jest.fn().mockResolvedValue(true);
+    existingBranchNames = [];
+    existingPullRequests = [
+      {
+        id: 1,
+        properties: [
+          {
+            name: DEVOPS_PR_PROPERTY_MICROSOFT_GIT_SOURCE_REF_NAME,
+            value: 'dependabot/nuget/dependency1-1.0.0',
+          },
+        ],
+      },
+    ];
+
+    await abandonPullRequestsWhereSourceRefIsDeleted(
+      taskInputs,
+      devOpsPrAuthorClient,
+      existingBranchNames,
+      existingPullRequests,
+    );
+
+    expect(devOpsPrAuthorClient.abandonPullRequest).toHaveBeenCalledWith({
+      pullRequestId: 1,
+    });
+  });
+
+  it('should not abandon pull requests where the source branch still exists', async () => {
+    devOpsPrAuthorClient.abandonPullRequest = jest.fn().mockResolvedValue(undefined);
+    existingBranchNames = ['dependabot/nuget/dependency1-1.0.0'];
+    existingPullRequests = [
+      {
+        id: 1,
+        properties: [
+          {
+            name: DEVOPS_PR_PROPERTY_MICROSOFT_GIT_SOURCE_REF_NAME,
+            value: 'dependabot/nuget/dependency1-1.0.0',
+          },
+        ],
+      },
+    ];
+
+    await abandonPullRequestsWhereSourceRefIsDeleted(
+      taskInputs,
+      devOpsPrAuthorClient,
+      existingBranchNames,
+      existingPullRequests,
+    );
+
+    expect(devOpsPrAuthorClient.abandonPullRequest).not.toHaveBeenCalled();
+  });
+
+  it('should not abandon any pull requests if existingBranchNames is undefined or null', async () => {
+    devOpsPrAuthorClient.abandonPullRequest = jest.fn().mockResolvedValue(undefined);
+
+    await abandonPullRequestsWhereSourceRefIsDeleted(taskInputs, devOpsPrAuthorClient, undefined, existingPullRequests);
+    await abandonPullRequestsWhereSourceRefIsDeleted(taskInputs, devOpsPrAuthorClient, null, existingPullRequests);
+
+    expect(devOpsPrAuthorClient.abandonPullRequest).not.toHaveBeenCalled();
+  });
+
+  it('should not abandon any pull requests if existingPullRequests is undefined or null', async () => {
+    devOpsPrAuthorClient.abandonPullRequest = jest.fn().mockResolvedValue(undefined);
+
+    await abandonPullRequestsWhereSourceRefIsDeleted(taskInputs, devOpsPrAuthorClient, existingBranchNames, undefined);
+    await abandonPullRequestsWhereSourceRefIsDeleted(taskInputs, devOpsPrAuthorClient, existingBranchNames, null);
+
+    expect(devOpsPrAuthorClient.abandonPullRequest).not.toHaveBeenCalled();
+  });
+});
 
 describe('performDependabotUpdatesAsync', () => {
   let taskInputs: ISharedVariables;
@@ -66,11 +155,11 @@ describe('performDependabotUpdatesAsync', () => {
       id: 1,
       properties: [
         {
-          name: DependabotOutputProcessor.PR_PROPERTY_NAME_PACKAGE_MANAGER,
+          name: DEVOPS_PR_PROPERTY_DEPENDABOT_PACKAGE_MANAGER,
           value: 'npm_and_yarn',
         },
         {
-          name: DependabotOutputProcessor.PR_PROPERTY_NAME_DEPENDENCIES,
+          name: DEVOPS_PR_PROPERTY_DEPENDABOT_DEPENDENCIES,
           value: JSON.stringify([{ 'dependency-name': 'dependency1' }]),
         },
       ],
@@ -115,11 +204,11 @@ describe('performDependabotUpdatesAsync', () => {
       id: 1,
       properties: [
         {
-          name: DependabotOutputProcessor.PR_PROPERTY_NAME_PACKAGE_MANAGER,
+          name: DEVOPS_PR_PROPERTY_DEPENDABOT_PACKAGE_MANAGER,
           value: 'npm_and_yarn',
         },
         {
-          name: DependabotOutputProcessor.PR_PROPERTY_NAME_DEPENDENCIES,
+          name: DEVOPS_PR_PROPERTY_DEPENDABOT_DEPENDENCIES,
           value: JSON.stringify([{ 'dependency-name': 'dependency1' }]),
         },
       ],

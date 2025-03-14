@@ -1,7 +1,11 @@
 import { error, warning } from 'azure-pipelines-task-lib/task';
 import * as fs from 'fs';
 import { AzureDevOpsWebApiClient } from '../azure-devops/client';
-import { IPullRequestProperties } from '../azure-devops/models';
+import {
+  DEVOPS_PR_PROPERTY_DEPENDABOT_DEPENDENCIES,
+  DEVOPS_PR_PROPERTY_DEPENDABOT_PACKAGE_MANAGER,
+  IPullRequestProperties,
+} from '../azure-devops/models';
 import { ISharedVariables } from '../utils/shared-variables';
 import { IDependabotUpdate } from './config';
 import { IDependabotUpdateOperation } from './models';
@@ -134,9 +138,9 @@ describe('DependabotOutputProcessor', () => {
       existingPullRequests.push({
         id: 1,
         properties: [
-          { name: DependabotOutputProcessor.PR_PROPERTY_NAME_PACKAGE_MANAGER, value: 'npm' },
+          { name: DEVOPS_PR_PROPERTY_DEPENDABOT_PACKAGE_MANAGER, value: 'npm' },
           {
-            name: DependabotOutputProcessor.PR_PROPERTY_NAME_DEPENDENCIES,
+            name: DEVOPS_PR_PROPERTY_DEPENDABOT_DEPENDENCIES,
             value: JSON.stringify([{ 'dependency-name': 'dependency1' }]),
           },
         ],
@@ -182,9 +186,9 @@ describe('DependabotOutputProcessor', () => {
       existingPullRequests.push({
         id: 1,
         properties: [
-          { name: DependabotOutputProcessor.PR_PROPERTY_NAME_PACKAGE_MANAGER, value: 'npm' },
+          { name: DEVOPS_PR_PROPERTY_DEPENDABOT_PACKAGE_MANAGER, value: 'npm' },
           {
-            name: DependabotOutputProcessor.PR_PROPERTY_NAME_DEPENDENCIES,
+            name: DEVOPS_PR_PROPERTY_DEPENDABOT_DEPENDENCIES,
             value: JSON.stringify([{ 'dependency-name': 'dependency1' }]),
           },
         ],
