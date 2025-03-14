@@ -18,18 +18,18 @@ export const DependabotDependenciesSchema = z.object({
           .array(
             z.object({
               file: z.string(), // e.g. 'requirements.txt' or '/Root.csproj'
-              groups: z.array(z.string()).optional(), // e.g. ['dependencies']
-              requirement: z.string().optional(), // e.g. '==3.2.0' or '8.1.0'
+              groups: z.array(z.string()).nullish(), // e.g. ['dependencies']
+              requirement: z.string().nullish(), // e.g. '==3.2.0' or '8.1.0'
               // others keys like 'source' are not clear on format/type
             }),
           )
-          .optional(),
-        version: z.string().optional(), // e.g. '5.0.1' or '8.1.0'
+          .nullish(),
+        version: z.string().nullish(), // e.g. '5.0.1' or '8.1.0'
       }),
     )
-    .optional(),
+    .nullish(),
   dependency_files: z.array(z.string()), // e.g. ['/requirements.txt'] or ['/Root.csproj']
-  last_updated: z.date({ coerce: true }).optional(), // e.g. '2021-09-01T00:00:00Z'
+  last_updated: z.date({ coerce: true }).nullish(), // e.g. '2021-09-01T00:00:00Z'
 });
 export type DependabotDependencies = z.infer<typeof DependabotDependenciesSchema>;
 

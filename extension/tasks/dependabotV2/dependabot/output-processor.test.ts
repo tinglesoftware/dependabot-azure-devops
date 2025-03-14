@@ -239,8 +239,8 @@ describe('DependabotOutputProcessor', () => {
   });
 
   describe('schema', () => {
-    it('works for a result from pip', () => {
-      const raw = JSON.parse(fs.readFileSync('tests/update_dependency_list/pip.json', 'utf-8'));
+    it('works for a result from python pip', () => {
+      const raw = JSON.parse(fs.readFileSync('tests/update_dependency_list/python-pip.json', 'utf-8'));
       const data = DependabotDependenciesSchema.parse(raw['data']);
 
       expect(data['dependency_files']).toEqual(['/requirements.txt']);
@@ -251,6 +251,21 @@ describe('DependabotOutputProcessor', () => {
       expect(data['dependencies'][0].requirements.length).toEqual(1);
       expect(data['dependencies'][0].requirements[0].file).toEqual('requirements.txt');
       expect(data['dependencies'][0].requirements[0].requirement).toEqual('==3.7.2');
+      expect(data['dependencies'][0].requirements[0].groups).toEqual(['dependencies']);
+    });
+
+    it('works for a result from python poetry', () => {
+      const raw = JSON.parse(fs.readFileSync('tests/update_dependency_list/python-poetry.json', 'utf-8'));
+      const data = DependabotDependenciesSchema.parse(raw['data']);
+
+      expect(data['dependency_files']).toEqual(['/pyproject.toml']);
+      expect(data['dependencies'].length).toEqual(1);
+
+      expect(data['dependencies'][0].name).toEqual('requests');
+      expect(data['dependencies'][0].version).toBeNull();
+      expect(data['dependencies'][0].requirements.length).toEqual(1);
+      expect(data['dependencies'][0].requirements[0].file).toEqual('pyproject.toml');
+      expect(data['dependencies'][0].requirements[0].requirement).toEqual('^2.31.0');
       expect(data['dependencies'][0].requirements[0].groups).toEqual(['dependencies']);
     });
 
