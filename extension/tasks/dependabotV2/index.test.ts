@@ -36,7 +36,7 @@ describe('abandonPullRequestsWhereSourceRefIsDeleted', () => {
 
   it('should abandon pull requests where the source branch has been deleted', async () => {
     devOpsPrAuthorClient.abandonPullRequest = jest.fn().mockResolvedValue(true);
-    existingBranchNames = ['main', 'develop'];
+    existingBranchNames = [];
     existingPullRequests = [
       {
         id: 1,
@@ -62,8 +62,8 @@ describe('abandonPullRequestsWhereSourceRefIsDeleted', () => {
   });
 
   it('should not abandon pull requests where the source branch still exists', async () => {
-    devOpsPrAuthorClient.abandonPullRequest = jest.fn().mockResolvedValue(false);
-    existingBranchNames = ['main', 'develop', 'dependabot/nuget/dependency1-1.0.0'];
+    devOpsPrAuthorClient.abandonPullRequest = jest.fn().mockResolvedValue(undefined);
+    existingBranchNames = ['dependabot/nuget/dependency1-1.0.0'];
     existingPullRequests = [
       {
         id: 1,
@@ -86,18 +86,20 @@ describe('abandonPullRequestsWhereSourceRefIsDeleted', () => {
     expect(devOpsPrAuthorClient.abandonPullRequest).not.toHaveBeenCalled();
   });
 
-  it('should not abandon any pull requests if existingBranchNames is undefined', async () => {
+  it('should not abandon any pull requests if existingBranchNames is undefined or null', async () => {
     devOpsPrAuthorClient.abandonPullRequest = jest.fn().mockResolvedValue(undefined);
 
     await abandonPullRequestsWhereSourceRefIsDeleted(taskInputs, devOpsPrAuthorClient, undefined, existingPullRequests);
+    await abandonPullRequestsWhereSourceRefIsDeleted(taskInputs, devOpsPrAuthorClient, null, existingPullRequests);
 
     expect(devOpsPrAuthorClient.abandonPullRequest).not.toHaveBeenCalled();
   });
 
-  it('should not abandon any pull requests if existingPullRequests is undefined', async () => {
+  it('should not abandon any pull requests if existingPullRequests is undefined or null', async () => {
     devOpsPrAuthorClient.abandonPullRequest = jest.fn().mockResolvedValue(undefined);
 
     await abandonPullRequestsWhereSourceRefIsDeleted(taskInputs, devOpsPrAuthorClient, existingBranchNames, undefined);
+    await abandonPullRequestsWhereSourceRefIsDeleted(taskInputs, devOpsPrAuthorClient, existingBranchNames, null);
 
     expect(devOpsPrAuthorClient.abandonPullRequest).not.toHaveBeenCalled();
   });
