@@ -2,6 +2,14 @@ import { GitPullRequestMergeStrategy } from 'azure-devops-node-api/interfaces/Gi
 import { VersionControlChangeType } from 'azure-devops-node-api/interfaces/TfvcInterfaces';
 
 /**
+ * Pull request property names used to store metadata about the pull request.
+ * https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-properties
+ */
+export const DEVOPS_PR_PROPERTY_MICROSOFT_GIT_SOURCE_REF_NAME = 'Microsoft.Git.PullRequest.SourceRefName';
+export const DEVOPS_PR_PROPERTY_DEPENDABOT_PACKAGE_MANAGER = 'Dependabot.PackageManager';
+export const DEVOPS_PR_PROPERTY_DEPENDABOT_DEPENDENCIES = 'Dependabot.Dependencies';
+
+/**
  * File change
  */
 export interface IFileChange {
@@ -91,6 +99,6 @@ export interface IAbandonPullRequest {
   project: string;
   repository: string;
   pullRequestId: number;
-  comment: string;
-  deleteSourceBranch: boolean;
+  comment?: string;
+  deleteSourceBranch?: boolean;
 }

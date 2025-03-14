@@ -1,10 +1,13 @@
 import { TaskResult } from 'azure-pipelines-task-lib';
-import { IPullRequestProperties } from './azure-devops/models';
+import {
+  DEVOPS_PR_PROPERTY_DEPENDABOT_DEPENDENCIES,
+  DEVOPS_PR_PROPERTY_DEPENDABOT_PACKAGE_MANAGER,
+  IPullRequestProperties,
+} from './azure-devops/models';
 import { DependabotCli } from './dependabot/cli';
 import { IDependabotConfig } from './dependabot/config';
 import { DependabotJobBuilder } from './dependabot/job-builder';
 import { IDependabotUpdateOperationResult } from './dependabot/models';
-import { DependabotOutputProcessor } from './dependabot/output-processor';
 import { GitHubGraphClient } from './github';
 import { performDependabotUpdatesAsync } from './index';
 import { ISharedVariables } from './utils/shared-variables';
@@ -66,11 +69,11 @@ describe('performDependabotUpdatesAsync', () => {
       id: 1,
       properties: [
         {
-          name: DependabotOutputProcessor.PR_PROPERTY_NAME_PACKAGE_MANAGER,
+          name: DEVOPS_PR_PROPERTY_DEPENDABOT_PACKAGE_MANAGER,
           value: 'npm_and_yarn',
         },
         {
-          name: DependabotOutputProcessor.PR_PROPERTY_NAME_DEPENDENCIES,
+          name: DEVOPS_PR_PROPERTY_DEPENDABOT_DEPENDENCIES,
           value: JSON.stringify([{ 'dependency-name': 'dependency1' }]),
         },
       ],
@@ -115,11 +118,11 @@ describe('performDependabotUpdatesAsync', () => {
       id: 1,
       properties: [
         {
-          name: DependabotOutputProcessor.PR_PROPERTY_NAME_PACKAGE_MANAGER,
+          name: DEVOPS_PR_PROPERTY_DEPENDABOT_PACKAGE_MANAGER,
           value: 'npm_and_yarn',
         },
         {
-          name: DependabotOutputProcessor.PR_PROPERTY_NAME_DEPENDENCIES,
+          name: DEVOPS_PR_PROPERTY_DEPENDABOT_DEPENDENCIES,
           value: JSON.stringify([{ 'dependency-name': 'dependency1' }]),
         },
       ],

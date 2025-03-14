@@ -1,7 +1,7 @@
 import { debug, error, setResult, TaskResult, warning, which } from 'azure-pipelines-task-lib/task';
 import { AzureDevOpsWebApiClient } from './azure-devops/client';
 import { section, setSecrets } from './azure-devops/formatting';
-import { IPullRequestProperties } from './azure-devops/models';
+import { DEVOPS_PR_PROPERTY_MICROSOFT_GIT_SOURCE_REF_NAME, IPullRequestProperties } from './azure-devops/models';
 import { DependabotCli } from './dependabot/cli';
 import { IDependabotConfig, IDependabotUpdate, parseConfigFile } from './dependabot/config';
 import { DependabotJobBuilder, mapPackageEcosystemToPackageManager } from './dependabot/job-builder';
@@ -123,6 +123,14 @@ async function run() {
       dependabotUpdatesToPerform = dependabotConfig.updates;
     }
 
+    // Abandon all pull requests where the source branch has been deleted
+    await abandonPullRequestsWhereSourceRefIsDeleted(
+      taskInputs,
+      devOpsPrAuthorClient,
+      existingBranchNames,
+      existingPullRequests,
+    );
+
     // Perform updates for each of the [targeted] update blocks in dependabot.yaml
     const taskResult = await performDependabotUpdatesAsync(
       taskInputs,
@@ -151,6 +159,42 @@ async function run() {
     exception(e);
   } finally {
     dependabotCli?.cleanup();
+  }
+}
+
+/**
+ * Abandon all pull requests where the source branch has been deleted.
+ * @param taskInputs The shared task inputs.
+ * @param devOpsPrAuthorClient The Azure DevOps API client for authoring pull requests.
+ * @param existingBranchNames The names of the existing branches.
+ * @param existingPullRequests The existing pull requests.
+ */
+export async function abandonPullRequestsWhereSourceRefIsDeleted(
+  taskInputs: ISharedVariables,
+  devOpsPrAuthorClient: AzureDevOpsWebApiClient,
+  existingBranchNames: string[],
+  existingPullRequests: IPullRequestProperties[],
+): Promise<void> {
+  if (!existingBranchNames || !existingPullRequests) {
+    return;
+  }
+  for (const pullRequestId in existingPullRequests) {
+    const pullRequest = existingPullRequests[pullRequestId];
+    const pullRequestSourceRefName = pullRequest.properties[DEVOPS_PR_PROPERTY_MICROSOFT_GIT_SOURCE_REF_NAME];
+    if (pullRequestSourceRefName && !existingBranchNames.includes(pullRequestSourceRefName)) {
+      warning(`Detected source branch for PR #${pullRequest.id} has been deleted; The pull request will be abandoned`);
+      await devOpsPrAuthorClient.abandonPullRequest({
+        project: taskInputs.project,
+        repository: taskInputs.repository,
+        pullRequestId: pullRequest.id,
+        comment: taskInputs.commentPullRequests
+          ? "OK, I won't notify you again about this release, but will get in touch when a new version is available. " +
+            "If you'd rather skip all updates until the next major or minor version, add an " +
+            '[ignore condition](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#ignore--) ' +
+            'with the desired `update-types` to your config file.'
+          : undefined,
+      });
+    }
   }
 }
 

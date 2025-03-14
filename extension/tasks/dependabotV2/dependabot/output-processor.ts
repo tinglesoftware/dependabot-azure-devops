@@ -4,7 +4,12 @@ import * as path from 'path';
 import { z } from 'zod';
 import { AzureDevOpsWebApiClient } from '../azure-devops/client';
 import { section } from '../azure-devops/formatting';
-import { IFileChange, IPullRequestProperties } from '../azure-devops/models';
+import {
+  DEVOPS_PR_PROPERTY_DEPENDABOT_DEPENDENCIES,
+  DEVOPS_PR_PROPERTY_DEPENDABOT_PACKAGE_MANAGER,
+  IFileChange,
+  IPullRequestProperties,
+} from '../azure-devops/models';
 import { ISharedVariables } from '../utils/shared-variables';
 import { getBranchNameForUpdate } from './branch-name';
 import { IDependabotUpdateOperation } from './models';
@@ -44,11 +49,6 @@ export class DependabotOutputProcessor {
   private readonly createdPullRequestIds: number[];
   private readonly taskInputs: ISharedVariables;
   private readonly debug: boolean;
-
-  // Custom properties used to store dependabot metadata in pull requests.
-  // https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-properties
-  public static PR_PROPERTY_NAME_PACKAGE_MANAGER = 'Dependabot.PackageManager';
-  public static PR_PROPERTY_NAME_DEPENDENCIES = 'Dependabot.Dependencies';
 
   public static PR_DEFAULT_AUTHOR_EMAIL = 'noreply@github.com';
   public static PR_DEFAULT_AUTHOR_NAME = 'dependabot[bot]';
@@ -312,11 +312,11 @@ export class DependabotOutputProcessor {
     return this.existingPullRequests.find((pr) => {
       return (
         pr.properties.find(
-          (p) => p.name === DependabotOutputProcessor.PR_PROPERTY_NAME_PACKAGE_MANAGER && p.value === packageManager,
+          (p) => p.name === DEVOPS_PR_PROPERTY_DEPENDABOT_PACKAGE_MANAGER && p.value === packageManager,
         ) &&
         pr.properties.find(
           (p) =>
-            p.name === DependabotOutputProcessor.PR_PROPERTY_NAME_DEPENDENCIES &&
+            p.name === DEVOPS_PR_PROPERTY_DEPENDABOT_DEPENDENCIES &&
             areEqual(getDependencyNames(JSON.parse(p.value)), dependencyNames),
         )
       );
@@ -327,11 +327,11 @@ export class DependabotOutputProcessor {
 export function buildPullRequestProperties(packageManager: string, dependencies: any): any[] {
   return [
     {
-      name: DependabotOutputProcessor.PR_PROPERTY_NAME_PACKAGE_MANAGER,
+      name: DEVOPS_PR_PROPERTY_DEPENDABOT_PACKAGE_MANAGER,
       value: packageManager,
     },
     {
-      name: DependabotOutputProcessor.PR_PROPERTY_NAME_DEPENDENCIES,
+      name: DEVOPS_PR_PROPERTY_DEPENDABOT_DEPENDENCIES,
       value: JSON.stringify(dependencies),
     },
   ];
@@ -346,16 +346,14 @@ export function parsePullRequestProperties(
       .filter((pr) => {
         return pr.properties.find(
           (p) =>
-            p.name === DependabotOutputProcessor.PR_PROPERTY_NAME_PACKAGE_MANAGER &&
+            p.name === DEVOPS_PR_PROPERTY_DEPENDABOT_PACKAGE_MANAGER &&
             (packageManager === null || p.value === packageManager),
         );
       })
       .map((pr) => {
         return [
           pr.id,
-          JSON.parse(
-            pr.properties.find((p) => p.name === DependabotOutputProcessor.PR_PROPERTY_NAME_DEPENDENCIES)?.value,
-          ),
+          JSON.parse(pr.properties.find((p) => p.name === DEVOPS_PR_PROPERTY_DEPENDABOT_DEPENDENCIES)?.value),
         ];
       }),
   );
