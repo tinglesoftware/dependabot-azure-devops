@@ -178,8 +178,8 @@ export async function abandonPullRequestsWhereSourceRefIsDeleted(
   if (!existingBranchNames || !existingPullRequests) {
     return;
   }
-  for (const pullRequestId in existingPullRequests) {
-    const pullRequest = existingPullRequests[pullRequestId];
+  for (const pullRequestIndex in existingPullRequests) {
+    const pullRequest = existingPullRequests[pullRequestIndex];
     const pullRequestSourceRefName = normalizeBranchName(
       pullRequest.properties.find((x) => x.name === DEVOPS_PR_PROPERTY_MICROSOFT_GIT_SOURCE_REF_NAME)?.value,
     );
