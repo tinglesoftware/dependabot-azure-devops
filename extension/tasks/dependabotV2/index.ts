@@ -184,22 +184,26 @@ export async function abandonPullRequestsWhereSourceRefIsDeleted(
       pullRequest.properties.find((x) => x.name === DEVOPS_PR_PROPERTY_MICROSOFT_GIT_SOURCE_REF_NAME)?.value,
     );
     if (pullRequestSourceRefName && !existingBranchNames.includes(pullRequestSourceRefName)) {
-      warning(`Detected source branch for PR #${pullRequest.id} has been deleted; The pull request will be abandoned`);
-      const prWasAbandoned = await devOpsPrAuthorClient.abandonPullRequest({
-        project: taskInputs.project,
-        repository: taskInputs.repository,
-        pullRequestId: pullRequest.id,
-        comment: taskInputs.commentPullRequests
-          ? "OK, I won't notify you again about this release, but will get in touch when a new version is available. " +
-            "If you'd rather skip all updates until the next major or minor version, add an " +
-            '[`ignore` condition](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#ignore--) ' +
-            'with the desired `update-types` to your config file.'
-          : undefined,
-      });
-      if (prWasAbandoned) {
-        // Remove the pull request from the list of existing pull requests to ensures that we don't attempt to update it later in the process.
-        existingPullRequests.splice(existingPullRequests.indexOf(pullRequest), 1);
+      // The source branch for the pull request has been deleted; abandon the pull request (if configured to do so)
+      if (taskInputs.abandonUnwantedPullRequests) {
+        warning(
+          `Detected source branch for PR #${pullRequest.id} has been deleted; The pull request will be abandoned`,
+        );
+        const prWasAbandoned = await devOpsPrAuthorClient.abandonPullRequest({
+          project: taskInputs.project,
+          repository: taskInputs.repository,
+          pullRequestId: pullRequest.id,
+          comment: taskInputs.commentPullRequests
+            ? "OK, I won't notify you again about this release, but will get in touch when a new version is available. " +
+              "If you'd rather skip all updates until the next major or minor version, add an " +
+              '[`ignore` condition](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#ignore--) ' +
+              'with the desired `update-types` to your config file.'
+            : undefined,
+        });
       }
+
+      // Remove the pull request from the list of existing pull requests to ensures that we don't attempt to update it later in the process.
+      existingPullRequests.splice(existingPullRequests.indexOf(pullRequest), 1);
     }
   }
 }

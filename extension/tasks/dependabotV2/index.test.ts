@@ -30,8 +30,36 @@ describe('abandonPullRequestsWhereSourceRefIsDeleted', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    taskInputs = {} as ISharedVariables;
+    taskInputs = {
+      abandonUnwantedPullRequests: true,
+    } as ISharedVariables;
     devOpsPrAuthorClient = new AzureDevOpsWebApiClient('https://dev.azure.com/test-org', 'fake-token', true);
+  });
+
+  it('should not abandon pull requests when `abandonUnwantedPullRequests` is false', async () => {
+    taskInputs.abandonUnwantedPullRequests = false;
+    devOpsPrAuthorClient.abandonPullRequest = jest.fn().mockResolvedValue(true);
+    existingBranchNames = [];
+    existingPullRequests = [
+      {
+        id: 1,
+        properties: [
+          {
+            name: DEVOPS_PR_PROPERTY_MICROSOFT_GIT_SOURCE_REF_NAME,
+            value: 'dependabot/nuget/dependency1-1.0.0',
+          },
+        ],
+      },
+    ];
+
+    await abandonPullRequestsWhereSourceRefIsDeleted(
+      taskInputs,
+      devOpsPrAuthorClient,
+      existingBranchNames,
+      existingPullRequests,
+    );
+
+    expect(devOpsPrAuthorClient.abandonPullRequest).not.toHaveBeenCalled();
   });
 
   it('should abandon pull requests where the source branch has been deleted', async () => {
@@ -113,18 +141,17 @@ describe('abandonPullRequestsWhereSourceRefIsDeleted', () => {
 
   it('should remove the pull request from the existing pull requests list after abandoning it', async () => {
     devOpsPrAuthorClient.abandonPullRequest = jest.fn().mockResolvedValue(true);
+    const pullRequestToBeAbandoned = {
+      id: 1,
+      properties: [
+        {
+          name: DEVOPS_PR_PROPERTY_MICROSOFT_GIT_SOURCE_REF_NAME,
+          value: 'dependabot/nuget/dependency1-1.0.0',
+        },
+      ],
+    };
     existingBranchNames = [];
-    existingPullRequests = [
-      {
-        id: 1,
-        properties: [
-          {
-            name: DEVOPS_PR_PROPERTY_MICROSOFT_GIT_SOURCE_REF_NAME,
-            value: 'dependabot/nuget/dependency1-1.0.0',
-          },
-        ],
-      },
-    ];
+    existingPullRequests = [pullRequestToBeAbandoned];
 
     await abandonPullRequestsWhereSourceRefIsDeleted(
       taskInputs,
@@ -133,7 +160,7 @@ describe('abandonPullRequestsWhereSourceRefIsDeleted', () => {
       existingPullRequests,
     );
 
-    expect(existingPullRequests.length).toBe(0);
+    expect(existingPullRequests.length).not.toContain(pullRequestToBeAbandoned);
   });
 
   it('should not abandon any pull requests if existingBranchNames is undefined or null', async () => {
