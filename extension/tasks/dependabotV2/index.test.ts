@@ -30,11 +30,10 @@ describe('abandonPullRequestsWhereSourceRefIsDeleted', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    taskInputs = {} as ISharedVariables;
+    taskInputs = {
+      abandonUnwantedPullRequests: true,
+    } as ISharedVariables;
     devOpsPrAuthorClient = new AzureDevOpsWebApiClient('https://dev.azure.com/test-org', 'fake-token', true);
-  });
-
-  it('should abandon pull requests where the source branch has been deleted', async () => {
     devOpsPrAuthorClient.abandonPullRequest = jest.fn().mockResolvedValue(true);
     existingBranchNames = [];
     existingPullRequests = [
@@ -48,7 +47,9 @@ describe('abandonPullRequestsWhereSourceRefIsDeleted', () => {
         ],
       },
     ];
+  });
 
+  it('should abandon pull requests where the source branch has been deleted', async () => {
     await abandonPullRequestsWhereSourceRefIsDeleted(
       taskInputs,
       devOpsPrAuthorClient,
@@ -61,8 +62,33 @@ describe('abandonPullRequestsWhereSourceRefIsDeleted', () => {
     });
   });
 
+  it('should not abandon pull requests when `abandonUnwantedPullRequests` is false', async () => {
+    taskInputs.abandonUnwantedPullRequests = false;
+
+    await abandonPullRequestsWhereSourceRefIsDeleted(
+      taskInputs,
+      devOpsPrAuthorClient,
+      existingBranchNames,
+      existingPullRequests,
+    );
+
+    expect(devOpsPrAuthorClient.abandonPullRequest).not.toHaveBeenCalled();
+  });
+
   it('should not abandon pull requests where the source branch still exists', async () => {
-    devOpsPrAuthorClient.abandonPullRequest = jest.fn().mockResolvedValue(undefined);
+    existingBranchNames = ['dependabot/nuget/dependency1-1.0.0'];
+
+    await abandonPullRequestsWhereSourceRefIsDeleted(
+      taskInputs,
+      devOpsPrAuthorClient,
+      existingBranchNames,
+      existingPullRequests,
+    );
+
+    expect(devOpsPrAuthorClient.abandonPullRequest).not.toHaveBeenCalled();
+  });
+
+  it('should ignore "refs/heads/" prefix when comparing branch names', async () => {
     existingBranchNames = ['dependabot/nuget/dependency1-1.0.0'];
     existingPullRequests = [
       {
@@ -70,7 +96,7 @@ describe('abandonPullRequestsWhereSourceRefIsDeleted', () => {
         properties: [
           {
             name: DEVOPS_PR_PROPERTY_MICROSOFT_GIT_SOURCE_REF_NAME,
-            value: 'dependabot/nuget/dependency1-1.0.0',
+            value: 'refs/heads/dependabot/nuget/dependency1-1.0.0',
           },
         ],
       },
@@ -86,9 +112,20 @@ describe('abandonPullRequestsWhereSourceRefIsDeleted', () => {
     expect(devOpsPrAuthorClient.abandonPullRequest).not.toHaveBeenCalled();
   });
 
-  it('should not abandon any pull requests if existingBranchNames is undefined or null', async () => {
-    devOpsPrAuthorClient.abandonPullRequest = jest.fn().mockResolvedValue(undefined);
+  it('should remove the pull request from the existing pull requests list after abandoning it', async () => {
+    const pullRequestToBeAbandoned = existingPullRequests[0];
 
+    await abandonPullRequestsWhereSourceRefIsDeleted(
+      taskInputs,
+      devOpsPrAuthorClient,
+      existingBranchNames,
+      existingPullRequests,
+    );
+
+    expect(existingPullRequests.length).not.toContain(pullRequestToBeAbandoned);
+  });
+
+  it('should not abandon any pull requests if existingBranchNames is undefined or null', async () => {
     await abandonPullRequestsWhereSourceRefIsDeleted(taskInputs, devOpsPrAuthorClient, undefined, existingPullRequests);
     await abandonPullRequestsWhereSourceRefIsDeleted(taskInputs, devOpsPrAuthorClient, null, existingPullRequests);
 
@@ -96,8 +133,6 @@ describe('abandonPullRequestsWhereSourceRefIsDeleted', () => {
   });
 
   it('should not abandon any pull requests if existingPullRequests is undefined or null', async () => {
-    devOpsPrAuthorClient.abandonPullRequest = jest.fn().mockResolvedValue(undefined);
-
     await abandonPullRequestsWhereSourceRefIsDeleted(taskInputs, devOpsPrAuthorClient, existingBranchNames, undefined);
     await abandonPullRequestsWhereSourceRefIsDeleted(taskInputs, devOpsPrAuthorClient, existingBranchNames, null);
 

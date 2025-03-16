@@ -9,6 +9,7 @@ import {
 } from 'azure-devops-node-api/interfaces/GitInterfaces';
 import { debug, error, warning } from 'azure-pipelines-task-lib/task';
 import { IHttpClientResponse } from 'typed-rest-client/Interfaces';
+import { normalizeBranchName, normalizeFilePath } from './formatting';
 import {
   IAbandonPullRequest,
   IApprovePullRequest,
@@ -659,19 +660,6 @@ export class AzureDevOpsWebApiClient {
       throw e;
     }
   }
-}
-
-function normalizeFilePath(path: string): string {
-  // Convert backslashes to forward slashes, convert './' => '/' and ensure the path starts with a forward slash if it doesn't already, this is how DevOps paths are formatted
-  return path
-    .replace(/\\/g, '/')
-    .replace(/^\.\//, '/')
-    .replace(/^([^/])/, '/$1');
-}
-
-function normalizeBranchName(branch: string): string {
-  // Strip the 'refs/heads/' prefix from the branch name, if present
-  return branch.replace(/^refs\/heads\//i, '');
 }
 
 function mergeCommitMessage(id: number, title: string, description: string): string {
