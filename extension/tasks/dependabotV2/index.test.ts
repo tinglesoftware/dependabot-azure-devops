@@ -86,6 +86,56 @@ describe('abandonPullRequestsWhereSourceRefIsDeleted', () => {
     expect(devOpsPrAuthorClient.abandonPullRequest).not.toHaveBeenCalled();
   });
 
+  it('should ignore "refs/heads/" prefix when comparing branch names', async () => {
+    devOpsPrAuthorClient.abandonPullRequest = jest.fn().mockResolvedValue(undefined);
+    existingBranchNames = ['dependabot/nuget/dependency1-1.0.0'];
+    existingPullRequests = [
+      {
+        id: 1,
+        properties: [
+          {
+            name: DEVOPS_PR_PROPERTY_MICROSOFT_GIT_SOURCE_REF_NAME,
+            value: 'refs/heads/dependabot/nuget/dependency1-1.0.0',
+          },
+        ],
+      },
+    ];
+
+    await abandonPullRequestsWhereSourceRefIsDeleted(
+      taskInputs,
+      devOpsPrAuthorClient,
+      existingBranchNames,
+      existingPullRequests,
+    );
+
+    expect(devOpsPrAuthorClient.abandonPullRequest).not.toHaveBeenCalled();
+  });
+
+  it('should remove the pull request from the existing pull requests list after abandoning it', async () => {
+    devOpsPrAuthorClient.abandonPullRequest = jest.fn().mockResolvedValue(true);
+    existingBranchNames = [];
+    existingPullRequests = [
+      {
+        id: 1,
+        properties: [
+          {
+            name: DEVOPS_PR_PROPERTY_MICROSOFT_GIT_SOURCE_REF_NAME,
+            value: 'dependabot/nuget/dependency1-1.0.0',
+          },
+        ],
+      },
+    ];
+
+    await abandonPullRequestsWhereSourceRefIsDeleted(
+      taskInputs,
+      devOpsPrAuthorClient,
+      existingBranchNames,
+      existingPullRequests,
+    );
+
+    expect(existingPullRequests.length).toBe(0);
+  });
+
   it('should not abandon any pull requests if existingBranchNames is undefined or null', async () => {
     devOpsPrAuthorClient.abandonPullRequest = jest.fn().mockResolvedValue(undefined);
 

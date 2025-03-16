@@ -1,6 +1,6 @@
 import { debug, error, setResult, TaskResult, warning, which } from 'azure-pipelines-task-lib/task';
 import { AzureDevOpsWebApiClient } from './azure-devops/client';
-import { section, setSecrets } from './azure-devops/formatting';
+import { normalizeBranchName, section, setSecrets } from './azure-devops/formatting';
 import { DEVOPS_PR_PROPERTY_MICROSOFT_GIT_SOURCE_REF_NAME, IPullRequestProperties } from './azure-devops/models';
 import { DependabotCli } from './dependabot/cli';
 import { IDependabotConfig, IDependabotUpdate, parseConfigFile } from './dependabot/config';
@@ -180,12 +180,12 @@ export async function abandonPullRequestsWhereSourceRefIsDeleted(
   }
   for (const pullRequestId in existingPullRequests) {
     const pullRequest = existingPullRequests[pullRequestId];
-    const pullRequestSourceRefName = pullRequest.properties.find(
-      (x) => x.name === DEVOPS_PR_PROPERTY_MICROSOFT_GIT_SOURCE_REF_NAME,
-    )?.value;
+    const pullRequestSourceRefName = normalizeBranchName(
+      pullRequest.properties.find((x) => x.name === DEVOPS_PR_PROPERTY_MICROSOFT_GIT_SOURCE_REF_NAME)?.value,
+    );
     if (pullRequestSourceRefName && !existingBranchNames.includes(pullRequestSourceRefName)) {
       warning(`Detected source branch for PR #${pullRequest.id} has been deleted; The pull request will be abandoned`);
-      await devOpsPrAuthorClient.abandonPullRequest({
+      const prWasAbandoned = await devOpsPrAuthorClient.abandonPullRequest({
         project: taskInputs.project,
         repository: taskInputs.repository,
         pullRequestId: pullRequest.id,
@@ -196,6 +196,10 @@ export async function abandonPullRequestsWhereSourceRefIsDeleted(
             'with the desired `update-types` to your config file.'
           : undefined,
       });
+      if (prWasAbandoned) {
+        // Remove the pull request from the list of existing pull requests to ensures that we don't attempt to update it later in the process.
+        existingPullRequests.splice(existingPullRequests.indexOf(pullRequest), 1);
+      }
     }
   }
 }
