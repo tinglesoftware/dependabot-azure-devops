@@ -189,7 +189,7 @@ export async function abandonPullRequestsWhereSourceRefIsDeleted(
         warning(
           `Detected source branch for PR #${pullRequest.id} has been deleted; The pull request will be abandoned`,
         );
-        const prWasAbandoned = await devOpsPrAuthorClient.abandonPullRequest({
+        await devOpsPrAuthorClient.abandonPullRequest({
           project: taskInputs.project,
           repository: taskInputs.repository,
           pullRequestId: pullRequest.id,
