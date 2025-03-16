@@ -691,13 +691,14 @@ export async function sendRestApiRequestWithRetry(
   requestAsync: () => Promise<IHttpClientResponse>,
   isDebug: boolean = false,
 ): Promise<any | undefined> {
-  // Send the request, ready the response
-  if (isDebug) debug(`🌎 🠊 [${method}] ${url}`);
-  const response = await requestAsync();
-  const body = await response.readBody();
-  if (isDebug) debug(`🌎 🠈 [${response.message.statusCode}] ${response.message.statusMessage}`);
-
+  let body: any;
   try {
+    // Send the request, ready the response
+    if (isDebug) debug(`🌎 🠊 [${method}] ${url}`);
+    const response = await requestAsync();
+    body = await response.readBody();
+    if (isDebug) debug(`🌎 🠈 [${response.message.statusCode}] ${response.message.statusMessage}`);
+
     // Check that the request was successful
     if (response.message.statusCode < 200 || response.message.statusCode > 299) {
       throw new Error(
