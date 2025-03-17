@@ -244,6 +244,14 @@
       "helpMarkDown": "The apiUrl argument of the `dependabot update` command. This argument is necessary when the DevOps agent is running inside docker."
     },
     {
+      "name": "dependabotCliApiListeningPort",
+      "type": "string",
+      "groupName": "advanced",
+      "label": "Dependabot CLI listening port",
+      "required": false,
+      "helpMarkDown": "The listening port of the `dependabot update` command. This is necessary when the DevOps agent is running inside docker. It should match 'Dependabot CLI apiUrl argument'"
+    },
+    {
       "name": "dependabotUpdaterImage",
       "type": "string",
       "groupName": "advanced",

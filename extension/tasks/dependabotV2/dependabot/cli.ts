@@ -53,6 +53,7 @@ export class DependabotCli {
       timeoutDurationMinutes?: number;
       flamegraph?: boolean;
       apiUrl?: string;
+      apiListeningPort?: string;
     },
   ): Promise<IDependabotUpdateOperationResult[] | undefined> {
     try {
@@ -132,6 +133,7 @@ export class DependabotCli {
             DEPENDABOT_JOB_ID: jobId.replace(/-/g, '_'), // replace hyphens with underscores
             LOCAL_GITHUB_ACCESS_TOKEN: options?.gitHubAccessToken, // avoid rate-limiting when pulling images from GitHub container registries
             LOCAL_AZURE_ACCESS_TOKEN: options?.azureDevOpsAccessToken, // technically not needed since we already supply this in our 'git_source' registry, but included for consistency
+            FAKE_API_PORT: options?.apiListeningPort, // used to pin PORT of the Dependabot CLI api back-channel
           },
         });
         if (dependabotResultCode != 0) {
