@@ -72,6 +72,8 @@ export interface ISharedVariables {
 
   /** The dependabot-cli go package to use for updates. e.g. github.com/dependabot/cli/cmd/dependabot@latest */
   dependabotCliPackage?: string;
+  /** The apiUrl argument of the dependabot update command */
+  dependabotCliApiUrl?: string;
   /** The dependabot-updater docker image to use for updates. e.g. ghcr.io/dependabot/dependabot-updater-{ecosystem}:latest */
   dependabotUpdaterImage?: string;
 
@@ -180,6 +182,7 @@ export default function getSharedVariables(): ISharedVariables {
   let abandonUnwantedPullRequests: boolean = tl.getBoolInput('abandonUnwantedPullRequests', true);
 
   let dependabotCliPackage: string | undefined = tl.getInput('dependabotCliPackage');
+  let dependabotCliApiUrl: string | undefined = tl.getInput('dependabotCliApiUrl');
   let dependabotUpdaterImage: string | undefined = tl.getInput('dependabotUpdaterImage');
 
   let proxyCertPath: string | undefined = tl.getInput('proxyCertPath');
@@ -225,6 +228,7 @@ export default function getSharedVariables(): ISharedVariables {
     commentPullRequests,
     abandonUnwantedPullRequests,
 
+    dependabotCliApiUrl,
     dependabotCliPackage,
     dependabotUpdaterImage,
 

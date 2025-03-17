@@ -236,6 +236,14 @@
       "helpMarkDown": "The [Dependabot CLI package](https://pkg.go.dev/github.com/dependabot/cli) to use for updates. This is intended to be used in scenarios where 'latest' has issues and you want to pin a known working version, or use a custom package. Defaults to `github.com/dependabot/cli/cmd/dependabot@latest`"
     },
     {
+      "name": "dependabotCliApiUrl",
+      "type": "string",
+      "groupName": "advanced",
+      "label": "Dependabot CLI apiUrl argument",
+      "required": false,
+      "helpMarkDown": "The apiUrl argument of the `dependabot update` command. This argument is necessary when the DevOps agent is running inside docker."
+    },
+    {
       "name": "dependabotUpdaterImage",
       "type": "string",
       "groupName": "advanced",

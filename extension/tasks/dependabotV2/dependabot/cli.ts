@@ -52,6 +52,7 @@ export class DependabotCli {
       updaterImage?: string;
       timeoutDurationMinutes?: number;
       flamegraph?: boolean;
+      apiUrl?: string;
     },
   ): Promise<IDependabotUpdateOperationResult[] | undefined> {
     try {
@@ -110,6 +111,9 @@ export class DependabotCli {
       }
       if (options?.flamegraph) {
         dependabotArguments.push('--flamegraph');
+      }
+      if (options?.apiUrl) {
+        dependabotArguments.push('--api-url', options.apiUrl);
       }
 
       // Generate the job input file
