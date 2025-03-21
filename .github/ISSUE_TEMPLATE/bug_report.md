@@ -12,6 +12,10 @@ A clear and concise description of what the bug is.
 
 **Categorization**
 - [ ] This is not a permissions issue (Seek help at https://github.com/tinglesoftware/dependabot-azure-devops/discussions/1245)
+- [ ] This is an issue specific to Azure DevOps or this repository and does not belong in [dependabot-core](https://github.com/dependabot/dependabot-core).
+<!-- Specific issues for dependabot are solved faster in the core repository. For example, why a package version is skipped. Trying out this behaviour in the GitHub Hosted version can help you pinpoint where it lies. -->
+- [ ] I have linked a public reproduction of the specific issue or none is required because the issue is not specific to me.
+<!-- Please note that you can create a public organization/project and repository to show the issue. This tends to accelerate resolution. -->
 
 **Repository**
 URL: e.g. https://dev.azure.com/tingle/dependabot/_git/repro-684
