@@ -110,6 +110,8 @@ async function run() {
       updaterImage: taskInputs.dependabotUpdaterImage,
       timeoutDuration: undefined, // TODO: Add config for this?
       flamegraph: taskInputs.debug,
+      apiUrl: taskInputs.dependabotCliApiUrl,
+      apiListeningPort: taskInputs.dependabotCliApiListeningPort,
     };
 
     // If update identifiers are specified, select them; otherwise handle all
