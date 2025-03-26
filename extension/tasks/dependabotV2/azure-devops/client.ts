@@ -11,6 +11,7 @@ import { debug, error, warning } from 'azure-pipelines-task-lib/task';
 import { IHttpClientResponse } from 'typed-rest-client/Interfaces';
 import { normalizeBranchName, normalizeFilePath } from './formatting';
 import {
+  HttpRequestError,
   IAbandonPullRequest,
   IApprovePullRequest,
   ICreatePullRequest,
@@ -577,10 +578,15 @@ export class AzureDevOpsWebApiClient {
       .map((key) => `${key}=${params[key]}`)
       .join('&');
     const fullUrl = `${url}?api-version=${apiVersion}${queryString ? `&${queryString}` : ''}`;
-    return await this.restApiRequest('GET', fullUrl, undefined, () =>
-      this.connection.rest.client.get(fullUrl, {
-        Accept: 'application/json',
-      }),
+    return await sendRestApiRequestWithRetry(
+      'GET',
+      fullUrl,
+      undefined,
+      () =>
+        this.connection.rest.client.get(fullUrl, {
+          Accept: 'application/json',
+        }),
+      this.debug,
     );
   }
 
@@ -590,10 +596,15 @@ export class AzureDevOpsWebApiClient {
     apiVersion: string = AzureDevOpsWebApiClient.API_VERSION,
   ): Promise<any | undefined> {
     const fullUrl = `${url}?api-version=${apiVersion}`;
-    return await this.restApiRequest('POST', fullUrl, data, () =>
-      this.connection.rest.client.post(fullUrl, JSON.stringify(data), {
-        'Content-Type': 'application/json',
-      }),
+    return await sendRestApiRequestWithRetry(
+      'POST',
+      fullUrl,
+      data,
+      () =>
+        this.connection.rest.client.post(fullUrl, JSON.stringify(data), {
+          'Content-Type': 'application/json',
+        }),
+      this.debug,
     );
   }
 
@@ -603,10 +614,15 @@ export class AzureDevOpsWebApiClient {
     apiVersion: string = AzureDevOpsWebApiClient.API_VERSION,
   ): Promise<any | undefined> {
     const fullUrl = `${url}?api-version=${apiVersion}`;
-    return await this.restApiRequest('PUT', fullUrl, data, () =>
-      this.connection.rest.client.put(fullUrl, JSON.stringify(data), {
-        'Content-Type': 'application/json',
-      }),
+    return await sendRestApiRequestWithRetry(
+      'PUT',
+      fullUrl,
+      data,
+      () =>
+        this.connection.rest.client.put(fullUrl, JSON.stringify(data), {
+          'Content-Type': 'application/json',
+        }),
+      this.debug,
     );
   }
 
@@ -617,48 +633,16 @@ export class AzureDevOpsWebApiClient {
     apiVersion: string = AzureDevOpsWebApiClient.API_VERSION,
   ): Promise<any | undefined> {
     const fullUrl = `${url}?api-version=${apiVersion}`;
-    return await this.restApiRequest('PATCH', fullUrl, data, () =>
-      this.connection.rest.client.patch(fullUrl, JSON.stringify(data), {
-        'Content-Type': contentType || 'application/json',
-      }),
+    return await sendRestApiRequestWithRetry(
+      'PATCH',
+      fullUrl,
+      data,
+      () =>
+        this.connection.rest.client.patch(fullUrl, JSON.stringify(data), {
+          'Content-Type': contentType || 'application/json',
+        }),
+      this.debug,
     );
-  }
-
-  private async restApiRequest(
-    method: string,
-    url: string,
-    payload: any,
-    requestAsync: () => Promise<IHttpClientResponse>,
-  ): Promise<any | undefined> {
-    // Send the request, ready the response
-    if (this.debug) debug(`🌎 🠊 [${method}] ${url}`);
-    const response = await requestAsync();
-    const body = await response.readBody();
-    if (this.debug) debug(`🌎 🠈 [${response.message.statusCode}] ${response.message.statusMessage}`);
-
-    try {
-      // Check that the request was successful
-      if (response.message.statusCode < 200 || response.message.statusCode > 299) {
-        throw new Error(
-          `HTTP ${method} '${url}' failed: ${response.message.statusCode} ${response.message.statusMessage}`,
-        );
-      }
-
-      // Parse the response
-      return JSON.parse(body);
-    } catch (e) {
-      // In debug mode, log the error, request, and response for debugging
-      if (this.debug) {
-        if (payload) {
-          debug(`REQUEST: ${JSON.stringify(payload)}`);
-        }
-        if (body) {
-          debug(`RESPONSE: ${body}`);
-        }
-      }
-
-      throw e;
-    }
   }
 }
 
@@ -699,4 +683,83 @@ function getIdentityApiUrl(organisationApiUrl: string): string {
     uri.host = 'vssps.dev.azure.com';
   }
   return uri.toString();
+}
+
+export async function sendRestApiRequestWithRetry(
+  method: string,
+  url: string,
+  payload: any,
+  requestAsync: () => Promise<IHttpClientResponse>,
+  isDebug: boolean = false,
+  retryCount: number = 3,
+  retryDelay: number = 3000,
+): Promise<any | undefined> {
+  let body: any;
+  try {
+    // Send the request, ready the response
+    if (isDebug) debug(`🌎 🠊 [${method}] ${url}`);
+    const response = await requestAsync();
+    body = await response.readBody();
+    if (isDebug) debug(`🌎 🠈 [${response.message.statusCode}] ${response.message.statusMessage}`);
+
+    // Check that the request was successful
+    if (response.message.statusCode < 200 || response.message.statusCode > 299) {
+      throw new HttpRequestError(
+        `HTTP ${method} '${url}' failed: ${response.message.statusCode} ${response.message.statusMessage}`,
+        response.message.statusCode,
+      );
+    }
+
+    // Parse the response
+    return JSON.parse(body);
+  } catch (e) {
+    // Retry the request if the error is a temporary failure
+    if (retryCount > 1 && isErrorTemporaryFailure(e)) {
+      warning(e.message);
+      if (isDebug) debug(`⏳ Retrying request in ${retryDelay}ms...`);
+      await new Promise((resolve) => setTimeout(resolve, retryDelay));
+      return sendRestApiRequestWithRetry(method, url, payload, requestAsync, isDebug, retryCount - 1, retryDelay);
+    }
+
+    // In debug mode, log the error, request, and response for debugging
+    if (isDebug) {
+      if (payload) {
+        debug(`REQUEST: ${JSON.stringify(payload)}`);
+      }
+      if (body) {
+        debug(`RESPONSE: ${body}`);
+      }
+    }
+
+    console.log('THROW', e);
+    throw e;
+  }
+}
+
+export function isErrorTemporaryFailure(e: any): boolean {
+  if (e instanceof HttpRequestError) {
+    // Check for common HTTP status codes that indicate a temporary failure
+    // See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+    switch (e.code) {
+      case 502:
+        return true; // 502 Bad Gateway
+      case 503:
+        return true; // 503 Service Unavailable
+      case 504:
+        return true; // 504 Gateway Timeout
+      default:
+        return false;
+    }
+  } else if (e?.code) {
+    // Check for Node.js system errors that indicate a temporary failure
+    // See: https://nodejs.org/api/errors.html#errors_common_system_errors
+    switch (e.code) {
+      case 'ETIMEDOUT':
+        return true; // Operation timed out
+      default:
+        return false;
+    }
+  } else {
+    return false;
+  }
 }
