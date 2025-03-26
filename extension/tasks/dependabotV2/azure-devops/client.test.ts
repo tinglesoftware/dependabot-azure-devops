@@ -3,8 +3,8 @@ import { jest } from '@jest/globals';
 import { VersionControlChangeType } from 'azure-devops-node-api/interfaces/TfvcInterfaces';
 
 import { IHttpClientResponse } from 'typed-rest-client/Interfaces';
-import { AzureDevOpsWebApiClient, sendRestApiRequestWithRetry } from '../azure-devops/client';
-import { ICreatePullRequest } from './models';
+import { AzureDevOpsWebApiClient, isErrorTemporaryFailure, sendRestApiRequestWithRetry } from '../azure-devops/client';
+import { HttpRequestError, ICreatePullRequest } from './models';
 import exp = require('constants');
 
 jest.mock('azure-devops-node-api');
@@ -137,5 +137,73 @@ describe('sendRestApiRequestWithRetry', () => {
     await expect(
       sendRestApiRequestWithRetry('GET', 'https://example.com', undefined, mockRequestAsync),
     ).rejects.toThrow(/unexpected token .* in JSON/i);
+  });
+
+  it('should throw an error after retrying a request three times', async () => {
+    const err = Object.assign(new Error('connect ETIMEDOUT 127.0.0.1:443'), { code: 'ETIMEDOUT' });
+    mockRequestAsync.mockRejectedValue(err);
+
+    await expect(
+      sendRestApiRequestWithRetry('GET', 'https://example.com', undefined, mockRequestAsync, true, 3, 0),
+    ).rejects.toThrow(err);
+    expect(mockRequestAsync).toHaveBeenCalledTimes(3);
+  }, 10000);
+
+  it('should retry the request if a temporary failure error is thrown', async () => {
+    const err = Object.assign(new Error('connect ETIMEDOUT 127.0.0.1:443'), { code: 'ETIMEDOUT' });
+    mockRequestAsync.mockRejectedValueOnce(err);
+    mockRequestAsync.mockResolvedValueOnce(mockResponse as IHttpClientResponse);
+    mockResponseBody = { hello: 'world' };
+
+    const result = await sendRestApiRequestWithRetry(
+      'GET',
+      'https://example.com',
+      undefined,
+      mockRequestAsync,
+      true,
+      3,
+      0,
+    );
+
+    expect(mockRequestAsync).toHaveBeenCalledTimes(2);
+    expect(mockResponse.readBody).toHaveBeenCalledTimes(1);
+    expect(result).toEqual(mockResponseBody);
+  });
+});
+
+describe('isErrorTemporaryFailure', () => {
+  it('should return true for HttpRequestError with status code 502', () => {
+    const error = new HttpRequestError('Bad Gateway', 502);
+    expect(isErrorTemporaryFailure(error)).toBe(true);
+  });
+
+  it('should return true for HttpRequestError with status code 503', () => {
+    const error = new HttpRequestError('Service Unavailable', 503);
+    expect(isErrorTemporaryFailure(error)).toBe(true);
+  });
+
+  it('should return true for HttpRequestError with status code 504', () => {
+    const error = new HttpRequestError('Gateway Timeout', 504);
+    expect(isErrorTemporaryFailure(error)).toBe(true);
+  });
+
+  it('should return false for HttpRequestError with other status codes', () => {
+    const error = new HttpRequestError('Bad Request', 400);
+    expect(isErrorTemporaryFailure(error)).toBe(false);
+  });
+
+  it('should return true for Node.js system error with code ETIMEDOUT', () => {
+    const error = { code: 'ETIMEDOUT', message: 'Operation timed out' };
+    expect(isErrorTemporaryFailure(error)).toBe(true);
+  });
+
+  it('should return false for Node.js system error with other codes', () => {
+    const error = { code: 'ECONNREFUSED', message: 'Connection refused' };
+    expect(isErrorTemporaryFailure(error)).toBe(false);
+  });
+
+  it('should return false for undefined or null errors', () => {
+    expect(isErrorTemporaryFailure(undefined)).toBe(false);
+    expect(isErrorTemporaryFailure(null)).toBe(false);
   });
 });

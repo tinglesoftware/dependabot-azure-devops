@@ -11,6 +11,7 @@ import { debug, error, warning } from 'azure-pipelines-task-lib/task';
 import { IHttpClientResponse } from 'typed-rest-client/Interfaces';
 import { normalizeBranchName, normalizeFilePath } from './formatting';
 import {
+  HttpRequestError,
   IAbandonPullRequest,
   IApprovePullRequest,
   ICreatePullRequest,
@@ -690,6 +691,8 @@ export async function sendRestApiRequestWithRetry(
   payload: any,
   requestAsync: () => Promise<IHttpClientResponse>,
   isDebug: boolean = false,
+  retryCount: number = 3,
+  retryDelay: number = 3000,
 ): Promise<any | undefined> {
   let body: any;
   try {
@@ -701,14 +704,23 @@ export async function sendRestApiRequestWithRetry(
 
     // Check that the request was successful
     if (response.message.statusCode < 200 || response.message.statusCode > 299) {
-      throw new Error(
+      throw new HttpRequestError(
         `HTTP ${method} '${url}' failed: ${response.message.statusCode} ${response.message.statusMessage}`,
+        response.message.statusCode,
       );
     }
 
     // Parse the response
     return JSON.parse(body);
   } catch (e) {
+    // Retry the request if the error is a temporary failure
+    if (retryCount > 1 && isErrorTemporaryFailure(e)) {
+      warning(e.message);
+      if (isDebug) debug(`⏳ Retrying request in 3 seconds...`);
+      await new Promise((resolve) => setTimeout(resolve, retryDelay));
+      return sendRestApiRequestWithRetry(method, url, payload, requestAsync, isDebug, retryCount - 1, retryDelay);
+    }
+
     // In debug mode, log the error, request, and response for debugging
     if (isDebug) {
       if (payload) {
@@ -719,6 +731,35 @@ export async function sendRestApiRequestWithRetry(
       }
     }
 
+    console.log('THROW', e);
     throw e;
+  }
+}
+
+export function isErrorTemporaryFailure(e: any): boolean {
+  if (e instanceof HttpRequestError) {
+    // Check for common HTTP status codes that indicate a temporary failure
+    // See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+    switch (e.code) {
+      case 502:
+        return true; // 502 Bad Gateway
+      case 503:
+        return true; // 503 Service Unavailable
+      case 504:
+        return true; // 504 Gateway Timeout
+      default:
+        return false;
+    }
+  } else if (e?.code) {
+    // Check for Node.js system errors that indicate a temporary failure
+    // See: https://nodejs.org/api/errors.html#errors_common_system_errors
+    switch (e.code) {
+      case 'ETIMEDOUT':
+        return true; // Operation timed out
+      default:
+        return false;
+    }
+  } else {
+    return false;
   }
 }

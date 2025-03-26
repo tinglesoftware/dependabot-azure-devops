@@ -102,3 +102,15 @@ export interface IAbandonPullRequest {
   comment?: string;
   deleteSourceBranch?: boolean;
 }
+
+/**
+ * Http request error
+ */
+export class HttpRequestError extends Error {
+  constructor(
+    message: string,
+    public code: number,
+  ) {
+    super(message);
+  }
+}
