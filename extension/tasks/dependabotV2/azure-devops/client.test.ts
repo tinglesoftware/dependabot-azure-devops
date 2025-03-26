@@ -147,7 +147,7 @@ describe('sendRestApiRequestWithRetry', () => {
       sendRestApiRequestWithRetry('GET', 'https://example.com', undefined, mockRequestAsync, true, 3, 0),
     ).rejects.toThrow(err);
     expect(mockRequestAsync).toHaveBeenCalledTimes(3);
-  }, 10000);
+  });
 
   it('should retry the request if a temporary failure error is thrown', async () => {
     const err = Object.assign(new Error('connect ETIMEDOUT 127.0.0.1:443'), { code: 'ETIMEDOUT' });

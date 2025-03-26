@@ -716,7 +716,7 @@ export async function sendRestApiRequestWithRetry(
     // Retry the request if the error is a temporary failure
     if (retryCount > 1 && isErrorTemporaryFailure(e)) {
       warning(e.message);
-      if (isDebug) debug(`⏳ Retrying request in 3 seconds...`);
+      if (isDebug) debug(`⏳ Retrying request in ${retryDelay}ms...`);
       await new Promise((resolve) => setTimeout(resolve, retryDelay));
       return sendRestApiRequestWithRetry(method, url, payload, requestAsync, isDebug, retryCount - 1, retryDelay);
     }
