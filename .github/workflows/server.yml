@@ -17,6 +17,10 @@ on:
       - '.github/workflows/server.yml'
       - '!docs/**'
 
+permissions:
+  contents: read
+  packages: write
+
 env:
   AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
   AZURE_RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}

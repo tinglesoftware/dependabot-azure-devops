@@ -20,6 +20,10 @@ on:
       - '.github/workflows/updater.yml'
       - '!docs/**'
 
+permissions:
+  contents: read
+  packages: write
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
