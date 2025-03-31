@@ -21,6 +21,9 @@ on:
       - '!extension/README.md'
       - '!docs/**'
 
+permissions:
+  contents: read
+
 jobs:
   Build:
     runs-on: ubuntu-latest

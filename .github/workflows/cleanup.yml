@@ -5,6 +5,9 @@ on:
   schedule:
     - cron: '0 0 */14 * *' # every 14 days
 
+permissions:
+  packages: write
+
 jobs:
   cleanup-updater:
     runs-on: ubuntu-latest
