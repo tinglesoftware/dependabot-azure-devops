@@ -57,7 +57,7 @@ Dependabot uses Docker containers, which may take time to install if not already
 |--|--|
 |skipPullRequests|**_Optional_**. Determines whether to skip creation and updating of pull requests. When set to `true` the logic to update the dependencies is executed but the actual Pull Requests are not created/updated. This is useful for debugging. Defaults to `false`.|
 |abandonUnwantedPullRequests|**_Optional_**. Determines whether to abandon unwanted pull requests. Defaults to `false`.|
-|commentPullRequests|**_Optional_**. Determines whether to comment on pull requests which an explanation of the reason for closing. Defaults to `false`.|
+|commentPullRequests|**_Optional_**. Determines whether to comment on pull requests with an explanation of the reason for closing. Defaults to `false`.|
 |setAutoComplete|**_Optional_**. Determines if the pull requests that dependabot creates should have auto complete set. When set to `true`, pull requests that pass all policies will be merged automatically. Defaults to `false`.|
 |mergeStrategy|**_Optional_**. The merge strategy to use when auto complete is set. Learn more [here](https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-requests/update?view=azure-devops-rest-6.0&tabs=HTTP#gitpullrequestmergestrategy). Defaults to `squash`.|
 |autoCompleteIgnoreConfigIds|**_Optional_**. List of any policy configuration Id's which auto-complete should not wait for. Only applies to optional policies. Auto-complete always waits for required (blocking) policies.|
