@@ -234,10 +234,6 @@ internal partial class UpdateRunner
                                                                                 bool debug,
                                                                                 CancellationToken cancellationToken = default) // TODO: unit test this
     {
-        // check if debug and determinism is enabled for the project via Feature Management
-        var fmc = MakeTargetingContext(project, job);
-        var deterministic = await featureManager.IsEnabledAsync(FeatureNames.DeterministicUpdates, fmc);
-
         // Add compulsory values
         var values = new Dictionary<string, string>
         {
@@ -251,7 +247,7 @@ internal partial class UpdateRunner
             // Setting DEPENDABOT_REPO_CONTENTS_PATH causes some issues, ignore till we can resolve
             //["DEPENDABOT_REPO_CONTENTS_PATH"] = Path.Join(jobDirectory, "repo"),
             ["GITHUB_ACTIONS"] = "false",
-            ["UPDATER_DETERMINISTIC"] = deterministic.ToString().ToLower(),
+            ["UPDATER_DETERMINISTIC"] = "true",
 
             // env for v1
             ["DEPENDABOT_PACKAGE_MANAGER"] = job.PackageEcosystem!,
