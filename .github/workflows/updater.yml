@@ -21,7 +21,7 @@ on:
       - '!docs/**'
 
 permissions:
-  contents: write
+  contents: read
   packages: write
 
 concurrency:
