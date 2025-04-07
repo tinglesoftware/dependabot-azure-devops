@@ -23,6 +23,5 @@ internal static class ErrorCodes
 internal static class FeatureNames
 {
     internal const string DependabotDebug = "DependabotDebug";
-    internal const string DeterministicUpdates = "DeterministicUpdates"; // Whether updates should be created in the same order.
     internal const string UpdaterV2 = "UpdaterV2"; // Whether to use V2 updater.
 }
