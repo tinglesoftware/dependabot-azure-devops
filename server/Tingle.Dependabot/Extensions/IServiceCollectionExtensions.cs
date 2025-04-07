@@ -1,34 +1,12 @@
 ﻿using Medallion.Threading;
 using Medallion.Threading.FileSystem;
-using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.FeatureManagement;
-using Tingle.Dependabot.ApplicationInsights;
 using Tingle.Dependabot.Workflow;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
 internal static class IServiceCollectionExtensions
 {
-    public static IServiceCollection AddStandardApplicationInsights(this IServiceCollection services, IConfiguration configuration)
-    {
-        // Add the core services
-        services.AddApplicationInsightsTelemetry(configuration);
-
-        // Add background service to flush telemetry on shutdown
-        services.AddHostedService<InsightsShutdownFlushService>();
-
-        // Add processors
-        services.AddApplicationInsightsTelemetryProcessor<InsightsFilteringProcessor>();
-
-        // Enrich the telemetry with various sources of information
-        services.AddHttpContextAccessor(); // Required to resolve the request from the HttpContext
-                                           // according to docs link below, this registration should be singleton
-                                           // https://docs.microsoft.com/en-us/azure/azure-monitor/app/asp-net-core#adding-telemetryinitializers
-        services.AddSingleton<ITelemetryInitializer, DependabotTelemetryInitializer>();
-
-        return services;
-    }
-
     public static IServiceCollection AddDistributedLockProvider(this IServiceCollection services, IHostEnvironment environment, IConfiguration configuration)
     {
         var configKey = ConfigurationPath.Combine("DistributedLocking", "FilePath");

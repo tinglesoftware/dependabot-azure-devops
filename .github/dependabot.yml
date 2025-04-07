@@ -69,6 +69,8 @@ updates:
           - 'Microsoft.Azure.*'
           - 'Microsoft.Extensions.Configuration.AzureAppConfiguration'
           - 'Microsoft.VisualStudio.Azure.Containers.Tools.Targets'
+      opentelemetry:
+        patterns: ['OpenTelemetry*']
       system:
         patterns: ['System*']
       tingle:
