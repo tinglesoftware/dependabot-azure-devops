@@ -24,4 +24,7 @@ export const DEFAULT_EXPERIMENTS: Record<string, string | boolean> = {
   'allow-refresh-for-existing-pr-dependencies': true,
   'enable-bun-ecosystem': true,
   'exclude-local-composer-packages': true,
+  'enable-cooldown-for-python': true,
+  'enable-cooldown-for-uv': true,
+  'enable-cooldown-for-npm-and-yarn': true,
 };
