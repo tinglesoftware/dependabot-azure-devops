@@ -19,6 +19,9 @@ public class UpdateJob
     /// <summary>Trigger for the update job.</summary>
     public UpdateJobTrigger Trigger { get; set; }
 
+    /// <summary>Where the update job is run/hosted.</summary>
+    public UpdateJobPlatform Platform { get; set; }
+
     /// <summary>Identifier of the project.</summary>
     [Required]
     [JsonIgnore] // only for internal use

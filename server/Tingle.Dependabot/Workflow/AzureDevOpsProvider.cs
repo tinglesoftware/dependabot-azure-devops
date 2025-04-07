@@ -29,6 +29,10 @@ public class AzureDevOpsProvider(HttpClient httpClient, IOptions<WorkflowOptions
 
     public async Task<List<string>> CreateOrUpdateSubscriptionsAsync(Project project, CancellationToken cancellationToken = default)
     {
+        // if there is no webhook endpoint, we don't need to do anything
+        var webhookUrl = options.WebhookEndpoint;
+        if (webhookUrl is null) return [];
+
         // prepare the query
         var projectId = project.ProviderId ?? throw new InvalidOperationException("ProviderId for the project cannot be null");
         var query = new AzdoSubscriptionsQuery
@@ -68,7 +72,6 @@ public class AzureDevOpsProvider(HttpClient httpClient, IOptions<WorkflowOptions
         var subscriptions = (await SendAsync<AzdoSubscriptionsQueryResponse>(project.Token!, request, cancellationToken)).Results;
 
         // iterate each subscription checking if creation or update is required
-        var webhookUrl = options.WebhookEndpoint!;
         var ids = new List<string>();
         foreach (var (eventType, resourceVersion) in SubscriptionEventTypes)
         {

@@ -294,6 +294,7 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
             { name: 'Logging__OpenTelemetry__LogLevel__Polly', value: 'None' } // too many logs (one above seems not sufficient)
 
             { name: 'Workflow__JobsApiUrl', value: 'https://${name}.${appEnvironment.properties.defaultDomain}' }
+            { name: 'Workflow__JobsPlatform', value: 'ContainerApps' }
             { name: 'Workflow__WorkingDirectory', value: '/mnt/dependabot' }
             { name: 'Workflow__WebhookEndpoint', value: 'https://${name}.${appEnvironment.properties.defaultDomain}/webhooks/azure' }
             { name: 'Workflow__ResourceGroupId', value: resourceGroup().id }

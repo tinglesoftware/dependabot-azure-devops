@@ -85,6 +85,12 @@ internal static partial class ILoggerExtensions
     [LoggerMessage(502, LogLevel.Information, "Started ContainerApp Job for {UpdateJobId}")]
     public static partial void StartedContainerAppJob(this ILogger logger, string? updateJobId);
 
+    [LoggerMessage(503, LogLevel.Information, "Created Docker Container Job for {UpdateJobId}")]
+    public static partial void CreatedDockerContainerJob(this ILogger logger, string? updateJobId);
+
+    [LoggerMessage(504, LogLevel.Information, "Started Docker Container Job for {UpdateJobId}")]
+    public static partial void StartedDockerContainerJob(this ILogger logger, string? updateJobId);
+
     #endregion
 
     #region Update Jobs (6xx)

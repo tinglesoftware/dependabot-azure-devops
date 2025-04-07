@@ -488,6 +488,10 @@
                   "value": "[format('https://{0}.{1}', parameters('name'), reference(resourceId('Microsoft.App/managedEnvironments', parameters('name')), '2023-05-01').defaultDomain)]"
                 },
                 {
+                  "name": "Workflow__JobsPlatform",
+                  "value": "ContainerApps"
+                },
+                {
                   "name": "Workflow__WorkingDirectory",
                   "value": "/mnt/dependabot"
                 },

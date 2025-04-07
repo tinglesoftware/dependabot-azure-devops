@@ -16,6 +16,7 @@ builder.Services.Configure<HostOptions>(options => options.ShutdownTimeout = Tim
 
 // Add OpenTelemetry
 builder.AddOpenTelemetry();
+builder.Services.AddHttpContextAccessor(); // needed by custom enrichers
 
 // Add Azure AppConfiguration
 builder.Configuration.AddStandardAzureAppConfiguration(builder.Environment);
