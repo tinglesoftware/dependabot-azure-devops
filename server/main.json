@@ -152,7 +152,7 @@
     },
     {
       "copy": {
-        "name": "shares",
+        "name": "storageAccount::fileServices::shares",
         "count": "[length(variables('fileShares'))]"
       },
       "type": "Microsoft.Storage/storageAccounts/fileServices/shares",
@@ -168,7 +168,7 @@
     },
     {
       "copy": {
-        "name": "storages",
+        "name": "appEnvironment::storages",
         "count": "[length(variables('fileShares'))]"
       },
       "type": "Microsoft.App/managedEnvironments/storages",
@@ -452,7 +452,7 @@
                   "value": "Production"
                 },
                 {
-                  "name": "ApplicationInsights__ConnectionString",
+                  "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
                   "secretRef": "connection-strings-application-insights"
                 },
                 {
@@ -468,20 +468,16 @@
                   "value": "/mnt/distributed-locks"
                 },
                 {
-                  "name": "Logging__ApplicationInsights__LogLevel__Default",
-                  "value": "None"
-                },
-                {
-                  "name": "Logging__Seq__LogLevel__Default",
+                  "name": "Logging__OpenTelemetry__LogLevel__Default",
                   "value": "Warning"
                 },
                 {
-                  "name": "Logging__Seq__ServerUrl",
-                  "value": ""
+                  "name": "Logging__LogLevel__Polly",
+                  "value": "None"
                 },
                 {
-                  "name": "Logging__Seq__ApiKey",
-                  "value": ""
+                  "name": "Logging__OpenTelemetry__LogLevel__Polly",
+                  "value": "None"
                 },
                 {
                   "name": "Workflow__JobsApiUrl",

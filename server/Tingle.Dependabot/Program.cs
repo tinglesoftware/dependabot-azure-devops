@@ -14,27 +14,13 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.Configure<HostOptions>(options => options.ShutdownTimeout = TimeSpan.FromSeconds(30)); /* default is 5 seconds */
 
+// Add OpenTelemetry
+builder.AddOpenTelemetry();
+
 // Add Azure AppConfiguration
 builder.Configuration.AddStandardAzureAppConfiguration(builder.Environment);
 builder.Services.AddAzureAppConfiguration();
 builder.Services.AddSingleton<IStartupFilter, AzureAppConfigurationStartupFilter>(); // Use IStartupFilter to setup AppConfiguration middleware correctly
-
-// Add Serilog
-builder.Services.AddSerilog(builder =>
-{
-    builder.ConfigureSensitiveDataMasking(options =>
-    {
-        options.ExcludeProperties.AddRange([
-            "ExecutionId",
-            "JobDefinitionPath",
-            "UpdateJobId",
-            "RepositoryUrl",
-        ]);
-    });
-});
-
-// Add Application Insights
-builder.Services.AddStandardApplicationInsights(builder.Configuration);
 
 // Add DbContext
 builder.Services.AddDbContext<MainDbContext>(options =>

@@ -281,16 +281,15 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
             { name: 'AzureAppConfig__Endpoint', value: appConfiguration.properties.endpoint }
             { name: 'AzureAppConfig__Label', value: 'Production' }
 
-            { name: 'ApplicationInsights__ConnectionString', secretRef: 'connection-strings-application-insights' }
+            { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', secretRef: 'connection-strings-application-insights' }
             { name: 'ConnectionStrings__Sql', secretRef: 'connection-strings-sql' }
 
             { name: 'DataProtection__Azure__KeyVault__KeyUrl', value: keyVault::dataProtectionKey.properties.keyUri }
             { name: 'DistributedLocking__FilePath', value: '/mnt/distributed-locks' }
 
-            { name: 'Logging__ApplicationInsights__LogLevel__Default', value: 'None' } // do not send logs to application insights (duplicates LogAnalytics)
-            { name: 'Logging__Seq__LogLevel__Default', value: 'Warning' }
-            { name: 'Logging__Seq__ServerUrl', value: '' } // set via AppConfig
-            { name: 'Logging__Seq__ApiKey', value: '' } // set via AppConfig
+            { name: 'Logging__OpenTelemetry__LogLevel__Default', value: 'Warning' } // only send warnings and above to OpenTelemetry
+            { name: 'Logging__LogLevel__Polly', value: 'None' } // too many logs
+            { name: 'Logging__OpenTelemetry__LogLevel__Polly', value: 'None' } // too many logs (one above seems not sufficient)
 
             { name: 'Workflow__JobsApiUrl', value: 'https://${name}.${appEnvironment.properties.defaultDomain}' }
             { name: 'Workflow__WorkingDirectory', value: '/mnt/dependabot' }
