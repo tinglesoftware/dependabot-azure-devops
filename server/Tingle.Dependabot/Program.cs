@@ -23,10 +23,19 @@ builder.Services.AddAzureAppConfiguration();
 builder.Services.AddSingleton<IStartupFilter, AzureAppConfigurationStartupFilter>(); // Use IStartupFilter to setup AppConfiguration middleware correctly
 
 // Add DbContext
+var selectedDatabase = builder.Configuration.GetValue<DatabaseKind?>("Database:Kind");
 builder.Services.AddDbContext<MainDbContext>(options =>
 {
-    options.UseSqlServer(builder.Configuration.GetConnectionString("Sql"), options => options.EnableRetryOnFailure());
     options.EnableDetailedErrors();
+
+    if (selectedDatabase is DatabaseKind.InMemory)
+    {
+        options.UseInMemoryDatabase(nameof(Tingle.Dependabot));
+    }
+    else if (selectedDatabase is DatabaseKind.SqlServer)
+    {
+        options.UseSqlServer(builder.Configuration.GetConnectionString("Sql"), options => options.EnableRetryOnFailure());
+    }
 });
 // restore this once the we no longer pull schedules from DB on startup
 //builder.Services.AddDatabaseMigrator<MainDbContext>();
@@ -132,4 +141,5 @@ await AppSetup.SetupAsync(app);
 
 await app.RunAsync();
 
+internal enum DatabaseKind { InMemory, SqlServer, }
 internal enum EventBusTransportKind { InMemory, ServiceBus, }
