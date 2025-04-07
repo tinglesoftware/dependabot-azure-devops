@@ -57,8 +57,9 @@ internal partial class UpdateRunner
         }
         catch (Azure.RequestFailedException rfe) when (rfe.Status is 404) { }
 
-        // check if V2 updater is enabled for the project via Feature Management
+        // check if debug is enabled for the project via Feature Management
         var fmc = MakeTargetingContext(project, job);
+        var debug = await featureManager.IsEnabledAsync(FeatureNames.DependabotDebug, fmc);
         var useV2 = await featureManager.IsEnabledAsync(FeatureNames.UpdaterV2, fmc);
 
         // prepare credentials with replaced secrets
@@ -80,7 +81,7 @@ internal partial class UpdateRunner
             Args = { useV2 ? "update_files" : "update_script_vnext", },
             VolumeMounts = { new ContainerAppVolumeMount { VolumeName = volumeName, MountPath = options.WorkingDirectory, }, },
         };
-        var env = await CreateEnvironmentVariables(project, repository, update, job, directory, credentials, cancellationToken);
+        var env = await CreateEnvironmentVariables(project, repository, update, job, directory, credentials, debug, cancellationToken);
         foreach (var (key, value) in env) container.Env.Add(new ContainerAppEnvironmentVariable { Name = key, Value = value, });
 
         // prepare the ContainerApp job
@@ -129,7 +130,7 @@ internal partial class UpdateRunner
             // ["record-ecosystem-versions"] = await featureManager.IsEnabledAsync(FeatureNames.RecordEcosystemVersions, fmc),
             // ["record-update-job-unknown-error"] = await featureManager.IsEnabledAsync(FeatureNames.RecordUpdateJobUnknownError, fmc),
         };
-        var jobDefinitionPath = await WriteJobDefinitionAsync(project, update, job, experiments, directory, credentials, cancellationToken);
+        var jobDefinitionPath = await WriteJobDefinitionAsync(project, update, job, experiments, directory, credentials, debug, cancellationToken);
         logger.WrittenJobDefinitionFile(job.Id, jobDefinitionPath);
 
         // create the ContainerApp Job
@@ -230,11 +231,11 @@ internal partial class UpdateRunner
                                                                                 UpdateJob job,
                                                                                 string directory,
                                                                                 IList<Dictionary<string, string>> credentials,
+                                                                                bool debug,
                                                                                 CancellationToken cancellationToken = default) // TODO: unit test this
     {
         // check if debug and determinism is enabled for the project via Feature Management
         var fmc = MakeTargetingContext(project, job);
-        var debugAllJobs = await featureManager.IsEnabledAsync(FeatureNames.DebugAllJobs); // context is not passed because this is global
         var deterministic = await featureManager.IsEnabledAsync(FeatureNames.DeterministicUpdates, fmc);
 
         // Add compulsory values
@@ -243,7 +244,7 @@ internal partial class UpdateRunner
             // env for v2
             ["DEPENDABOT_JOB_ID"] = job.Id!,
             ["DEPENDABOT_JOB_TOKEN"] = job.AuthKey!,
-            ["DEPENDABOT_DEBUG"] = debugAllJobs.ToString().ToLower(),
+            ["DEPENDABOT_DEBUG"] = debug.ToString().ToLower(),
             ["DEPENDABOT_API_URL"] = options.JobsApiUrl!.ToString(),
             ["DEPENDABOT_JOB_PATH"] = Path.Join(directory, JobDefinitionFileName),
             ["DEPENDABOT_OUTPUT_PATH"] = Path.Join(directory, "output"),
@@ -297,6 +298,7 @@ internal partial class UpdateRunner
                                                         IDictionary<string, bool> experiments,
                                                         string directory,
                                                         IList<Dictionary<string, string>> credentials,
+                                                        bool debug,
                                                         CancellationToken cancellationToken = default) // TODO: unit test this
     {
         [return: NotNullIfNotNull(nameof(value))]
@@ -304,10 +306,6 @@ internal partial class UpdateRunner
 
         var url = project.Url;
         var credentialsMetadata = MakeCredentialsMetadata(credentials);
-
-        // check if debug is enabled for the project via Feature Management
-        var fmc = MakeTargetingContext(project, job);
-        var debug = await featureManager.IsEnabledAsync(FeatureNames.DebugJobs, fmc);
 
         var definition = new JsonObject
         {
