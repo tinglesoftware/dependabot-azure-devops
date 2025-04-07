@@ -456,6 +456,10 @@
                   "secretRef": "connection-strings-application-insights"
                 },
                 {
+                  "name": "Database__Kind",
+                  "value": "SqlServer"
+                },
+                {
                   "name": "ConnectionStrings__Sql",
                   "secretRef": "connection-strings-sql"
                 },

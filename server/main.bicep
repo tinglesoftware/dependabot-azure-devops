@@ -282,6 +282,8 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
             { name: 'AzureAppConfig__Label', value: 'Production' }
 
             { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', secretRef: 'connection-strings-application-insights' }
+
+            { name: 'Database__Kind', value: 'SqlServer' }
             { name: 'ConnectionStrings__Sql', secretRef: 'connection-strings-sql' }
 
             { name: 'DataProtection__Azure__KeyVault__KeyUrl', value: keyVault::dataProtectionKey.properties.keyUri }
