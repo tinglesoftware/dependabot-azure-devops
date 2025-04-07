@@ -15,3 +15,17 @@ public enum UpdateJobTrigger
 
     Manual = 3,
 }
+
+[JsonConverter(typeof(JsonStringEnumMemberConverter))]
+public enum UpdateJobPlatform
+{
+    [EnumMember(Value = "container_apps")]
+    ContainerApps = 0,
+
+    // [EnumMember(Value = "container_instances")]
+    // ContainerInstances = 1,
+
+    // Kubernetes = 2,
+
+    DockerCompose = 3,
+}
