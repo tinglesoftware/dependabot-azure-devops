@@ -432,6 +432,14 @@
                   "value": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('name')), '2023-01-31').clientId]"
                 },
                 {
+                  "name": "GITHUB_SHA",
+                  "value": "#{GITHUB_SHA}#"
+                },
+                {
+                  "name": "GITHUB_REF_NAME",
+                  "value": "#{GITHUB_REF_NAME}#"
+                },
+                {
                   "name": "ASPNETCORE_FORWARDEDHEADERS_ENABLED",
                   "value": "true"
                 },
