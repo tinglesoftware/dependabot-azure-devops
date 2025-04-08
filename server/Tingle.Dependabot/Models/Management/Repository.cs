@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using Tingle.Dependabot.Models.Dependabot;
+using Tingle.Extensions.Primitives;
 
 namespace Tingle.Dependabot.Models.Management;
 
@@ -61,5 +62,5 @@ public class Repository
     public Dictionary<string, DependabotRegistry> Registries { get; set; } = [];
 
     [Timestamp]
-    public byte[]? Etag { get; set; }
+    public Etag? Etag { get; set; } // TODO: remove nullability once we reset the migrations
 }

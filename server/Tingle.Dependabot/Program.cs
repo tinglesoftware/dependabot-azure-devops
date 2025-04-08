@@ -38,8 +38,8 @@ builder.Services.AddDbContext<MainDbContext>(options =>
         options.UseSqlServer(builder.Configuration.GetConnectionString("Sql"), options => options.EnableRetryOnFailure());
     }
 });
-// restore this once the we no longer pull schedules from DB on startup
-//builder.Services.AddDatabaseMigrator<MainDbContext>();
+// TODO: restore this once AppSetup changes to an IHostedService
+// builder.Services.AddDatabaseSetup<MainDbContext>();
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 

@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using Tingle.Dependabot.Workflow;
+using Tingle.Extensions.Primitives;
 
 namespace Tingle.Dependabot.Models.Management;
 
@@ -95,7 +96,7 @@ public class Project
     public DateTimeOffset? Synchronized { get; set; }
 
     [Timestamp]
-    public byte[]? Etag { get; set; }
+    public Etag? Etag { get; set; } // TODO: remove nullability once we reset the migrations
 }
 
 public class ProjectAutoComplete

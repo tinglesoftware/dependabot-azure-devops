@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+using Tingle.Extensions.Primitives;
 
 namespace Tingle.Dependabot.Models.Management;
 
@@ -89,7 +90,7 @@ public class UpdateJob
     public UpdateJobError? Error { get; set; }
 
     [Timestamp]
-    public byte[]? Etag { get; set; }
+    public Etag? Etag { get; set; } // TODO: remove nullability once we reset the migrations
 }
 
 public class UpdateJobError

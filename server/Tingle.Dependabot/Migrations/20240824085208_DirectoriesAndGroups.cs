@@ -35,12 +35,12 @@ public partial class DirectoriesAndGroups : Migration
         migrationBuilder.CreateIndex(
             name: "IX_UpdateJobs_PackageEcosystem_Directory_Directories",
             table: "UpdateJobs",
-            columns: new[] { "PackageEcosystem", "Directory", "Directories" });
+            columns: ["PackageEcosystem", "Directory", "Directories"]);
 
         migrationBuilder.CreateIndex(
             name: "IX_UpdateJobs_PackageEcosystem_Directory_Directories_EventBusId",
             table: "UpdateJobs",
-            columns: new[] { "PackageEcosystem", "Directory", "Directories", "EventBusId" },
+            columns: ["PackageEcosystem", "Directory", "Directories", "EventBusId"],
             unique: true,
             filter: "[Directory] IS NOT NULL AND [Directories] IS NOT NULL AND [EventBusId] IS NOT NULL");
     }
@@ -73,12 +73,12 @@ public partial class DirectoriesAndGroups : Migration
         migrationBuilder.CreateIndex(
             name: "IX_UpdateJobs_PackageEcosystem_Directory",
             table: "UpdateJobs",
-            columns: new[] { "PackageEcosystem", "Directory" });
+            columns: ["PackageEcosystem", "Directory"]);
 
         migrationBuilder.CreateIndex(
             name: "IX_UpdateJobs_PackageEcosystem_Directory_EventBusId",
             table: "UpdateJobs",
-            columns: new[] { "PackageEcosystem", "Directory", "EventBusId" },
+            columns: ["PackageEcosystem", "Directory", "EventBusId"],
             unique: true,
             filter: "[EventBusId] IS NOT NULL");
     }

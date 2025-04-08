@@ -19,7 +19,13 @@ public class MainDbContext(DbContextOptions<MainDbContext> options) : DbContext(
     {
         base.ConfigureConventions(configurationBuilder);
 
-        configurationBuilder.Properties<AzureDevOpsProjectUrl>().HaveConversion<AzureDevOpsProjectUrlConverter, AzureDevOpsProjectUrlComparer>();
+        if (Database.IsSqlServer() || Database.IsInMemory())
+        {
+            configurationBuilder.AddEtagToBytesConventions();
+        }
+
+        configurationBuilder.Properties<AzureDevOpsProjectUrl>()
+                            .HaveConversion<AzureDevOpsProjectUrlConverter, AzureDevOpsProjectUrlComparer>();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

@@ -121,7 +121,7 @@ public partial class InitialCreate : Migration
             name: "IX_Projects_Created",
             table: "Projects",
             column: "Created",
-            descending: new bool[0]);
+            descending: []);
 
         migrationBuilder.CreateIndex(
             name: "IX_Projects_Password",
@@ -139,7 +139,7 @@ public partial class InitialCreate : Migration
             name: "IX_Repositories_Created",
             table: "Repositories",
             column: "Created",
-            descending: new bool[0]);
+            descending: []);
 
         migrationBuilder.CreateIndex(
             name: "IX_Repositories_ProjectId",
@@ -162,7 +162,7 @@ public partial class InitialCreate : Migration
             name: "IX_UpdateJobs_Created",
             table: "UpdateJobs",
             column: "Created",
-            descending: new bool[0]);
+            descending: []);
 
         migrationBuilder.CreateIndex(
             name: "IX_UpdateJobs_Error_Type",
@@ -172,12 +172,12 @@ public partial class InitialCreate : Migration
         migrationBuilder.CreateIndex(
             name: "IX_UpdateJobs_PackageEcosystem_Directory",
             table: "UpdateJobs",
-            columns: new[] { "PackageEcosystem", "Directory" });
+            columns: ["PackageEcosystem", "Directory"]);
 
         migrationBuilder.CreateIndex(
             name: "IX_UpdateJobs_PackageEcosystem_Directory_EventBusId",
             table: "UpdateJobs",
-            columns: new[] { "PackageEcosystem", "Directory", "EventBusId" },
+            columns: ["PackageEcosystem", "Directory", "EventBusId"],
             unique: true,
             filter: "[EventBusId] IS NOT NULL");
 
