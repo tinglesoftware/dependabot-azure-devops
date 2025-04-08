@@ -138,7 +138,7 @@ app.MapHealthChecks("/liveness", new HealthCheckOptions { Predicate = _ => false
 app.MapControllers();
 
 // setup the application environment
-await AppSetup.SetupAsync(app);
+await AppSetup.SetupAsync(app, app.Lifetime.ApplicationStopping);
 
 await app.RunAsync();
 
