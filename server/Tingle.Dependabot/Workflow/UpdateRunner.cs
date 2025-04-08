@@ -171,6 +171,7 @@ internal partial class UpdateRunner(IFeatureManagerSnapshot featureManager,
                         Name = Docker.DotNet.Models.RestartPolicyKind.No,
                         MaximumRetryCount = 0,
                     },
+                    NetworkMode = options.DockerNetwork,
                 },
                 Cmd = useV2 ? ["update_files"] : ["update_script_vnext"],
                 Labels =

@@ -68,6 +68,13 @@ public class WorkflowOptions
     /// <example>westeurope</example>
     public string? Location { get; set; } // using Azure.Core.Location does not work when binding from IConfiguration
 
+    /// <summary>
+    /// Name of the docker network to use for the jobs.
+    /// This is only used when the the target platform is <see cref="UpdateJobPlatform.DockerCompose"/>.
+    /// </summary>
+    /// <example>dependabot_jobs</example>
+    public string? DockerNetwork { get; set; }
+
     public string GetUpdaterImageTag(string ecosystem, Models.Management.Project project)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(ecosystem);

@@ -16,7 +16,8 @@ internal class WorkflowConfigureOptions : IValidateOptions<WorkflowOptions>
             return ValidateOptionsResult.Fail($"'{nameof(options.JobsPlatform)}' is required");
         }
 
-        if (options.JobsPlatform is Models.Management.UpdateJobPlatform.ContainerApps)
+        var platform = options.JobsPlatform.Value;
+        if (platform is Models.Management.UpdateJobPlatform.ContainerApps)
         {
             if (string.IsNullOrWhiteSpace(options.ResourceGroupId))
             {
@@ -36,6 +37,14 @@ internal class WorkflowConfigureOptions : IValidateOptions<WorkflowOptions>
             if (string.IsNullOrWhiteSpace(options.Location))
             {
                 return ValidateOptionsResult.Fail($"'{nameof(options.Location)}' cannot be null or whitespace");
+            }
+        }
+
+        if (platform is Models.Management.UpdateJobPlatform.DockerCompose)
+        {
+            if (string.IsNullOrWhiteSpace(options.DockerNetwork))
+            {
+                return ValidateOptionsResult.Fail($"'{nameof(options.DockerNetwork)}' cannot be null or whitespace");
             }
         }
 
