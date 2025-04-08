@@ -27,6 +27,7 @@ internal static class AppSetup
     {
         using var scope = app.Services.CreateScope();
         var provider = scope.ServiceProvider;
+        var logger = provider.GetRequiredService<ILoggerFactory>().CreateLogger(typeof(AppSetup).FullName!);
 
         // perform migrations on startup if asked to
         if (app.Configuration.GetValue<bool>("EFCORE_PERFORM_MIGRATIONS"))
@@ -34,6 +35,7 @@ internal static class AppSetup
             var db = provider.GetRequiredService<MainDbContext>().Database;
             if (db.IsRelational()) // only relational databases
             {
+                logger.LogInformation("Performing EF Core migrations on startup");
                 await db.MigrateAsync(cancellationToken: cancellationToken);
             }
         }
@@ -46,6 +48,8 @@ internal static class AppSetup
             setups = JsonSerializer.Deserialize<List<ProjectSetupInfo>>(setupsJson, serializerOptions)!;
         }
 
+        logger.LogInformation("Found {Count} projects to setup", setups.Count);
+
         // add projects if there are projects to be added
         var adoProvider = provider.GetRequiredService<AzureDevOpsProvider>();
         var context = provider.GetRequiredService<MainDbContext>();
@@ -53,6 +57,7 @@ internal static class AppSetup
         foreach (var setup in setups)
         {
             var url = setup.Url;
+            logger.LogInformation("Setting up project: {Url}", url);
             var project = projects.SingleOrDefault(p => p.Url == setup.Url);
             if (project is null)
             {
@@ -64,6 +69,7 @@ internal static class AppSetup
                     Url = setup.Url.ToString(),
                     Type = Models.Management.ProjectType.Azure,
                 };
+                logger.LogInformation("Adding new project to database: {Url}", url);
                 await context.Projects.AddAsync(project, cancellationToken);
             }
 
