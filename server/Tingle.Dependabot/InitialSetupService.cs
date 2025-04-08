@@ -7,7 +7,12 @@ using Tingle.Extensions.Primitives;
 
 namespace Tingle.Dependabot;
 
-internal static class AppSetup
+/// <summary>
+/// Service to setup projects and repositories on startup based on the configuration.
+/// This must be registered as a hosted service after the hosted services responsible for database migrations/creation.
+/// </summary>
+/// <param name="serviceScopeFactory"></param>
+internal class InitialSetupService(IServiceScopeFactory serviceScopeFactory, ILogger<InitialSetupService> logger) : IHostedService
 {
     private class ProjectSetupInfo
     {
@@ -23,25 +28,15 @@ internal static class AppSetup
 
     private static readonly JsonSerializerOptions serializerOptions = new(JsonSerializerDefaults.Web);
 
-    public static async Task SetupAsync(WebApplication app, CancellationToken cancellationToken = default)
+    /// <inheritdoc/>
+    public async Task StartAsync(CancellationToken cancellationToken)
     {
-        using var scope = app.Services.CreateScope();
+        var scope = serviceScopeFactory.CreateScope();
         var provider = scope.ServiceProvider;
-        var logger = provider.GetRequiredService<ILoggerFactory>().CreateLogger(typeof(AppSetup).FullName!);
-
-        // perform migrations on startup if asked to
-        if (app.Configuration.GetValue<bool>("EFCORE_PERFORM_MIGRATIONS"))
-        {
-            var db = provider.GetRequiredService<MainDbContext>().Database;
-            if (db.IsRelational()) // only relational databases
-            {
-                logger.LogInformation("Performing EF Core migrations on startup");
-                await db.MigrateAsync(cancellationToken: cancellationToken);
-            }
-        }
+        var configuration = provider.GetRequiredService<IConfiguration>();
 
         // parse projects to be setup
-        var setupsJson = app.Configuration.GetValue<string?>("PROJECT_SETUPS");
+        var setupsJson = configuration.GetValue<string?>("PROJECT_SETUPS");
         var setups = new List<ProjectSetupInfo>();
         if (!string.IsNullOrWhiteSpace(setupsJson))
         {
@@ -94,6 +89,7 @@ internal static class AppSetup
             if (context.ChangeTracker.HasChanges())
             {
                 project.Updated = DateTimeOffset.UtcNow;
+                logger.LogInformation("Project {Url} updated", url);
             }
         }
 
@@ -116,7 +112,7 @@ internal static class AppSetup
         }
 
         // skip loading schedules if told to
-        if (!app.Configuration.GetValue<bool>("SKIP_LOAD_SCHEDULES"))
+        if (!configuration.GetValue<bool>("SKIP_LOAD_SCHEDULES"))
         {
             var repositories = await context.Repositories.ToListAsync(cancellationToken);
             var scheduler = provider.GetRequiredService<UpdateScheduler>();
@@ -126,6 +122,9 @@ internal static class AppSetup
             }
         }
     }
+
+    /// <inheritdoc/>
+    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
     private static string GeneratePassword(int length = 32)
     {

@@ -38,8 +38,7 @@ builder.Services.AddDbContext<MainDbContext>(options =>
         options.UseSqlServer(builder.Configuration.GetConnectionString("Sql"), options => options.EnableRetryOnFailure());
     }
 });
-// TODO: restore this once AppSetup changes to an IHostedService
-// builder.Services.AddDatabaseSetup<MainDbContext>();
+builder.Services.AddDatabaseSetup<MainDbContext>();
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
@@ -126,6 +125,9 @@ builder.Services.AddPeriodicTasks(builder =>
 builder.Services.AddHealthChecks()
                 .AddDbContextCheck<MainDbContext>();
 
+// Add service to do initial sync
+builder.Services.AddHostedService<InitialSetupService>(); // must be after the IHostedService for migrations
+
 var app = builder.Build();
 
 app.UseRouting();
@@ -136,9 +138,6 @@ app.UseAuthorization();
 app.MapHealthChecks("/health");
 app.MapHealthChecks("/liveness", new HealthCheckOptions { Predicate = _ => false, });
 app.MapControllers();
-
-// setup the application environment
-await AppSetup.SetupAsync(app, app.Lifetime.ApplicationStopping);
 
 await app.RunAsync();
 
