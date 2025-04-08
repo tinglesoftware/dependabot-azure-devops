@@ -69,6 +69,8 @@ public class MainDbContext(DbContextOptions<MainDbContext> options) : DbContext(
         });
     }
 
+    public bool SupportsBulk => Database.IsSqlServer();
+
     private class AzureDevOpsProjectUrlConverter : ValueConverter<AzureDevOpsProjectUrl, string>
     {
         public AzureDevOpsProjectUrlConverter() : base(convertToProviderExpression: v => v.ToString(),
