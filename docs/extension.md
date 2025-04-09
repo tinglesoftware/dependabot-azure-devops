@@ -4,14 +4,14 @@
 - [Using the extension](#using-the-extension)
 - [Troubleshooting issues](#troubleshooting-issues)
 - [Development guide](#development-guide)
-   * [Getting the development environment ready](#getting-the-development-environment-ready)
-   * [Building the extension](#building-the-extension)
-   * [Installing the extension](#installing-the-extension)
-   * [Running the task locally](#running-the-task-locally)
-   * [Running the unit tests](#running-the-unit-tests)
+  - [Getting the development environment ready](#getting-the-development-environment-ready)
+  - [Building the extension](#building-the-extension)
+  - [Installing the extension](#installing-the-extension)
+  - [Running the task locally](#running-the-task-locally)
+  - [Running the unit tests](#running-the-unit-tests)
 - [Architecture](#architecture)
-   * [dependabot@2 versioned update process diagram](#dependabot2-versioned-update-process-diagram)
-   * [dependabot@2 hsecurity-only update process diagram](#dependabot2-security-only-update-process-diagram)
+  - [dependabot@2 versioned update process diagram](#dependabot2-versioned-update-process-diagram)
+  - [dependabot@2 hsecurity-only update process diagram](#dependabot2-security-only-update-process-diagram)
 
 # Using the extension
 
@@ -21,10 +21,10 @@ Refer to the extension [README.md](../extension/README.md).
 
 Dependabot will log more diagnostic information when [verbose logs are enabled](https://learn.microsoft.com/en-us/azure/devops/pipelines/troubleshooting/review-logs?view=azure-devops&tabs=windows-agent#configure-verbose-logs); i.e. `System.Debug` variable is set to `true`.
 
-When verbose logs are enable, Dependabot will also generate a [Flame Graph performance metrics report](https://www.brendangregg.com/flamegraphs.html), which can be viewed by [downloading the pipeline logs](https://learn.microsoft.com/en-us/azure/devops/pipelines/troubleshooting/review-logs?view=azure-devops&tabs=windows-agent#view-and-download-logs), then locating the corresponding HTML report file in the `Job` folder. To understand how to read Flame Graph reports, see: https://www.brendangregg.com/flamegraphs.html#summary
+When verbose logs are enable, Dependabot will also generate a [Flame Graph performance metrics report](https://www.brendangregg.com/flamegraphs.html), which can be viewed by [downloading the pipeline logs](https://learn.microsoft.com/en-us/azure/devops/pipelines/troubleshooting/review-logs?view=azure-devops&tabs=windows-agent#view-and-download-logs), then locating the corresponding HTML report file in the `Job` folder. To understand how to read Flame Graph reports, see: <https://www.brendangregg.com/flamegraphs.html#summary>
 
 > [!WARNING]
-> When sharing pipeline logs, please be aware that the **task log contains potentionally sensitive information** such as your DevOps organisation name, project names, repository names, private package feeds URLs, list of used dependency names/versions, and the contents of any dependency files that are updated (e.g. `package.json`, `*.csproj`, etc). The Flame Graph report does **not** contain any sensitive information about your DevOps environment.
+> When sharing pipeline logs, please be aware that the **task log contains potentially sensitive information** such as your DevOps organisation name, project names, repository names, private package feeds URLs, list of used dependency names/versions, and the contents of any dependency files that are updated (e.g. `package.json`, `*.csproj`, etc). The Flame Graph report does **not** contain any sensitive information about your DevOps environment.
 
 > [!TIP]
 > To mask environment secrets from the task log, set the `System.Secrets` variable to `true` in your pipeline.
@@ -56,17 +56,21 @@ npm run package -- --overrides-file overrides.local.json --rev-version --publish
 ## Installing the extension
 
 To test the extension in a Azure DevOps organisation:
+
 1. [Build the extension `.vsix` package](#building-the-extension)
-1. [Publish the extension to your publisher account](https://learn.microsoft.com/en-us/azure/devops/extend/publish/overview?view=azure-devops#publish-your-extension)
-1. [Share the extension with the organisation](https://learn.microsoft.com/en-us/azure/devops/extend/publish/overview?view=azure-devops#share-your-extension).
+2. [Publish the extension to your publisher account](https://learn.microsoft.com/en-us/azure/devops/extend/publish/overview?view=azure-devops#publish-your-extension)
+3. [Share the extension with the organisation](https://learn.microsoft.com/en-us/azure/devops/extend/publish/overview?view=azure-devops#share-your-extension).
 
 ## Running the task locally
+
 To run the latest task version:
+
 ```bash
 npm start
 ```
 
 To run a specific task version:
+
 ```bash
 npm run start:V1 # runs dependabot@1 task
 npm run start:V2 # runs dependabot@2 task
@@ -82,6 +86,7 @@ npm test
 # Architecture
 
 ## dependabot2 versioned update process diagram
+
 High-level sequence diagram illustrating how the `dependabot@2` task performs versioned updates using [dependabot-cli](https://github.com/dependabot/cli). For more technical details, see [how dependabot-cli works](https://github.com/dependabot/cli?tab=readme-ov-file#how-it-works).
 
 ```mermaid
@@ -133,6 +138,7 @@ High-level sequence diagram illustrating how the `dependabot@2` task performs ve
 ```
 
 ## dependabot2 security-only update process diagram
+
 High-level sequence diagram illustrating how the `dependabot@2` task performs security-only updates using [dependabot-cli](https://github.com/dependabot/cli).
 
 ```mermaid

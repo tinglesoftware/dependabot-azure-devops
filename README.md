@@ -91,7 +91,6 @@ Besides accessing the repository, sometimes private feeds/registries may need to
 
 Private registries are configured in `dependabot.yml`, refer to the [official documentation](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#configuration-options-for-private-registries).
 
-
 <details open>
 <summary>Example:</summary>
 

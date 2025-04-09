@@ -5,13 +5,13 @@
 # Table of Contents
 
 - [Running the updater](#running-the-updater)
-   * [Environment Variables](#environment-variables)
+  - [Environment Variables](#environment-variables)
 - [Development guide](#development-guide)
-   * [Getting the development environment ready](#getting-the-development-environment-ready)
-   * [Building the Docker image](#building-the-docker-image)
-   * [Running your code changes](#running-your-code-changes)
-   * [Running the code linter](#running-the-code-linter)
-   * [Running the unit tests](#running-the-unit-tests)
+  - [Getting the development environment ready](#getting-the-development-environment-ready)
+  - [Building the Docker image](#building-the-docker-image)
+  - [Running your code changes](#running-your-code-changes)
+  - [Running the code linter](#running-the-code-linter)
+  - [Running the unit tests](#running-the-unit-tests)
 
 # Running the updater
 
