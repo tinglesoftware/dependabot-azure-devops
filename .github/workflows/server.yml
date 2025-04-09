@@ -168,7 +168,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push multi-arch image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ${{ github.workspace }}/drop/Tingle.Dependabot
           file: server/Tingle.Dependabot/Dockerfile.CI
