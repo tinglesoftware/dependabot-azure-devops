@@ -301,11 +301,13 @@ internal partial class UpdateRunner(IFeatureManagerSnapshot featureManager,
             var container = containers.FirstOrDefault(c => c.Names.Contains($"/{resourceName}"));
             if (container is null) return null;
 
-            var status = container.State.ToString() switch
+            var inspection = await dockerClient.Containers.InspectContainerAsync(container.ID, cancellationToken);
+            var status = inspection.State switch
             {
-                "created" => UpdateJobStatus.Running,
-                "running" => UpdateJobStatus.Running,
-                "exited" => UpdateJobStatus.Succeeded,
+                { Running: true } => UpdateJobStatus.Running,
+                { Status: "created" } => UpdateJobStatus.Running,
+                { Status: "exited", ExitCode: 0 } => UpdateJobStatus.Succeeded,
+                { Status: "exited", ExitCode: not 0 } => UpdateJobStatus.Failed,
                 _ => UpdateJobStatus.Failed,
             };
 
@@ -313,7 +315,6 @@ internal partial class UpdateRunner(IFeatureManagerSnapshot featureManager,
             if (status is UpdateJobStatus.Running) return null;
 
             // get the period
-            var inspection = await dockerClient.Containers.InspectContainerAsync(container.ID, cancellationToken);
             var start = DateTimeOffset.Parse(inspection.State.StartedAt);
             var end = DateTimeOffset.Parse(inspection.State.FinishedAt);
 
