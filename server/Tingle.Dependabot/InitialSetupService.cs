@@ -94,14 +94,15 @@ internal class InitialSetupService(IServiceScopeFactory serviceScopeFactory, ILo
             }
         }
 
-        // update database and list of projects
+        // update database
         var updated = await context.SaveChangesAsync(cancellationToken);
-        projects = updated > 0 ? await context.Projects.ToListAsync(cancellationToken) : projects;
-
-        // synchronize and create/update subscriptions if we have setups
-        var synchronizer = provider.GetRequiredService<Synchronizer>();
-        if (setups.Count > 0)
+        if (updated > 0)
         {
+            // update database and list of projects
+            projects = await context.Projects.ToListAsync(cancellationToken);
+
+            // synchronize and create/update subscriptions if we have setups
+            var synchronizer = provider.GetRequiredService<Synchronizer>();
             foreach (var project in projects)
             {
                 // synchronize project
