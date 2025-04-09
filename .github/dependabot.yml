@@ -10,6 +10,9 @@ updates:
     schedule:
       interval: 'weekly'
       time: '02:00'
+    group:
+      docker:
+        patterns: ['docker/*']
 
   - package-ecosystem: 'devcontainers'
     directory: '/'
