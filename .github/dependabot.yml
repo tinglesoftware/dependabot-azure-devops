@@ -10,7 +10,7 @@ updates:
     schedule:
       interval: 'weekly'
       time: '02:00'
-    group:
+    groups:
       docker:
         patterns: ['docker/*']
 
