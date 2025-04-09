@@ -448,7 +448,7 @@
                   "value": "true"
                 },
                 {
-                  "name": "PROJECT_SETUPS",
+                  "name": "InitialSetup__Projects",
                   "secretRef": "project-setups"
                 },
                 {

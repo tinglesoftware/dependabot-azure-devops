@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using System.Security.Cryptography;
 using System.Text.Json;
 using Tingle.Dependabot.Models;
 using Tingle.Dependabot.Workflow;
@@ -14,13 +13,15 @@ namespace Tingle.Dependabot;
 /// This must be registered as a hosted service after the hosted services responsible for database migrations/creation.
 /// </summary>
 /// <param name="serviceScopeFactory"></param>
+/// <param name="optionsAccessor"></param>
 /// <param name="jsonOptionsAccessor"></param>
 /// <param name="logger"></param>
 internal class InitialSetupService(IServiceScopeFactory serviceScopeFactory,
+                                   IOptions<InitialSetupOptions> optionsAccessor,
                                    IOptions<JsonOptions> jsonOptionsAccessor,
                                    ILogger<InitialSetupService> logger) : IHostedService
 {
-    private class ProjectSetupInfo
+    internal class ProjectSetupInfo
     {
         public required AzureDevOpsProjectUrl Url { get; set; }
         public required string Token { get; set; }
@@ -32,6 +33,7 @@ internal class InitialSetupService(IServiceScopeFactory serviceScopeFactory,
         public Dictionary<string, string> Secrets { get; set; } = new(StringComparer.OrdinalIgnoreCase);
     }
 
+    private readonly InitialSetupOptions options = optionsAccessor?.Value ?? throw new ArgumentNullException(nameof(optionsAccessor));
     private readonly JsonOptions jsonOptions = jsonOptionsAccessor?.Value ?? throw new ArgumentNullException(nameof(jsonOptionsAccessor));
 
     /// <inheritdoc/>
@@ -39,14 +41,13 @@ internal class InitialSetupService(IServiceScopeFactory serviceScopeFactory,
     {
         var scope = serviceScopeFactory.CreateScope();
         var provider = scope.ServiceProvider;
-        var configuration = provider.GetRequiredService<IConfiguration>();
 
         // parse projects to be setup
-        var setupsJson = configuration.GetValue<string?>("PROJECT_SETUPS");
+        var setupsJson = options.Projects;
         var setups = new List<ProjectSetupInfo>();
-        if (!string.IsNullOrWhiteSpace(setupsJson))
+        if (!string.IsNullOrWhiteSpace(options.Projects))
         {
-            setups = JsonSerializer.Deserialize<List<ProjectSetupInfo>>(setupsJson, jsonOptions.SerializerOptions)!;
+            setups = JsonSerializer.Deserialize<List<ProjectSetupInfo>>(options.Projects, jsonOptions.SerializerOptions)!;
         }
 
         logger.LogInformation("Found {Count} projects to setup", setups.Count);
@@ -66,7 +67,7 @@ internal class InitialSetupService(IServiceScopeFactory serviceScopeFactory,
                 {
                     Id = $"prj_{Ksuid.Generate()}",
                     Created = DateTimeOffset.UtcNow,
-                    Password = GeneratePassword(32),
+                    Password = Keygen.Create(32, Keygen.OutputFormat.Base62), // base62 so that it can be used in the URL if needed
                     Url = setup.Url.ToString(),
                     Type = Models.Management.ProjectType.Azure,
                 };
@@ -119,7 +120,7 @@ internal class InitialSetupService(IServiceScopeFactory serviceScopeFactory,
         }
 
         // skip loading schedules if told to
-        if (!configuration.GetValue<bool>("SKIP_LOAD_SCHEDULES"))
+        if (!options.SkipLoadSchedules)
         {
             var repositories = await context.Repositories.ToListAsync(cancellationToken);
             var scheduler = provider.GetRequiredService<UpdateScheduler>();
@@ -132,12 +133,44 @@ internal class InitialSetupService(IServiceScopeFactory serviceScopeFactory,
 
     /// <inheritdoc/>
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+}
 
-    private static string GeneratePassword(int length = 32)
+internal class InitialSetupOptions
+{
+    /// <summary>
+    /// The JSON array as a string for the projects to be setup.
+    /// If provided, it must be a valid JSON and is deserialized into an array
+    /// of <see cref="InitialSetupService.ProjectSetupInfo"/>.
+    /// </summary>
+    /// <example>
+    /// [{\"url\":\"https://dev.azure.com/tingle/dependabot\",\"token\":\"dummy\",\"AutoComplete\":true}]
+    /// </example>
+    public string? Projects { get; set; }
+
+    /// <summary>
+    /// Indicates whether the loading of schedules into memory should be skipped.
+    /// Each repository has updates and each update has a schedule.
+    /// </summary>
+    public bool SkipLoadSchedules { get; set; }
+}
+
+internal class InitialSetupConfigureOptions : IValidateOptions<InitialSetupOptions>
+{
+    public ValidateOptionsResult Validate(string? name, InitialSetupOptions options)
     {
-        var data = new byte[length];
-        using var rng = RandomNumberGenerator.Create();
-        rng.GetBytes(data);
-        return Convert.ToBase64String(data);
+        if (!string.IsNullOrWhiteSpace(options.Projects))
+        {
+            try
+            {
+                var node = System.Text.Json.Nodes.JsonNode.Parse(options.Projects);
+                node!.AsArray();
+            }
+            catch (Exception ex)
+            {
+                return ValidateOptionsResult.Fail(ex.Message);
+            }
+        }
+
+        return ValidateOptionsResult.Success;
     }
 }

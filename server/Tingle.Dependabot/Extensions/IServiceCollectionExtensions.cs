@@ -1,6 +1,7 @@
 ﻿using Medallion.Threading;
 using Medallion.Threading.FileSystem;
 using Microsoft.FeatureManagement;
+using Tingle.Dependabot;
 using Tingle.Dependabot.Workflow;
 
 namespace Microsoft.Extensions.DependencyInjection;
@@ -53,6 +54,16 @@ internal static class IServiceCollectionExtensions
 
         services.AddHttpClient<AzureDevOpsProvider>();
         services.AddScoped<Synchronizer>();
+
+        return services;
+    }
+
+    public static IServiceCollection AddInitialSetup(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.Configure<InitialSetupOptions>(configuration);
+        services.ConfigureOptions<InitialSetupConfigureOptions>();
+
+        services.AddHostedService<InitialSetupService>();
 
         return services;
     }

@@ -41,7 +41,7 @@ services:
       GITHUB_REF_NAME: '${GITHUB_REF_NAME:-unknown}'
 
       EFCORE_PERFORM_MIGRATIONS: 'true' # Perform migrations on startup
-      # PROJECT_SETUPS: '[{"url":"https://dev.azure.com/tingle/dependabot","token":"dummy","AutoComplete":true}]'
+      # InitialSetup__Projects: '[{"url":"https://dev.azure.com/tingle/dependabot","token":"dummy","AutoComplete":true}]'
       Database__Kind: 'SqlServer'
       # ConnectionStrings__Mongo: 'mongodb://dependabot:My!P#ssw0rd1@mongo:27017/dependabot'
       ConnectionStrings__Sql: 'Server=mssql;Database=dependabot;User Id=sa;Password=My!P#ssw0rd1;TrustServerCertificate=True;MultipleActiveResultSets=False;'

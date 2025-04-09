@@ -280,7 +280,7 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
             { name: 'ASPNETCORE_FORWARDEDHEADERS_ENABLED', value: 'true' } // Application is behind proxy
             { name: 'EFCORE_PERFORM_MIGRATIONS', value: 'true' } // Perform migrations on startup
 
-            { name: 'PROJECT_SETUPS', secretRef: 'project-setups' }
+            { name: 'InitialSetup__Projects', secretRef: 'project-setups' }
 
             { name: 'AzureAppConfig__Endpoint', value: appConfiguration.properties.endpoint }
             { name: 'AzureAppConfig__Label', value: 'Production' }

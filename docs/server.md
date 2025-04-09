@@ -125,7 +125,7 @@ Create a new `server/docker-compose.local.yml` file to setup the project and tok
 services:
   server:
     environment:
-      PROJECT_SETUPS: '[{"url":"https://dev.azure.com/tingle/dependabot","token":"dummy","AutoComplete":true}]'
+      InitialSetup__Projects: '[{"url":"https://dev.azure.com/tingle/dependabot","token":"dummy","AutoComplete":true}]'
       Workflow__GithubToken: 'dummy'
 ```
 

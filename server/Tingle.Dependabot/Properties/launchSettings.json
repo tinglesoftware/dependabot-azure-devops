@@ -8,9 +8,7 @@
       "applicationUrl": "https://localhost:44390;http://localhost:59269",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "EFCORE_PERFORM_MIGRATIONS": "true",
-        "SKIP_LOAD_SCHEDULES": "true",
-        "PROJECT_SETUPS_": "[{\"url\":\"https://dev.azure.com/tingle/dependabot\",\"token\":\"dummy\",\"AutoComplete\":true}]"
+        "EFCORE_PERFORM_MIGRATIONS": "true"
       }
     },
     "Docker": {

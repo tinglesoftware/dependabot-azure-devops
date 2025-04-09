@@ -123,8 +123,8 @@ builder.Services.AddPeriodicTasks(builder =>
 builder.Services.AddHealthChecks()
                 .AddDbContextCheck<MainDbContext>();
 
-// Add service to do initial sync
-builder.Services.AddHostedService<InitialSetupService>(); // must be after the IHostedService for migrations
+// Add service to do initial sync (must be after the IHostedService for migrations)
+builder.Services.AddInitialSetup(builder.Configuration.GetSection("InitialSetup"));
 
 var app = builder.Build();
 
