@@ -14,7 +14,6 @@ Gemfile.lock
 !updater/spec/fixtures/**/Gemfile.lock
 !updater/Gemfile.lock
 *.pyc
-/.vscode/
 /.vscode-server/
 /.vscode-server-insiders/
 /.core-bash_history
