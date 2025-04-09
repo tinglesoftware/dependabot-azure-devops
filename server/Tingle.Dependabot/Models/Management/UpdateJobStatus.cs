@@ -1,5 +1,8 @@
-﻿namespace Tingle.Dependabot.Models.Management;
+﻿using System.Text.Json.Serialization;
 
+namespace Tingle.Dependabot.Models.Management;
+
+[JsonConverter(typeof(JsonStringEnumMemberConverter))]
 public enum UpdateJobStatus
 {
     Scheduled = 0,
