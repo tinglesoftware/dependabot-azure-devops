@@ -2,7 +2,7 @@ services:
   server:
     image: dependabot-server:${IMAGE_TAG:-latest}
     build:
-      context: ../
+      context: .
       dockerfile: server/Tingle.Dependabot/Dockerfile
       args:
         - configuration=Debug

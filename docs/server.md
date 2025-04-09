@@ -119,7 +119,7 @@ To enable automatic pickup of configuration files, merge conflict resolution and
 
 ## Docker Compose
 
-Create a new `server/docker-compose.local.yml` file to setup the project and token. For example:
+Create a new `docker-compose.local.yml` file to setup the project and token. For example:
 
 ```yml
 services:
