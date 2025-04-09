@@ -224,14 +224,14 @@ internal class Synchronizer(MainDbContext dbContext, AzureDevOpsProvider adoProv
 
                 // set the updates a fresh
                 var updates = configuration.Updates!;
-                repository.Updates = updates.Select(update => new RepositoryUpdate(update)
+                repository.Updates = [.. updates.Select(update => new RepositoryUpdate(update)
                 {
                     Files = [], // files are populated by an API call from Ruby during job execution
 
                     LatestJobId = null,
                     LatestJobStatus = null,
                     LatestUpdate = null,
-                }).ToList();
+                })];
             }
             catch (YamlDotNet.Core.YamlException ye)
             {

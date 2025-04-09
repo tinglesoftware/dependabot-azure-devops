@@ -515,12 +515,12 @@ internal partial class UpdateRunner(IFeatureManagerSnapshot featureManager,
     {
         return new TargetingContext
         {
-            Groups = new[]
-            {
+            Groups =
+            [
                 $"provider:{project.Type.ToString().ToLower()}",
                 $"project:{project.Id}",
                 $"ecosystem:{job.PackageEcosystem}",
-            },
+            ],
         };
     }
     internal static IList<Dictionary<string, string>> MakeCredentialsMetadata(IList<Dictionary<string, string>> credentials)
@@ -550,7 +550,7 @@ internal partial class UpdateRunner(IFeatureManagerSnapshot featureManager,
     {
         if (registries is null) return Array.Empty<Dictionary<string, string>>();
 
-        return registries.Select(v =>
+        return [.. registries.Select(v =>
         {
             var type = v.Type?.Replace("-", "_") ?? throw new InvalidOperationException("Type should not be null");
 
@@ -597,7 +597,7 @@ internal partial class UpdateRunner(IFeatureManagerSnapshot featureManager,
             if (!skipUrl) values.AddIfNotDefault("url", v.Url);
 
             return values;
-        }).ToList();
+        })];
     }
     internal static string? ConvertPlaceholder(string? input, IDictionary<string, string> secrets)
     {

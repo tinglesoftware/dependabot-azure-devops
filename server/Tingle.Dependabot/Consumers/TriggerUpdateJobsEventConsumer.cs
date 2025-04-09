@@ -43,11 +43,11 @@ internal class TriggerUpdateJobsEventConsumer(MainDbContext dbContext, UpdateRun
                 logger.SkippingTriggerRepositoryUpdateNotFound(repositoryId: repositoryId, repositoryUpdateId.Value, projectId: project.Id);
                 return;
             }
-            updates = new[] { update, };
+            updates = [update];
         }
         else
         {
-            updates = repository.Updates.ToList();
+            updates = [.. repository.Updates];
         }
 
         // trigger each update

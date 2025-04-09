@@ -9,13 +9,13 @@ namespace Tingle.Dependabot.Workflow;
 public class AzureDevOpsProvider(HttpClient httpClient, IOptions<WorkflowOptions> optionsAccessor)
 {
     // Possible/allowed paths for the configuration files in a repository.
-    private static readonly IReadOnlyList<string> ConfigurationFilePaths = new[] {
+    private static readonly IReadOnlyList<string> ConfigurationFilePaths = [
         ".azuredevops/dependabot.yml",
         ".azuredevops/dependabot.yaml",
 
         ".github/dependabot.yml",
         ".github/dependabot.yaml",
-    };
+    ];
 
     private static readonly (string, string)[] SubscriptionEventTypes =
     [

@@ -24,7 +24,7 @@ internal class UpdateScheduler
             var cached = Interlocked.Exchange(ref store, null!);
             var timers = cached.Values.ToArray().SelectMany(l => l).ToArray();
             var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
-            Task.WaitAll(timers.Select(t => t.StopAsync(cts.Token)).ToArray());
+            Task.WaitAll([.. timers.Select(t => t.StopAsync(cts.Token))]);
         });
     }
 

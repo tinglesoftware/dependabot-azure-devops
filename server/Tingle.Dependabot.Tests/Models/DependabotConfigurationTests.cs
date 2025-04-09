@@ -70,7 +70,7 @@ public class DependabotConfigurationTests
                 {
                     PackageEcosystem = "npm",
                     Directory = "/",
-                    Registries = ["dummy1", "dummy2",],
+                    Registries = ["dummy1", "dummy2"],
                 },
             ],
             Registries = new Dictionary<string, DependabotRegistry>
