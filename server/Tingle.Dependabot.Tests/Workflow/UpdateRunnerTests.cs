@@ -27,58 +27,58 @@ public class UpdateRunnerTests
 
         // composer-repository
         var metadata = metadatas[0];
-        Assert.Equal<string>(["type", "host"], metadata.Keys);
-        Assert.Equal<string>(["composer_repository", "repo.packagist.com"], metadata.Values);
+        Assert.Equal(["type", "host"], metadata.Keys);
+        Assert.Equal(["composer_repository", "repo.packagist.com"], metadata.Values);
 
         // docker-registry
         metadata = metadatas[1];
-        Assert.Equal<string>(["type", "host"], metadata.Keys);
-        Assert.Equal<string>(["docker_registry", "registry.hub.docker.com"], metadata.Values);
+        Assert.Equal(["type", "host"], metadata.Keys);
+        Assert.Equal(["docker_registry", "registry.hub.docker.com"], metadata.Values);
 
         // git
         metadata = metadatas[2];
-        Assert.Equal<string>(["type", "host"], metadata.Keys);
-        Assert.Equal<string>(["git", "github.com"], metadata.Values);
+        Assert.Equal(["type", "host"], metadata.Keys);
+        Assert.Equal(["git", "github.com"], metadata.Values);
 
         // hex-organization
         metadata = metadatas[3];
-        Assert.Equal<string>(["type"], metadata.Keys);
-        Assert.Equal<string>(["hex_organization"], metadata.Values);
+        Assert.Equal(["type"], metadata.Keys);
+        Assert.Equal(["hex_organization"], metadata.Values);
 
         // hex-repository
         metadata = metadatas[4];
-        Assert.Equal<string>(["type", "host"], metadata.Keys);
-        Assert.Equal<string>(["hex_repository", "private-repo.example.com"], metadata.Values);
+        Assert.Equal(["type", "host"], metadata.Keys);
+        Assert.Equal(["hex_repository", "private-repo.example.com"], metadata.Values);
 
         // maven-repository
         metadata = metadatas[5];
-        Assert.Equal<string>(["type", "host"], metadata.Keys);
-        Assert.Equal<string>(["maven_repository", "artifactory.example.com"], metadata.Values);
+        Assert.Equal(["type", "host"], metadata.Keys);
+        Assert.Equal(["maven_repository", "artifactory.example.com"], metadata.Values);
 
         // npm-registry
         metadata = metadatas[6];
-        Assert.Equal<string>(["type", "host"], metadata.Keys);
-        Assert.Equal<string>(["npm_registry", "npm.pkg.github.com"], metadata.Values);
+        Assert.Equal(["type", "host"], metadata.Keys);
+        Assert.Equal(["npm_registry", "npm.pkg.github.com"], metadata.Values);
 
         // nuget-feed
         metadata = metadatas[7];
-        Assert.Equal<string>(["type", "host"], metadata.Keys);
-        Assert.Equal<string>(["nuget_feed", "pkgs.dev.azure.com"], metadata.Values);
+        Assert.Equal(["type", "host"], metadata.Keys);
+        Assert.Equal(["nuget_feed", "pkgs.dev.azure.com"], metadata.Values);
 
         // python-index
         metadata = metadatas[8];
-        Assert.Equal<string>(["type", "host"], metadata.Keys);
-        Assert.Equal<string>(["python_index", "pkgs.dev.azure.com"], metadata.Values);
+        Assert.Equal(["type", "host"], metadata.Keys);
+        Assert.Equal(["python_index", "pkgs.dev.azure.com"], metadata.Values);
 
         // rubygems-server
         metadata = metadatas[9];
-        Assert.Equal<string>(["type", "host"], metadata.Keys);
-        Assert.Equal<string>(["rubygems_server", "rubygems.pkg.github.com"], metadata.Values);
+        Assert.Equal(["type", "host"], metadata.Keys);
+        Assert.Equal(["rubygems_server", "rubygems.pkg.github.com"], metadata.Values);
 
         // terraform-registry
         metadata = metadatas[10];
-        Assert.Equal<string>(["type", "host"], metadata.Keys);
-        Assert.Equal<string>(["terraform_registry", "terraform.example.com"], metadata.Values);
+        Assert.Equal(["type", "host"], metadata.Keys);
+        Assert.Equal(["terraform_registry", "terraform.example.com"], metadata.Values);
     }
 
     [Fact]

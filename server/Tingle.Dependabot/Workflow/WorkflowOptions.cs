@@ -75,7 +75,7 @@ public class WorkflowOptions
     /// <example>dependabot_jobs</example>
     public string? DockerNetwork { get; set; }
 
-    public string GetUpdaterImageTag(string ecosystem, Models.Management.Project project)
+    public string GetUpdaterImageTag(string ecosystem, Project project)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(ecosystem);
 

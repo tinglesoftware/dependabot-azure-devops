@@ -39,7 +39,7 @@ internal static class IServiceCollectionExtensions
         builder.AddFeatureFilter<FeatureManagement.FeatureFilters.ContextualTargetingFilter>();
         builder.Services.Configure<FeatureManagement.FeatureFilters.TargetingEvaluationOptions>(o => o.IgnoreCase = true);
 
-        builder.UseDisabledFeaturesHandler(new Tingle.Dependabot.CustomDisabledFeaturesHandler());
+        builder.UseDisabledFeaturesHandler(new CustomDisabledFeaturesHandler());
 
         return services;
     }
