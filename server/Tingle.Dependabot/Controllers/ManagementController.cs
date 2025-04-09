@@ -66,6 +66,23 @@ public class ManagementController(MainDbContext dbContext, IEventPublisher publi
         return Ok(repository);
     }
 
+    [HttpGet("repos/{id}/jobs")]
+    public async Task<IActionResult> GetJobsAsync([FromRoute, Required] string id)
+    {
+        // ensure project exists
+        var projectId = HttpContext.GetProjectId() ?? throw new InvalidOperationException("Project identifier must be provided");
+        var project = await dbContext.Projects.SingleOrDefaultAsync(p => p.Id == projectId);
+        if (project is null) return Problem(title: ErrorCodes.ProjectNotFound, statusCode: 400);
+
+        // ensure repository exists
+        var repository = await dbContext.Repositories.SingleOrDefaultAsync(r => r.ProjectId == project.Id && r.Id == id);
+        if (repository is null) return Problem(title: ErrorCodes.RepositoryNotFound, statusCode: 400);
+
+        // find the jobs
+        var jobs = await dbContext.UpdateJobs.Where(j => j.RepositoryId == repository.Id).ToListAsync();
+        return Ok(jobs);
+    }
+
     [HttpGet("repos/{id}/jobs/{jobId}")]
     public async Task<IActionResult> GetJobAsync([FromRoute, Required] string id, [FromRoute, Required] string jobId)
     {
@@ -81,6 +98,25 @@ public class ManagementController(MainDbContext dbContext, IEventPublisher publi
         // find the job
         var job = await dbContext.UpdateJobs.Where(j => j.RepositoryId == repository.Id && j.Id == jobId).SingleOrDefaultAsync();
         return Ok(job);
+    }
+
+    [HttpGet("repos/{id}/jobs/{jobId}/log")]
+    public async Task<IActionResult> GetJobLogAsync([FromRoute, Required] string id, [FromRoute, Required] string jobId)
+    {
+        // ensure project exists
+        var projectId = HttpContext.GetProjectId() ?? throw new InvalidOperationException("Project identifier must be provided");
+        var project = await dbContext.Projects.SingleOrDefaultAsync(p => p.Id == projectId);
+        if (project is null) return Problem(title: ErrorCodes.ProjectNotFound, statusCode: 400);
+
+        // ensure repository exists
+        var repository = await dbContext.Repositories.SingleOrDefaultAsync(r => r.ProjectId == project.Id && r.Id == id);
+        if (repository is null) return Problem(title: ErrorCodes.RepositoryNotFound, statusCode: 400);
+
+        // ensure job exists
+        var job = await dbContext.UpdateJobs.Where(j => j.RepositoryId == repository.Id && j.Id == jobId).SingleOrDefaultAsync();
+        if (job is null) return Problem(title: ErrorCodes.UpdateJobNotFound, statusCode: 400);
+
+        return Ok(job.Log);
     }
 
     [HttpPost("repos/{id}/sync")]

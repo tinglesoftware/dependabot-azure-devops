@@ -84,6 +84,7 @@ public class UpdateJob
     public long? Duration { get; set; }
 
     /// <summary>Detailed log output.</summary>
+    [JsonIgnore]
     public string? Log { get; set; }
 
     /// <summary>Error recorded by the job, if any.</summary>
