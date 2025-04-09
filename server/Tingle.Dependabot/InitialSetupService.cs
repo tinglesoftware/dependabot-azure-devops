@@ -12,6 +12,7 @@ namespace Tingle.Dependabot;
 /// This must be registered as a hosted service after the hosted services responsible for database migrations/creation.
 /// </summary>
 /// <param name="serviceScopeFactory"></param>
+/// <param name="logger"></param>
 internal class InitialSetupService(IServiceScopeFactory serviceScopeFactory, ILogger<InitialSetupService> logger) : IHostedService
 {
     private class ProjectSetupInfo

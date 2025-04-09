@@ -4,14 +4,15 @@
 - [Why should I use the server?](#why-should-i-use-the-server)
 - [Composition](#composition)
 - [Deployment](#deployment)
-   * [Single click deployment](#single-click-deployment)
-   * [Deployment Parameters](#deployment-parameters)
-   * [Deployment with CLI](#deployment-with-cli)
-   * [Service Hooks and Subscriptions](#service-hooks-and-subscriptions)
+  - [Single click deployment](#single-click-deployment)
+  - [Deployment Parameters](#deployment-parameters)
+  - [Deployment with CLI](#deployment-with-cli)
+  - [Service Hooks and Subscriptions](#service-hooks-and-subscriptions)
+  - [Docker Compose](#docker-compose)
 - [Keeping updated](#keeping-updated)
 - [Development guide](#development-guide)
-   * [Getting the development environment ready](#getting-the-development-environment-ready)
-   * [Running the unit tests](#running-the-unit-tests)
+  - [Getting the development environment ready](#getting-the-development-environment-ready)
+  - [Running the unit tests](#running-the-unit-tests)
 
 # Why should I use the server?
 
@@ -115,6 +116,39 @@ The parameters file (`main.parameters.json`):
 ## Service Hooks and Subscriptions
 
 To enable automatic pickup of configuration files, merge conflict resolution and commands via comments, subscriptions need to be setup on Azure DevOps. You should let the application create them on startup to because it is easier. See [code](https://github.com/tinglesoftware/dependabot-azure-devops/blob/b4e87bfeea133b8e9fa278c98157b7a0123bfdd3/server/Tingle.Dependabot/Workflow/AzureDevOpsProvider.cs#L18-L21) for the list of events subscribed to.
+
+## Docker Compose
+
+Create a new `server/docker-compose.local.yml` file to setup the project and token. For example:
+
+```yml
+services:
+  server:
+    environment:
+      PROJECT_SETUPS: '[{"url":"https://dev.azure.com/tingle/dependabot","token":"dummy","AutoComplete":true}]'
+      Workflow__GithubToken: 'dummy'
+```
+
+Next, run the setup:
+
+```bash
+docker compose -p dependabot -f docker-compose.yml -f docker-compose.local.yml up
+```
+
+If you have made some changes in the code, you might want a fresh Docker image to be built or need to see more logs:
+
+```bash
+docker compose -p dependabot -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.local.yml up --build
+```
+
+On macOS, the default docker socket is not available. You would need run
+
+```bash
+sudo ln -s $HOME/.docker/run/docker.sock /var/run/docker.sock
+```
+
+> [!IMPORTANT]
+> The project name specified as `-p dependabot` must be as is as the values are hardcoded in the code too.
 
 # Keeping updated
 

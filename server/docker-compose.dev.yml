@@ -1,0 +1,9 @@
+services:
+  server:
+    image: dependabot-server:${IMAGE_TAG:-latest}
+    build:
+      context: ../
+      dockerfile: server/Tingle.Dependabot/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      SKIP_LOAD_SCHEDULES: 'true'

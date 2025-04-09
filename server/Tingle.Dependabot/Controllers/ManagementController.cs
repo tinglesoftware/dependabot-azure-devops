@@ -79,7 +79,7 @@ public class ManagementController(MainDbContext dbContext, IEventPublisher publi
         if (repository is null) return Problem(title: ErrorCodes.RepositoryNotFound, statusCode: 400);
 
         // find the job
-        var job = dbContext.UpdateJobs.Where(j => j.RepositoryId == repository.Id && j.Id == jobId).SingleOrDefaultAsync();
+        var job = await dbContext.UpdateJobs.Where(j => j.RepositoryId == repository.Id && j.Id == jobId).SingleOrDefaultAsync();
         return Ok(job);
     }
 

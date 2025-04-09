@@ -14,6 +14,7 @@ using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using Tingle.Dependabot.Models.Dependabot;
 using Tingle.Dependabot.Models.Management;
+using Tingle.Extensions.Primitives;
 
 namespace Tingle.Dependabot.Workflow;
 
@@ -101,7 +102,7 @@ internal partial class UpdateRunner(IFeatureManagerSnapshot featureManager,
                 Image = updaterImage,
                 Resources = job.Resources!,
                 Args = { useV2 ? "update_files" : "update_script_vnext", },
-                VolumeMounts = { new ContainerAppVolumeMount { VolumeName = volumeName, MountPath = options.WorkingDirectory, }, },
+                VolumeMounts = { new ContainerAppVolumeMount { VolumeName = volumeName, MountPath = "/mnt/dependabot", }, },
             };
             foreach (var (key, value) in env) container.Env.Add(new ContainerAppEnvironmentVariable { Name = key, Value = value, });
 
@@ -156,7 +157,22 @@ internal partial class UpdateRunner(IFeatureManagerSnapshot featureManager,
         }
         else if (platform is UpdateJobPlatform.DockerCompose)
         {
+            // pull the image if it does not exist
+            var images = await dockerClient.Images.ListImagesAsync(new() { All = true, }, cancellationToken);
+            var image = images.FirstOrDefault(i => i.RepoTags?.Contains(updaterImage) ?? false);
+            if (image is null)
+            {
+                logger.LogInformation("Pulling image {Image}", updaterImage);
+                var pullParams = new Docker.DotNet.Models.ImagesCreateParameters
+                {
+                    FromImage = updaterImage,
+                    Tag = updaterImage.Split(':').Last(),
+                };
+                await dockerClient.Images.CreateImageAsync(pullParams, new(), new Progress<Docker.DotNet.Models.JSONMessage>(), cancellationToken);
+            }
+
             // prepare the container
+            var resources = job.Resources!;
             var containerParams = new Docker.DotNet.Models.CreateContainerParameters
             {
                 Name = resourceName,
@@ -164,17 +180,19 @@ internal partial class UpdateRunner(IFeatureManagerSnapshot featureManager,
                 Tty = true,
                 HostConfig = new Docker.DotNet.Models.HostConfig
                 {
-                    AutoRemove = true,
-                    Binds = { $"{directory}:{options.WorkingDirectory}", }, // format is "{hostPath}:{containerPath}"
+                    AutoRemove = false,
+                    Binds = ["dependabot_working_directory:/mnt/dependabot"],
                     RestartPolicy = new Docker.DotNet.Models.RestartPolicy
                     {
                         Name = Docker.DotNet.Models.RestartPolicyKind.No,
                         MaximumRetryCount = 0,
                     },
                     NetworkMode = options.DockerNetwork,
+                    Memory = ByteSize.FromGigaBytes(resources.Memory).Bytes,
+                    NanoCPUs = Convert.ToInt64(resources.Cpu * 1_000_000_000),
                 },
                 Cmd = useV2 ? ["update_files"] : ["update_script_vnext"],
-                Labels =
+                Labels = new Dictionary<string, string?>
                 {
                     ["purpose"] = "dependabot",
                     ["ecosystem"] = ecosystem,
