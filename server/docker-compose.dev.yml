@@ -4,5 +4,9 @@ services:
     build:
       context: ../
       dockerfile: server/Tingle.Dependabot/Dockerfile
+      args:
+        - configuration=Debug
+    volumes:
+      - ~/.vsdbg:/remote_debugger:rw
     environment:
       ASPNETCORE_ENVIRONMENT: Development

@@ -5,10 +5,33 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Server Debug",
-      "type": "dotnet",
+      "name": "Server Launch (web)",
+      "type": "coreclr",
       "request": "launch",
-      "projectPath": "${workspaceFolder}/server/Tingle.Dependabot/Tingle.Dependabot.csproj"
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/server/Tingle.Dependabot/bin/Debug/net9.0/Tingle.Dependabot.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/server/Tingle.Dependabot",
+      "stopAtEntry": false,
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+      },
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "sourceFileMap": {
+        "/Views": "${workspaceFolder}/Views"
+      }
+    },
+    {
+      "name": "Server Launch (Docker)",
+      "type": "docker",
+      "request": "launch",
+      "preLaunchTask": "docker-run: debug",
+      "netCore": {
+        "appProject": "${workspaceFolder}/server/Tingle.Dependabot/Tingle.Dependabot.csproj"
+      }
     }
   ]
 }
