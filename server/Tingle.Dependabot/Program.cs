@@ -53,11 +53,9 @@ if (keyVaultKeyUrl is not null)
 // Add controllers
 builder.Services.AddControllers()
                 .AddControllersAsServices()
-                .AddJsonOptions(options =>
-                {
-                    options.JsonSerializerOptions.AllowTrailingCommas = true;
-                    options.JsonSerializerOptions.ReadCommentHandling = JsonCommentHandling.Skip;
-                });
+                .AddJsonOptions(options => options.JsonSerializerOptions.UseStandard());
+
+builder.Services.ConfigureHttpJsonOptions(options => options.SerializerOptions.UseStandard());
 
 // Configure any generated URL to be in lower case
 builder.Services.Configure<RouteOptions>(options => options.LowercaseUrls = true);

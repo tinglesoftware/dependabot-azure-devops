@@ -186,11 +186,7 @@ public class WebhooksControllerIntegrationTests(ITestOutputHelper outputHelper)
             {
                 services.AddControllers()
                         .AddApplicationPart(typeof(MainDbContext).Assembly)
-                        .AddJsonOptions(options =>
-                        {
-                            options.JsonSerializerOptions.AllowTrailingCommas = true;
-                            options.JsonSerializerOptions.ReadCommentHandling = JsonCommentHandling.Skip;
-                        });
+                        .AddJsonOptions(options => options.JsonSerializerOptions.UseStandard());
 
                 var dbName = Guid.NewGuid().ToString();
                 var configuration = context.Configuration;

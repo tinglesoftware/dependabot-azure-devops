@@ -5,6 +5,7 @@ using Azure.ResourceManager.AppContainers;
 using Azure.ResourceManager.AppContainers.Models;
 using Azure.ResourceManager.Resources;
 using Docker.DotNet;
+using Microsoft.AspNetCore.Http.Json;
 using Microsoft.Extensions.Options;
 using Microsoft.FeatureManagement;
 using Microsoft.FeatureManagement.FeatureFilters;
@@ -20,6 +21,7 @@ namespace Tingle.Dependabot.Workflow;
 
 internal partial class UpdateRunner(IFeatureManagerSnapshot featureManager,
                                     IOptions<WorkflowOptions> optionsAccessor,
+                                    IOptions<JsonOptions> jsonOptionsAccessor,
                                     ILogger<UpdateRunner> logger)
 {
     [GeneratedRegex("\\${{\\s*([a-zA-Z_]+[a-zA-Z0-9_-]*)\\s*}}", RegexOptions.Compiled)]
@@ -28,10 +30,9 @@ internal partial class UpdateRunner(IFeatureManagerSnapshot featureManager,
     private const string UpdaterContainerName = "updater";
     private const string JobDefinitionFileName = "job.json";
 
-    private static readonly JsonSerializerOptions serializerOptions = new(JsonSerializerDefaults.Web);
-
     private readonly IFeatureManagerSnapshot featureManager = featureManager ?? throw new ArgumentNullException(nameof(featureManager));
     private readonly WorkflowOptions options = optionsAccessor?.Value ?? throw new ArgumentNullException(nameof(optionsAccessor));
+    private readonly JsonOptions jsonOptions = jsonOptionsAccessor?.Value ?? throw new ArgumentNullException(nameof(jsonOptionsAccessor));
     private readonly ILogger logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     private readonly ArmClient armClient = new(new DefaultAzureCredential());
@@ -455,9 +456,6 @@ internal partial class UpdateRunner(IFeatureManagerSnapshot featureManager,
                                                         bool debug,
                                                         CancellationToken cancellationToken = default) // TODO: unit test this
     {
-        [return: NotNullIfNotNull(nameof(value))]
-        static JsonNode? ToJsonNode<T>(T? value) => value is null ? null : JsonSerializer.SerializeToNode(value, serializerOptions); // null ensures we do not add to the values
-
         var url = project.Url;
         var credentialsMetadata = MakeCredentialsMetadata(credentials);
 
@@ -507,7 +505,7 @@ internal partial class UpdateRunner(IFeatureManagerSnapshot featureManager,
         var path = Path.Join(directory, JobDefinitionFileName);
         if (File.Exists(path)) File.Delete(path);
         using var stream = File.OpenWrite(path);
-        await JsonSerializer.SerializeAsync(stream, definition, serializerOptions, cancellationToken);
+        await JsonSerializer.SerializeAsync(stream, definition, jsonOptions.SerializerOptions, cancellationToken);
 
         return path;
     }
@@ -657,7 +655,10 @@ internal partial class UpdateRunner(IFeatureManagerSnapshot featureManager,
     private ResourceGroupResource GetResourceGroup() => armClient.GetResourceGroupResource(new(options.ResourceGroupId!));
 
     [return: NotNullIfNotNull(nameof(value))]
-    private static string? ToJson<T>(T? value) => value is null ? null : JsonSerializer.Serialize(value, serializerOptions); // null ensures we do not add to the values
+    private string? ToJson<T>(T? value) => value is null ? null : JsonSerializer.Serialize(value, jsonOptions.SerializerOptions); // null ensures we do not add to the values
+
+    [return: NotNullIfNotNull(nameof(value))]
+    private JsonNode? ToJsonNode<T>(T? value) => value is null ? null : JsonSerializer.SerializeToNode(value, jsonOptions.SerializerOptions); // null ensures we do not add to the values
 }
 
 public readonly record struct UpdateRunnerState(UpdateJobStatus Status, DateTimeOffset? Start, DateTimeOffset? End)

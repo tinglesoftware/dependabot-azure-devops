@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Http.Json;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using System.Security.Cryptography;
 using System.Text.Json;
 using Tingle.Dependabot.Models;
@@ -12,8 +14,11 @@ namespace Tingle.Dependabot;
 /// This must be registered as a hosted service after the hosted services responsible for database migrations/creation.
 /// </summary>
 /// <param name="serviceScopeFactory"></param>
+/// <param name="jsonOptionsAccessor"></param>
 /// <param name="logger"></param>
-internal class InitialSetupService(IServiceScopeFactory serviceScopeFactory, ILogger<InitialSetupService> logger) : IHostedService
+internal class InitialSetupService(IServiceScopeFactory serviceScopeFactory,
+                                   IOptions<JsonOptions> jsonOptionsAccessor,
+                                   ILogger<InitialSetupService> logger) : IHostedService
 {
     private class ProjectSetupInfo
     {
@@ -27,7 +32,7 @@ internal class InitialSetupService(IServiceScopeFactory serviceScopeFactory, ILo
         public Dictionary<string, string> Secrets { get; set; } = new(StringComparer.OrdinalIgnoreCase);
     }
 
-    private static readonly JsonSerializerOptions serializerOptions = new(JsonSerializerDefaults.Web);
+    private readonly JsonOptions jsonOptions = jsonOptionsAccessor?.Value ?? throw new ArgumentNullException(nameof(jsonOptionsAccessor));
 
     /// <inheritdoc/>
     public async Task StartAsync(CancellationToken cancellationToken)
@@ -41,7 +46,7 @@ internal class InitialSetupService(IServiceScopeFactory serviceScopeFactory, ILo
         var setups = new List<ProjectSetupInfo>();
         if (!string.IsNullOrWhiteSpace(setupsJson))
         {
-            setups = JsonSerializer.Deserialize<List<ProjectSetupInfo>>(setupsJson, serializerOptions)!;
+            setups = JsonSerializer.Deserialize<List<ProjectSetupInfo>>(setupsJson, jsonOptions.SerializerOptions)!;
         }
 
         logger.LogInformation("Found {Count} projects to setup", setups.Count);
