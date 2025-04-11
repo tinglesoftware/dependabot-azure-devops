@@ -4,8 +4,8 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.29.47.4906",
-      "templateHash": "3661784367808800983"
+      "version": "0.34.44.8038",
+      "templateHash": "375636957893884961"
     }
   },
   "parameters": {
@@ -44,7 +44,23 @@
       "defaultValue": "#{IMAGE_TAG}#",
       "minLength": 1,
       "metadata": {
-        "description": "Tag of the docker images."
+        "description": "Tag of the docker image for the server."
+      }
+    },
+    "dependabotProxyImageTag": {
+      "type": "string",
+      "defaultValue": "latest",
+      "minLength": 1,
+      "metadata": {
+        "description": "Tag for the dependabot proxy docker image."
+      }
+    },
+    "dependabotUpdaterImageTag": {
+      "type": "string",
+      "defaultValue": "latest",
+      "minLength": 1,
+      "metadata": {
+        "description": "Tag for the dependabot updater docker image."
       }
     }
   },
@@ -74,8 +90,9 @@
     ],
     "fileShares": [
       "certs",
-      "distributed-locks",
-      "working-dir"
+      "locks",
+      "proxy",
+      "jobs"
     ],
     "storageAccountName": "[replace(replace(if(equals(parameters('name'), 'dependabot'), 'dependabotstore', parameters('name')), '-', ''), '_', '')]",
     "sqlServerAdministratorLogin": "[uniqueString(resourceGroup().id)]",
@@ -418,12 +435,20 @@
               "name": "dependabot",
               "volumeMounts": [
                 {
-                  "mountPath": "/mnt/dependabot",
-                  "volumeName": "working-dir"
+                  "mountPath": "/mnt/dependabot/certs",
+                  "volumeName": "certs"
                 },
                 {
-                  "mountPath": "/mnt/distributed-locks",
-                  "volumeName": "distributed-locks"
+                  "mountPath": "/mnt/dependabot/locks",
+                  "volumeName": "locks"
+                },
+                {
+                  "mountPath": "/mnt/dependabot/jobs",
+                  "volumeName": "jobs"
+                },
+                {
+                  "mountPath": "/mnt/dependabot/proxy",
+                  "volumeName": "proxy"
                 }
               ],
               "env": [
@@ -477,7 +502,7 @@
                 },
                 {
                   "name": "DistributedLocking__FilePath",
-                  "value": "/mnt/distributed-locks"
+                  "value": "/mnt/dependabot/locks"
                 },
                 {
                   "name": "Logging__OpenTelemetry__LogLevel__Default",
@@ -500,8 +525,16 @@
                   "value": "ContainerApps"
                 },
                 {
-                  "name": "Workflow__WorkingDirectory",
-                  "value": "/mnt/dependabot"
+                  "name": "Workflow__CertsDirectory",
+                  "value": "/mnt/dependabot/certs"
+                },
+                {
+                  "name": "Workflow__ProxyDirectory",
+                  "value": "/mnt/dependabot/proxy"
+                },
+                {
+                  "name": "Workflow__JobsDirectory",
+                  "value": "/mnt/dependabot/jobs"
                 },
                 {
                   "name": "Workflow__WebhookEndpoint",
@@ -520,8 +553,12 @@
                   "value": "[reference(resourceId('Microsoft.OperationalInsights/workspaces', parameters('name')), '2022-10-01').customerId]"
                 },
                 {
+                  "name": "Workflow__ProxyImageTag",
+                  "value": "[parameters('dependabotProxyImageTag')]"
+                },
+                {
                   "name": "Workflow__UpdaterImageTag",
-                  "value": "[parameters('imageTag')]"
+                  "value": "[parameters('dependabotUpdaterImageTag')]"
                 },
                 {
                   "name": "Workflow__GithubToken",
@@ -585,13 +622,23 @@
           ],
           "volumes": [
             {
-              "name": "working-dir",
-              "storageName": "working-dir",
+              "name": "certs",
+              "storageName": "certs",
               "storageType": "AzureFile"
             },
             {
-              "name": "distributed-locks",
-              "storageName": "distributed-locks",
+              "name": "locks",
+              "storageName": "locks",
+              "storageType": "AzureFile"
+            },
+            {
+              "name": "proxy",
+              "storageName": "proxy",
+              "storageType": "AzureFile"
+            },
+            {
+              "name": "jobs",
+              "storageName": "jobs",
               "storageType": "AzureFile"
             }
           ],

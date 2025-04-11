@@ -67,12 +67,9 @@ public class Project
     public Dictionary<string, string> Secrets { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
-    /// Version of the updater docker container images to use.
-    /// If no value is provided, the default version is used.
-    /// Providing a value allows to test new feature just for the project.
+    /// Experiments for the project. If none are provided, the default ones are used
     /// </summary>
-    /// <example>1.20</example>
-    public string? UpdaterImageTag { get; set; }
+    public Dictionary<string, string>? Experiments { get; set; }
 
     /// <summary>
     /// Token for accessing GitHub APIs.

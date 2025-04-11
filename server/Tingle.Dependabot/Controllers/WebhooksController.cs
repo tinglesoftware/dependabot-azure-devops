@@ -10,7 +10,7 @@ using Tingle.EventBus;
 namespace Tingle.Dependabot.Controllers;
 
 [ApiController]
-[Route("/webhooks")]
+[Route("webhooks")]
 [Authorize(AuthConstants.PolicyNameServiceHooks)]
 public class WebhooksController(MainDbContext dbContext, IEventPublisher publisher, ILogger<WebhooksController> logger) : ControllerBase // TODO: unit test this
 {

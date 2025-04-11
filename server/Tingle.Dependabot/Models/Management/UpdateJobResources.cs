@@ -48,6 +48,6 @@ public class UpdateJobResources
 
     public static implicit operator AppContainerResources(UpdateJobResources resources)
     {
-        return new() { Cpu = resources.Cpu, Memory = $"{resources.Memory}Gi", };
+        return new AppContainerResources { Cpu = resources.Cpu, Memory = $"{resources.Memory}Gi", };
     }
 }

@@ -25,7 +25,6 @@ internal class InitialSetupService(IServiceScopeFactory serviceScopeFactory,
     {
         public required AzureDevOpsProjectUrl Url { get; set; }
         public required string Token { get; set; }
-        public string? UpdaterImageTag { get; set; }
         public bool AutoComplete { get; set; }
         public List<int>? AutoCompleteIgnoreConfigs { get; set; }
         public MergeStrategy? AutoCompleteMergeStrategy { get; set; }
@@ -77,7 +76,6 @@ internal class InitialSetupService(IServiceScopeFactory serviceScopeFactory,
 
             // update project using values from the setup
             project.Token = setup.Token;
-            project.UpdaterImageTag = setup.UpdaterImageTag;
             project.AutoComplete.Enabled = setup.AutoComplete;
             project.AutoComplete.IgnoreConfigs = setup.AutoCompleteIgnoreConfigs;
             project.AutoComplete.MergeStrategy = setup.AutoCompleteMergeStrategy;

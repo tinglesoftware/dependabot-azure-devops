@@ -23,7 +23,7 @@ services:
       - mssql_data:/var/opt/mssql
     networks: [server]
     healthcheck:
-      test: ["CMD", "bash", "-c", "</dev/tcp/localhost/1433"]
+      test: ['CMD', 'bash', '-c', '</dev/tcp/localhost/1433']
       interval: 10s
       timeout: 3s
       retries: 6
@@ -45,30 +45,38 @@ services:
       Database__Kind: 'SqlServer'
       # ConnectionStrings__Mongo: 'mongodb://dependabot:My!P#ssw0rd1@mongo:27017/dependabot'
       ConnectionStrings__Sql: 'Server=mssql;Database=dependabot;User Id=sa;Password=My!P#ssw0rd1;TrustServerCertificate=True;MultipleActiveResultSets=False;'
-      DistributedLocking__FilePath: '/mnt/dependabot/distributed-locks'
+      DistributedLocking__FilePath: '/mnt/dependabot/locks'
       Workflow__JobsApiUrl: 'http://server/api/v1/jobs'
       Workflow__JobsPlatform: 'DockerCompose'
-      Workflow__WorkingDirectory: '/mnt/dependabot'
-      Workflow__UpdaterImageTag: '${DEPENDABOT_IMAGES_TAG:-latest}'
-      Workflow__GithubToken: '${GITHUB_TOKEN}'
+      Workflow__CertsDirectory: '/mnt/dependabot/certs'
+      Workflow__ProxyDirectory: '/mnt/dependabot/proxy'
+      Workflow__JobsDirectory: '/mnt/dependabot/jobs'
+      # Workflow__ProxyImageTag: '${DEPENDABOT_PROXY_IMAGE_TAG}'
+      # Workflow__UpdaterImageTag: '${DEPENDABOT_UPDATER_IMAGE_TAG}'
+      # Workflow__GithubToken: '${GITHUB_TOKEN}'
       # EventBus__SelectedTransport: 'InMemory'
       Logging__OpenTelemetry__LogLevel__Default: Warning # only send warnings and above to OpenTelemetry
       Logging__LogLevel__Polly: None # too many logs
       Logging__OpenTelemetry__LogLevel__Polly: None # too many logs (one above seems not sufficient)
       Logging__LogLevel__Microsoft.AspNetCore.DataProtection.KeyManagement.XmlKeyManager: Error
     volumes:
-      - working_directory:/mnt/dependabot
-      - /var/run/docker.sock:/var/run/docker.sock  # Allows the container to create/manage other containers
-    networks: [server, jobs]
+      - locks:/mnt/dependabot/locks
+      - proxy:/mnt/dependabot/proxy
+      - jobs:/mnt/dependabot/jobs
+      - /var/run/docker.sock:/var/run/docker.sock # Allows the container to create/manage other containers
+    networks: [server, proxy]
 
 volumes:
-  mongo_configdb:
-  mongo_data:
+  locks:
   mssql_data:
-  working_directory:
+  proxy:
+  jobs:
 
 networks:
   server:
     driver: bridge
+  proxy:
+    driver: bridge
   jobs:
     driver: bridge
+    internal: true # no internet access

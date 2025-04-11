@@ -63,6 +63,9 @@ public class UpdateJob
     [Required]
     public UpdateJobResources? Resources { get; set; }
 
+    /// <summary>Image used for the proxy.</summary>
+    public string? ProxyImage { get; set; }
+
     /// <summary>Image used for the updater.</summary>
     public string? UpdaterImage { get; set; }
 
@@ -92,6 +95,19 @@ public class UpdateJob
 
     [Timestamp]
     public Etag? Etag { get; set; } // TODO: remove nullability once we reset the migrations
+
+    public string GetResourceName()
+    {
+        // we use this to create azure resources which have name restrictions
+        // alphanumeric, starts with a letter, does not contain "--", up to 32 characters
+        return Platform switch
+        {
+            UpdateJobPlatform.ContainerApps => $"job-{Id}",
+            _ => $"dependabot-{Id}",
+        };
+    }
+
+    public string GetResourceNameProxy() => $"{GetResourceName()}-proxy";
 }
 
 public class UpdateJobError

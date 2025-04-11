@@ -1,9 +1,7 @@
 ﻿using System.Runtime.Serialization;
-using System.Text.Json.Serialization;
 
 namespace Tingle.Dependabot.Models.Management;
 
-[JsonConverter(typeof(JsonStringEnumMemberConverter))]
 public enum UpdateJobTrigger
 {
     Scheduled = 0,
@@ -16,7 +14,6 @@ public enum UpdateJobTrigger
     Manual = 3,
 }
 
-[JsonConverter(typeof(JsonStringEnumMemberConverter))]
 public enum UpdateJobPlatform
 {
     [EnumMember(Value = "container_apps")]
@@ -27,5 +24,6 @@ public enum UpdateJobPlatform
 
     // Kubernetes = 2,
 
+    [EnumMember(Value = "docker_compose")]
     DockerCompose = 3,
 }

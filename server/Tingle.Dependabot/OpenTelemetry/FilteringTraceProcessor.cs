@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using OpenTelemetry;
+﻿using OpenTelemetry;
 using System.Diagnostics;
 
 namespace Tingle.Dependabot.OpenTelemetry;
