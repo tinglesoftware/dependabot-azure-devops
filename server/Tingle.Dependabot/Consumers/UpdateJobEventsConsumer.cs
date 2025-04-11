@@ -85,9 +85,9 @@ internal class UpdateJobEventsConsumer(MainDbContext dbContext, UpdateRunner upd
         // save to the database
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        // logs are sometimes not available immediately, we usually need at least 2 minutes after completion time
+        // logs are sometimes not available immediately, we usually need at least 2-3 minutes after completion time
         // we publish an event in the future to pull the logs then delete the run
-        var scheduleTime = end?.AddMinutes(2.5f); // extra half-minute for buffer
+        var scheduleTime = end?.AddMinutes(3f);
         if (scheduleTime < DateTimeOffset.UtcNow) scheduleTime = null; // no need to schedule in the past
         await context.PublishAsync(new UpdateJobCollectLogsEvent { JobId = job.Id, }, scheduleTime, cancellationToken);
     }

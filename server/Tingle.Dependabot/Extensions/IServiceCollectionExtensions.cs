@@ -17,7 +17,7 @@ internal static class IServiceCollectionExtensions
         // when the path is null in development, set one
         if (string.IsNullOrWhiteSpace(path) && environment.IsDevelopment())
         {
-            path = Path.Combine(environment.ContentRootPath, "distributed-locks");
+            path = Path.Combine(environment.ContentRootPath, "locks");
         }
 
         if (string.IsNullOrWhiteSpace(path))
@@ -48,6 +48,11 @@ internal static class IServiceCollectionExtensions
     {
         services.Configure<WorkflowOptions>(configuration);
         services.ConfigureOptions<WorkflowConfigureOptions>();
+
+        services.AddScoped<ConfigFilesWriter>();
+
+        services.AddSingleton<CertificateManager>();
+        services.AddHostedService<CertificateManagerInitializerService>();
 
         services.AddScoped<UpdateRunner>();
         services.AddSingleton<UpdateScheduler>();

@@ -13,10 +13,18 @@ param projectSetups string = '[]'
 param githubToken string = ''
 
 @minLength(1)
-@description('Tag of the docker images.')
+@description('Tag of the docker image for the server.')
 param imageTag string = '#{IMAGE_TAG}#'
 
-var fileShares = ['certs', 'distributed-locks', 'working-dir']
+@minLength(1)
+@description('Tag for the dependabot proxy docker image.')
+param dependabotProxyImageTag string = 'latest' // no better default as of 2025-Apr-09
+
+@minLength(1)
+@description('Tag for the dependabot updater docker image.')
+param dependabotUpdaterImageTag string = 'latest' // no better default as of 2025-Apr-09
+
+var fileShares = ['certs', 'locks', 'proxy', 'jobs']
 
 // dependabot is not available as of 2023-Sep-25 so we change just for the public deployment
 var storageAccountName = replace(replace((name == 'dependabot' ? 'dependabotstore' : name), '-', ''), '_', '') // remove underscores and hyphens
@@ -268,8 +276,10 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
           image: 'ghcr.io/tinglesoftware/dependabot-server:${imageTag}'
           name: 'dependabot'
           volumeMounts: [
-            { mountPath: '/mnt/dependabot', volumeName: 'working-dir' }
-            { mountPath: '/mnt/distributed-locks', volumeName: 'distributed-locks' }
+            { mountPath: '/mnt/dependabot/certs', volumeName: 'certs' }
+            { mountPath: '/mnt/dependabot/locks', volumeName: 'locks' }
+            { mountPath: '/mnt/dependabot/jobs', volumeName: 'jobs' }
+            { mountPath: '/mnt/dependabot/proxy', volumeName: 'proxy' }
           ]
           env: [
             { name: 'AZURE_CLIENT_ID', value: managedIdentity.properties.clientId } // Specifies the User-Assigned Managed Identity to use. Without this, the app attempt to use the system assigned one.
@@ -291,7 +301,7 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
             { name: 'ConnectionStrings__Sql', secretRef: 'connection-strings-sql' }
 
             { name: 'DataProtection__Azure__KeyVault__KeyUrl', value: keyVault::dataProtectionKey.properties.keyUri }
-            { name: 'DistributedLocking__FilePath', value: '/mnt/distributed-locks' }
+            { name: 'DistributedLocking__FilePath', value: '/mnt/dependabot/locks' }
 
             { name: 'Logging__OpenTelemetry__LogLevel__Default', value: 'Warning' } // only send warnings and above to OpenTelemetry
             { name: 'Logging__LogLevel__Polly', value: 'None' } // too many logs
@@ -299,12 +309,15 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
 
             { name: 'Workflow__JobsApiUrl', value: 'https://${name}.${appEnvironment.properties.defaultDomain}' }
             { name: 'Workflow__JobsPlatform', value: 'ContainerApps' }
-            { name: 'Workflow__WorkingDirectory', value: '/mnt/dependabot' }
+            { name: 'Workflow__CertsDirectory', value: '/mnt/dependabot/certs' }
+            { name: 'Workflow__ProxyDirectory', value: '/mnt/dependabot/proxy' }
+            { name: 'Workflow__JobsDirectory', value: '/mnt/dependabot/jobs' }
             { name: 'Workflow__WebhookEndpoint', value: 'https://${name}.${appEnvironment.properties.defaultDomain}/webhooks/azure' }
             { name: 'Workflow__ResourceGroupId', value: resourceGroup().id }
             { name: 'Workflow__AppEnvironmentId', value: appEnvironment.id }
             { name: 'Workflow__LogAnalyticsWorkspaceId', value: logAnalyticsWorkspace.properties.customerId }
-            { name: 'Workflow__UpdaterImageTag', value: imageTag }
+            { name: 'Workflow__ProxyImageTag', value: dependabotProxyImageTag }
+            { name: 'Workflow__UpdaterImageTag', value: dependabotUpdaterImageTag }
             { name: 'Workflow__GithubToken', value: githubToken }
             { name: 'Workflow__Location', value: location }
 
@@ -338,8 +351,10 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
         }
       ]
       volumes: [
-        { name: 'working-dir', storageName: 'working-dir', storageType: 'AzureFile' }
-        { name: 'distributed-locks', storageName: 'distributed-locks', storageType: 'AzureFile' }
+        { name: 'certs', storageName: 'certs', storageType: 'AzureFile' }
+        { name: 'locks', storageName: 'locks', storageType: 'AzureFile' }
+        { name: 'proxy', storageName: 'proxy', storageType: 'AzureFile' }
+        { name: 'jobs', storageName: 'jobs', storageType: 'AzureFile' }
       ]
       scale: {
         minReplicas: 1 // necessary for in-memory scheduling

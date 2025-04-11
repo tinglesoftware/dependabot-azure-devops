@@ -11,7 +11,7 @@ using Tingle.EventBus;
 namespace Tingle.Dependabot.Controllers;
 
 [ApiController]
-[Route("/mgnt")]
+[Route("mgnt")]
 [Authorize(AuthConstants.PolicyNameManagement)]
 public class ManagementController(MainDbContext dbContext, IEventPublisher publisher, AzureDevOpsProvider adoProvider) : ControllerBase // TODO: unit test this
 {

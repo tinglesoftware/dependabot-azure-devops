@@ -78,10 +78,7 @@ internal class TriggerUpdateJobsEventConsumer(MainDbContext dbContext, UpdateRun
                 // create the job
                 job = new UpdateJob
                 {
-                    // we use this to create azure resources which have name restrictions
-                    // alphanumeric, starts with a letter, does not contain "--", up to 32 characters
-                    Id = $"job-{SequenceNumber.Generate()}", // sequence number is 19 chars, total is 23 chars
-
+                    Id = $"{SequenceNumber.Generate()}",
                     Created = DateTimeOffset.UtcNow,
                     Status = UpdateJobStatus.Scheduled,
                     Trigger = evt.Trigger,
@@ -96,7 +93,7 @@ internal class TriggerUpdateJobsEventConsumer(MainDbContext dbContext, UpdateRun
                     Directory = update.Directory,
                     Directories = update.Directories,
                     Resources = resources,
-                    AuthKey = Guid.NewGuid().ToString("n"),
+                    AuthKey = Keygen.Create(32, Keygen.OutputFormat.Base62),
 
                     Start = null,
                     End = null,

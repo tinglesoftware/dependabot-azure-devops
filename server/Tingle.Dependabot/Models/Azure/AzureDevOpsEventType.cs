@@ -1,9 +1,7 @@
 ﻿using System.Runtime.Serialization;
-using System.Text.Json.Serialization;
 
 namespace Tingle.Dependabot.Models.Azure;
 
-[JsonConverter(typeof(JsonStringEnumMemberConverter))]
 public enum AzureDevOpsEventType
 {
     /// <summary>Code pushed</summary>

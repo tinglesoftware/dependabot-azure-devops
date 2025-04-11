@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using Tingle.Dependabot.Events;
 using Tingle.Dependabot.Models;
 using Tingle.Dependabot.Models.Dependabot;
@@ -13,7 +12,7 @@ using Tingle.EventBus;
 namespace Tingle.Dependabot.Controllers;
 
 [ApiController]
-[Route("/update_jobs")]
+[Route("update_jobs")]
 [Authorize(AuthConstants.PolicyNameUpdater)]
 public class UpdateJobsController(MainDbContext dbContext, IEventPublisher publisher, ILogger<UpdateJobsController> logger) : ControllerBase // TODO: unit and integration test this
 {
@@ -89,9 +88,11 @@ public class UpdateJobsController(MainDbContext dbContext, IEventPublisher publi
     {
         var job = await dbContext.UpdateJobs.SingleAsync(j => j.Id == id);
 
-        // publish event that will run update the job and collect logs
+        // the update jobs needs sometime to exit after calling this endpoint, usually up to 1 minute
+        // we publish an event in the future that will run update the job and collect logs
         var evt = new UpdateJobCheckStateEvent { JobId = id, };
-        await publisher.PublishAsync(evt);
+        var scheduleTime = DateTimeOffset.UtcNow.AddMinutes(1.5f);
+        await publisher.PublishAsync(evt, scheduleTime);
 
         return Ok();
     }
@@ -118,18 +119,18 @@ public class UpdateJobsController(MainDbContext dbContext, IEventPublisher publi
     }
 
     [HttpPost("{id}/record_ecosystem_versions")]
-    public async Task<IActionResult> RecordEcosystemVersionsAsync([FromRoute, Required] string id, [FromBody] JsonNode model)
+    public async Task<IActionResult> RecordEcosystemVersionsAsync([FromRoute, Required] string id, [FromBody] PayloadWithData<DependabotUpdateRecordEcosystemVersions> model)
     {
         var job = await dbContext.UpdateJobs.SingleAsync(j => j.Id == id);
-        logger.LogInformation("Received request to record ecosystem version from job {JobId} but we did nothing.\r\n{ModelJson}", id.Replace(Environment.NewLine, ""), model.ToJsonString());
+        logger.LogInformation("Received request to record ecosystem version from job {JobId} but we did nothing.\r\n{ModelJson}", id.Replace(Environment.NewLine, ""), JsonSerializer.Serialize(model));
         return Ok();
     }
 
     [HttpPost("{id}/increment_metric")]
-    public async Task<IActionResult> IncrementMetricAsync([FromRoute, Required] string id, [FromBody] JsonNode model)
+    public async Task<IActionResult> IncrementMetricAsync([FromRoute, Required] string id, [FromBody] PayloadWithData<DependabotUpdateIncrementMetric> model)
     {
         var job = await dbContext.UpdateJobs.SingleAsync(j => j.Id == id);
-        logger.LogInformation("Received metrics from job {JobId} but we did nothing with them.\r\n{ModelJson}", id.Replace(Environment.NewLine, ""), model.ToJsonString());
+        logger.LogInformation("Received metrics from job {JobId} but we did nothing with them.\r\n{ModelJson}", id.Replace(Environment.NewLine, ""), JsonSerializer.Serialize(model));
         return Ok();
     }
 }

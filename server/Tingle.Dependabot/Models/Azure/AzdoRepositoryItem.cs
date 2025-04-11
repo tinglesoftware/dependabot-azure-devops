@@ -33,7 +33,6 @@ public class AzdoRepositoryItem
     public bool IsSymbolicLink { get; set; }
 }
 
-[JsonConverter(typeof(JsonStringEnumMemberConverter))]
 public enum AzdoRepositoryItemType
 {
     [EnumMember(Value = "bad")]

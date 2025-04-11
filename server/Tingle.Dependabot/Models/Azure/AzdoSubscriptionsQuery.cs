@@ -48,7 +48,6 @@ public class AzdoSubscriptionsQueryInputFilterCondition
     public AzdoSubscriptionsQueryInputFilterOperator Operator { get; set; }
 }
 
-[JsonConverter(typeof(JsonStringEnumMemberConverter))]
 public enum AzdoSubscriptionsQueryInputFilterOperator
 {
     [EnumMember(Value = "equals")]
@@ -99,7 +98,6 @@ public class AzdoSubscription
     public string? ActionDescription { get; set; }
 }
 
-[JsonConverter(typeof(JsonStringEnumMemberConverter))]
 public enum AzdoSubscriptionStatus
 {
     [EnumMember(Value = "enabled")]

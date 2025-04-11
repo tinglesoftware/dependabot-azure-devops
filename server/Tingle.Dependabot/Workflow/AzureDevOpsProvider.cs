@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Options;
+﻿using Microsoft.AspNetCore.Http.Json;
+using Microsoft.Extensions.Options;
 using System.Net.Http.Headers;
 using System.Text;
 using Tingle.Dependabot.Models.Azure;
@@ -6,7 +7,7 @@ using Tingle.Dependabot.Models.Management;
 
 namespace Tingle.Dependabot.Workflow;
 
-public class AzureDevOpsProvider(HttpClient httpClient, IOptions<WorkflowOptions> optionsAccessor)
+public class AzureDevOpsProvider(HttpClient httpClient, IOptions<WorkflowOptions> optionsAccessor, IOptions<JsonOptions> jsonOptionsAccessor)
 {
     // Possible/allowed paths for the configuration files in a repository.
     private static readonly IReadOnlyList<string> ConfigurationFilePaths = [
@@ -26,6 +27,7 @@ public class AzureDevOpsProvider(HttpClient httpClient, IOptions<WorkflowOptions
     ];
 
     private readonly WorkflowOptions options = optionsAccessor?.Value ?? throw new ArgumentNullException(nameof(optionsAccessor));
+    private readonly JsonOptions jsonOptions = jsonOptionsAccessor?.Value ?? throw new ArgumentNullException(nameof(jsonOptionsAccessor));
 
     public async Task<List<string>> CreateOrUpdateSubscriptionsAsync(Project project, CancellationToken cancellationToken = default)
     {
@@ -68,7 +70,7 @@ public class AzureDevOpsProvider(HttpClient httpClient, IOptions<WorkflowOptions
             Path = $"{url.OrganizationName}/_apis/hooks/subscriptionsquery",
             Query = "?api-version=7.1",
         }.Uri;
-        var request = new HttpRequestMessage(HttpMethod.Post, uri) { Content = JsonContent.Create(query), };
+        var request = new HttpRequestMessage(HttpMethod.Post, uri) { Content = JsonContent.Create(query, options: jsonOptions.SerializerOptions), };
         var subscriptions = (await SendAsync<AzdoSubscriptionsQueryResponse>(project.Token!, request, cancellationToken)).Results;
 
         // iterate each subscription checking if creation or update is required
@@ -98,7 +100,7 @@ public class AzureDevOpsProvider(HttpClient httpClient, IOptions<WorkflowOptions
                 existing.PublisherInputs = MakeTfsPublisherInputs(eventType, projectId);
                 existing.ConsumerInputs = MakeWebHooksConsumerInputs(project, webhookUrl);
                 uri = new UriBuilder(uri) { Path = $"{url.OrganizationName}/_apis/hooks/subscriptions/{existing.Id}", }.Uri;
-                request = new HttpRequestMessage(HttpMethod.Put, uri) { Content = JsonContent.Create(existing), };
+                request = new HttpRequestMessage(HttpMethod.Put, uri) { Content = JsonContent.Create(existing, options: jsonOptions.SerializerOptions), };
                 existing = await SendAsync<AzdoSubscription>(project.Token!, request, cancellationToken);
             }
             else
@@ -115,7 +117,7 @@ public class AzureDevOpsProvider(HttpClient httpClient, IOptions<WorkflowOptions
                     ConsumerInputs = MakeWebHooksConsumerInputs(project, webhookUrl),
                 };
                 uri = new UriBuilder(uri) { Path = $"{url.OrganizationName}/_apis/hooks/subscriptions", }.Uri;
-                request = new HttpRequestMessage(HttpMethod.Post, uri) { Content = JsonContent.Create(existing), };
+                request = new HttpRequestMessage(HttpMethod.Post, uri) { Content = JsonContent.Create(existing, options: jsonOptions.SerializerOptions), };
                 existing = await SendAsync<AzdoSubscription>(project.Token!, request, cancellationToken);
             }
 
@@ -206,7 +208,7 @@ public class AzureDevOpsProvider(HttpClient httpClient, IOptions<WorkflowOptions
 
         var response = await httpClient.SendAsync(request, cancellationToken);
         response.EnsureSuccessStatusCode();
-        return (await response.Content.ReadFromJsonAsync<T>(cancellationToken: cancellationToken))!;
+        return (await response.Content.ReadFromJsonAsync<T>(jsonOptions.SerializerOptions, cancellationToken))!;
     }
 
     internal static Dictionary<string, string> MakeTfsPublisherInputs(string type, string projectId)

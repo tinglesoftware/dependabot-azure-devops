@@ -1,12 +1,12 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Text.Json.Serialization;
 
 namespace Tingle.Dependabot.Models;
 
 public class PayloadWithData<T> where T : new()
 {
-    [Required]
+    [JsonPropertyName("data")]
     public T? Data { get; set; }
 
-    [System.Text.Json.Serialization.JsonExtensionData]
+    [JsonExtensionData]
     public Dictionary<string, object>? Extensions { get; set; }
 }

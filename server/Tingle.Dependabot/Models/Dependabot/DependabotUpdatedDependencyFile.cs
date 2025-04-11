@@ -23,11 +23,11 @@ public class DependabotUpdatedDependencyFile
     public string? Name { get; set; }
 
     [JsonPropertyName("operation")]
-    public string? Operation { get; set; } // convert from string to enum once we know all possible values
+    public string? Operation { get; set; }
 
     [JsonPropertyName("support_file")]
     public bool? SupportFile { get; set; }
 
     [JsonPropertyName("type")]
-    public string? Type { get; set; } // convert from string to enum once we know all possible values
+    public string? Type { get; set; }
 }

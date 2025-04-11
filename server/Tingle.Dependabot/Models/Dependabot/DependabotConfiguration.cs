@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 
 namespace Tingle.Dependabot.Models.Dependabot;
@@ -65,7 +66,7 @@ public record DependabotUpdate : IValidatableObject
     public List<DependabotAllowDependency>? Allow { get; set; }
 
     [JsonPropertyName("groups")]
-    public List<DependabotGroupDependency>? Groups { get; set; }
+    public Dictionary<string, DependabotGroupDependency>? Groups { get; set; }
 
     [JsonPropertyName("ignore")]
     public List<DependabotIgnoreDependency>? Ignore { get; set; }
@@ -97,6 +98,9 @@ public record DependabotUpdate : IValidatableObject
                 memberNames: [nameof(Directory), nameof(Directories)]);
         }
     }
+
+    [JsonIgnore]
+    internal bool SecurityOnly => OpenPullRequestsLimit == 0;
 }
 
 public class DependabotUpdateSchedule
@@ -130,7 +134,7 @@ public class DependabotUpdateSchedule
             DependabotScheduleInterval.Daily => "* * 1-5",          // any day of the month, any month, but on weekdays
             DependabotScheduleInterval.Weekly => $"* * {(int)day}", // any day of the month, any month, but on a given day
             DependabotScheduleInterval.Monthly => "1 * *",          // first day of the month, any month, any day of the week
-            _ => throw new NotImplementedException(),
+            _ => throw new InvalidOperationException($"{nameof(DependabotScheduleInterval)}.{Interval} is not supported"),
         };
     }
 }
@@ -155,6 +159,8 @@ public class DependabotAllowDependency : IValidatableObject
     public string? DependencyName { get; set; }
     [JsonPropertyName("dependency-type")]
     public string? DependencyType { get; set; }
+    [JsonPropertyName("update-type")]
+    public string? UpdateType { get; set; }
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
@@ -171,7 +177,7 @@ public class DependabotIgnoreDependency : IValidatableObject
     public string? DependencyName { get; set; }
 
     [JsonPropertyName("versions")]
-    public IList<string>? Versions { get; set; }
+    public JsonNode? Versions { get; set; }
 
     [JsonPropertyName("update-types")]
     public IList<string>? UpdateTypes { get; set; }
