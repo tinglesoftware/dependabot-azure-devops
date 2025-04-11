@@ -1,13 +1,14 @@
-﻿using Microsoft.AspNetCore.Http.Json;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Text.Json.Serialization.Metadata;
 using Tingle.Dependabot.Models.Azure;
 using Tingle.Dependabot.Models.Management;
+using SC = Tingle.Dependabot.DependabotSerializerContext;
 
 namespace Tingle.Dependabot.Workflow;
 
-public class AzureDevOpsProvider(HttpClient httpClient, IOptions<WorkflowOptions> optionsAccessor, IOptions<JsonOptions> jsonOptionsAccessor)
+public class AzureDevOpsProvider(HttpClient httpClient, IOptions<WorkflowOptions> optionsAccessor)
 {
     // Possible/allowed paths for the configuration files in a repository.
     private static readonly IReadOnlyList<string> ConfigurationFilePaths = [
@@ -27,7 +28,6 @@ public class AzureDevOpsProvider(HttpClient httpClient, IOptions<WorkflowOptions
     ];
 
     private readonly WorkflowOptions options = optionsAccessor?.Value ?? throw new ArgumentNullException(nameof(optionsAccessor));
-    private readonly JsonOptions jsonOptions = jsonOptionsAccessor?.Value ?? throw new ArgumentNullException(nameof(jsonOptionsAccessor));
 
     public async Task<List<string>> CreateOrUpdateSubscriptionsAsync(Project project, CancellationToken cancellationToken = default)
     {
@@ -70,8 +70,8 @@ public class AzureDevOpsProvider(HttpClient httpClient, IOptions<WorkflowOptions
             Path = $"{url.OrganizationName}/_apis/hooks/subscriptionsquery",
             Query = "?api-version=7.1",
         }.Uri;
-        var request = new HttpRequestMessage(HttpMethod.Post, uri) { Content = JsonContent.Create(query, options: jsonOptions.SerializerOptions), };
-        var subscriptions = (await SendAsync<AzdoSubscriptionsQueryResponse>(project.Token!, request, cancellationToken)).Results;
+        var request = new HttpRequestMessage(HttpMethod.Post, uri) { Content = JsonContent.Create(query, SC.Default.AzdoSubscriptionsQuery), };
+        var subscriptions = (await SendAsync(project.Token!, request, SC.Default.AzdoSubscriptionsQueryResponse, cancellationToken)).Results;
 
         // iterate each subscription checking if creation or update is required
         var ids = new List<string>();
@@ -100,8 +100,8 @@ public class AzureDevOpsProvider(HttpClient httpClient, IOptions<WorkflowOptions
                 existing.PublisherInputs = MakeTfsPublisherInputs(eventType, projectId);
                 existing.ConsumerInputs = MakeWebHooksConsumerInputs(project, webhookUrl);
                 uri = new UriBuilder(uri) { Path = $"{url.OrganizationName}/_apis/hooks/subscriptions/{existing.Id}", }.Uri;
-                request = new HttpRequestMessage(HttpMethod.Put, uri) { Content = JsonContent.Create(existing, options: jsonOptions.SerializerOptions), };
-                existing = await SendAsync<AzdoSubscription>(project.Token!, request, cancellationToken);
+                request = new HttpRequestMessage(HttpMethod.Put, uri) { Content = JsonContent.Create(existing, SC.Default.AzdoSubscription), };
+                existing = await SendAsync(project.Token!, request, SC.Default.AzdoSubscription, cancellationToken);
             }
             else
             {
@@ -117,8 +117,8 @@ public class AzureDevOpsProvider(HttpClient httpClient, IOptions<WorkflowOptions
                     ConsumerInputs = MakeWebHooksConsumerInputs(project, webhookUrl),
                 };
                 uri = new UriBuilder(uri) { Path = $"{url.OrganizationName}/_apis/hooks/subscriptions", }.Uri;
-                request = new HttpRequestMessage(HttpMethod.Post, uri) { Content = JsonContent.Create(existing, options: jsonOptions.SerializerOptions), };
-                existing = await SendAsync<AzdoSubscription>(project.Token!, request, cancellationToken);
+                request = new HttpRequestMessage(HttpMethod.Post, uri) { Content = JsonContent.Create(existing, SC.Default.AzdoSubscription), };
+                existing = await SendAsync(project.Token!, request, SC.Default.AzdoSubscription, cancellationToken);
             }
 
             // track the identifier of the subscription
@@ -140,7 +140,7 @@ public class AzureDevOpsProvider(HttpClient httpClient, IOptions<WorkflowOptions
             Query = "?api-version=7.1",
         }.Uri;
         var request = new HttpRequestMessage(HttpMethod.Get, uri);
-        return await SendAsync<AzdoProject>(project.Token!, request, cancellationToken);
+        return await SendAsync(project.Token!, request, SC.Default.AzdoProject, cancellationToken);
     }
 
     public async Task<List<AzdoRepository>> GetRepositoriesAsync(Project project, CancellationToken cancellationToken)
@@ -155,7 +155,7 @@ public class AzureDevOpsProvider(HttpClient httpClient, IOptions<WorkflowOptions
             Query = "?api-version=7.1",
         }.Uri;
         var request = new HttpRequestMessage(HttpMethod.Get, uri);
-        var data = await SendAsync<AzdoListResponse<AzdoRepository>>(project.Token!, request, cancellationToken);
+        var data = await SendAsync(project.Token!, request, SC.Default.AzdoListResponseAzdoRepository, cancellationToken);
         return data.Value;
     }
 
@@ -171,7 +171,7 @@ public class AzureDevOpsProvider(HttpClient httpClient, IOptions<WorkflowOptions
             Query = "?api-version=7.1",
         }.Uri;
         var request = new HttpRequestMessage(HttpMethod.Get, uri);
-        return await SendAsync<AzdoRepository>(project.Token!, request, cancellationToken);
+        return await SendAsync(project.Token!, request, SC.Default.AzdoRepository, cancellationToken);
     }
 
     public async Task<AzdoRepositoryItem?> GetConfigurationFileAsync(Project project, string repositoryIdOrName, CancellationToken cancellationToken = default)
@@ -192,7 +192,7 @@ public class AzureDevOpsProvider(HttpClient httpClient, IOptions<WorkflowOptions
                     Query = $"?path={path}&includeContent=true&latestProcessedChange=true&api-version=7.1"
                 }.Uri;
                 var request = new HttpRequestMessage(HttpMethod.Get, uri);
-                var item = await SendAsync<AzdoRepositoryItem>(project.Token!, request, cancellationToken);
+                var item = await SendAsync<AzdoRepositoryItem>(project.Token!, request, SC.Default.AzdoRepositoryItem, cancellationToken);
                 if (item is not null) return item;
             }
             catch (HttpRequestException hre) when (hre.StatusCode is System.Net.HttpStatusCode.NotFound) { }
@@ -201,14 +201,14 @@ public class AzureDevOpsProvider(HttpClient httpClient, IOptions<WorkflowOptions
         return null;
     }
 
-    private async Task<T> SendAsync<T>(string token, HttpRequestMessage request, CancellationToken cancellationToken)
+    private async Task<T> SendAsync<T>(string token, HttpRequestMessage request, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken)
     {
         request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         request.Headers.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($":{token}")));
 
         var response = await httpClient.SendAsync(request, cancellationToken);
         response.EnsureSuccessStatusCode();
-        return (await response.Content.ReadFromJsonAsync<T>(jsonOptions.SerializerOptions, cancellationToken))!;
+        return (await response.Content.ReadFromJsonAsync(jsonTypeInfo, cancellationToken))!;
     }
 
     internal static Dictionary<string, string> MakeTfsPublisherInputs(string type, string projectId)

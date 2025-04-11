@@ -89,7 +89,7 @@ public readonly struct AzureDevOpsProjectUrl : IEquatable<AzureDevOpsProjectUrl>
     public static implicit operator string(AzureDevOpsProjectUrl url) => url.ToString();
     public static implicit operator Uri(AzureDevOpsProjectUrl url) => url.uri;
 
-    private class AzureDevOpsProjectUrlTypeConverter : TypeConverter
+    internal class AzureDevOpsProjectUrlTypeConverter : TypeConverter
     {
         /// <inheritdoc/>
         public override bool CanConvertFrom(ITypeDescriptorContext? context, Type sourceType) => sourceType == typeof(string) || sourceType == typeof(Uri);
@@ -117,7 +117,7 @@ public readonly struct AzureDevOpsProjectUrl : IEquatable<AzureDevOpsProjectUrl>
         }
     }
 
-    private class AzureDevOpsProjectUrlJsonConverter : JsonConverter<AzureDevOpsProjectUrl>
+    internal class AzureDevOpsProjectUrlJsonConverter : JsonConverter<AzureDevOpsProjectUrl>
     {
         public override AzureDevOpsProjectUrl Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {

@@ -14,7 +14,6 @@ using Tingle.Extensions.Primitives;
 namespace Tingle.Dependabot.Workflow;
 
 internal partial class UpdateRunner(IFeatureManagerSnapshot featureManager,
-                                    CertificateManager certificateManager,
                                     ConfigFilesWriter configFilesWriter,
                                     IOptions<WorkflowOptions> optionsAccessor,
                                     ILogger<UpdateRunner> logger)
@@ -75,8 +74,8 @@ internal partial class UpdateRunner(IFeatureManagerSnapshot featureManager,
         if (!Directory.Exists(proxyDirectory)) Directory.CreateDirectory(proxyDirectory);
         var proxyConfigPath = Path.Join(proxyDirectory, "config.json");
         if (File.Exists(proxyConfigPath)) File.Delete(proxyConfigPath);
-        var proxyCa = certificateManager.Get();
-        await configFilesWriter.WriteProxyAsync(proxyConfigPath, job, credentials, proxyCa, cancellationToken);
+        var writeConfigParams = new WriteConfigParams { Job = job, Credentials = credentials, };
+        await configFilesWriter.WriteProxyAsync(proxyConfigPath, writeConfigParams, cancellationToken);
 
         // the proxy config must be mounted in the root
         // example: change /Users/maxwell/Documents/dependabot-azure-devops/server/Tingle.Dependabot/work/proxy/1359497145993567115/config.json
@@ -90,16 +89,19 @@ internal partial class UpdateRunner(IFeatureManagerSnapshot featureManager,
         if (File.Exists(jobDefinitionPath)) File.Delete(jobDefinitionPath);
         var outputPath = Path.Join(jobsDirectory, "output.json");
         if (File.Exists(outputPath)) File.Delete(outputPath);
-        await configFilesWriter.WriteJobAsync(path: jobDefinitionPath,
-                                              project: project,
-                                              credentials: credentials,
-                                              update: update,
-                                              job: job,
-                                              updatingPullRequest: false, // TODO: fix this
-                                              updateDependencyGroupName: null, // TODO: fix this
-                                              updateDependencyNames: null, // TODO: fix this
-                                              debug: debug,
-                                              cancellationToken: cancellationToken);
+
+        var writeJobParams = new WriteJobParams
+        {
+            Project = project,
+            Update = update,
+            Job = job,
+            Credentials = credentials,
+            UpdatingPullRequest = false, // TODO: fix this
+            UpdateDependencyGroupName = null, // TODO: fix this
+            UpdateDependencyNames = [], // TODO: fix this
+            Debug = debug,
+        };
+        await configFilesWriter.WriteJobAsync(jobDefinitionPath, writeJobParams, cancellationToken);
         var caCertPath = Path.Join(options.CertsDirectory, "cert.crt");
 
         // the job path we have might local to the machine but we need to be based on the mount we have in the container

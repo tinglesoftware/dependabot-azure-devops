@@ -1,5 +1,6 @@
 ﻿using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
+using Tingle.Extensions.Primitives.Converters;
 
 namespace Tingle.Dependabot.Models.Azure;
 
@@ -48,6 +49,7 @@ public class AzdoSubscriptionsQueryInputFilterCondition
     public AzdoSubscriptionsQueryInputFilterOperator Operator { get; set; }
 }
 
+[JsonConverter(typeof(JsonStringEnumMemberConverter<AzdoSubscriptionsQueryInputFilterOperator>))]
 public enum AzdoSubscriptionsQueryInputFilterOperator
 {
     [EnumMember(Value = "equals")]
@@ -98,6 +100,7 @@ public class AzdoSubscription
     public string? ActionDescription { get; set; }
 }
 
+[JsonConverter(typeof(JsonStringEnumMemberConverter<AzdoSubscriptionStatus>))]
 public enum AzdoSubscriptionStatus
 {
     [EnumMember(Value = "enabled")]

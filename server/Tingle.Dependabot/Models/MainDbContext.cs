@@ -1,17 +1,15 @@
-﻿using System.Text.Json;
-using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Tingle.Dependabot.Models.Management;
 using Tingle.Dependabot.Workflow;
+using SC = Tingle.Dependabot.DependabotSerializerContext;
 
 namespace Tingle.Dependabot.Models;
 
 public class MainDbContext(DbContextOptions<MainDbContext> options) : DbContext(options), IDataProtectionKeyContext
 {
-    private static readonly JsonSerializerOptions serializerOptions = new JsonSerializerOptions().UseStandard();
-
     public DbSet<Project> Projects => Set<Project>();
     public DbSet<Repository> Repositories => Set<Repository>();
     public DbSet<UpdateJob> UpdateJobs => Set<UpdateJob>();
@@ -39,8 +37,8 @@ public class MainDbContext(DbContextOptions<MainDbContext> options) : DbContext(
         {
             builder.OwnsOne(p => p.AutoApprove);
             builder.OwnsOne(p => p.AutoComplete);
-            builder.Property(p => p.Secrets).HasJsonConversion(serializerOptions);
-            builder.Property(p => p.Experiments).HasJsonConversion(serializerOptions);
+            builder.Property(p => p.Secrets).HasJsonConversion(SC.Default.DictionaryStringString);
+            builder.Property(p => p.Experiments).HasJsonConversion(SC.Default.DictionaryStringString);
 
             builder.HasIndex(p => p.Created).IsDescending(); // faster filtering
             builder.HasIndex(p => p.ProviderId).IsUnique();
@@ -49,8 +47,8 @@ public class MainDbContext(DbContextOptions<MainDbContext> options) : DbContext(
 
         modelBuilder.Entity<Repository>(builder =>
         {
-            builder.Property(r => r.Updates).HasJsonConversion(serializerOptions);
-            builder.Property(r => r.Registries).HasJsonConversion(serializerOptions);
+            builder.Property(r => r.Updates).HasJsonConversion(SC.Default.ListRepositoryUpdate);
+            builder.Property(r => r.Registries).HasJsonConversion(SC.Default.DictionaryStringDependabotRegistry);
 
             builder.HasIndex(r => r.Created).IsDescending(); // faster filtering
             builder.HasIndex(r => r.ProviderId).IsUnique();
@@ -61,7 +59,7 @@ public class MainDbContext(DbContextOptions<MainDbContext> options) : DbContext(
             builder.Property(j => j.PackageEcosystem).IsRequired();
             builder.OwnsOne(j => j.Error, ownedBuilder =>
             {
-                ownedBuilder.Property(e => e.Detail).HasJsonConversion(serializerOptions);
+                ownedBuilder.Property(e => e.Detail).HasJsonConversion(SC.Default.JsonNode);
                 ownedBuilder.HasIndex(e => e.Type); // faster filtering
             });
 

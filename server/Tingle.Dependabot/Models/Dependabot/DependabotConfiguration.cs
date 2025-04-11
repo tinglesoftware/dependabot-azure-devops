@@ -180,7 +180,7 @@ public class DependabotIgnoreDependency : IValidatableObject
     public JsonNode? Versions { get; set; }
 
     [JsonPropertyName("update-types")]
-    public IList<string>? UpdateTypes { get; set; }
+    public List<string>? UpdateTypes { get; set; }
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {

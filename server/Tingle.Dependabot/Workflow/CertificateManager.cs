@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.Options;
+using Tingle.Dependabot.Models.Dependabot;
 
 namespace Tingle.Dependabot.Workflow;
 
@@ -98,7 +99,6 @@ internal class CertificateManager(IOptions<WorkflowOptions> optionsAccessor, ILo
 
         var pemCert = certificate.ExportCertificatePem();
         var pemKey = rsa.ExportRSAPrivateKeyPem();
-        // var pemKey = rsa.ExportPkcs8PrivateKeyPem();
 
         return new CertificateAuthority(pemCert, pemKey);
     }
@@ -117,5 +117,3 @@ internal class CertificateManagerInitializerService(IServiceScopeFactory scopeFa
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 }
-
-internal record CertificateAuthority(string Cert, string Key);

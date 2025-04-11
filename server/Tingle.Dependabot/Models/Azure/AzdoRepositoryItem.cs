@@ -1,5 +1,6 @@
 ﻿using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
+using Tingle.Extensions.Primitives.Converters;
 
 namespace Tingle.Dependabot.Models.Azure;
 
@@ -33,6 +34,7 @@ public class AzdoRepositoryItem
     public bool IsSymbolicLink { get; set; }
 }
 
+[JsonConverter(typeof(JsonStringEnumMemberConverter<AzdoRepositoryItemType>))]
 public enum AzdoRepositoryItemType
 {
     [EnumMember(Value = "bad")]

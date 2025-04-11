@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations;
 using Tingle.Dependabot.Events;
 using Tingle.Dependabot.Models;
 using Tingle.Dependabot.Models.Management;
@@ -55,7 +54,7 @@ public class ManagementController(MainDbContext dbContext, IEventPublisher publi
     }
 
     [HttpGet("repos/{id}")]
-    public async Task<IActionResult> GetRepoAsync([FromRoute, Required] string id)
+    public async Task<IActionResult> GetRepoAsync([FromRoute] string id)
     {
         // ensure project exists
         var projectId = HttpContext.GetProjectId() ?? throw new InvalidOperationException("Project identifier must be provided");
@@ -67,7 +66,7 @@ public class ManagementController(MainDbContext dbContext, IEventPublisher publi
     }
 
     [HttpGet("repos/{id}/jobs")]
-    public async Task<IActionResult> GetJobsAsync([FromRoute, Required] string id)
+    public async Task<IActionResult> GetJobsAsync([FromRoute] string id)
     {
         // ensure project exists
         var projectId = HttpContext.GetProjectId() ?? throw new InvalidOperationException("Project identifier must be provided");
@@ -84,7 +83,7 @@ public class ManagementController(MainDbContext dbContext, IEventPublisher publi
     }
 
     [HttpGet("repos/{id}/jobs/{jobId}")]
-    public async Task<IActionResult> GetJobAsync([FromRoute, Required] string id, [FromRoute, Required] string jobId)
+    public async Task<IActionResult> GetJobAsync([FromRoute] string id, [FromRoute] string jobId)
     {
         // ensure project exists
         var projectId = HttpContext.GetProjectId() ?? throw new InvalidOperationException("Project identifier must be provided");
@@ -101,7 +100,7 @@ public class ManagementController(MainDbContext dbContext, IEventPublisher publi
     }
 
     [HttpGet("repos/{id}/jobs/{jobId}/log")]
-    public async Task<IActionResult> GetJobLogAsync([FromRoute, Required] string id, [FromRoute, Required] string jobId)
+    public async Task<IActionResult> GetJobLogAsync([FromRoute] string id, [FromRoute] string jobId)
     {
         // ensure project exists
         var projectId = HttpContext.GetProjectId() ?? throw new InvalidOperationException("Project identifier must be provided");
@@ -120,7 +119,7 @@ public class ManagementController(MainDbContext dbContext, IEventPublisher publi
     }
 
     [HttpPost("repos/{id}/sync")]
-    public async Task<IActionResult> SyncRepoAsync([FromRoute, Required] string id, [FromBody] SynchronizationRequest model)
+    public async Task<IActionResult> SyncRepoAsync([FromRoute] string id, [FromBody] SynchronizationRequest model)
     {
         // ensure project exists
         var projectId = HttpContext.GetProjectId() ?? throw new InvalidOperationException("Project identifier must be provided");
@@ -139,7 +138,7 @@ public class ManagementController(MainDbContext dbContext, IEventPublisher publi
     }
 
     [HttpPost("repos/{id}/trigger")]
-    public async Task<IActionResult> TriggerAsync([FromRoute, Required] string id, [FromBody] TriggerUpdateRequest model)
+    public async Task<IActionResult> TriggerAsync([FromRoute] string id, [FromBody] TriggerUpdateRequest model)
     {
         // ensure project exists
         var projectId = HttpContext.GetProjectId() ?? throw new InvalidOperationException("Project identifier must be provided");

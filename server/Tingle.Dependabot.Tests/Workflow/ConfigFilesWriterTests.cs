@@ -126,7 +126,7 @@ public class ConfigFilesWriterTests
         Assert.Equal("git_source", Assert.Contains("type", credential));
         Assert.Equal("github.com", Assert.Contains("host", credential));
         Assert.Equal("x-access-token", Assert.Contains("username", credential));
-        Assert.Equal("<github-pat-here>", Assert.Contains("password", credential));
+        Assert.Equal("github-token", Assert.Contains("password", credential));
 
         // composer-repository
         credential = credentials[2];

@@ -1,10 +1,10 @@
-﻿using Microsoft.AspNetCore.Http.Json;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.Text.Json;
 using Tingle.Dependabot.Models;
 using Tingle.Dependabot.Workflow;
 using Tingle.Extensions.Primitives;
+using SC = Tingle.Dependabot.DependabotSerializerContext;
 
 namespace Tingle.Dependabot;
 
@@ -14,11 +14,9 @@ namespace Tingle.Dependabot;
 /// </summary>
 /// <param name="serviceScopeFactory"></param>
 /// <param name="optionsAccessor"></param>
-/// <param name="jsonOptionsAccessor"></param>
 /// <param name="logger"></param>
 internal class InitialSetupService(IServiceScopeFactory serviceScopeFactory,
                                    IOptions<InitialSetupOptions> optionsAccessor,
-                                   IOptions<JsonOptions> jsonOptionsAccessor,
                                    ILogger<InitialSetupService> logger) : IHostedService
 {
     internal class ProjectSetupInfo
@@ -33,7 +31,6 @@ internal class InitialSetupService(IServiceScopeFactory serviceScopeFactory,
     }
 
     private readonly InitialSetupOptions options = optionsAccessor?.Value ?? throw new ArgumentNullException(nameof(optionsAccessor));
-    private readonly JsonOptions jsonOptions = jsonOptionsAccessor?.Value ?? throw new ArgumentNullException(nameof(jsonOptionsAccessor));
 
     /// <inheritdoc/>
     public async Task StartAsync(CancellationToken cancellationToken)
@@ -46,7 +43,7 @@ internal class InitialSetupService(IServiceScopeFactory serviceScopeFactory,
         var setups = new List<ProjectSetupInfo>();
         if (!string.IsNullOrWhiteSpace(options.Projects))
         {
-            setups = JsonSerializer.Deserialize<List<ProjectSetupInfo>>(options.Projects, jsonOptions.SerializerOptions)!;
+            setups = JsonSerializer.Deserialize(options.Projects, SC.Default.ListProjectSetupInfo)!;
         }
 
         logger.LogInformation("Found {Count} projects to setup", setups.Count);

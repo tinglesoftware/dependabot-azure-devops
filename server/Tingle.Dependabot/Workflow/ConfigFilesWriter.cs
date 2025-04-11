@@ -1,154 +1,101 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using Microsoft.AspNetCore.Http.Json;
 using Microsoft.Extensions.Options;
 using Tingle.Dependabot.Models.Dependabot;
 using Tingle.Dependabot.Models.Management;
+using SC = Tingle.Dependabot.DependabotSerializerContext;
 
 namespace Tingle.Dependabot.Workflow;
 
-internal partial class ConfigFilesWriter(IOptions<WorkflowOptions> optionsAccessor,
-                                         IOptions<JsonOptions> jsonOptionsAccessor,
+internal partial class ConfigFilesWriter(CertificateManager certificateManager,
+                                         IOptions<WorkflowOptions> optionsAccessor,
                                          ILogger<ConfigFilesWriter> logger)
 {
     private readonly WorkflowOptions options = optionsAccessor?.Value ?? throw new ArgumentNullException(nameof(optionsAccessor));
-    private readonly JsonOptions jsonOptions = jsonOptionsAccessor?.Value ?? throw new ArgumentNullException(nameof(jsonOptionsAccessor));
-
-    public async Task WriteJobAsync(string path,
-                                    Project project,
-                                    RepositoryUpdate update,
-                                    UpdateJob job,
-                                    IReadOnlyList<IReadOnlyDictionary<string, string>> credentials,
-                                    bool updatingPullRequest,
-                                    string? updateDependencyGroupName,
-                                    IList<string>? updateDependencyNames,
-                                    bool debug,
-                                    CancellationToken cancellationToken = default)
+    public async Task WriteJobAsync(string path, WriteJobParams @params, CancellationToken cancellationToken = default)
     {
         // write the job definition file
         using var stream = File.OpenWrite(path);
-        await WriteJobAsync(stream: stream,
-                            project: project,
-                            update: update,
-                            job: job,
-                            credentials: credentials,
-                            updatingPullRequest: updatingPullRequest,
-                            updateDependencyGroupName: updateDependencyGroupName,
-                            updateDependencyNames: updateDependencyNames,
-                            debug: debug,
-                            cancellationToken: cancellationToken);
-        logger.WrittenJobDefinitionFile(job.Id, path);
+        await WriteJobAsync(stream, @params, cancellationToken);
+        logger.WrittenJobDefinitionFile(@params.Job.Id, path);
     }
-
-    public async Task WriteJobAsync(Stream stream,
-                                    Project project,
-                                    RepositoryUpdate update,
-                                    UpdateJob job,
-                                    IReadOnlyList<IReadOnlyDictionary<string, string>> credentials,
-                                    bool updatingPullRequest,
-                                    string? updateDependencyGroupName,
-                                    IList<string>? updateDependencyNames,
-                                    bool debug,
-                                    CancellationToken cancellationToken = default)
+    public async Task WriteJobAsync(Stream stream, WriteJobParams @params, CancellationToken cancellationToken = default)
     {
         // prepare credentials metadata
-        var credentialsMetadata = MakeCredentialsMetadata(credentials);
+        var credentialsMetadata = MakeCredentialsMetadata(@params.Credentials);
 
         // prepare the experiments
+        var project = @params.Project;
         var experiments = project.Experiments;
         if (experiments is null || experiments.Count == 0) experiments = new(options.DefaultExperiments);
 
         // make the definition
         var url = project.Url;
-        var definition = new Dictionary<string, object?>
-        {
-            ["job"] = new Dictionary<string, object?>
-            {
-                ["package-manager"] = ConvertEcosystemToPackageManager(update.PackageEcosystem!),
-                ["updating-a-pull-request"] = updatingPullRequest,
-                ["dependency-group-to-refresh"] = updateDependencyGroupName,
-                ["dependency-groups"] = (update.Groups ?? []).Select(p => MapDependencyGroup(p.Key, p.Value)),
-                ["dependencies"] = updateDependencyNames,
-                ["allowed-updates"] = GetAllowDependencies(update.Allow, update.SecurityOnly),
-                ["ignore-conditions"] = (update.Ignore ?? []).Select(MapIgnoreDependency),
-                ["security-updates-only"] = update.SecurityOnly,
-                ["security-advisories"] = Array.Empty<string>(), // TODO: needs mapping similar to the extension
-                ["source"] = new Dictionary<string, object?>
+        var update = @params.Update;
+        var job = @params.Job;
+        var definition = new DependabotJobConfig(
+            PackageManager: ConvertEcosystemToPackageManager(update.PackageEcosystem!),
+            AllowedUpdates: GetAllowDependencies(update.Allow, update.SecurityOnly),
+            Debug: @params.Debug,
+            DependencyGroups: [.. (update.Groups ?? []).Select(p => MapDependencyGroup(p.Key, p.Value))],
+            Dependencies: @params.UpdateDependencyNames,
+            DependencyGroupToRefresh: @params.UpdateDependencyGroupName,
+            ExistingPullRequests: [], // TODO: filter out PRs for the given dependency-group-name similar to the extension
+            ExistingGroupPullRequests: [], // TODO: filter out PRs for the given dependency-group-name similar to the extension
+            Experiments: MapExperiments(experiments),
+            IgnoreConditions: [.. (update.Ignore ?? []).Select(MapIgnoreDependency)],
+            LockfileOnly: update.VersioningStrategy == "lockfile-only",
+            RequirementsUpdateStrategy: MapRequirementsUpdateStrategy(update.VersioningStrategy),
+            SecurityAdvisories: [], // TODO: needs mapping similar to the extension
+            SecurityUpdatesOnly: update.SecurityOnly,
+            Source: new DependabotSource(
+                Provider: "azure",
+                Repo: job.RepositorySlug,
+                Directory: update.Directory,
+                Directories: update.Directories,
+                Branch: update.TargetBranch,
+                Commit: null, // use latest commit of target branch
+                Hostname: url.Hostname,
+                APIEndpoint: new UriBuilder
                 {
-                    ["provider"] = "azure",
-                    ["api-endpoint"] = new UriBuilder
-                    {
-                        Scheme = Uri.UriSchemeHttps,
-                        Host = url.Hostname,
-                        Port = url.Port ?? -1,
-                    }.ToString(),
-                    ["hostname"] = url.Hostname,
-                    ["repo"] = job.RepositorySlug,
-                    ["branch"] = update.TargetBranch,
-                    ["commit"] = null, // use latest commit of target branch
-                    ["directory"] = update.Directory,
-                    ["directories"] = update.Directories,
-                },
-                ["existing-pull-requests"] = Array.Empty<string>(), // TODO: filter out PRs for the given dependency-group-name similar to the extension
-                ["existing-group-pull-requests"] = Array.Empty<string>(), // TODO: filter out PRs for the given dependency-group-name similar to the extension
-                ["commit-message-options"] = MapCommitMessage(update.CommitMessage),
-                ["experiments"] = MapExperiments(experiments),
-                ["reject-external-code"] = string.Equals(update.InsecureExternalCodeExecution, "deny"),
-                ["repo-private"] = null, // TODO: add config for this?
-                ["repo-contents-path"] = null, // TODO: add config for this?
-                ["requirements-update-strategy"] = MapRequirementsUpdateStrategy(update.VersioningStrategy),
-                ["lockfile-only"] = update.VersioningStrategy == "lockfile-only",
-                ["vendor-dependencies"] = update.Vendor,
-                ["debug"] = debug,
-                ["credentials-metadata"] = credentialsMetadata,
-                ["update-subdependencies"] = false,
-
-                // TODO: Investigate if these options are needed or are now obsolete.
-                //       These options don't appear to be used by dependabot-core yet/anymore,
-                //       but do appear in GitHub Dependabot job logs seen in the wild.
-                // ["max-updater-run-time"] = 2700,
-                // ["proxy-log-response-body-on-auth-failure"] = true,
-            },
+                    Scheme = Uri.UriSchemeHttps,
+                    Host = url.Hostname,
+                    Port = url.Port ?? -1,
+                }.ToString()
+            ),
+            UpdateSubdependencies: false,
+            UpdatingAPullRequest: @params.UpdatingPullRequest,
+            VendorDependencies: update.Vendor,
+            RejectExternalCode: string.Equals(update.InsecureExternalCodeExecution, "deny"),
+            RepoPrivate: null, // TODO: add config for this?
+            CommitMessageOptions: MapCommitMessage(update.CommitMessage),
             // credentials do not go to the updater, just the metadata
-        };
+            CredentialsMetadata: credentialsMetadata
+        // MaxUpdaterRunTime: 2700
+        );
 
-        // serialize the job definition
-        await JsonSerializer.SerializeAsync(stream, definition, jsonOptions.SerializerOptions, cancellationToken);
+        // serialize the job config
+        var config = new DependabotJobFile(definition);
+        await JsonSerializer.SerializeAsync(stream, config, SC.Default.DependabotJobFile, cancellationToken);
     }
 
-    public async Task WriteProxyAsync(string path,
-                                      UpdateJob job,
-                                      IReadOnlyList<IReadOnlyDictionary<string, string>> credentials,
-                                      CertificateAuthority ca,
-                                      CancellationToken cancellationToken)
+    public async Task WriteProxyAsync(string path, WriteConfigParams @params, CancellationToken cancellationToken = default)
     {
         // write the proxy config file
         using var stream = File.OpenWrite(path);
-        await WriteProxyAsync(stream, credentials, ca, cancellationToken);
-        logger.WrittenProxyConfigFile(job.Id, path);
+        await WriteProxyAsync(stream, @params, cancellationToken);
+        logger.WrittenProxyConfigFile(@params.Job.Id, path);
     }
-
-    public async Task WriteProxyAsync(Stream stream,
-                                      IReadOnlyList<IReadOnlyDictionary<string, string>> credentials,
-                                      CertificateAuthority ca,
-                                      CancellationToken cancellationToken)
+    public async Task WriteProxyAsync(Stream stream, WriteConfigParams @params, CancellationToken cancellationToken = default)
     {
-        var config = new Dictionary<string, object>
-        {
-            ["all_credentials"] = credentials,
-            // CertificateAuthority includes the MITM CA certificate and private key
-            ["ca"] = new Dictionary<string, string>
-            {
-                ["cert"] = ca.Cert,
-                ["key"] = ca.Key,
-            },
-        };
+        var ca = certificateManager.Get();
+        var config = new DependabotProxyConfig(@params.Credentials, ca);
 
-        // serialize the job definition
-        await JsonSerializer.SerializeAsync(stream, config, jsonOptions.SerializerOptions, cancellationToken);
+        // serialize the proxy config
+        await JsonSerializer.SerializeAsync(stream, config, SC.Default.DependabotProxyConfig, cancellationToken);
     }
 
-    public IReadOnlyList<IReadOnlyDictionary<string, string>> MakeCredentials(Project project, Repository repository, RepositoryUpdate update)
+    public IReadOnlyList<DependabotCredential> MakeCredentials(Project project, Repository repository, RepositoryUpdate update)
     {
         // prepare credentials with replaced secrets
         var secrets = new Dictionary<string, string>(project.Secrets) { ["DEFAULT_TOKEN"] = project.Token!, };
@@ -156,26 +103,26 @@ internal partial class ConfigFilesWriter(IOptions<WorkflowOptions> optionsAccess
         return MakeCredentials(registries, secrets, project, options.GithubToken);
     }
 
-    internal static IReadOnlyList<IReadOnlyDictionary<string, string>> MakeCredentialsMetadata(IReadOnlyList<IReadOnlyDictionary<string, string>> credentials)
+    internal static IReadOnlyList<DependabotCredential> MakeCredentialsMetadata(IReadOnlyList<DependabotCredential> credentials)
     {
-        var metadata = new List<IReadOnlyDictionary<string, string>>();
+        var metadata = new List<DependabotCredential>();
 
         // remove the sensitive values
         string[] sensitive = ["username", "token", "password", "key", "auth-key"];
         foreach (var cred in credentials)
         {
             metadata.Add(
-                new Dictionary<string, string>(
+                new DependabotCredential(
                     cred.Where(k => !sensitive.Contains(k.Key, StringComparer.OrdinalIgnoreCase))));
         }
 
         return metadata;
     }
-    internal static IReadOnlyList<IReadOnlyDictionary<string, string>> MakeCredentials(IReadOnlyCollection<DependabotRegistry> registries, IReadOnlyDictionary<string, string> secrets, Project project, string? githubToken)
+    internal static IReadOnlyList<DependabotCredential> MakeCredentials(IReadOnlyCollection<DependabotRegistry> registries, IReadOnlyDictionary<string, string> secrets, Project project, string? githubToken)
     {
-        var credentials = new List<IReadOnlyDictionary<string, string>>()
+        var credentials = new List<DependabotCredential>()
         {
-            new Dictionary< string, string>
+            new DependabotCredential
             {
                 ["type"] = "git_source",
                 ["host"] = project.Url.Hostname,
@@ -186,7 +133,7 @@ internal partial class ConfigFilesWriter(IOptions<WorkflowOptions> optionsAccess
 
         if (!string.IsNullOrWhiteSpace(githubToken))
         {
-            credentials.Add(new Dictionary<string, string>
+            credentials.Add(new DependabotCredential
             {
                 ["type"] = "git_source",
                 ["host"] = "github.com",
@@ -199,7 +146,7 @@ internal partial class ConfigFilesWriter(IOptions<WorkflowOptions> optionsAccess
         {
             var type = v.Type?.Replace("-", "_") ?? throw new InvalidOperationException("Type should not be null");
 
-            var values = new Dictionary<string, string> { ["type"] = type, };
+            var values = new DependabotCredential { ["type"] = type, };
 
             // values for hex-organization
             values.AddIfNotDefault("organization", v.Organization);
@@ -266,7 +213,7 @@ internal partial class ConfigFilesWriter(IOptions<WorkflowOptions> optionsAccess
 
         return result;
     }
-    internal static string? ConvertEcosystemToPackageManager(string ecosystem)
+    internal static string ConvertEcosystemToPackageManager(string ecosystem)
     {
         ArgumentException.ThrowIfNullOrEmpty(ecosystem);
 
@@ -287,37 +234,35 @@ internal partial class ConfigFilesWriter(IOptions<WorkflowOptions> optionsAccess
             _ => ecosystem,
         };
     }
-    internal static IReadOnlyDictionary<string, object?> MapDependencyGroup(string name, DependabotGroupDependency group)
+    internal static DependabotGroup MapDependencyGroup(string name, DependabotGroupDependency group)
     {
-        return new Dictionary<string, object?>
-        {
-            ["name"] = name,
-            ["applies-to"] = group.AppliesTo,
-            ["rules"] = new Dictionary<string, object?>
+        return new DependabotGroup(
+            GroupName: name,
+            AppliesTo: group.AppliesTo,
+            Rules: new System.Text.Json.Nodes.JsonObject
             {
-                ["patterns"] = group.Patterns,
-                ["exclude-patterns"] = group.ExcludePatterns,
+                ["patterns"] = JsonSerializer.Serialize(group.Patterns, SC.Default.ListString),
+                ["exclude-patterns"] = JsonSerializer.Serialize(group.ExcludePatterns, SC.Default.ListString),
                 ["dependency-type"] = group.DependencyType,
-                ["update-types"] = group.UpdateTypes,
-            },
-        };
+                ["update-types"] = JsonSerializer.Serialize(group.UpdateTypes, SC.Default.ListString),
+            }
+        );
     }
-    internal static IReadOnlyDictionary<string, object?>? MapCommitMessage(DependabotCommitMessage? message)
+    internal static DependabotCommitOptions? MapCommitMessage(DependabotCommitMessage? message)
     {
         if (message is null) return null;
-        return new Dictionary<string, object?>
-        {
-            ["prefix"] = message.Prefix,
-            ["prefix-development"] = message.PrefixDevelopment,
-            ["include-scope"] = message.Include == "scope" ? true : null,
-        };
+        return new DependabotCommitOptions(
+            Prefix: message.Prefix,
+            PrefixDevelopment: message.PrefixDevelopment,
+            IncludeScope: message.Include == "scope" ? true : null
+        );
     }
-    internal static IReadOnlyDictionary<string, object> MapExperiments(IReadOnlyDictionary<string, string> experiments)
+    internal static DependabotExperiment MapExperiments(IReadOnlyDictionary<string, string> experiments)
     {
         // Experiment values are known to be either 'true', 'false', or a string value.
         // If the value is 'true' or 'false', convert it to a boolean type so that dependabot-core handles it correctly.
 
-        var result = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+        var result = new DependabotExperiment(StringComparer.OrdinalIgnoreCase);
 
         foreach (var (key, value) in experiments)
         {
@@ -332,7 +277,7 @@ internal partial class ConfigFilesWriter(IOptions<WorkflowOptions> optionsAccess
 
         return result;
     }
-    internal static IReadOnlyList<IReadOnlyDictionary<string, string?>> GetAllowDependencies(List<DependabotAllowDependency>? allow, bool securityOnly)
+    internal static IReadOnlyList<DependabotAllowed> GetAllowDependencies(List<DependabotAllowDependency>? allow, bool securityOnly)
     {
         // If no allow conditions are specified, update direct dependencies by default; This is what GitHub does.
         // NOTE: 'update-type' appears to be a deprecated config, but still appears in the dependabot-core model and GitHub Dependabot job logs.
@@ -340,39 +285,35 @@ internal partial class ConfigFilesWriter(IOptions<WorkflowOptions> optionsAccess
 
         if (allow is null)
         {
-            return [new Dictionary<string, string?>
-            {
-                ["dependency-type"] = "direct",
-                ["update-type"] = securityOnly ? "security" : "all",
-            }];
+            return [new DependabotAllowed(
+                DependencyType: "direct",
+                UpdateType: securityOnly ? "security" : "all"
+            )];
         }
 
-        return allow.Select(c => new Dictionary<string, string?>
-        {
-            ["dependency-name"] = c.DependencyName,
-            ["dependency-type"] = c.DependencyType,
-            ["update-type"] = c.UpdateType,
-        }).ToList();
+        return [.. allow.Select(c => new DependabotAllowed(
+            DependencyName: c.DependencyName,
+            DependencyType: c.DependencyType,
+            UpdateType: c.UpdateType
+        ))];
     }
-    internal static IReadOnlyDictionary<string, object?> MapIgnoreDependency(DependabotIgnoreDependency ignore)
+    internal static DependabotCondition MapIgnoreDependency(DependabotIgnoreDependency ignore)
     {
-        return new Dictionary<string, object?>
-        {
-            // https://github.com/dependabot/cli/blob/main/internal/infra/job.go
-            ["source"] = null,
-            ["updated-at"] = null,
-            ["dependency-name"] = ignore.DependencyName,
-            ["update-types"] = ignore.UpdateTypes,
+        return new DependabotCondition(
+            DependencyName: ignore.DependencyName!,
+            Source: null,
+            UpdateTypes: ignore.UpdateTypes,
+            UpdatedAt: null,
 
             // The dependabot.yml config docs are not very clear about acceptable values; after scanning dependabot-core and dependabot-cli,
             // this could either be a single version string (e.g. '>1.0.0'), or multiple version strings separated by commas (e.g. '>1.0.0, <2.0.0')
-            ["version-requirement"] = ignore.Versions switch
+            VersionRequirement: ignore.Versions switch
             {
                 System.Text.Json.Nodes.JsonArray arr => string.Join(",", arr.GetValues<string>()),
                 System.Text.Json.Nodes.JsonValue jv => jv.GetValue<string>(),
                 _ => null,
-            },
-        };
+            }
+        );
     }
     internal static string? MapRequirementsUpdateStrategy(string value)
     {
@@ -390,4 +331,22 @@ internal partial class ConfigFilesWriter(IOptions<WorkflowOptions> optionsAccess
 
     [GeneratedRegex("\\${{\\s*([a-zA-Z_]+[a-zA-Z0-9_-]*)\\s*}}", RegexOptions.Compiled)]
     private static partial Regex PlaceholderPattern();
+}
+
+internal class WriteJobParams
+{
+    public required Project Project { get; init; }
+    public required RepositoryUpdate Update { get; init; }
+    public required UpdateJob Job { get; init; }
+    public required IReadOnlyList<DependabotCredential> Credentials { get; init; }
+    public bool UpdatingPullRequest { get; init; }
+    public string? UpdateDependencyGroupName { get; init; }
+    public required List<string> UpdateDependencyNames { get; init; }
+    public bool Debug { get; init; }
+}
+
+internal class WriteConfigParams
+{
+    public required UpdateJob Job { get; init; }
+    public required IReadOnlyList<DependabotCredential> Credentials { get; init; }
 }

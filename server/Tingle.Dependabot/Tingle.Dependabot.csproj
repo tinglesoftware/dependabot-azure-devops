@@ -8,6 +8,10 @@
     <UserSecretsId>e58d698d-4791-43fc-8b76-ce1f01cbd092</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <DockerfileContext>..\..</DockerfileContext>
+
+    <!-- TODO: enable this once we have tested stuff -->
+    <!-- <IsAotCompatible>true</IsAotCompatible> -->
+    <!-- <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault> -->
   </PropertyGroup>
 
   <ItemGroup>
@@ -25,7 +29,6 @@
     <PackageReference Include="Azure.ResourceManager.AppContainers" Version="1.3.0" />
     <PackageReference Include="DistributedLock.FileSystem" Version="1.0.3" />
     <PackageReference Include="Docker.DotNet" Version="3.125.15" />
-    <PackageReference Include="Macross.Json.Extensions" Version="3.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.4" />
     <PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" Version="9.0.4" />
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="9.0.4" />

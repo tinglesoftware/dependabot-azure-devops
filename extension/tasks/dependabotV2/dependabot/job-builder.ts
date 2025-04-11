@@ -152,7 +152,6 @@ export function buildUpdateJobConfig(
       'experiments': mapExperiments(taskInputs.experiments),
       'reject-external-code': update['insecure-external-code-execution']?.toLocaleLowerCase()?.trim() == 'allow',
       'repo-private': undefined, // TODO: add config for this?
-      'repo-contents-path': undefined, // TODO: add config for this?
       'requirements-update-strategy': mapVersionStrategyToRequirementsUpdateStrategy(update['versioning-strategy']),
       'lockfile-only': update['versioning-strategy'] === 'lockfile-only',
       'vendor-dependencies': update.vendor,

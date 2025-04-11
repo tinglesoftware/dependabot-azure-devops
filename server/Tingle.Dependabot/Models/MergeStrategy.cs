@@ -1,7 +1,10 @@
 ﻿using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
+using Tingle.Extensions.Primitives.Converters;
 
 namespace Tingle.Dependabot.Models;
 
+[JsonConverter(typeof(JsonStringEnumMemberConverter<MergeStrategy>))]
 public enum MergeStrategy
 {
     [EnumMember(Value = "noFastForward")]
