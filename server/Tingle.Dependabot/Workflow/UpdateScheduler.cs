@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using Tingle.Dependabot.Events;
+using Tingle.Dependabot.Models.Dependabot;
 using Tingle.Dependabot.Models.Management;
 using Tingle.EventBus;
 using Tingle.PeriodicTasks;
@@ -90,4 +91,13 @@ internal class UpdateScheduler
     }
 
     private readonly record struct TimerPayload(string ProjectId, string RepositoryId, int RepositoryUpdateId);
+}
+
+public readonly record struct SchedulableUpdate(int Index, DependabotUpdateSchedule Supplied)
+{
+    public void Deconstruct(out int index, out DependabotUpdateSchedule supplied)
+    {
+        index = Index;
+        supplied = Supplied;
+    }
 }
