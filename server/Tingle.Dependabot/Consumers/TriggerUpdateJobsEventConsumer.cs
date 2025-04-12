@@ -54,7 +54,7 @@ internal class TriggerUpdateJobsEventConsumer(MainDbContext dbContext, UpdateRun
         var eventBusId = context.Id;
         foreach (var update in updates)
         {
-            var ecosystem = update.PackageEcosystem!;
+            var ecosystem = update.PackageEcosystem;
 
             // check if there is an existing one
             var job = await (from j in dbContext.UpdateJobs
@@ -95,6 +95,8 @@ internal class TriggerUpdateJobsEventConsumer(MainDbContext dbContext, UpdateRun
                     Resources = resources,
                     AuthKey = Keygen.Create(32, Keygen.OutputFormat.Base62),
 
+                    ProxyImage = null,
+                    UpdaterImage = null,
                     Start = null,
                     End = null,
                     Duration = null,
@@ -113,7 +115,18 @@ internal class TriggerUpdateJobsEventConsumer(MainDbContext dbContext, UpdateRun
             }
 
             // call the update runner to run the update
-            await updateRunner.CreateAsync(project, repository, update, job, cancellationToken);
+            var updaterContext = new UpdaterContext
+            {
+                Project = project,
+                Repository = repository,
+                Update = update,
+                Job = job,
+
+                UpdatingPullRequest = false, // TODO: fix this
+                UpdateDependencyGroupName = null, // TODO: fix this
+                UpdateDependencyNames = [], // TODO: fix this
+            };
+            await updateRunner.CreateAsync(updaterContext, cancellationToken);
 
             // save changes that may have been made by the updateRunner
             update.LatestJobStatus = job.Status;

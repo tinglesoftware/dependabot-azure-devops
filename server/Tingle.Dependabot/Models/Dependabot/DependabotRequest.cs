@@ -51,11 +51,11 @@ public record DependabotRecordEcosystemVersions(
     [property: JsonPropertyName("ecosystem_versions")] JsonObject? EcosystemVersions);
 
 public record DependabotRecordUpdateJobError(
-    [property: JsonPropertyName("error-type")] string? ErrorType,
+    [property: JsonPropertyName("error-type")] string ErrorType,
     [property: JsonPropertyName("error-details")] JsonObject? ErrorDetails);
 
 public record DependabotRecordUpdateJobUnknownError(
-    [property: JsonPropertyName("error-type")] string? ErrorType,
+    [property: JsonPropertyName("error-type")] string ErrorType,
     [property: JsonPropertyName("error-details")] JsonObject? ErrorDetails);
 
 public record DependabotIncrementMetric(

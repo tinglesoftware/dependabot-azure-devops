@@ -41,6 +41,13 @@ public class ManagementController(MainDbContext dbContext, IEventPublisher publi
         return Ok();
     }
 
+    [HttpGet("projects")]
+    public async Task<IActionResult> GetProjectsAsync()
+    {
+        var projects = await dbContext.Projects.ToListAsync();
+        return Ok(projects);
+    }
+
     [HttpGet("repos")]
     public async Task<IActionResult> GetReposAsync()
     {
@@ -99,6 +106,28 @@ public class ManagementController(MainDbContext dbContext, IEventPublisher publi
         return Ok(job);
     }
 
+    [HttpDelete("repos/{id}/jobs/{jobId}")]
+    public async Task<IActionResult> DeleteJobAsync([FromRoute] string id, [FromRoute] string jobId)
+    {
+        // ensure project exists
+        var projectId = HttpContext.GetProjectId() ?? throw new InvalidOperationException("Project identifier must be provided");
+        var project = await dbContext.Projects.SingleOrDefaultAsync(p => p.Id == projectId);
+        if (project is null) return Problem(title: ErrorCodes.ProjectNotFound, statusCode: 400);
+
+        // ensure repository exists
+        var repository = await dbContext.Repositories.SingleOrDefaultAsync(r => r.ProjectId == project.Id && r.Id == id);
+        if (repository is null) return Problem(title: ErrorCodes.RepositoryNotFound, statusCode: 400);
+
+        // ensure job exists
+        var job = await dbContext.UpdateJobs.Where(j => j.RepositoryId == repository.Id && j.Id == jobId).SingleOrDefaultAsync();
+        if (job is null) return Problem(title: ErrorCodes.UpdateJobNotFound, statusCode: 400);
+
+        // delete the job
+        dbContext.UpdateJobs.Remove(job);
+        await dbContext.SaveChangesAsync();
+        return Ok();
+    }
+
     [HttpGet("repos/{id}/jobs/{jobId}/log")]
     public async Task<IActionResult> GetJobLogAsync([FromRoute] string id, [FromRoute] string jobId)
     {
@@ -150,7 +179,7 @@ public class ManagementController(MainDbContext dbContext, IEventPublisher publi
         if (repository is null) return Problem(title: ErrorCodes.RepositoryNotFound, statusCode: 400);
 
         // ensure the repository update exists
-        var update = repository.Updates.ElementAtOrDefault(model.Id!.Value);
+        var update = repository.Updates.ElementAtOrDefault(model.Id);
         if (update is null) return Problem(title: ErrorCodes.RepositoryUpdateNotFound, statusCode: 400);
 
         // trigger update for specific update
@@ -158,7 +187,7 @@ public class ManagementController(MainDbContext dbContext, IEventPublisher publi
         {
             ProjectId = project.Id,
             RepositoryId = repository.Id,
-            RepositoryUpdateId = model.Id.Value,
+            RepositoryUpdateId = model.Id,
             Trigger = UpdateJobTrigger.Manual,
         };
         await publisher.PublishAsync(evt);

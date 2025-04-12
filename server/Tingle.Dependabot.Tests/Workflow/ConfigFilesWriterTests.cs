@@ -10,6 +10,8 @@ namespace Tingle.Dependabot.Tests.Workflow;
 
 public class ConfigFilesWriterTests
 {
+    private const string ProjectId = "prj_1234567890";
+
     [Fact]
     public void MakeCredentialsMetadata_Works()
     {
@@ -24,7 +26,18 @@ public class ConfigFilesWriterTests
         Assert.NotNull(configuration);
 
         var secrets = new Dictionary<string, string>();
-        var project = new Dependabot.Models.Management.Project { Url = "https://dependabot.visualstudio.com/Core", Token = "token", };
+        var project = new Dependabot.Models.Management.Project
+        {
+            Id = ProjectId,
+            Url = "https://dev.azure.com/dependabot/dependabot",
+            Name = "dependabot",
+            UserId = "6ce954b1-ce1f-45d1-b94d-e6bf2464ba2c",
+            Token = "token",
+            ProviderId = "6ce954b1-ce1f-45d1-b94d-e6bf2464ba2c",
+            Password = "burp-bump",
+            AutoApprove = new(),
+            AutoComplete = new(),
+        };
         var credentials = ConfigFilesWriter.MakeCredentials(configuration.Registries.Values, secrets, project, "github-token");
         Assert.Equal(13, credentials.Count);
         var metadatas = ConfigFilesWriter.MakeCredentialsMetadata(credentials);
@@ -33,7 +46,7 @@ public class ConfigFilesWriterTests
         // git_source (main repo)
         var metadata = metadatas[0];
         Assert.Equal(["type", "host"], metadata.Keys);
-        Assert.Equal(["git_source", "dependabot.visualstudio.com"], metadata.Values);
+        Assert.Equal(["git_source", "dev.azure.com"], metadata.Values);
 
         // git_source (GitHub)
         metadata = metadatas[1];
@@ -110,14 +123,25 @@ public class ConfigFilesWriterTests
         Assert.NotNull(configuration);
 
         var secrets = new Dictionary<string, string>();
-        var project = new Dependabot.Models.Management.Project { Url = "https://dependabot.visualstudio.com/Core", Token = "token", };
+        var project = new Dependabot.Models.Management.Project
+        {
+            Id = ProjectId,
+            Url = "https://dev.azure.com/dependabot/dependabot",
+            Name = "dependabot",
+            Token = "token",
+            UserId = "6ce954b1-ce1f-45d1-b94d-e6bf2464ba2c",
+            ProviderId = "6ce954b1-ce1f-45d1-b94d-e6bf2464ba2c",
+            Password = "burp-bump",
+            AutoApprove = new(),
+            AutoComplete = new(),
+        };
         var credentials = ConfigFilesWriter.MakeCredentials(configuration.Registries.Values, secrets, project, "github-token");
         Assert.Equal(13, credentials.Count);
 
         // git_source (main repo)
         var credential = credentials[0];
         Assert.Equal("git_source", Assert.Contains("type", credential));
-        Assert.Equal("dependabot.visualstudio.com", Assert.Contains("host", credential));
+        Assert.Equal("dev.azure.com", Assert.Contains("host", credential));
         Assert.Equal("x-access-token", Assert.Contains("username", credential));
         Assert.Equal("token", Assert.Contains("password", credential));
 

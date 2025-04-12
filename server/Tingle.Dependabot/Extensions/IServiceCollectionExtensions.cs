@@ -58,6 +58,7 @@ internal static class IServiceCollectionExtensions
         services.AddSingleton<UpdateScheduler>();
 
         services.AddHttpClient<AzureDevOpsProvider>();
+        services.AddHttpClient<GitHubGraphClient>();
         services.AddScoped<Synchronizer>();
 
         return services;

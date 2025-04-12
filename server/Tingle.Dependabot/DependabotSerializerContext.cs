@@ -14,6 +14,8 @@ namespace Tingle.Dependabot;
 
 // webhook endpoints
 [JsonSerializable(typeof(Models.Azure.AzureDevOpsEvent))]
+[JsonSerializable(typeof(Models.Azure.AzureDevOpsEventCodePushResource))]
+[JsonSerializable(typeof(Models.Azure.AzureDevOpsEventPullRequestCommentEventResource))]
 
 // update_jobs endpoints
 [JsonSerializable(typeof(Models.Dependabot.DependabotRequest<Models.Dependabot.DependabotCreatePullRequest>))]
@@ -31,12 +33,19 @@ namespace Tingle.Dependabot;
 [JsonSerializable(typeof(Models.Dependabot.DependabotProxyConfig))]
 
 // azure devops api
+[JsonSerializable(typeof(Models.Azure.AzdoConnectionData))]
 [JsonSerializable(typeof(Models.Azure.AzdoProject))]
-[JsonSerializable(typeof(Models.Azure.AzdoListResponse<Models.Azure.AzdoRepository>))]
-[JsonSerializable(typeof(Models.Azure.AzdoRepositoryItem))]
 [JsonSerializable(typeof(Models.Azure.AzdoSubscription))]
 [JsonSerializable(typeof(Models.Azure.AzdoSubscriptionsQuery))]
 [JsonSerializable(typeof(Models.Azure.AzdoSubscriptionsQueryResponse))]
+[JsonSerializable(typeof(Models.Azure.AzdoResponse<List<Models.Azure.AzdoRepository>>))]
+[JsonSerializable(typeof(Models.Azure.AzdoRepositoryItem))]
+[JsonSerializable(typeof(Models.Azure.AzdoResponse<List<Models.Azure.AzdoPullRequest>>))]
+[JsonSerializable(typeof(Models.Azure.AzdoResponse<Models.Azure.AzdoPullRequestProperties>))]
+
+// github graphql
+[JsonSerializable(typeof(Models.GitHub.GhsaGraphQlRequest))]
+[JsonSerializable(typeof(Models.GitHub.GhsaGraphQlResponse))]
 
 // shared
 [JsonSerializable(typeof(Dictionary<string, Models.Dependabot.DependabotRegistry>))]

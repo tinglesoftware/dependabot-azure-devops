@@ -42,9 +42,8 @@ public class DependabotConfiguration : IValidatableObject
 public record DependabotUpdate : IValidatableObject
 {
     /// <summary>Ecosystem for the update.</summary>
-    [Required]
     [JsonPropertyName("package-ecosystem")]
-    public string? PackageEcosystem { get; set; }
+    public required string PackageEcosystem { get; set; }
 
     [JsonPropertyName("directory")]
     public string? Directory { get; set; }
@@ -52,9 +51,8 @@ public record DependabotUpdate : IValidatableObject
     [JsonPropertyName("directories")]
     public List<string>? Directories { get; set; }
 
-    [Required]
     [JsonPropertyName("schedule")]
-    public DependabotUpdateSchedule? Schedule { get; set; }
+    public required DependabotUpdateSchedule Schedule { get; set; }
 
     [JsonPropertyName("open-pull-requests-limit")]
     public int OpenPullRequestsLimit { get; set; } = 5;

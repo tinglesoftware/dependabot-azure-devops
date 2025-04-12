@@ -35,10 +35,14 @@ internal partial class UpdateRunner(IFeatureManagerSnapshot featureManager,
     private readonly LogsQueryClient logsQueryClient = new(new DefaultAzureCredential());
     private readonly DockerClient dockerClient = new DockerClientConfiguration().CreateClient();
 
-    public async Task CreateAsync(Project project, Repository repository, RepositoryUpdate update, UpdateJob job, CancellationToken cancellationToken = default)
+    public async Task CreateAsync(UpdaterContext context, CancellationToken cancellationToken = default)
     {
+        var project = context.Project;
+        var update = context.Update;
+        var job = context.Job;
+
         // if we have an existing one, there is nothing more to do
-        var ecosystem = job.PackageEcosystem!;
+        var ecosystem = job.PackageEcosystem;
         var platform = job.Platform = options.JobsPlatform!.Value;
         var resourceName = job.GetResourceName();
         if (platform is UpdateJobPlatform.ContainerApps)
@@ -67,15 +71,15 @@ internal partial class UpdateRunner(IFeatureManagerSnapshot featureManager,
         var debug = await featureManager.IsEnabledAsync(FeatureNames.DependabotDebug, fmc);
 
         // prepare credentials and job directory
-        var credentials = configFilesWriter.MakeCredentials(project, repository, update);
+        var credentials = configFilesWriter.MakeCredentials(context);
 
         // write proxy config file
         var proxyDirectory = Path.Join(options.ProxyDirectory, job.Id);
         if (!Directory.Exists(proxyDirectory)) Directory.CreateDirectory(proxyDirectory);
         var proxyConfigPath = Path.Join(proxyDirectory, "config.json");
         if (File.Exists(proxyConfigPath)) File.Delete(proxyConfigPath);
-        var writeConfigParams = new WriteConfigParams { Job = job, Credentials = credentials, };
-        await configFilesWriter.WriteProxyAsync(proxyConfigPath, writeConfigParams, cancellationToken);
+        var proxyConfigContext = new ProxyConfigContext(context, credentials);
+        await configFilesWriter.WriteProxyAsync(proxyConfigPath, proxyConfigContext, cancellationToken);
 
         // the proxy config must be mounted in the root
         // example: change /Users/maxwell/Documents/dependabot-azure-devops/server/Tingle.Dependabot/work/proxy/1359497145993567115/config.json
@@ -90,18 +94,8 @@ internal partial class UpdateRunner(IFeatureManagerSnapshot featureManager,
         var outputPath = Path.Join(jobsDirectory, "output.json");
         if (File.Exists(outputPath)) File.Delete(outputPath);
 
-        var writeJobParams = new WriteJobParams
-        {
-            Project = project,
-            Update = update,
-            Job = job,
-            Credentials = credentials,
-            UpdatingPullRequest = false, // TODO: fix this
-            UpdateDependencyGroupName = null, // TODO: fix this
-            UpdateDependencyNames = [], // TODO: fix this
-            Debug = debug,
-        };
-        await configFilesWriter.WriteJobAsync(jobDefinitionPath, writeJobParams, cancellationToken);
+        var jobConfigContext = new JobConfigContext(context, credentials, debug);
+        await configFilesWriter.WriteJobAsync(jobDefinitionPath, jobConfigContext, cancellationToken);
         var caCertPath = Path.Join(options.CertsDirectory, "cert.crt");
 
         // the job path we have might local to the machine but we need to be based on the mount we have in the container
@@ -272,6 +266,19 @@ internal partial class UpdateRunner(IFeatureManagerSnapshot featureManager,
             // create the proxy container
             var proxyContainer = await dockerClient.Containers.CreateContainerAsync(proxyContainerParams, cancellationToken);
             logger.CreatedUpdaterProxy(job.Id, job.Platform);
+
+            // // mounting the config.json file is so much gymnastics so we instead just write it into the container
+            // using var tarStream = new MemoryStream();
+            // using (var tarWriter = new TarWriter(tarStream, leaveOpen: true))
+            // {
+            //     var entry = new PaxTarEntry(TarEntryType.RegularFile, Path.GetFileName(proxyConfigPath))
+            //     {
+            //         DataStream = new MemoryStream(await File.ReadAllBytesAsync(proxyConfigPath, cancellationToken)),
+            //     };
+            //     await tarWriter.WriteEntryAsync(entry, cancellationToken: cancellationToken);
+            // }
+            // tarStream.Seek(0, SeekOrigin.Begin);
+            // await dockerClient.Containers.ExtractArchiveToContainerAsync(proxyContainer.ID, new() { Path = "/" }, tarStream, cancellationToken);
 
             // start the proxy container
             _ = await dockerClient.Containers.StartContainerAsync(proxyContainer.ID, new(), cancellationToken);
@@ -595,4 +602,18 @@ public readonly record struct UpdateRunnerState(UpdateJobStatus Status, DateTime
         start = Start;
         end = End;
     }
+}
+
+public readonly struct UpdaterContext
+{
+    public UpdaterContext() { }
+
+    public required Project Project { get; init; }
+    public required Repository Repository { get; init; }
+    public required RepositoryUpdate Update { get; init; }
+    public required UpdateJob Job { get; init; }
+
+    public bool UpdatingPullRequest { get; init; } = false;
+    public string? UpdateDependencyGroupName { get; init; } = null;
+    public List<string> UpdateDependencyNames { get; init; } = [];
 }

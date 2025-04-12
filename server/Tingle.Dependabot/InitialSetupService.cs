@@ -54,9 +54,14 @@ internal class InitialSetupService(IServiceScopeFactory serviceScopeFactory,
         var projects = await context.Projects.ToListAsync(cancellationToken);
         foreach (var setup in setups)
         {
+            // pull the project from the provider
             var url = setup.Url;
+            var token = setup.Token;
+            var adoProject = await adoProvider.GetProjectAsync(url, token, cancellationToken);
+            var adoUser = await adoProvider.GetConnectionDataAsync(url, token, cancellationToken);
+
             logger.LogInformation("Setting up project: {Url}", url);
-            var project = projects.SingleOrDefault(p => p.Url == setup.Url);
+            var project = projects.SingleOrDefault(p => p.Url == url);
             if (project is null)
             {
                 project = new Models.Management.Project
@@ -64,28 +69,47 @@ internal class InitialSetupService(IServiceScopeFactory serviceScopeFactory,
                     Id = $"prj_{Ksuid.Generate()}",
                     Created = DateTimeOffset.UtcNow,
                     Password = Keygen.Create(32, Keygen.OutputFormat.Base62), // base62 so that it can be used in the URL if needed
-                    Url = setup.Url.ToString(),
+                    Url = url,
                     Type = Models.Management.ProjectType.Azure,
+
+                    Name = adoProject.Name,
+                    Description = adoProject.Description,
+                    ProviderId = adoProject.Id,
+                    Slug = url.Slug,
+                    Private = adoProject.Visibility is not Models.Azure.AzdoProjectVisibility.Public,
+                    Token = token,
+                    UserId = adoUser.AuthenticatedUser.Id,
+                    AutoApprove = new Models.Management.ProjectAutoApprove { Enabled = setup.AutoApprove, },
+                    AutoComplete = new Models.Management.ProjectAutoComplete
+                    {
+                        Enabled = setup.AutoComplete,
+                        IgnoreConfigs = setup.AutoCompleteIgnoreConfigs,
+                        MergeStrategy = setup.AutoCompleteMergeStrategy,
+                    },
+                    Secrets = setup.Secrets,
                 };
                 logger.LogInformation("Adding new project to database: {Url}", url);
                 await context.Projects.AddAsync(project, cancellationToken);
             }
-
-            // update project using values from the setup
-            project.Token = setup.Token;
-            project.AutoComplete.Enabled = setup.AutoComplete;
-            project.AutoComplete.IgnoreConfigs = setup.AutoCompleteIgnoreConfigs;
-            project.AutoComplete.MergeStrategy = setup.AutoCompleteMergeStrategy;
-            project.AutoApprove.Enabled = setup.AutoApprove;
-            project.Secrets = setup.Secrets;
-
-            // update values from the project
-            var tp = await adoProvider.GetProjectAsync(project, cancellationToken);
-            project.ProviderId = tp.Id.ToString();
-            project.Name = tp.Name;
-            project.Description = tp.Description;
-            project.Slug = url.Slug;
-            project.Private = tp.Visibility is not Models.Azure.AzdoProjectVisibility.Public;
+            else
+            {
+                // update project using values from the setup
+                project.Name = adoProject.Name;
+                project.Description = adoProject.Description;
+                project.ProviderId = adoProject.Id;
+                project.Slug = url.Slug;
+                project.Private = adoProject.Visibility is not Models.Azure.AzdoProjectVisibility.Public;
+                project.Token = token;
+                project.UserId = adoUser.AuthenticatedUser.Id;
+                project.AutoComplete = new Models.Management.ProjectAutoComplete
+                {
+                    Enabled = setup.AutoComplete,
+                    IgnoreConfigs = setup.AutoCompleteIgnoreConfigs,
+                    MergeStrategy = setup.AutoCompleteMergeStrategy,
+                };
+                project.AutoApprove = new Models.Management.ProjectAutoApprove { Enabled = setup.AutoApprove, };
+                project.Secrets = setup.Secrets;
+            }
 
             // if there are changes, set the Updated field
             if (context.ChangeTracker.HasChanges())

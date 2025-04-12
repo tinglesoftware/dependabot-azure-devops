@@ -14,7 +14,7 @@ public class MainDbContext(DbContextOptions<MainDbContext> options) : DbContext(
     public DbSet<Repository> Repositories => Set<Repository>();
     public DbSet<UpdateJob> UpdateJobs => Set<UpdateJob>();
 
-    public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
+    DbSet<DataProtectionKey> IDataProtectionKeyContext.DataProtectionKeys => Set<DataProtectionKey>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {

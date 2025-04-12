@@ -8,7 +8,7 @@ namespace Tingle.Dependabot.Models.Management;
 public class Project
 {
     [Key, MaxLength(50)]
-    public string? Id { get; set; }
+    public required string Id { get; set; }
 
     public DateTimeOffset Created { get; set; }
 
@@ -17,8 +17,7 @@ public class Project
     public ProjectType Type { get; set; }
 
     /// <summary>Name of the project as per provider.</summary>
-    [Required]
-    public string? Name { get; set; }
+    public required string Name { get; set; }
 
     /// <summary>Description of the project as per provider.</summary>
     public string? Description { get; set; }
@@ -28,9 +27,8 @@ public class Project
     public string? Slug { get; set; }
 
     /// <summary>Identifier of the repository as per provider.</summary>
-    [Required]
     [JsonIgnore] // only for internal use
-    public string? ProviderId { get; set; }
+    public required string ProviderId { get; set; }
 
     /// <summary>URL for the project.</summary>
     /// <example>https://dev.azure.com/tingle/dependabot</example>
@@ -40,25 +38,27 @@ public class Project
     /// <summary>
     /// Token for accessing the project with permissions for repositories, pull requests, and service hooks.
     /// </summary>
-    [Required]
     [JsonIgnore] // expose this once we know how to protect the values
-    public string? Token { get; set; }
+    public required string Token { get; set; }
+
+    /// <summary>
+    /// User identifier for the provided token.
+    /// </summary>
+    [JsonIgnore] // only for internal use
+    public required string UserId { get; set; }
 
     /// <summary>Whether the project is private.</summary>
     public bool Private { get; set; }
 
     /// <summary>Auto complete settings.</summary>
-    [Required]
-    public ProjectAutoComplete AutoComplete { get; set; } = new();
+    public required ProjectAutoComplete AutoComplete { get; set; }
 
     /// <summary>Auto approve settings.</summary>
-    [Required]
-    public ProjectAutoApprove AutoApprove { get; set; } = new();
+    public required ProjectAutoApprove AutoApprove { get; set; }
 
     /// <summary>Password for Webhooks, ServiceHooks, and Notifications from the provider.</summary>
-    [Required]
     [DataType(DataType.Password)]
-    public string? Password { get; set; }
+    public required string Password { get; set; }
 
     /// <summary>
     /// Secrets that can be replaced in the registries section of the dependabot configuration file.

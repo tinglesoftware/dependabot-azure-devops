@@ -6,6 +6,7 @@ using Tingle.Dependabot.Events;
 using Tingle.Dependabot.Models;
 using Tingle.Dependabot.Models.Azure;
 using Tingle.EventBus;
+using SC = Tingle.Dependabot.DependabotSerializerContext;
 
 namespace Tingle.Dependabot.Controllers;
 
@@ -22,7 +23,7 @@ public class WebhooksController(MainDbContext dbContext, IEventPublisher publish
 
         if (type is AzureDevOpsEventType.GitPush)
         {
-            var resource = JsonSerializer.Deserialize<AzureDevOpsEventCodePushResource>(model.Resource)!;
+            var resource = JsonSerializer.Deserialize(model.Resource, SC.Default.AzureDevOpsEventCodePushResource)!;
             var adoRepository = resource.Repository!;
             var adoRepositoryId = adoRepository.Id;
             var defaultBranch = adoRepository.DefaultBranch;
@@ -43,8 +44,8 @@ public class WebhooksController(MainDbContext dbContext, IEventPublisher publish
         }
         else if (type is AzureDevOpsEventType.GitPullRequestUpdated or AzureDevOpsEventType.GitPullRequestMerged)
         {
-            var resource = JsonSerializer.Deserialize<AzureDevOpsEventPullRequestResource>(model.Resource)!;
-            var adoRepository = resource.Repository!;
+            var resource = JsonSerializer.Deserialize(model.Resource, SC.Default.AzdoPullRequest)!;
+            var adoRepository = resource.Repository;
             var prId = resource.PullRequestId;
             var status = resource.Status;
 
@@ -53,16 +54,17 @@ public class WebhooksController(MainDbContext dbContext, IEventPublisher publish
             var project = await dbContext.Projects.SingleOrDefaultAsync(p => p.ProviderId == adoProjectId);
             if (project is null) return Problem(title: ErrorCodes.ProjectNotFound, statusCode: 400);
 
+            var repoSlug = project.Url.MakeRepositorySlug(adoRepository.Name);
             if (type is AzureDevOpsEventType.GitPullRequestUpdated)
             {
-                logger.WebhooksPullRequestStatusUpdated(prId, adoRepository.RemoteUrl, status);
+                logger.WebhooksPullRequestStatusUpdated(prId, repoSlug, status);
 
                 // TODO: handle the logic for merge conflicts here using events
 
             }
             else if (type is AzureDevOpsEventType.GitPullRequestMerged)
             {
-                logger.WebhooksPullRequestMergedStatusUpdated(prId, adoRepository.RemoteUrl, resource.MergeStatus);
+                logger.WebhooksPullRequestMergedStatusUpdated(prId, repoSlug, resource.MergeStatus);
 
                 // TODO: handle the logic for updating other PRs to find merge conflicts (restart merge or attempt merge)
 
@@ -70,7 +72,7 @@ public class WebhooksController(MainDbContext dbContext, IEventPublisher publish
         }
         else if (type is AzureDevOpsEventType.GitPullRequestCommentEvent)
         {
-            var resource = JsonSerializer.Deserialize<AzureDevOpsEventPullRequestCommentEventResource>(model.Resource)!;
+            var resource = JsonSerializer.Deserialize(model.Resource, SC.Default.AzureDevOpsEventPullRequestCommentEventResource)!;
             var comment = resource.Comment!;
             var pr = resource.PullRequest!;
             var adoRepository = pr.Repository!;
@@ -81,12 +83,13 @@ public class WebhooksController(MainDbContext dbContext, IEventPublisher publish
             var adoProjectId = adoRepository.Project!.Id;
             var project = await dbContext.Projects.SingleOrDefaultAsync(p => p.ProviderId == adoProjectId);
             if (project is null) return Problem(title: ErrorCodes.ProjectNotFound, statusCode: 400);
+            var repoSlug = project.Url.MakeRepositorySlug(adoRepository.Name);
 
             // ensure the comment starts with @dependabot
             var content = comment.Content?.Trim();
             if (content is not null && content.StartsWith("@dependabot"))
             {
-                logger.WebhooksPullRequestCommentedOn(prId, adoRepository.RemoteUrl, content);
+                logger.WebhooksPullRequestCommentedOn(prId, repoSlug, content);
 
                 // TODO: handle the logic for comments here using events
             }

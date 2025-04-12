@@ -12,34 +12,34 @@ internal partial class ConfigFilesWriter(CertificateManager certificateManager,
                                          ILogger<ConfigFilesWriter> logger)
 {
     private readonly WorkflowOptions options = optionsAccessor?.Value ?? throw new ArgumentNullException(nameof(optionsAccessor));
-    public async Task WriteJobAsync(string path, WriteJobParams @params, CancellationToken cancellationToken = default)
+    public async Task WriteJobAsync(string path, JobConfigContext context, CancellationToken cancellationToken = default)
     {
         // write the job definition file
         using var stream = File.OpenWrite(path);
-        await WriteJobAsync(stream, @params, cancellationToken);
-        logger.WrittenJobDefinitionFile(@params.Job.Id, path);
+        await WriteJobAsync(stream, context, cancellationToken);
+        logger.WrittenJobDefinitionFile(context.Job.Id, path);
     }
-    public async Task WriteJobAsync(Stream stream, WriteJobParams @params, CancellationToken cancellationToken = default)
+    public async Task WriteJobAsync(Stream stream, JobConfigContext context, CancellationToken cancellationToken = default)
     {
         // prepare credentials metadata
-        var credentialsMetadata = MakeCredentialsMetadata(@params.Credentials);
+        var credentialsMetadata = MakeCredentialsMetadata(context.Credentials);
 
         // prepare the experiments
-        var project = @params.Project;
+        var project = context.Project;
         var experiments = project.Experiments;
         if (experiments is null || experiments.Count == 0) experiments = new(options.DefaultExperiments);
 
         // make the definition
         var url = project.Url;
-        var update = @params.Update;
-        var job = @params.Job;
+        var update = context.Update;
+        var job = context.Job;
         var definition = new DependabotJobConfig(
-            PackageManager: ConvertEcosystemToPackageManager(update.PackageEcosystem!),
+            PackageManager: ConvertEcosystemToPackageManager(update.PackageEcosystem),
             AllowedUpdates: GetAllowDependencies(update.Allow, update.SecurityOnly),
-            Debug: @params.Debug,
+            Debug: context.Debug,
             DependencyGroups: [.. (update.Groups ?? []).Select(p => MapDependencyGroup(p.Key, p.Value))],
-            Dependencies: @params.UpdateDependencyNames,
-            DependencyGroupToRefresh: @params.UpdateDependencyGroupName,
+            Dependencies: context.UpdateDependencyNames,
+            DependencyGroupToRefresh: context.UpdateDependencyGroupName,
             ExistingPullRequests: [], // TODO: filter out PRs for the given dependency-group-name similar to the extension
             ExistingGroupPullRequests: [], // TODO: filter out PRs for the given dependency-group-name similar to the extension
             Experiments: MapExperiments(experiments),
@@ -64,7 +64,7 @@ internal partial class ConfigFilesWriter(CertificateManager certificateManager,
                 }.ToString()
             ),
             UpdateSubdependencies: false,
-            UpdatingAPullRequest: @params.UpdatingPullRequest,
+            UpdatingAPullRequest: context.UpdatingPullRequest,
             VendorDependencies: update.Vendor,
             RejectExternalCode: string.Equals(update.InsecureExternalCodeExecution, "deny"),
             RepoPrivate: null, // TODO: add config for this?
@@ -79,27 +79,28 @@ internal partial class ConfigFilesWriter(CertificateManager certificateManager,
         await JsonSerializer.SerializeAsync(stream, config, SC.Default.DependabotJobFile, cancellationToken);
     }
 
-    public async Task WriteProxyAsync(string path, WriteConfigParams @params, CancellationToken cancellationToken = default)
+    public async Task WriteProxyAsync(string path, ProxyConfigContext context, CancellationToken cancellationToken = default)
     {
         // write the proxy config file
         using var stream = File.OpenWrite(path);
-        await WriteProxyAsync(stream, @params, cancellationToken);
-        logger.WrittenProxyConfigFile(@params.Job.Id, path);
+        await WriteProxyAsync(stream, context, cancellationToken);
+        logger.WrittenProxyConfigFile(context.Job.Id, path);
     }
-    public async Task WriteProxyAsync(Stream stream, WriteConfigParams @params, CancellationToken cancellationToken = default)
+    public async Task WriteProxyAsync(Stream stream, ProxyConfigContext context, CancellationToken cancellationToken = default)
     {
         var ca = certificateManager.Get();
-        var config = new DependabotProxyConfig(@params.Credentials, ca);
+        var config = new DependabotProxyConfig(context.Credentials, ca);
 
         // serialize the proxy config
         await JsonSerializer.SerializeAsync(stream, config, SC.Default.DependabotProxyConfig, cancellationToken);
     }
 
-    public IReadOnlyList<DependabotCredential> MakeCredentials(Project project, Repository repository, RepositoryUpdate update)
+    public IReadOnlyList<DependabotCredential> MakeCredentials(UpdaterContext context)
     {
         // prepare credentials with replaced secrets
-        var secrets = new Dictionary<string, string>(project.Secrets) { ["DEFAULT_TOKEN"] = project.Token!, };
-        var registries = update.Registries?.Select(r => repository.Registries[r]).ToList() ?? [];
+        var project = context.Project;
+        var secrets = new Dictionary<string, string>(project.Secrets) { ["DEFAULT_TOKEN"] = project.Token, };
+        var registries = context.Update.Registries?.Select(r => context.Repository.Registries[r]).ToList() ?? [];
         return MakeCredentials(registries, secrets, project, options.GithubToken);
     }
 
@@ -333,20 +334,20 @@ internal partial class ConfigFilesWriter(CertificateManager certificateManager,
     private static partial Regex PlaceholderPattern();
 }
 
-internal class WriteJobParams
+internal readonly struct JobConfigContext(UpdaterContext context, IReadOnlyList<DependabotCredential> credentials, bool debug)
 {
-    public required Project Project { get; init; }
-    public required RepositoryUpdate Update { get; init; }
-    public required UpdateJob Job { get; init; }
-    public required IReadOnlyList<DependabotCredential> Credentials { get; init; }
-    public bool UpdatingPullRequest { get; init; }
-    public string? UpdateDependencyGroupName { get; init; }
-    public required List<string> UpdateDependencyNames { get; init; }
-    public bool Debug { get; init; }
+    public Project Project { get; } = context.Project;
+    public RepositoryUpdate Update { get; } = context.Update;
+    public UpdateJob Job { get; } = context.Job;
+    public IReadOnlyList<DependabotCredential> Credentials { get; } = credentials;
+    public bool UpdatingPullRequest { get; } = context.UpdatingPullRequest;
+    public string? UpdateDependencyGroupName { get; } = context.UpdateDependencyGroupName;
+    public List<string> UpdateDependencyNames { get; } = context.UpdateDependencyNames;
+    public bool Debug { get; } = debug;
 }
 
-internal class WriteConfigParams
+internal readonly struct ProxyConfigContext(UpdaterContext context, IReadOnlyList<DependabotCredential> credentials)
 {
-    public required UpdateJob Job { get; init; }
-    public required IReadOnlyList<DependabotCredential> Credentials { get; init; }
+    public UpdateJob Job { get; } = context.Job;
+    public IReadOnlyList<DependabotCredential> Credentials { get; } = credentials;
 }

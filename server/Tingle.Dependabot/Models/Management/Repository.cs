@@ -8,16 +8,15 @@ namespace Tingle.Dependabot.Models.Management;
 public class Repository
 {
     [Key, MaxLength(50)]
-    public string? Id { get; set; }
+    public required string Id { get; set; }
 
     public DateTimeOffset Created { get; set; }
 
     public DateTimeOffset Updated { get; set; }
 
     /// <summary>Identifier of the project.</summary>
-    [Required]
     [JsonIgnore] // only for internal use
-    public string? ProjectId { get; set; }
+    public required string ProjectId { get; set; }
 
     /// <summary>Name of the repository as per provider.</summary>
     public string? Name { get; set; }
@@ -27,9 +26,8 @@ public class Repository
     public string? Slug { get; set; }
 
     /// <summary>Identifier of the repository as per provider.</summary>
-    [Required]
     [JsonIgnore] // only for internal use
-    public string? ProviderId { get; set; }
+    public required string ProviderId { get; set; }
 
     /// <summary>
     /// Latest commit SHA synchronized for the configuration file.
@@ -63,4 +61,14 @@ public class Repository
 
     [Timestamp]
     public Etag? Etag { get; set; } // TODO: remove nullability once we reset the migrations
+
+    public RepositoryUpdate? GetUpdate(UpdateJob job)
+    {
+        // find the update (we assume that there is only one matching the ecosystem and directory/directories)
+        return (from u in Updates
+                where u.PackageEcosystem == job.PackageEcosystem
+                where u.Directory == job.Directory
+                where u.Directories == job.Directories
+                select u).SingleOrDefault();
+    }
 }

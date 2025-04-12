@@ -103,9 +103,12 @@ public class MissedTriggerCheckerTaskTests(ITestOutputHelper outputHelper)
             Id = ProjectId,
             Url = "https://dev.azure.com/dependabot/dependabot",
             Token = "token",
+            UserId = "6ce954b1-ce1f-45d1-b94d-e6bf2464ba2c",
             Name = "dependabot",
             ProviderId = "6ce954b1-ce1f-45d1-b94d-e6bf2464ba2c",
             Password = "burp-bump",
+            AutoApprove = new(),
+            AutoComplete = new(),
         });
         await context.Repositories.AddAsync(new Repository
         {
