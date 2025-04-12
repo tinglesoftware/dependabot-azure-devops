@@ -1,5 +1,13 @@
+using System.ComponentModel;
+using System.Globalization;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
 namespace Tingle.Dependabot.Workflow;
 
+/// <summary>Easier parser for docker images with tags or digest.</summary>
+[JsonConverter(typeof(DockerImageJsonConverter))]
+[TypeConverter(typeof(DockerImageTypeConverter))]
 public readonly struct DockerImage(string repository, string? tag, string? digest) : IEquatable<DockerImage>
 {
     public string Repository { get; } = repository;
@@ -43,5 +51,51 @@ public readonly struct DockerImage(string repository, string? tag, string? diges
             digest = null;
         }
         return new DockerImage(repository, tag, digest);
+    }
+
+    internal class DockerImageTypeConverter : TypeConverter
+    {
+        /// <inheritdoc/>
+        public override bool CanConvertFrom(ITypeDescriptorContext? context, Type sourceType) => sourceType == typeof(string) || sourceType == typeof(Uri);
+
+        /// <inheritdoc/>
+        public override bool CanConvertTo(ITypeDescriptorContext? context, Type? destinationType) => destinationType == typeof(string) || destinationType == typeof(Uri);
+
+        /// <inheritdoc/>
+        public override object? ConvertFrom(ITypeDescriptorContext? context, CultureInfo? culture, object value)
+        {
+            if (value is string s) return Parse(s);
+            return base.ConvertFrom(context, culture, value);
+        }
+
+        /// <inheritdoc/>
+        public override object? ConvertTo(ITypeDescriptorContext? context, CultureInfo? culture, object? value, Type destinationType)
+        {
+            if (value is DockerImage i)
+            {
+                if (destinationType == typeof(string)) return i.ToString();
+            }
+            return base.ConvertTo(context, culture, value, destinationType);
+        }
+    }
+
+    internal class DockerImageJsonConverter : JsonConverter<DockerImage>
+    {
+        public override DockerImage Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            if (reader.TokenType == JsonTokenType.Null) return default;
+            if (reader.TokenType != JsonTokenType.String)
+            {
+                throw new InvalidOperationException("Only strings are supported");
+            }
+
+            var str = reader.GetString();
+            return DockerImage.Parse(str!);
+        }
+
+        public override void Write(Utf8JsonWriter writer, DockerImage value, JsonSerializerOptions options)
+        {
+            writer.WriteStringValue(value.ToString());
+        }
     }
 }

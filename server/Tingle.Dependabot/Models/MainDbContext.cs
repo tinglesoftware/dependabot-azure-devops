@@ -27,6 +27,9 @@ public class MainDbContext(DbContextOptions<MainDbContext> options) : DbContext(
 
         configurationBuilder.Properties<AzureDevOpsProjectUrl>()
                             .HaveConversion<AzureDevOpsProjectUrlConverter, AzureDevOpsProjectUrlComparer>();
+
+        configurationBuilder.Properties<DockerImage>()
+                            .HaveConversion<DockerImageConverter, DockerImageComparer>();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -87,6 +90,20 @@ public class MainDbContext(DbContextOptions<MainDbContext> options) : DbContext(
         public AzureDevOpsProjectUrlComparer() : base(equalsExpression: (l, r) => l == r,
                                                       hashCodeExpression: v => v.GetHashCode(),
                                                       snapshotExpression: v => new AzureDevOpsProjectUrl(v.ToString()))
+        { }
+    }
+
+    private class DockerImageConverter : ValueConverter<DockerImage, string>
+    {
+        public DockerImageConverter() : base(convertToProviderExpression: v => v.ToString(),
+                                             convertFromProviderExpression: v => v == null ? default : DockerImage.Parse(v))
+        { }
+    }
+    private class DockerImageComparer : ValueComparer<DockerImage>
+    {
+        public DockerImageComparer() : base(equalsExpression: (l, r) => l == r,
+                                            hashCodeExpression: v => v.GetHashCode(),
+                                            snapshotExpression: v => DockerImage.Parse(v.ToString()))
         { }
     }
 }

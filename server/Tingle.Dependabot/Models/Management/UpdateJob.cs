@@ -2,6 +2,7 @@
 using System.Runtime.Serialization;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+using Tingle.Dependabot.Workflow;
 using Tingle.Extensions.Primitives;
 using Tingle.Extensions.Primitives.Converters;
 
@@ -60,10 +61,10 @@ public class UpdateJob
     public required UpdateJobResources Resources { get; set; }
 
     /// <summary>Image used for the proxy.</summary>
-    public string? ProxyImage { get; set; }
+    public DockerImage? ProxyImage { get; set; }
 
     /// <summary>Image used for the updater.</summary>
-    public string? UpdaterImage { get; set; }
+    public DockerImage? UpdaterImage { get; set; }
 
     /// <summary>
     /// Authorization key for the job.
