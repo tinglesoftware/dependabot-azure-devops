@@ -41,35 +41,6 @@ internal class WorkflowConfigureOptions : IPostConfigureOptions<WorkflowOptions>
             return ValidateOptionsResult.Fail($"'{nameof(options.JobsApiUrl)}' is required");
         }
 
-        if (options.JobsPlatform is null)
-        {
-            return ValidateOptionsResult.Fail($"'{nameof(options.JobsPlatform)}' is required");
-        }
-
-        var platform = options.JobsPlatform.Value;
-        if (platform is Models.Management.UpdateJobPlatform.ContainerApps)
-        {
-            if (string.IsNullOrWhiteSpace(options.ResourceGroupId))
-            {
-                return ValidateOptionsResult.Fail($"'{nameof(options.ResourceGroupId)}' cannot be null or whitespace");
-            }
-
-            if (string.IsNullOrWhiteSpace(options.AppEnvironmentId))
-            {
-                return ValidateOptionsResult.Fail($"'{nameof(options.AppEnvironmentId)}' cannot be null or whitespace");
-            }
-
-            if (string.IsNullOrWhiteSpace(options.LogAnalyticsWorkspaceId))
-            {
-                return ValidateOptionsResult.Fail($"'{nameof(options.LogAnalyticsWorkspaceId)}' cannot be null or whitespace");
-            }
-
-            if (string.IsNullOrWhiteSpace(options.Location))
-            {
-                return ValidateOptionsResult.Fail($"'{nameof(options.Location)}' cannot be null or whitespace");
-            }
-        }
-
         if (string.IsNullOrWhiteSpace(options.ProxyImageTag))
         {
             return ValidateOptionsResult.Fail($"'{nameof(options.ProxyImageTag)}' cannot be null or whitespace");

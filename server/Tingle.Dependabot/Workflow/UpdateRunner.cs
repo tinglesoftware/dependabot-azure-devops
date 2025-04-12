@@ -1,9 +1,4 @@
 ﻿using Azure.Identity;
-using Azure.Monitor.Query;
-using Azure.ResourceManager;
-using Azure.ResourceManager.AppContainers;
-using Azure.ResourceManager.AppContainers.Models;
-using Azure.ResourceManager.Resources;
 using Docker.DotNet;
 using Microsoft.Extensions.Options;
 using Microsoft.FeatureManagement;
@@ -30,9 +25,6 @@ internal partial class UpdateRunner(IFeatureManagerSnapshot featureManager,
     private readonly IFeatureManagerSnapshot featureManager = featureManager ?? throw new ArgumentNullException(nameof(featureManager));
     private readonly WorkflowOptions options = optionsAccessor?.Value ?? throw new ArgumentNullException(nameof(optionsAccessor));
     private readonly ILogger logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
-    private readonly ArmClient armClient = new(new DefaultAzureCredential());
-    private readonly LogsQueryClient logsQueryClient = new(new DefaultAzureCredential());
     private readonly DockerClient dockerClient = new DockerClientConfiguration().CreateClient();
 
     public async Task CreateAsync(UpdaterContext context, CancellationToken cancellationToken = default)
@@ -43,28 +35,10 @@ internal partial class UpdateRunner(IFeatureManagerSnapshot featureManager,
 
         // if we have an existing one, there is nothing more to do
         var ecosystem = job.PackageEcosystem;
-        var platform = job.Platform = options.JobsPlatform!.Value;
-        var resourceName = job.GetResourceName();
-        if (platform is UpdateJobPlatform.ContainerApps)
-        {
-            var containerAppJobs = GetResourceGroup().GetContainerAppJobs();
-            try
-            {
-                var response = await containerAppJobs.GetAsync(resourceName, cancellationToken);
-                if (response.Value is not null) return;
-            }
-            catch (Azure.RequestFailedException rfe) when (rfe.Status is 404) { }
-        }
-        else if (platform is UpdateJobPlatform.DockerCompose)
-        {
-            var containers = await dockerClient.Containers.ListContainersAsync(new() { All = true, }, cancellationToken);
-            var container = containers.FirstOrDefault(c => c.Names.Contains($"/{resourceName}"));
-            if (container is not null) return;
-        }
-        else
-        {
-            throw new NotSupportedException($"Platform {platform} is not supported");
-        }
+        var resourceName = job.ResourceName;
+        var containers = await dockerClient.Containers.ListContainersAsync(new() { All = true, }, cancellationToken);
+        var container = containers.FirstOrDefault(c => c.Names.Contains($"/{resourceName}"));
+        if (container is not null) return;
 
         // check if debug is enabled for the project via Feature Management
         var fmc = MakeTargetingContext(project, job);
@@ -136,372 +110,194 @@ internal partial class UpdateRunner(IFeatureManagerSnapshot featureManager,
         };
         var updateEnvNamesForProxyUrl = new List<string> { "http_proxy", "HTTP_PROXY", "https_proxy", "HTTPS_PROXY" };
 
-        var timeoutSec = Convert.ToInt32(TimeSpan.FromHours(1).TotalSeconds);
-        if (platform is UpdateJobPlatform.ContainerApps)
+        // fetch networks (should we cache this ?)
+        var networks = await GetDockerNetworksAsync(cancellationToken);
+        var serverNetwork = networks[DockerNetworkName.Server];
+        var proxyNetwork = networks[DockerNetworkName.Proxy];
+        var jobsNetwork = networks[DockerNetworkName.Jobs];
+
+        // find and pull images we need
+        job.ProxyImage = await GetImageWithDigestAsync(proxyImage, true, cancellationToken);
+        job.UpdaterImage = await GetImageWithDigestAsync(updaterImage, true, cancellationToken);
+
+        // prepare the proxy container
+        var proxyContainerParams = new Docker.DotNet.Models.CreateContainerParameters
         {
-            // find images we need
-            job.ProxyImage = await GetImageWithDigestAsync(proxyImage, false, cancellationToken);
-            job.UpdaterImage = await GetImageWithDigestAsync(updaterImage, false, cancellationToken);
-
-            // prepare the proxy container
-            var proxyContainer = new ContainerAppContainer
+            Name = job.ResourceNameProxy,
+            Image = job.ProxyImage,
+            Tty = true,
+            HostConfig = new Docker.DotNet.Models.HostConfig
             {
-                Name = ContainerNameProxy,
-                Image = job.ProxyImage,
-                Resources = new AppContainerResources { Cpu = 0.25, Memory = "0.5Gi" }, // the least we can provision
-                VolumeMounts =
-                {
-                    new ContainerAppVolumeMount
-                    {
-                        VolumeName = VolumeNameProxy,
-                        MountPath = "/config.json",
-                        SubPath = mountedProxyConfigSubPath,
-                    },
-                },
-            };
-            foreach (var ep in proxyEntrypoint) proxyContainer.Command.Add(ep);
-            foreach (var (key, value) in proxyEnv) proxyContainer.Env.Add(new ContainerAppEnvironmentVariable { Name = key, Value = value, });
-
-            // prepare the updater container
-            var proxyUrl = $"http://localhost:{ProxyPort}";
-            var updaterContainer = new ContainerAppContainer
+                AutoRemove = false,
+                // TODO: make sure this bind works from within a container not just the local machine
+                Binds = [$"{proxyConfigPath}:/config.json"],
+                RestartPolicy = new Docker.DotNet.Models.RestartPolicy { Name = Docker.DotNet.Models.RestartPolicyKind.No },
+                Memory = ByteSize.FromMegaBytes(100).Bytes, // 100M
+                NanoCPUs = Convert.ToInt64(0.1 * 1_000_000_000), // 100m
+                ExtraHosts = ["host.docker.internal:host-gateway"], // manual mapping needed for Docker on Linux
+            },
+            NetworkingConfig = new Docker.DotNet.Models.NetworkingConfig
             {
-                Name = ContainerNameUpdater,
-                Image = job.UpdaterImage,
-                Resources = job.Resources!,
-                VolumeMounts =
+                EndpointsConfig = new Dictionary<string, Docker.DotNet.Models.EndpointSettings>
                 {
-                    new ContainerAppVolumeMount { VolumeName = VolumeNameJobs, MountPath = MountPathJobs, },
-                    new ContainerAppVolumeMount { VolumeName = VolumeNameCerts, MountPath = MountPathCert, SubPath = "cert.crt", },
-                },
-            };
-            foreach (var cmd in updaterCommand) updaterContainer.Command.Add(cmd);
-            foreach (var (key, value) in updaterEnv) updaterContainer.Env.Add(new ContainerAppEnvironmentVariable { Name = key, Value = value, });
-            foreach (var name in updateEnvNamesForProxyUrl) updaterContainer.Env.Add(new ContainerAppEnvironmentVariable { Name = name, Value = proxyUrl, });
+                    [proxyNetwork.Name] = new() { NetworkID = proxyNetwork.Id, }, // where the proxies live
+                    [serverNetwork.Name] = new() { NetworkID = serverNetwork.Id, }, // allow the proxy to reach the API
+                    [jobsNetwork.Name] = new() { NetworkID = jobsNetwork.Id, }, // allow the update job to reach the proxy
+                }
+            },
+            Entrypoint = proxyEntrypoint,
+            Env = [.. proxyEnv.Select(kvp => $"{kvp.Key}={kvp.Value}")],
+        };
 
-            // prepare the ContainerApp job
-            var data = new ContainerAppJobData((project.Location ?? options.Location)!)
-            {
-                EnvironmentId = options.AppEnvironmentId,
-                Configuration = new ContainerAppJobConfiguration(ContainerAppJobTriggerType.Manual, replicaTimeout: timeoutSec)
-                {
-                    ManualTriggerConfig = new JobConfigurationManualTriggerConfig
-                    {
-                        Parallelism = 1,
-                        ReplicaCompletionCount = 1,
-                    },
-                    ReplicaRetryLimit = 1,
-                },
-                Template = new ContainerAppJobTemplate
-                {
-                    Containers = { proxyContainer, updaterContainer, },
-                    Volumes =
-                    {
-                        new ContainerAppVolume
-                        {
-                            Name = VolumeNameProxy,
-                            StorageType = ContainerAppStorageType.AzureFile,
-                            StorageName = VolumeNameProxy,
-                        },
-                        new ContainerAppVolume
-                        {
-                            Name = VolumeNameJobs,
-                            StorageType = ContainerAppStorageType.AzureFile,
-                            StorageName = VolumeNameJobs,
-                        },
-                    },
-                },
-            };
+        // create the proxy container
+        var proxyContainer = await dockerClient.Containers.CreateContainerAsync(proxyContainerParams, cancellationToken);
+        logger.CreatedUpdaterProxy(job.Id);
 
-            // create the ContainerApp Job
-            var containerAppJobs = GetResourceGroup().GetContainerAppJobs();
-            var operation = await containerAppJobs.CreateOrUpdateAsync(Azure.WaitUntil.Completed, resourceName, data, cancellationToken);
-            logger.CreatedUpdaterJob(job.Id, job.Platform);
+        // // mounting the config.json file is so much gymnastics so we instead just write it into the container
+        // using var tarStream = new MemoryStream();
+        // using (var tarWriter = new TarWriter(tarStream, leaveOpen: true))
+        // {
+        //     var entry = new PaxTarEntry(TarEntryType.RegularFile, Path.GetFileName(proxyConfigPath))
+        //     {
+        //         DataStream = new MemoryStream(await File.ReadAllBytesAsync(proxyConfigPath, cancellationToken)),
+        //     };
+        //     await tarWriter.WriteEntryAsync(entry, cancellationToken: cancellationToken);
+        // }
+        // tarStream.Seek(0, SeekOrigin.Begin);
+        // await dockerClient.Containers.ExtractArchiveToContainerAsync(proxyContainer.ID, new() { Path = "/" }, tarStream, cancellationToken);
 
-            // start the ContainerApp Job
-            _ = await operation.Value.StartAsync(Azure.WaitUntil.Completed, cancellationToken: cancellationToken);
-            logger.StartedUpdaterJob(job.Id, job.Platform);
-        }
-        else if (platform is UpdateJobPlatform.DockerCompose)
+        // start the proxy container
+        _ = await dockerClient.Containers.StartContainerAsync(proxyContainer.ID, new(), cancellationToken);
+        logger.StartedUpdaterProxy(job.Id);
+
+        var proxyInspection = await dockerClient.Containers.InspectContainerAsync(proxyContainer.ID, cancellationToken);
+        var proxyUrl = $"http://{proxyInspection.NetworkSettings.Networks[jobsNetwork.Name].IPAddress}:{ProxyPort}";
+
+        // prepare the updater container
+        var updaterResources = job.Resources!;
+        var updaterContainerParams = new Docker.DotNet.Models.CreateContainerParameters
         {
-            // fetch networks (should we cache this ?)
-            var networks = await GetDockerNetworksAsync(cancellationToken);
-            var serverNetwork = networks[DockerNetworkName.Server];
-            var proxyNetwork = networks[DockerNetworkName.Proxy];
-            var jobsNetwork = networks[DockerNetworkName.Jobs];
-
-            // find and pull images we need
-            job.ProxyImage = await GetImageWithDigestAsync(proxyImage, true, cancellationToken);
-            job.UpdaterImage = await GetImageWithDigestAsync(updaterImage, true, cancellationToken);
-
-            // prepare the proxy container
-            var proxyContainerParams = new Docker.DotNet.Models.CreateContainerParameters
+            Name = resourceName,
+            Image = job.UpdaterImage,
+            Tty = true,
+            HostConfig = new Docker.DotNet.Models.HostConfig
             {
-                Name = job.GetResourceNameProxy(),
-                Image = job.ProxyImage,
-                Tty = true,
-                HostConfig = new Docker.DotNet.Models.HostConfig
-                {
-                    AutoRemove = false,
+                AutoRemove = false,
+                Binds = [
+                    $"{(options.IsInContainer ? "dependabot_jobs" : options.JobsDirectory)}:{MountPathJobs}",
                     // TODO: make sure this bind works from within a container not just the local machine
-                    Binds = [$"{proxyConfigPath}:/config.json"],
-                    RestartPolicy = new Docker.DotNet.Models.RestartPolicy { Name = Docker.DotNet.Models.RestartPolicyKind.No },
-                    Memory = ByteSize.FromMegaBytes(100).Bytes, // 100M
-                    NanoCPUs = Convert.ToInt64(0.1 * 1_000_000_000), // 100m
-                    ExtraHosts = ["host.docker.internal:host-gateway"], // manual mapping needed for Docker on Linux
-                },
-                NetworkingConfig = new Docker.DotNet.Models.NetworkingConfig
-                {
-                    EndpointsConfig = new Dictionary<string, Docker.DotNet.Models.EndpointSettings>
-                    {
-                        [proxyNetwork.Name] = new() { NetworkID = proxyNetwork.Id, }, // where the proxies live
-                        [serverNetwork.Name] = new() { NetworkID = serverNetwork.Id, }, // allow the proxy to reach the API
-                        [jobsNetwork.Name] = new() { NetworkID = jobsNetwork.Id, }, // allow the update job to reach the proxy
-                    }
-                },
-                Entrypoint = proxyEntrypoint,
-                Env = [.. proxyEnv.Select(kvp => $"{kvp.Key}={kvp.Value}")],
-            };
-
-            // create the proxy container
-            var proxyContainer = await dockerClient.Containers.CreateContainerAsync(proxyContainerParams, cancellationToken);
-            logger.CreatedUpdaterProxy(job.Id, job.Platform);
-
-            // // mounting the config.json file is so much gymnastics so we instead just write it into the container
-            // using var tarStream = new MemoryStream();
-            // using (var tarWriter = new TarWriter(tarStream, leaveOpen: true))
-            // {
-            //     var entry = new PaxTarEntry(TarEntryType.RegularFile, Path.GetFileName(proxyConfigPath))
-            //     {
-            //         DataStream = new MemoryStream(await File.ReadAllBytesAsync(proxyConfigPath, cancellationToken)),
-            //     };
-            //     await tarWriter.WriteEntryAsync(entry, cancellationToken: cancellationToken);
-            // }
-            // tarStream.Seek(0, SeekOrigin.Begin);
-            // await dockerClient.Containers.ExtractArchiveToContainerAsync(proxyContainer.ID, new() { Path = "/" }, tarStream, cancellationToken);
-
-            // start the proxy container
-            _ = await dockerClient.Containers.StartContainerAsync(proxyContainer.ID, new(), cancellationToken);
-            logger.StartedUpdaterProxy(job.Id, job.Platform);
-
-            var proxyInspection = await dockerClient.Containers.InspectContainerAsync(proxyContainer.ID, cancellationToken);
-            var proxyUrl = $"http://{proxyInspection.NetworkSettings.Networks[jobsNetwork.Name].IPAddress}:{ProxyPort}";
-
-            // prepare the updater container
-            var updaterResources = job.Resources!;
-            var updaterContainerParams = new Docker.DotNet.Models.CreateContainerParameters
+                    $"{caCertPath}:{MountPathCert}",
+                ],
+                RestartPolicy = new Docker.DotNet.Models.RestartPolicy { Name = Docker.DotNet.Models.RestartPolicyKind.No },
+                Memory = ByteSize.FromGigaBytes(updaterResources.Memory).Bytes,
+                NanoCPUs = Convert.ToInt64(updaterResources.Cpu * 1_000_000_000),
+            },
+            NetworkingConfig = new Docker.DotNet.Models.NetworkingConfig
             {
-                Name = resourceName,
-                Image = job.UpdaterImage,
-                Tty = true,
-                HostConfig = new Docker.DotNet.Models.HostConfig
+                EndpointsConfig = new Dictionary<string, Docker.DotNet.Models.EndpointSettings>
                 {
-                    AutoRemove = false,
-                    Binds = [
-                        $"{(options.IsInContainer ? "dependabot_jobs" : options.JobsDirectory)}:{MountPathJobs}",
-                        // TODO: make sure this bind works from within a container not just the local machine
-                        $"{caCertPath}:{MountPathCert}",
-                    ],
-                    RestartPolicy = new Docker.DotNet.Models.RestartPolicy { Name = Docker.DotNet.Models.RestartPolicyKind.No },
-                    Memory = ByteSize.FromGigaBytes(updaterResources.Memory).Bytes,
-                    NanoCPUs = Convert.ToInt64(updaterResources.Cpu * 1_000_000_000),
-                },
-                NetworkingConfig = new Docker.DotNet.Models.NetworkingConfig
-                {
-                    EndpointsConfig = new Dictionary<string, Docker.DotNet.Models.EndpointSettings>
-                    {
-                        [jobsNetwork.Name] = new() { NetworkID = jobsNetwork.Id, } // where the update jobs live
-                    }
-                },
-                Cmd = updaterCommand,
-                Env = [.. updaterEnv.Select(kvp => $"{kvp.Key}={kvp.Value}")],
-            };
-            foreach (var name in updateEnvNamesForProxyUrl) updaterContainerParams.Env.Add($"{name}={proxyUrl}");
+                    [jobsNetwork.Name] = new() { NetworkID = jobsNetwork.Id, } // where the update jobs live
+                }
+            },
+            Cmd = updaterCommand,
+            Env = [.. updaterEnv.Select(kvp => $"{kvp.Key}={kvp.Value}")],
+        };
+        foreach (var name in updateEnvNamesForProxyUrl) updaterContainerParams.Env.Add($"{name}={proxyUrl}");
 
-            // create the updater container
-            var updaterContainer = await dockerClient.Containers.CreateContainerAsync(updaterContainerParams, cancellationToken);
-            logger.CreatedUpdaterJob(job.Id, job.Platform);
+        // create the updater container
+        var updaterContainer = await dockerClient.Containers.CreateContainerAsync(updaterContainerParams, cancellationToken);
+        logger.CreatedUpdaterJob(job.Id);
 
-            // start the updater container
-            _ = await dockerClient.Containers.StartContainerAsync(updaterContainer.ID, new(), cancellationToken);
-            logger.StartedUpdaterJob(job.Id, job.Platform);
-        }
-        else
-        {
-            throw new NotSupportedException($"Platform {platform} is not supported");
-        }
+        // start the updater container
+        _ = await dockerClient.Containers.StartContainerAsync(updaterContainer.ID, new(), cancellationToken);
+        logger.StartedUpdaterJob(job.Id);
 
         job.Status = UpdateJobStatus.Running;
     }
 
     public async Task DeleteAsync(UpdateJob job, CancellationToken cancellationToken = default)
     {
-        var resourceName = job.GetResourceName();
-        var platform = job.Platform;
+        var resourceName = job.ResourceName;
 
-        if (platform is UpdateJobPlatform.ContainerApps)
+        // delete the container
+        var containers = await dockerClient.Containers.ListContainersAsync(new() { All = true, }, cancellationToken);
+        var container = containers.FirstOrDefault(c => c.Names.Contains($"/{resourceName}"));
+        if (container is not null)
         {
-            try
-            {
-                // if it does not exist, there is nothing more to do
-                var containerAppJobs = GetResourceGroup().GetContainerAppJobs();
-                var response = await containerAppJobs.GetAsync(resourceName, cancellationToken);
-                if (response.Value is null) return;
-
-                // delete the container group
-                await response.Value.DeleteAsync(Azure.WaitUntil.Completed, cancellationToken);
-            }
-            catch (Azure.RequestFailedException rfe) when (rfe.Status is 404) { }
+            await dockerClient.Containers.RemoveContainerAsync(container.ID, new() { Force = true, }, cancellationToken);
         }
-        else if (platform is UpdateJobPlatform.DockerCompose)
+        container = containers.FirstOrDefault(c => c.Names.Contains($"/{job.ResourceNameProxy}"));
+        if (container is not null)
         {
-            // delete the container
-            var containers = await dockerClient.Containers.ListContainersAsync(new() { All = true, }, cancellationToken);
-            var container = containers.FirstOrDefault(c => c.Names.Contains($"/{resourceName}"));
-            if (container is not null)
-            {
-                await dockerClient.Containers.RemoveContainerAsync(container.ID, new() { Force = true, }, cancellationToken);
-            }
-            container = containers.FirstOrDefault(c => c.Names.Contains($"/{job.GetResourceNameProxy()}"));
-            if (container is not null)
-            {
-                await dockerClient.Containers.RemoveContainerAsync(container.ID, new() { Force = true, }, cancellationToken);
-            }
-        }
-        else
-        {
-            throw new NotSupportedException($"Platform {platform} is not supported");
+            await dockerClient.Containers.RemoveContainerAsync(container.ID, new() { Force = true, }, cancellationToken);
         }
     }
 
     public async Task<UpdateRunnerState?> GetStateAsync(UpdateJob job, CancellationToken cancellationToken = default)
     {
-        var resourceName = job.GetResourceName();
-        var platform = job.Platform;
+        var resourceName = job.ResourceName;
 
-        if (platform is UpdateJobPlatform.ContainerApps)
+        var containers = await dockerClient.Containers.ListContainersAsync(new() { All = true, }, cancellationToken);
+        var container = containers.FirstOrDefault(c => c.Names.Contains($"/{resourceName}"));
+        if (container is null) return null;
+
+        var inspection = await dockerClient.Containers.InspectContainerAsync(container.ID, cancellationToken);
+        var status = inspection.State switch
         {
-            try
-            {
-                // if it does not exist, there is nothing more to do
-                var response = await GetResourceGroup().GetContainerAppJobAsync(resourceName, cancellationToken);
-                var resource = response.Value;
+            { Running: true } => UpdateJobStatus.Running,
+            { Status: "created" } => UpdateJobStatus.Running,
+            { Status: "exited", ExitCode: 0 } => UpdateJobStatus.Succeeded,
+            { Status: "exited", ExitCode: not 0 } => UpdateJobStatus.Failed,
+            _ => UpdateJobStatus.Failed,
+        };
 
-                // if there is no execution, there is nothing more to do
-                var executions = await resource.GetContainerAppJobExecutions().GetAllAsync(cancellationToken: cancellationToken).ToListAsync(cancellationToken: cancellationToken);
-                var execution = executions.SingleOrDefault();
-                if (execution is null) return null;
+        // there is no state for jobs that are running
+        if (status is UpdateJobStatus.Running) return null;
 
-                var status = execution.Data.Status.ToString() switch
-                {
-                    "Succeeded" => UpdateJobStatus.Succeeded,
-                    "Running" => UpdateJobStatus.Running,
-                    "Processing" => UpdateJobStatus.Running,
-                    _ => UpdateJobStatus.Failed,
-                };
+        // get the period
+        var start = DateTimeOffset.Parse(inspection.State.StartedAt);
+        var end = DateTimeOffset.Parse(inspection.State.FinishedAt);
 
-                // there is no state for jobs that are running
-                if (status is UpdateJobStatus.Running) return null;
+        // delete the job directory
+        DeleteJobDirectory(job);
 
-                // get the period
-                DateTimeOffset? start = execution.Data.StartOn, end = execution.Data.EndOn;
-
-                // delete the job directory
-                DeleteJobDirectory(job);
-
-                // create and return state
-                return new UpdateRunnerState(status, start, end);
-            }
-            catch (Azure.RequestFailedException rfe) when (rfe.Status is 404) { }
-        }
-        else if (platform is UpdateJobPlatform.DockerCompose)
-        {
-            var containers = await dockerClient.Containers.ListContainersAsync(new() { All = true, }, cancellationToken);
-            var container = containers.FirstOrDefault(c => c.Names.Contains($"/{resourceName}"));
-            if (container is null) return null;
-
-            var inspection = await dockerClient.Containers.InspectContainerAsync(container.ID, cancellationToken);
-            var status = inspection.State switch
-            {
-                { Running: true } => UpdateJobStatus.Running,
-                { Status: "created" } => UpdateJobStatus.Running,
-                { Status: "exited", ExitCode: 0 } => UpdateJobStatus.Succeeded,
-                { Status: "exited", ExitCode: not 0 } => UpdateJobStatus.Failed,
-                _ => UpdateJobStatus.Failed,
-            };
-
-            // there is no state for jobs that are running
-            if (status is UpdateJobStatus.Running) return null;
-
-            // get the period
-            var start = DateTimeOffset.Parse(inspection.State.StartedAt);
-            var end = DateTimeOffset.Parse(inspection.State.FinishedAt);
-
-            // delete the job directory
-            DeleteJobDirectory(job);
-
-            // create and return state
-            return new UpdateRunnerState(status, start, end);
-        }
-        else
-        {
-            throw new NotSupportedException($"Platform {platform} is not supported");
-        }
-        return null;
+        // create and return state
+        return new UpdateRunnerState(status, start, end);
     }
 
     public async Task<string?> GetLogsAsync(UpdateJob job, CancellationToken cancellationToken = default)
     {
         var logs = (string?)null;
-        var resourceName = job.GetResourceName();
-        var platform = job.Platform;
+        var resourceName = job.ResourceName;
 
-        if (platform is UpdateJobPlatform.ContainerApps)
+        // pull docker container logs
+        // TODO: find out how we can merge with those for the proxy
+        var containers = await dockerClient.Containers.ListContainersAsync(new() { All = true, }, cancellationToken);
+        var container = containers.FirstOrDefault(c => c.Names.Contains($"/{resourceName}"));
+        if (container is not null)
         {
-            // pull logs from Log Analytics
-            var query = $"ContainerAppConsoleLogs_CL | where ContainerJobName_s == '{resourceName}' | order by _timestamp_d asc | project Log_s";
-            var response = await logsQueryClient.QueryWorkspaceAsync<string>(workspaceId: options.LogAnalyticsWorkspaceId,
-                                                                             query: query,
-                                                                             timeRange: QueryTimeRange.All,
-                                                                             cancellationToken: cancellationToken);
-
-            logs = string.Join(Environment.NewLine, response.Value);
-        }
-        else if (platform is UpdateJobPlatform.DockerCompose)
-        {
-            // pull docker container logs
-            // TODO: find out how we can merge with those for the proxy
-            var containers = await dockerClient.Containers.ListContainersAsync(new() { All = true, }, cancellationToken);
-            var container = containers.FirstOrDefault(c => c.Names.Contains($"/{resourceName}"));
-            if (container is not null)
+            var logParams = new Docker.DotNet.Models.ContainerLogsParameters
             {
-                var logParams = new Docker.DotNet.Models.ContainerLogsParameters
-                {
-                    ShowStdout = true,
-                    ShowStderr = true,
-                    Follow = false,
-                    Timestamps = false,
-                };
-                using var stream = await dockerClient.Containers.GetContainerLogsAsync(container.ID, tty: true, logParams, cancellationToken);
-                using var stdin = new MemoryStream();
-                using var stdout = new MemoryStream();
-                using var stderr = new MemoryStream();
+                ShowStdout = true,
+                ShowStderr = true,
+                Follow = false,
+                Timestamps = false,
+            };
+            using var stream = await dockerClient.Containers.GetContainerLogsAsync(container.ID, tty: true, logParams, cancellationToken);
+            using var stdin = new MemoryStream();
+            using var stdout = new MemoryStream();
+            using var stderr = new MemoryStream();
 
-                await stream.CopyOutputToAsync(stdin, stdout, stderr, cancellationToken);
-                stdout.Seek(0, SeekOrigin.Begin);
-                using var reader = new StreamReader(stdout);
-                logs = await reader.ReadToEndAsync(cancellationToken);
-                if (string.IsNullOrWhiteSpace(logs))
-                {
-                    stderr.Seek(0, SeekOrigin.Begin);
-                    using var errorReader = new StreamReader(stderr);
-                    logs = await errorReader.ReadToEndAsync(cancellationToken);
-                }
+            await stream.CopyOutputToAsync(stdin, stdout, stderr, cancellationToken);
+            stdout.Seek(0, SeekOrigin.Begin);
+            using var reader = new StreamReader(stdout);
+            logs = await reader.ReadToEndAsync(cancellationToken);
+            if (string.IsNullOrWhiteSpace(logs))
+            {
+                stderr.Seek(0, SeekOrigin.Begin);
+                using var errorReader = new StreamReader(stderr);
+                logs = await errorReader.ReadToEndAsync(cancellationToken);
             }
-        }
-        else
-        {
-            throw new NotSupportedException($"Platform {platform} is not supported");
         }
 
         return logs;
@@ -590,8 +386,6 @@ internal partial class UpdateRunner(IFeatureManagerSnapshot featureManager,
             ],
         };
     }
-
-    private ResourceGroupResource GetResourceGroup() => armClient.GetResourceGroupResource(new(options.ResourceGroupId!));
 }
 
 public readonly record struct UpdateRunnerState(UpdateJobStatus Status, DateTimeOffset? Start, DateTimeOffset? End)

@@ -82,17 +82,17 @@ internal static partial class ILoggerExtensions
     [LoggerMessage(501, LogLevel.Information, "Written proxy config file for {UpdateJobId} at {ProxyConfigPath}")]
     public static partial void WrittenProxyConfigFile(this ILogger logger, string? updateJobId, string? proxyConfigPath);
 
-    [LoggerMessage(502, LogLevel.Information, "Created Updater Proxy for {UpdateJobId} in {Platform}")]
-    public static partial void CreatedUpdaterProxy(this ILogger logger, string? updateJobId, UpdateJobPlatform platform);
+    [LoggerMessage(502, LogLevel.Information, "Created Updater Proxy for {UpdateJobId}")]
+    public static partial void CreatedUpdaterProxy(this ILogger logger, string? updateJobId);
 
-    [LoggerMessage(503, LogLevel.Information, "Started Updater Proxy for {UpdateJobId} in {Platform}")]
-    public static partial void StartedUpdaterProxy(this ILogger logger, string? updateJobId, UpdateJobPlatform platform);
+    [LoggerMessage(503, LogLevel.Information, "Started Updater Proxy for {UpdateJobId}")]
+    public static partial void StartedUpdaterProxy(this ILogger logger, string? updateJobId);
 
-    [LoggerMessage(504, LogLevel.Information, "Created Updater Job for {UpdateJobId} in {Platform}")]
-    public static partial void CreatedUpdaterJob(this ILogger logger, string? updateJobId, UpdateJobPlatform platform);
+    [LoggerMessage(504, LogLevel.Information, "Created Updater Job for {UpdateJobId}")]
+    public static partial void CreatedUpdaterJob(this ILogger logger, string? updateJobId);
 
-    [LoggerMessage(505, LogLevel.Information, "Started Updater Job for {UpdateJobId} in {Platform}")]
-    public static partial void StartedUpdaterJob(this ILogger logger, string? updateJobId, UpdateJobPlatform platform);
+    [LoggerMessage(505, LogLevel.Information, "Started Updater Job for {UpdateJobId}")]
+    public static partial void StartedUpdaterJob(this ILogger logger, string? updateJobId);
 
     #endregion
 

@@ -47,7 +47,6 @@ services:
       ConnectionStrings__Sql: 'Server=mssql;Database=dependabot;User Id=sa;Password=My!P#ssw0rd1;TrustServerCertificate=True;MultipleActiveResultSets=False;'
       DistributedLocking__FilePath: '/mnt/dependabot/locks'
       Workflow__JobsApiUrl: 'http://server/api/v1/jobs'
-      Workflow__JobsPlatform: 'DockerCompose'
       Workflow__CertsDirectory: '/mnt/dependabot/certs'
       Workflow__ProxyDirectory: '/mnt/dependabot/proxy'
       Workflow__JobsDirectory: '/mnt/dependabot/jobs'

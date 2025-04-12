@@ -1,5 +1,4 @@
-﻿using Azure.ResourceManager.AppContainers.Models;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
@@ -22,9 +21,6 @@ public class UpdateJob
 
     /// <summary>Trigger for the update job.</summary>
     public UpdateJobTrigger Trigger { get; set; }
-
-    /// <summary>Where the update job is run/hosted.</summary>
-    public UpdateJobPlatform Platform { get; set; }
 
     /// <summary>Identifier of the project.</summary>
     [JsonIgnore] // only for internal use
@@ -95,18 +91,8 @@ public class UpdateJob
     [Timestamp]
     public Etag? Etag { get; set; } // TODO: remove nullability once we reset the migrations
 
-    public string GetResourceName()
-    {
-        // we use this to create azure resources which have name restrictions
-        // alphanumeric, starts with a letter, does not contain "--", up to 32 characters
-        return Platform switch
-        {
-            UpdateJobPlatform.ContainerApps => $"job-{Id}",
-            _ => $"dependabot-{Id}",
-        };
-    }
-
-    public string GetResourceNameProxy() => $"{GetResourceName()}-proxy";
+    public string ResourceName => $"dependabot-{Id}";
+    public string ResourceNameProxy => $"{ResourceName}-proxy";
 }
 
 public class UpdateJobError
@@ -126,21 +112,6 @@ public enum UpdateJobTrigger
     Synchronization = 2,
 
     Manual = 3,
-}
-
-[JsonConverter(typeof(JsonStringEnumMemberConverter<UpdateJobPlatform>))]
-public enum UpdateJobPlatform
-{
-    [EnumMember(Value = "container_apps")]
-    ContainerApps = 0,
-
-    // [EnumMember(Value = "container_instances")]
-    // ContainerInstances = 1,
-
-    // Kubernetes = 2,
-
-    [EnumMember(Value = "docker_compose")]
-    DockerCompose = 3,
 }
 
 public enum UpdateJobStatus
@@ -191,9 +162,4 @@ public class UpdateJobResources
 
     public static UpdateJobResources operator *(UpdateJobResources resources, double factor) => new(resources.Cpu * factor, resources.Memory * factor);
     public static UpdateJobResources operator /(UpdateJobResources resources, double factor) => new(resources.Cpu / factor, resources.Memory / factor);
-
-    public static implicit operator AppContainerResources(UpdateJobResources resources)
-    {
-        return new AppContainerResources { Cpu = resources.Cpu, Memory = $"{resources.Memory}Gi", };
-    }
 }

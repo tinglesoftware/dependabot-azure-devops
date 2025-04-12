@@ -10,9 +10,6 @@ public class WorkflowOptions
     /// <summary>URL on which to access the API from the jobs.</summary>
     public Uri? JobsApiUrl { get; set; }
 
-    /// <summary>Where new jobs are run/hosted.</summary>
-    public UpdateJobPlatform? JobsPlatform { get; set; }
-
     /// <summary>Resource identifier for the resource group to create jobs in.</summary>
     /// <example>/subscriptions/00000000-0000-1111-0001-000000000000/resourceGroups/DEPENDABOT</example>
     public string? ResourceGroupId { get; set; }
