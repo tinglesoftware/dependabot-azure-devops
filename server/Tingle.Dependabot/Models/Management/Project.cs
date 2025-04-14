@@ -87,10 +87,6 @@ public class Project : IProtectable
     /// </summary>
     public bool Debug { get; set; } = true;
 
-    /// <summary>Location/region where to create update jobs.</summary>
-    /// <example>westeurope</example>
-    public string? Location { get; set; }
-
     /// <summary>Time at which the synchronization was last done for the project.</summary>
     public DateTimeOffset? Synchronized { get; set; }
 
