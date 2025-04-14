@@ -17,14 +17,14 @@ builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
     ["EFCORE_PERFORM_MIGRATIONS"] = development ? "true" : null,
 
     ["Logging:LogLevel:Default"] = development ? "Information" : "Debug",
-    ["Logging:LogLevel:Microsoft"] = development ? "Warning" : "Information",
+    ["Logging:LogLevel:Microsoft"] = development ? "Information" : "Warning",
     ["Logging:LogLevel:Microsoft.EntityFrameworkCore"] = "Warning",
     ["Logging:LogLevel:Microsoft.Hosting.Lifetime"] = "Information",
     ["Logging:LogLevel:System"] = development ? "Information" : null,
-    ["Logging:LogLevel:System.Net.Http.HttpClient"] = development ? "Warning" : "Information",
+    ["Logging:LogLevel:System.Net.Http.HttpClient"] = development ? "Information" : "Warning",
     ["Logging:LogLevel:AspNetCore.Authentication"] = development ? "Warning" : null,
-    ["Logging:LogLevel:Tingle.AspNetCore"] = development ? "Warning" : "Information",
-    ["Logging:LogLevel:Tingle.EventBus"] = development ? "Warning" : "Information",
+    ["Logging:LogLevel:Tingle.AspNetCore"] = development ? "Information" : "Warning",
+    ["Logging:LogLevel:Tingle.EventBus"] = development ? "Information" : "Warning",
     ["Logging:Debug:LogLevel:Default"] = "None",
 
     ["AllowedHosts"] = "*",
