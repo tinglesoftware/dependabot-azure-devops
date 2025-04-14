@@ -11,6 +11,38 @@ using Tingle.Dependabot.Workflow;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var development = builder.Environment.IsDevelopment();
+builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
+{
+    ["EFCORE_PERFORM_MIGRATIONS"] = development ? "true" : null,
+
+    ["Logging:LogLevel:Default"] = development ? "Information" : "Debug",
+    ["Logging:LogLevel:Microsoft"] = development ? "Warning" : "Information",
+    ["Logging:LogLevel:Microsoft.EntityFrameworkCore"] = "Warning",
+    ["Logging:LogLevel:Microsoft.Hosting.Lifetime"] = "Information",
+    ["Logging:LogLevel:System"] = development ? "Information" : null,
+    ["Logging:LogLevel:System.Net.Http.HttpClient"] = development ? "Warning" : "Information",
+    ["Logging:LogLevel:AspNetCore.Authentication"] = development ? "Warning" : null,
+    ["Logging:LogLevel:Tingle.AspNetCore"] = development ? "Warning" : "Information",
+    ["Logging:LogLevel:Tingle.EventBus"] = development ? "Warning" : "Information",
+    ["Logging:Debug:LogLevel:Default"] = "None",
+
+    ["AllowedHosts"] = "*",
+
+    // ["ConnectionStrings:Sql"] = "Server=(localdb)\\mssqllocaldb;Database=dependabot;Trusted_Connection=True;MultipleActiveResultSets=true",
+    ["ConnectionStrings:Sql"] = "Server=localhost,1433;Database=dependabot;User Id=sa;Password=My!P#ssw0rd1;TrustServerCertificate=True;MultipleActiveResultSets=False;",
+
+    ["EventBus:SelectedTransport"] = "InMemory", // InMemory|ServiceBus
+    ["EventBus:DefaultTransportWaitStarted"] = "false", // defaults to true which causes startup tasks to hang
+    ["EventBus:Naming:UseFullTypeNames"] = "false",
+    ["EventBus:Transports:azure-service-bus:FullyQualifiedNamespace"] = "{your_namespace}.servicebus.windows.net",
+    ["EventBus:Transports:azure-service-bus:DefaultEntityKind"] = "Queue",
+
+    // if you are debugging, uncomment and update the value
+    // "InitialSetup:Projects": "[{\"url\":\"https://dev.azure.com/tingle/dependabot\",\"token\":\"dummy\",\"AutoComplete\":true}]",
+    ["InitialSetup:SkipLoadSchedules:"] = development ? "false" : "true",
+});
+
 builder.Services.Configure<HostOptions>(options => options.ShutdownTimeout = TimeSpan.FromSeconds(30)); /* default is 5 seconds */
 
 // Add OpenTelemetry

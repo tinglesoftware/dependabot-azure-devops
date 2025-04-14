@@ -8,7 +8,7 @@ public class WorkflowOptions
     public Uri? WebhookEndpoint { get; set; }
 
     /// <summary>URL on which to access the API from the jobs.</summary>
-    public Uri? JobsApiUrl { get; set; }
+    public Uri JobsApiUrl { get; set; } = new Uri("http://host.docker.internal:44390");
 
     /// <summary>
     /// Version of the proxy docker container images to use.
@@ -17,7 +17,7 @@ public class WorkflowOptions
     /// <br/>
     /// However, in production there maybe an issue that requires a rollback hence the value is placed in options.
     /// </summary>
-    public string? ProxyImageTag { get; set; } = "latest";
+    public string ProxyImageTag { get; set; } = "latest";
 
     /// <summary>
     /// Version of the updater docker container images to use.
@@ -26,20 +26,20 @@ public class WorkflowOptions
     /// <br/>
     /// However, in production there maybe an issue that requires a rollback hence the value is placed in options.
     /// </summary>
-    public string? UpdaterImageTag { get; set; } = "latest";
+    public string UpdaterImageTag { get; set; } = "latest";
 
     /// <summary>
     /// Directory where job artifacts are stored (logs, etc).
     /// The files stored here live as long as the relevant update job lives.
     /// </summary>
     /// <example>/mnt/dependabot/store</example>
-    public string? ArtifactsDirectory { get; set; }
+    public string ArtifactsDirectory { get; set; } = "work/artifacts";
 
     /// <summary>
     /// Directory where certificate files are stored.
     /// </summary>
     /// <example>/mnt/dependabot/certs</example>
-    public string? CertsDirectory { get; set; }
+    public string CertsDirectory { get; set; } = "work/certs";
 
     /// <summary>
     /// Directory where proxy config files are written during job scheduling and execution.
@@ -50,7 +50,7 @@ public class WorkflowOptions
     /// and some nested directories in it such as <c>/mnt/dependabot/proxy/123456789/repo</c>.
     /// </summary>
     /// <example>/mnt/dependabot/proxy</example>
-    public string? ProxyDirectory { get; set; }
+    public string ProxyDirectory { get; set; } = "work/proxy";
 
     /// <summary>
     /// Directory where job files are written during job scheduling and execution.
@@ -61,7 +61,7 @@ public class WorkflowOptions
     /// and some nested directories in it such as <c>/mnt/dependabot/jobs/123456789/repo</c>.
     /// </summary>
     /// <example>/mnt/dependabot/jobs</example>
-    public string? JobsDirectory { get; set; }
+    public string JobsDirectory { get; set; } = "work/jobs";
 
     /// <summary>
     /// The default experiments known to be used by the GitHub Dependabot service.
@@ -107,8 +107,8 @@ internal class WorkflowConfigureOptions : IPostConfigureOptions<WorkflowOptions>
 {
     public void PostConfigure(string? name, WorkflowOptions options)
     {
-        static string? MakeRooted(string? input)
-            => !Path.IsPathRooted(input) && !string.IsNullOrWhiteSpace(input) ? Path.Combine(Directory.GetCurrentDirectory(), input) : input;
+        static string MakeRooted(string input)
+            => !Path.IsPathRooted(input) ? Path.Combine(Directory.GetCurrentDirectory(), input) : input;
 
         if (!options.IsInContainer)
         {

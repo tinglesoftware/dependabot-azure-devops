@@ -60,7 +60,7 @@ internal partial class UpdateRunner(ConfigFilesWriter configFilesWriter,
         // the proxy config must be mounted in the root
         // example: change /Users/maxwell/Documents/dependabot-azure-devops/server/Tingle.Dependabot/work/proxy/1359497145993567115/config.json
         //              to 1359497145993567115/config.json
-        var mountedProxyConfigSubPath = Path.GetRelativePath(options.ProxyDirectory!, proxyConfigPath);
+        var mountedProxyConfigSubPath = Path.GetRelativePath(options.ProxyDirectory, proxyConfigPath);
 
         // write job definition file
         var jobDirectory = Path.Join(options.JobsDirectory, job.Id);
@@ -79,8 +79,8 @@ internal partial class UpdateRunner(ConfigFilesWriter configFilesWriter,
         //              to /mnt/dependabot/jobs/1359497145993567115/job.json
         // example: change /Users/maxwell/Documents/dependabot-azure-devops/server/Tingle.Dependabot/work/jobs/1359497145993567115/output.json
         //              to /mnt/dependabot/jobs/1359497145993567115/output.json
-        var mountedJobDefinitionPath = Path.Combine(MountPathJobs, Path.GetRelativePath(options.JobsDirectory!, jobDefinitionPath));
-        var mountedOutputPath = Path.Combine(MountPathJobs, Path.GetRelativePath(options.JobsDirectory!, outputPath));
+        var mountedJobDefinitionPath = Path.Combine(MountPathJobs, Path.GetRelativePath(options.JobsDirectory, jobDefinitionPath));
+        var mountedOutputPath = Path.Combine(MountPathJobs, Path.GetRelativePath(options.JobsDirectory, outputPath));
 
         // https://github.com/dependabot/cli/blob/main/internal/infra/proxy.go
         var proxyImage = $"ghcr.io/github/dependabot-update-job-proxy/dependabot-update-job-proxy:{options.ProxyImageTag}";
