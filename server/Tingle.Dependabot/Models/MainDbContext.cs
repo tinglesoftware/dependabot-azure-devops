@@ -20,7 +20,7 @@ public class MainDbContext(DbContextOptions<MainDbContext> options) : DbContext(
     {
         base.ConfigureConventions(configurationBuilder);
 
-        if (Database.IsSqlServer() || Database.IsInMemory())
+        if (Database.IsSqlServer())
         {
             configurationBuilder.AddEtagToBytesConventions();
         }

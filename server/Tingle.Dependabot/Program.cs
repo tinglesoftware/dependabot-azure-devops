@@ -1,6 +1,5 @@
 using AspNetCore.Authentication.ApiKey;
 using AspNetCore.Authentication.Basic;
-using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
@@ -24,19 +23,10 @@ builder.Services.AddAzureAppConfiguration();
 builder.Services.AddSingleton<IStartupFilter, AzureAppConfigurationStartupFilter>(); // Use IStartupFilter to setup AppConfiguration middleware correctly
 
 // Add DbContext
-var selectedDatabase = builder.Configuration.GetValue<DatabaseKind?>("Database:Kind");
 builder.Services.AddDbContext<MainDbContext>(options =>
 {
+    options.UseSqlServer(builder.Configuration.GetConnectionString("Sql"), options => options.EnableRetryOnFailure());
     options.EnableDetailedErrors();
-
-    if (selectedDatabase is DatabaseKind.InMemory)
-    {
-        options.UseInMemoryDatabase(nameof(Tingle.Dependabot));
-    }
-    else if (selectedDatabase is DatabaseKind.SqlServer)
-    {
-        options.UseSqlServer(builder.Configuration.GetConnectionString("Sql"), options => options.EnableRetryOnFailure());
-    }
 });
 builder.Services.AddDatabaseSetup<MainDbContext>();
 
@@ -153,5 +143,4 @@ app.MapControllers();
 
 await app.RunAsync();
 
-internal enum DatabaseKind { InMemory, SqlServer, }
 internal enum EventBusTransportKind { InMemory, ServiceBus, }
