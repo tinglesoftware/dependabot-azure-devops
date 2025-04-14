@@ -25,7 +25,7 @@ internal class InitialSetupService(IServiceScopeFactory serviceScopeFactory,
         public required string Token { get; set; }
         public bool AutoComplete { get; set; }
         public List<int>? AutoCompleteIgnoreConfigs { get; set; }
-        public MergeStrategy? AutoCompleteMergeStrategy { get; set; }
+        public Models.Management.MergeStrategy? AutoCompleteMergeStrategy { get; set; }
         public bool AutoApprove { get; set; }
         public string? GithubToken { get; set; }
         public Dictionary<string, string> Secrets { get; set; } = new(StringComparer.OrdinalIgnoreCase);

@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel;
-using Tingle.Dependabot.Workflow;
+using Tingle.Dependabot.Models;
 using Xunit;
 
-namespace Tingle.Dependabot.Tests.Workflow;
+namespace Tingle.Dependabot.Tests.Models;
 
 public class AzureDevOpsProjectUrlTests
 {

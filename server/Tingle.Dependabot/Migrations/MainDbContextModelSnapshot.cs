@@ -211,6 +211,10 @@ namespace Tingle.Dependabot.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("PackageManager")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("ProjectId")
                         .IsRequired()
                         .HasColumnType("TEXT");

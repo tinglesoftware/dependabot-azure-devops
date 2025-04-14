@@ -82,17 +82,17 @@ internal static partial class ILoggerExtensions
     [LoggerMessage(501, LogLevel.Information, "Written proxy config file for {UpdateJobId} at {ProxyConfigPath}")]
     public static partial void WrittenProxyConfigFile(this ILogger logger, string? updateJobId, string? proxyConfigPath);
 
-    [LoggerMessage(502, LogLevel.Information, "Created Proxy container for {UpdateJobId}")]
-    public static partial void CreatedProxyContainer(this ILogger logger, string? updateJobId);
+    [LoggerMessage(502, LogLevel.Information, "Created Proxy container for {UpdateJobId}. Container: {ContainerId}")]
+    public static partial void CreatedProxyContainer(this ILogger logger, string updateJobId, string containerId);
 
     [LoggerMessage(503, LogLevel.Information, "Started Proxy container for {UpdateJobId}")]
-    public static partial void StartedProxyContainer(this ILogger logger, string? updateJobId);
+    public static partial void StartedProxyContainer(this ILogger logger, string updateJobId);
 
-    [LoggerMessage(504, LogLevel.Information, "Created Updater container for {UpdateJobId}")]
-    public static partial void CreatedUpdaterContainer(this ILogger logger, string? updateJobId);
+    [LoggerMessage(504, LogLevel.Information, "Created Updater container for {UpdateJobId}. Container: {ContainerId}")]
+    public static partial void CreatedUpdaterContainer(this ILogger logger, string updateJobId, string containerId);
 
     [LoggerMessage(505, LogLevel.Information, "Started Updater container for {UpdateJobId}")]
-    public static partial void StartedUpdaterContainer(this ILogger logger, string? updateJobId);
+    public static partial void StartedUpdaterContainer(this ILogger logger, string updateJobId);
 
     #endregion
 

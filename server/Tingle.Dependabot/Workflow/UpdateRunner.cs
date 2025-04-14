@@ -1,6 +1,7 @@
 ﻿using System.Formats.Tar;
 using Docker.DotNet;
 using Microsoft.Extensions.Options;
+using Tingle.Dependabot.Models;
 using Tingle.Dependabot.Models.Management;
 using Tingle.Extensions.Primitives;
 
@@ -149,7 +150,7 @@ internal partial class UpdateRunner(ConfigFilesWriter configFilesWriter,
 
         // create the proxy container
         var proxyContainer = await dockerClient.Containers.CreateContainerAsync(proxyContainerParams, cancellationToken);
-        logger.CreatedProxyContainer(job.Id);
+        logger.CreatedProxyContainer(job.Id, proxyContainer.ID);
 
         // // mounting the config.json file is so much gymnastics so we instead just write it into the container
         // using var tarStream = new MemoryStream();
@@ -206,7 +207,7 @@ internal partial class UpdateRunner(ConfigFilesWriter configFilesWriter,
 
         // create the updater container
         var updaterContainer = await dockerClient.Containers.CreateContainerAsync(updaterContainerParams, cancellationToken);
-        logger.CreatedUpdaterContainer(job.Id);
+        logger.CreatedUpdaterContainer(job.Id, updaterContainer.ID);
 
         // start the updater container with streaming logs
         await dockerClient.Containers.StartContainerAsync(updaterContainer.ID, new(), cancellationToken);

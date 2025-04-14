@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 
 namespace Tingle.Dependabot;
@@ -27,6 +28,7 @@ namespace Tingle.Dependabot;
 [JsonSerializable(typeof(Models.Dependabot.DependabotRequest<Models.Dependabot.DependabotUpdateDependencyList>))]
 [JsonSerializable(typeof(Models.Dependabot.DependabotRequest<Models.Dependabot.DependabotRecordEcosystemVersions>))]
 [JsonSerializable(typeof(Models.Dependabot.DependabotRequest<Models.Dependabot.DependabotIncrementMetric>))]
+[JsonSerializable(typeof(Models.Dependabot.DependabotRequest<JsonObject>))]
 
 // runner
 [JsonSerializable(typeof(Models.Dependabot.DependabotJobFile))]

@@ -70,6 +70,7 @@ public partial class InitialCreate : Migration
                 EventBusId = table.Column<string>(type: "TEXT", nullable: true),
                 Commit = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
                 PackageEcosystem = table.Column<string>(type: "TEXT", nullable: false),
+                PackageManager = table.Column<string>(type: "TEXT", nullable: false),
                 Directory = table.Column<string>(type: "TEXT", nullable: true),
                 Directories = table.Column<string>(type: "TEXT", nullable: true),
                 Resources_Cpu = table.Column<double>(type: "REAL", nullable: false),

@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Tingle.Dependabot.Models.Management;
-using Tingle.Dependabot.Workflow;
 using SC = Tingle.Dependabot.DependabotSerializerContext;
 
 namespace Tingle.Dependabot.Models;

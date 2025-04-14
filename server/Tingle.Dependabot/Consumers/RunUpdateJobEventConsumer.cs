@@ -8,7 +8,10 @@ using Tingle.Extensions.Primitives;
 
 namespace Tingle.Dependabot.Consumers;
 
-internal class RunUpdateJobEventConsumer(MainDbContext dbContext, UpdateRunner runner, ILogger<RunUpdateJobEventConsumer> logger) : IEventConsumer<RunUpdateJobEvent>
+internal class RunUpdateJobEventConsumer(MainDbContext dbContext,
+                                         UpdateRunner runner,
+                                         ScenarioStore scenarioStore,
+                                         ILogger<RunUpdateJobEventConsumer> logger) : IEventConsumer<RunUpdateJobEvent>
 {
     public async Task ConsumeAsync(EventContext<RunUpdateJobEvent> context, CancellationToken cancellationToken)
     {
@@ -80,6 +83,7 @@ internal class RunUpdateJobEventConsumer(MainDbContext dbContext, UpdateRunner r
 
                 Commit = repository.LatestCommit,
                 PackageEcosystem = ecosystem,
+                PackageManager = ConvertEcosystemToPackageManager(ecosystem),
                 Directory = update.Directory,
                 Directories = update.Directories,
                 Resources = resources,
@@ -122,5 +126,52 @@ internal class RunUpdateJobEventConsumer(MainDbContext dbContext, UpdateRunner r
 
         // save changes made by the runner
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        // call the scenario store to apply
+        var scenarioContext = new ScenarioApplicationContext
+        {
+            Project = project,
+            Repository = repository,
+            Update = update,
+            Job = job,
+        };
+        await scenarioStore.ApplyAsync(scenarioContext, cancellationToken);
+
+        // save changes made by the scenario store
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    internal static string ConvertEcosystemToPackageManager(string ecosystem)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(ecosystem);
+
+        return ecosystem switch
+        {
+            "dotnet-sdk" => "dotnet_sdk",
+            "github-actions" => "github_actions",
+            "gitsubmodule" => "submodules",
+            "gomod" => "go_modules",
+            "mix" => "hex",
+            "npm" => "npm_and_yarn",
+            // Additional ones
+            "yarn" => "npm_and_yarn",
+            "pnpm" => "npm_and_yarn",
+            "pipenv" => "pip",
+            "pip-compile" => "pip",
+            "poetry" => "pip",
+            _ => ecosystem,
+        };
+    }
+
+
+    private record Entities(Project Project, Repository Repository, UpdateJob Job, RepositoryUpdate? Update);
+    private async Task<Entities> GetEntitiesAsync(string id, CancellationToken cancellationToken = default)
+    {
+        var job = await dbContext.UpdateJobs.SingleAsync(j => j.Id == id, cancellationToken);
+        var repository = await dbContext.Repositories.SingleAsync(r => r.Id == job.RepositoryId, cancellationToken);
+        var project = await dbContext.Projects.SingleAsync(p => p.Id == repository.ProjectId, cancellationToken);
+        var update = repository.GetUpdate(job);
+
+        return new Entities(project, repository, job, update);
     }
 }

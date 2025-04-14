@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
+using Tingle.Dependabot.Models;
 using Tingle.Dependabot.Models.Azure;
 using Tingle.Dependabot.Models.Management;
 using SC = Tingle.Dependabot.DependabotSerializerContext;
@@ -237,7 +238,7 @@ public class AzureDevOpsProvider(HttpClient httpClient, IOptions<WorkflowOptions
         var request = new HttpRequestMessage(HttpMethod.Get, uri);
         return await SendAsync(project.Token, request, SC.Default.AzdoResponseListAzdoPullRequest, cancellationToken);
     }
-    public async Task<RelevantPullRequestProperties> GetPullRequestPropertiesAsync(Project project, string repositoryIdOrName, int pullRequestId, CancellationToken cancellationToken = default)
+    public async Task<PullRequestProperties> GetPullRequestPropertiesAsync(Project project, string repositoryIdOrName, int pullRequestId, CancellationToken cancellationToken = default)
     {
         var url = project.Url;
         var uri = new UriBuilder
@@ -263,9 +264,9 @@ public class AzureDevOpsProvider(HttpClient httpClient, IOptions<WorkflowOptions
         return (await response.Content.ReadFromJsonAsync(jsonTypeInfo, cancellationToken))!;
     }
 
-    internal static RelevantPullRequestProperties ParsePullRequestProperties(AzdoPullRequestProperties properties)
+    internal static PullRequestProperties ParsePullRequestProperties(AzdoPullRequestProperties properties)
     {
-        var relevant = new RelevantPullRequestProperties { };
+        var relevant = new PullRequestProperties { };
         foreach (var (key, value) in properties)
         {
             var inner = value.Value;
@@ -310,7 +311,7 @@ public class AzureDevOpsProvider(HttpClient httpClient, IOptions<WorkflowOptions
     }
 }
 
-public class RelevantPullRequestProperties
+public class PullRequestProperties
 {
     public string? PackageManager { get; set; }
     public List<string>? Dependencies { get; set; }

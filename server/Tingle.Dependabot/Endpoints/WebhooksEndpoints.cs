@@ -1,23 +1,32 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
+using Tingle.Dependabot;
 using Tingle.Dependabot.Events;
 using Tingle.Dependabot.Models;
 using Tingle.Dependabot.Models.Azure;
 using Tingle.EventBus;
 using SC = Tingle.Dependabot.DependabotSerializerContext;
 
-namespace Tingle.Dependabot.Controllers;
+namespace Microsoft.AspNetCore.Builder;
 
-[ApiController]
-[Route("webhooks")]
-[Authorize(AuthConstants.PolicyNameServiceHooks)]
-public class WebhooksController(MainDbContext dbContext, IEventPublisher publisher, ILogger<WebhooksController> logger) : ControllerBase // TODO: unit test this
+public static class WebhooksEndpoints
 {
-    [HttpPost("azure")]
-    public async Task<IActionResult> PostAsync([FromBody] AzureDevOpsEvent model)
+    public static IEndpointConventionBuilder MapWebhooks(this IEndpointRouteBuilder endpoints)
     {
+        var group = endpoints.MapGroup("/webhooks")
+                             .WithGroupName("webhooks");
+        endpoints.MapPost("azure", HandleAzureAsync);
+        return group;
+    }
+
+    private static async Task<IResult> HandleAzureAsync([FromBody] AzureDevOpsEvent model,
+                                                        [FromServices] MainDbContext dbContext,
+                                                        [FromServices] IEventPublisher publisher,
+                                                        [FromServices] ILoggerFactory loggerFactory)
+    {
+        var logger = loggerFactory.CreateLogger(typeof(WebhooksEndpoints).FullName!);
+
         var type = model.EventType;
         logger.WebhooksReceivedEvent(type, model.NotificationId, model.SubscriptionId?.Replace(Environment.NewLine, ""));
 
@@ -31,7 +40,7 @@ public class WebhooksController(MainDbContext dbContext, IEventPublisher publish
             // ensure project exists
             var adoProjectId = adoRepository.Project!.Id;
             var project = await dbContext.Projects.SingleOrDefaultAsync(p => p.ProviderId == adoProjectId);
-            if (project is null) return Problem(title: ErrorCodes.ProjectNotFound, statusCode: 400);
+            if (project is null) return Results.Problem(title: ErrorCodes.ProjectNotFound, statusCode: 400);
 
             // if the updates are not the default branch, then we ignore them
             var updatedReferences = resource.RefUpdates!.Select(ru => ru.Name).ToList();
@@ -52,7 +61,7 @@ public class WebhooksController(MainDbContext dbContext, IEventPublisher publish
             // ensure project exists
             var adoProjectId = adoRepository.Project!.Id;
             var project = await dbContext.Projects.SingleOrDefaultAsync(p => p.ProviderId == adoProjectId);
-            if (project is null) return Problem(title: ErrorCodes.ProjectNotFound, statusCode: 400);
+            if (project is null) return Results.Problem(title: ErrorCodes.ProjectNotFound, statusCode: 400);
 
             var repoSlug = project.Url.MakeRepositorySlug(adoRepository.Name);
             if (type is AzureDevOpsEventType.GitPullRequestUpdated)
@@ -82,7 +91,7 @@ public class WebhooksController(MainDbContext dbContext, IEventPublisher publish
             // ensure project exists
             var adoProjectId = adoRepository.Project!.Id;
             var project = await dbContext.Projects.SingleOrDefaultAsync(p => p.ProviderId == adoProjectId);
-            if (project is null) return Problem(title: ErrorCodes.ProjectNotFound, statusCode: 400);
+            if (project is null) return Results.Problem(title: ErrorCodes.ProjectNotFound, statusCode: 400);
             var repoSlug = project.Url.MakeRepositorySlug(adoRepository.Name);
 
             // ensure the comment starts with @dependabot
@@ -99,6 +108,6 @@ public class WebhooksController(MainDbContext dbContext, IEventPublisher publish
             logger.WebhooksReceivedEventUnsupported(type);
         }
 
-        return Ok();
+        return Results.Ok();
     }
 }

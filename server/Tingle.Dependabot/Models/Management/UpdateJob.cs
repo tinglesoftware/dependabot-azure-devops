@@ -2,7 +2,6 @@
 using System.Runtime.Serialization;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
-using Tingle.Dependabot.Workflow;
 using Tingle.Extensions.Primitives;
 using Tingle.Extensions.Primitives.Converters;
 
@@ -13,7 +12,7 @@ namespace Tingle.Dependabot.Models.Management;
 public class UpdateJob : IProtectable
 {
     [Key, MaxLength(50)]
-    public string? Id { get; set; }
+    public required string Id { get; set; }
 
     public DateTimeOffset Created { get; set; }
 
@@ -46,8 +45,11 @@ public class UpdateJob : IProtectable
     [MaxLength(50)]
     public string? Commit { get; set; }
 
-    /// <summary>Ecosystem for the update.</summary>
+    /// <summary>Package ecosystem for the update.</summary>
     public required string PackageEcosystem { get; set; }
+
+    /// <summary>Package manager for the update (derived from the ecosystem).</summary>
+    public required string PackageManager { get; set; }
 
     /// <summary>Directory targeted by the repository update.</summary>
     public string? Directory { get; set; }

@@ -16,7 +16,7 @@ internal static class IServiceCollectionExtensions
         // when the path is null in development, set one
         if (string.IsNullOrWhiteSpace(path) && environment.IsDevelopment())
         {
-            path = Path.Combine(environment.ContentRootPath, "locks");
+            path = Path.Combine(environment.ContentRootPath, "work/locks");
         }
 
         if (string.IsNullOrWhiteSpace(path))
@@ -38,6 +38,8 @@ internal static class IServiceCollectionExtensions
 
         services.AddSingleton<CertificateManager>();
         services.AddHostedService<CertificateManagerInitializerService>();
+
+        services.AddSingleton<ScenarioStore>();
 
         services.AddScoped<UpdateRunner>();
         services.AddSingleton<UpdateScheduler>();

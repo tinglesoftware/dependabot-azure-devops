@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Tingle.Dependabot.Workflow;
+namespace Tingle.Dependabot.Models;
 
 /// <summary>Easier manager and parser for URLs of projects on Azure DevOps.</summary>
 [JsonConverter(typeof(AzureDevOpsProjectUrlJsonConverter))]

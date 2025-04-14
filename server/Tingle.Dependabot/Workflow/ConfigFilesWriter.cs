@@ -34,7 +34,7 @@ internal partial class ConfigFilesWriter(CertificateManager certificateManager,
         var update = context.Update;
         var job = context.Job;
         var definition = new DependabotJobConfig(
-            PackageManager: ConvertEcosystemToPackageManager(update.PackageEcosystem),
+            PackageManager: job.PackageManager,
             AllowedUpdates: GetAllowDependencies(update.Allow, update.SecurityOnly),
             Debug: project.Debug,
             DependencyGroups: [.. (update.Groups ?? []).Select(p => MapDependencyGroup(p.Key, p.Value))],
@@ -213,27 +213,6 @@ internal partial class ConfigFilesWriter(CertificateManager certificateManager,
         }
 
         return result;
-    }
-    internal static string ConvertEcosystemToPackageManager(string ecosystem)
-    {
-        ArgumentException.ThrowIfNullOrEmpty(ecosystem);
-
-        return ecosystem switch
-        {
-            "dotnet-sdk" => "dotnet_sdk",
-            "github-actions" => "github_actions",
-            "gitsubmodule" => "submodules",
-            "gomod" => "go_modules",
-            "mix" => "hex",
-            "npm" => "npm_and_yarn",
-            // Additional ones
-            "yarn" => "npm_and_yarn",
-            "pnpm" => "npm_and_yarn",
-            "pipenv" => "pip",
-            "pip-compile" => "pip",
-            "poetry" => "pip",
-            _ => ecosystem,
-        };
     }
     internal static DependabotGroup MapDependencyGroup(string name, DependabotGroupDependency group)
     {

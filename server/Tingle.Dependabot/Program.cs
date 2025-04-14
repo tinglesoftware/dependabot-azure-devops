@@ -18,6 +18,8 @@ builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
 
     ["Logging:LogLevel:Default"] = development ? "Information" : "Debug",
     ["Logging:LogLevel:Microsoft"] = development ? "Information" : "Warning",
+    ["Logging:LogLevel:Microsoft.AspNetCore.Routing"] = "Warning",
+    ["Logging:LogLevel:Microsoft.AspNetCore.Http"] = "Warning",
     ["Logging:LogLevel:Microsoft.EntityFrameworkCore"] = "Warning",
     ["Logging:LogLevel:Microsoft.Hosting.Lifetime"] = "Information",
     ["Logging:LogLevel:System"] = development ? "Information" : null,
@@ -48,23 +50,28 @@ builder.Services.AddHttpContextAccessor(); // needed by custom enrichers
 // Add DbContext
 builder.Services.AddDbContext<MainDbContext>(options =>
 {
-    options.UseSqlite(builder.Configuration.GetConnectionString("Sqlite"));
+    // parse the connection string and ensure the directory exists
+    var connectionString = builder.Configuration.GetConnectionString("Sqlite")
+                        ?? throw new InvalidOperationException("The connection string for Sqlite must be provided");
+    var csb = new Tingle.Extensions.Primitives.ConnectionStringBuilder(connectionString);
+    var ds = csb["Data Source"];
+    var directory = Path.GetDirectoryName(ds)!;
+    if (!Directory.Exists(directory)) Directory.CreateDirectory(directory);
+
+    // setup the database provider
+    options.UseSqlite(connectionString);
     options.EnableDetailedErrors();
 });
 builder.Services.AddDatabaseSetup<MainDbContext>();
-
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
-
-// Add controllers
-builder.Services.AddControllers()
-                .AddControllersAsServices()
-                .AddJsonOptions(options => options.JsonSerializerOptions.UseStandard());
-
-builder.Services.ConfigureHttpJsonOptions(options => options.SerializerOptions.UseStandard());
 
 // Configure any generated URL to be in lower case
 builder.Services.Configure<RouteOptions>(options => options.LowercaseUrls = true);
 
+// Configure JSON options for the API
+builder.Services.ConfigureHttpJsonOptions(options => options.SerializerOptions.UseStandard());
+
+// Configure Authentication
 builder.Services.AddAuthentication()
                 .AddApiKeyInAuthorizationHeader<ApiKeyProvider>(AuthConstants.SchemeNameUpdater, options =>
                 {
@@ -73,6 +80,7 @@ builder.Services.AddAuthentication()
                 })
                 .AddBasic<BasicUserValidationService>(AuthConstants.SchemeNameServiceHooks, options => options.Realm = "Dependabot");
 
+// Configure Authorization
 builder.Services.AddAuthorizationBuilder()
                 .AddPolicy(AuthConstants.PolicyNameServiceHooks, policy =>
                 {
@@ -84,12 +92,6 @@ builder.Services.AddAuthorizationBuilder()
                     policy.AddAuthenticationSchemes(AuthConstants.SchemeNameUpdater)
                           .RequireAuthenticatedUser();
                 });
-
-// Configure other services
-builder.Services.AddMemoryCache();
-builder.Services.AddDistributedMemoryCache();
-builder.Services.AddDistributedLockProvider(builder.Environment, builder.Configuration);
-builder.Services.AddWorkflowServices(builder.Configuration.GetSection("Workflow"));
 
 // Add event bus
 builder.Services.AddEventBus(builder =>
@@ -114,6 +116,12 @@ builder.Services.AddPeriodicTasks(builder =>
 builder.Services.AddHealthChecks()
                 .AddDbContextCheck<MainDbContext>();
 
+// Configure other services
+builder.Services.AddMemoryCache();
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddDistributedLockProvider(builder.Environment, builder.Configuration);
+builder.Services.AddWorkflowServices(builder.Configuration.GetSection("Workflow"));
+
 // Add service to do initial sync (must be after the IHostedService for migrations)
 builder.Services.AddInitialSetup(builder.Configuration.GetSection("InitialSetup"));
 
@@ -126,6 +134,13 @@ app.UseAuthorization();
 
 app.MapHealthChecks("/health");
 app.MapHealthChecks("/liveness", new HealthCheckOptions { Predicate = _ => false, });
-app.MapControllers();
+
+app.MapUpdateJobs()
+   .RequireAuthorization(AuthConstants.PolicyNameUpdater);
+
+app.MapWebhooks()
+   .RequireAuthorization(AuthConstants.PolicyNameServiceHooks);
+
+app.MapManagement();
 
 await app.RunAsync();
