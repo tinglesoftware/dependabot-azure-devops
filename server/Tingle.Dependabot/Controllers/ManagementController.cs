@@ -11,7 +11,6 @@ namespace Tingle.Dependabot.Controllers;
 
 [ApiController]
 [Route("mgnt")]
-[Authorize(AuthConstants.PolicyNameManagement)]
 public class ManagementController(MainDbContext dbContext, IEventPublisher publisher, AzureDevOpsProvider adoProvider) : ControllerBase // TODO: unit test this
 {
     [HttpPost("sync")]

@@ -43,7 +43,6 @@ builder.Services.ConfigureHttpJsonOptions(options => options.SerializerOptions.U
 builder.Services.Configure<RouteOptions>(options => options.LowercaseUrls = true);
 
 builder.Services.AddAuthentication()
-                .AddJwtBearer(AuthConstants.SchemeNameManagement)
                 .AddApiKeyInAuthorizationHeader<ApiKeyProvider>(AuthConstants.SchemeNameUpdater, options =>
                 {
                     options.KeyName = "Bearer"; // "Authorization: Bearer <token>" or "Authorization: Updater <token>" will work
@@ -52,11 +51,6 @@ builder.Services.AddAuthentication()
                 .AddBasic<BasicUserValidationService>(AuthConstants.SchemeNameServiceHooks, options => options.Realm = "Dependabot");
 
 builder.Services.AddAuthorizationBuilder()
-                .AddPolicy(AuthConstants.PolicyNameManagement, policy =>
-                {
-                    policy.AddAuthenticationSchemes(AuthConstants.SchemeNameManagement)
-                          .RequireAuthenticatedUser();
-                })
                 .AddPolicy(AuthConstants.PolicyNameServiceHooks, policy =>
                 {
                     policy.AddAuthenticationSchemes(AuthConstants.SchemeNameServiceHooks)
