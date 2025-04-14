@@ -37,8 +37,9 @@ public class ConfigFilesWriterTests
             Password = "burp-bump",
             AutoApprove = new(),
             AutoComplete = new(),
+            GithubToken = "github-token",
         };
-        var credentials = ConfigFilesWriter.MakeCredentials(configuration.Registries.Values, secrets, project, "github-token");
+        var credentials = ConfigFilesWriter.MakeCredentials(configuration.Registries.Values, secrets, project);
         Assert.Equal(13, credentials.Count);
         var metadatas = ConfigFilesWriter.MakeCredentialsMetadata(credentials);
         Assert.Equal(13, metadatas.Count);
@@ -134,8 +135,9 @@ public class ConfigFilesWriterTests
             Password = "burp-bump",
             AutoApprove = new(),
             AutoComplete = new(),
+            GithubToken = "github-token",
         };
-        var credentials = ConfigFilesWriter.MakeCredentials(configuration.Registries.Values, secrets, project, "github-token");
+        var credentials = ConfigFilesWriter.MakeCredentials(configuration.Registries.Values, secrets, project);
         Assert.Equal(13, credentials.Count);
 
         // git_source (main repo)

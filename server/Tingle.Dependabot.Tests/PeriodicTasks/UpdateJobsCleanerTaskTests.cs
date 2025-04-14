@@ -6,7 +6,6 @@ using Tingle.Dependabot.Models;
 using Tingle.Dependabot.Models.Dependabot;
 using Tingle.Dependabot.Models.Management;
 using Tingle.Dependabot.PeriodicTasks;
-using Tingle.EventBus.Transports.InMemory;
 using Xunit;
 
 namespace Tingle.Dependabot.Tests.PeriodicTasks;
@@ -17,9 +16,9 @@ public class UpdateJobsCleanerTaskTests(ITestOutputHelper outputHelper)
     private const string RepositoryId = "repo_1234567890";
 
     [Fact]
-    public async Task CleanupAsync_ResolvesJobs()
+    public async Task DeleteHangingAsync_Works()
     {
-        await TestAsync(async (harness, context, pt) =>
+        await TestAsync(async (context, pt) =>
         {
             var targetId = Guid.NewGuid().ToString();
             await context.UpdateJobs.AddAsync(new UpdateJob
@@ -48,7 +47,7 @@ public class UpdateJobsCleanerTaskTests(ITestOutputHelper outputHelper)
                 Directories = null,
                 Resources = new(0.25, 0.2),
                 AuthKey = Guid.NewGuid().ToString("n"),
-                Status = UpdateJobStatus.Succeeded,
+                Status = UpdateJobStatus.Running,
             }, TestContext.Current.CancellationToken);
             await context.UpdateJobs.AddAsync(new UpdateJob
             {
@@ -62,18 +61,19 @@ public class UpdateJobsCleanerTaskTests(ITestOutputHelper outputHelper)
                 Directories = ["**/*"],
                 Resources = new(0.25, 0.2),
                 AuthKey = Guid.NewGuid().ToString("n"),
-                Status = UpdateJobStatus.Running,
+                Status = UpdateJobStatus.Succeeded,
             }, TestContext.Current.CancellationToken);
             await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-            await pt.CleanupAsync(TestContext.Current.CancellationToken);
+            await pt.DeleteHangingAsync(TestContext.Current.CancellationToken);
+            Assert.Equal(2, await context.UpdateJobs.CountAsync(TestContext.Current.CancellationToken));
         });
     }
 
     [Fact]
-    public async Task CleanupAsync_DeletesOldJobsAsync()
+    public async Task DeleteOldJobsAsync_Works()
     {
-        await TestAsync(async (harness, context, pt) =>
+        await TestAsync(async (context, pt) =>
         {
             await context.UpdateJobs.AddAsync(new UpdateJob
             {
@@ -116,12 +116,12 @@ public class UpdateJobsCleanerTaskTests(ITestOutputHelper outputHelper)
             }, TestContext.Current.CancellationToken);
             await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-            await pt.CleanupAsync(TestContext.Current.CancellationToken);
+            await pt.DeleteOldJobsAsync(TestContext.Current.CancellationToken);
             Assert.Equal(1, await context.UpdateJobs.CountAsync(TestContext.Current.CancellationToken));
         });
     }
 
-    private async Task TestAsync(Func<InMemoryTestHarness, MainDbContext, UpdateJobsCleanerTask, Task> executeAndVerify)
+    private async Task TestAsync(Func<MainDbContext, UpdateJobsCleanerTask, Task> executeAndVerify)
     {
         var host = Host.CreateDefaultBuilder()
                        .ConfigureLogging(builder => builder.AddXUnit(outputHelper))
@@ -133,7 +133,6 @@ public class UpdateJobsCleanerTaskTests(ITestOutputHelper outputHelper)
                                options.UseInMemoryDatabase(dbName, o => o.EnableNullChecks());
                                options.EnableDetailedErrors();
                            });
-                           services.AddEventBus(builder => builder.AddInMemoryTransport().AddInMemoryTestHarness());
                        })
                        .Build();
 
@@ -190,21 +189,7 @@ public class UpdateJobsCleanerTaskTests(ITestOutputHelper outputHelper)
         });
         await context.SaveChangesAsync();
 
-        var harness = provider.GetRequiredService<InMemoryTestHarness>();
-        await harness.StartAsync();
-
-        try
-        {
-            var pt = ActivatorUtilities.GetServiceOrCreateInstance<UpdateJobsCleanerTask>(provider);
-
-            await executeAndVerify(harness, context, pt);
-
-            // Ensure there were no publish failures
-            Assert.Empty(await harness.FailedAsync());
-        }
-        finally
-        {
-            await harness.StopAsync();
-        }
+        var pt = ActivatorUtilities.GetServiceOrCreateInstance<UpdateJobsCleanerTask>(provider);
+        await executeAndVerify(context, pt);
     }
 }
