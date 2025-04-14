@@ -17,11 +17,6 @@ builder.Services.Configure<HostOptions>(options => options.ShutdownTimeout = Tim
 builder.AddOpenTelemetry();
 builder.Services.AddHttpContextAccessor(); // needed by custom enrichers
 
-// Add Azure AppConfiguration
-builder.Configuration.AddStandardAzureAppConfiguration(builder.Environment);
-builder.Services.AddAzureAppConfiguration();
-builder.Services.AddSingleton<IStartupFilter, AzureAppConfigurationStartupFilter>(); // Use IStartupFilter to setup AppConfiguration middleware correctly
-
 // Add DbContext
 builder.Services.AddDbContext<MainDbContext>(options =>
 {
@@ -65,7 +60,6 @@ builder.Services.AddAuthorizationBuilder()
 // Configure other services
 builder.Services.AddMemoryCache();
 builder.Services.AddDistributedMemoryCache();
-builder.Services.AddStandardFeatureManagement();
 builder.Services.AddDistributedLockProvider(builder.Environment, builder.Configuration);
 builder.Services.AddWorkflowServices(builder.Configuration.GetSection("Workflow"));
 

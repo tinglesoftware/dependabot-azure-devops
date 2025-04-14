@@ -36,7 +36,7 @@ internal partial class ConfigFilesWriter(CertificateManager certificateManager,
         var definition = new DependabotJobConfig(
             PackageManager: ConvertEcosystemToPackageManager(update.PackageEcosystem),
             AllowedUpdates: GetAllowDependencies(update.Allow, update.SecurityOnly),
-            Debug: context.Debug,
+            Debug: project.Debug,
             DependencyGroups: [.. (update.Groups ?? []).Select(p => MapDependencyGroup(p.Key, p.Value))],
             Dependencies: context.UpdateDependencyNames,
             DependencyGroupToRefresh: context.UpdateDependencyGroupName,
@@ -334,7 +334,7 @@ internal partial class ConfigFilesWriter(CertificateManager certificateManager,
     private static partial Regex PlaceholderPattern();
 }
 
-internal readonly struct JobConfigContext(UpdaterContext context, IReadOnlyList<DependabotCredential> credentials, bool debug)
+internal readonly struct JobConfigContext(UpdaterContext context, IReadOnlyList<DependabotCredential> credentials)
 {
     public Project Project { get; } = context.Project;
     public RepositoryUpdate Update { get; } = context.Update;
@@ -343,7 +343,6 @@ internal readonly struct JobConfigContext(UpdaterContext context, IReadOnlyList<
     public bool UpdatingPullRequest { get; } = context.UpdatingPullRequest;
     public string? UpdateDependencyGroupName { get; } = context.UpdateDependencyGroupName;
     public List<string> UpdateDependencyNames { get; } = context.UpdateDependencyNames;
-    public bool Debug { get; } = debug;
 }
 
 internal readonly struct ProxyConfigContext(UpdaterContext context, IReadOnlyList<DependabotCredential> credentials)

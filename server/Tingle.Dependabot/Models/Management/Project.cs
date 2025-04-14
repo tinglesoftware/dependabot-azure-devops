@@ -81,6 +81,12 @@ public class Project : IProtectable
     /// <example>ghp_1234567890</example>
     public string? GithubToken { get; set; }
 
+    /// <summary>
+    /// Whether to enable debug on jobs run for the project.
+    /// Defaults to <see langword="true"/>.
+    /// </summary>
+    public bool Debug { get; set; } = true;
+
     /// <summary>Location/region where to create update jobs.</summary>
     /// <example>westeurope</example>
     public string? Location { get; set; }

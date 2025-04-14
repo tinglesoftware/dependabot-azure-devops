@@ -1,6 +1,5 @@
 ﻿using Medallion.Threading;
 using Medallion.Threading.FileSystem;
-using Microsoft.FeatureManagement;
 using Tingle.Dependabot;
 using Tingle.Dependabot.Workflow;
 
@@ -26,20 +25,6 @@ internal static class IServiceCollectionExtensions
         }
 
         services.AddSingleton<IDistributedLockProvider>(new FileDistributedSynchronizationProvider(new(path)));
-
-        return services;
-    }
-
-    public static IServiceCollection AddStandardFeatureManagement(this IServiceCollection services)
-    {
-        var builder = services.AddFeatureManagement();
-
-        builder.AddFeatureFilter<FeatureManagement.FeatureFilters.PercentageFilter>();
-        builder.AddFeatureFilter<FeatureManagement.FeatureFilters.TimeWindowFilter>();
-        builder.AddFeatureFilter<FeatureManagement.FeatureFilters.ContextualTargetingFilter>();
-        builder.Services.Configure<FeatureManagement.FeatureFilters.TargetingEvaluationOptions>(o => o.IgnoreCase = true);
-
-        builder.UseDisabledFeaturesHandler(new CustomDisabledFeaturesHandler());
 
         return services;
     }

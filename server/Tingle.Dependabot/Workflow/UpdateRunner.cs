@@ -1,15 +1,12 @@
 ﻿using System.Formats.Tar;
 using Docker.DotNet;
 using Microsoft.Extensions.Options;
-using Microsoft.FeatureManagement;
-using Microsoft.FeatureManagement.FeatureFilters;
 using Tingle.Dependabot.Models.Management;
 using Tingle.Extensions.Primitives;
 
 namespace Tingle.Dependabot.Workflow;
 
-internal partial class UpdateRunner(IFeatureManagerSnapshot featureManager,
-                                    ConfigFilesWriter configFilesWriter,
+internal partial class UpdateRunner(ConfigFilesWriter configFilesWriter,
                                     IOptions<WorkflowOptions> optionsAccessor,
                                     ILogger<UpdateRunner> logger)
 {
@@ -22,7 +19,6 @@ internal partial class UpdateRunner(IFeatureManagerSnapshot featureManager,
     private const string MountPathCert = "/usr/local/share/ca-certificates/dbot-ca.crt";
     private const int ProxyPort = 1080;
 
-    private readonly IFeatureManagerSnapshot featureManager = featureManager ?? throw new ArgumentNullException(nameof(featureManager));
     private readonly WorkflowOptions options = optionsAccessor?.Value ?? throw new ArgumentNullException(nameof(optionsAccessor));
     private readonly ILogger logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly DockerClient dockerClient = new DockerClientConfiguration().CreateClient();
@@ -39,10 +35,6 @@ internal partial class UpdateRunner(IFeatureManagerSnapshot featureManager,
         var containers = await dockerClient.Containers.ListContainersAsync(new() { All = true, }, cancellationToken);
         var container = containers.FirstOrDefault(c => c.Names.Contains($"/{resourceName}"));
         if (container is not null) return;
-
-        // check if debug is enabled for the project via Feature Management
-        var fmc = MakeTargetingContext(project, job);
-        var debug = await featureManager.IsEnabledAsync(FeatureNames.DependabotDebug, fmc);
 
         // prepare credentials and job directory
         var credentials = configFilesWriter.MakeCredentials(context);
@@ -78,7 +70,7 @@ internal partial class UpdateRunner(IFeatureManagerSnapshot featureManager,
         var outputPath = Path.Join(jobDirectory, "output.json");
         if (File.Exists(outputPath)) File.Delete(outputPath);
 
-        var jobConfigContext = new JobConfigContext(context, credentials, debug);
+        var jobConfigContext = new JobConfigContext(context, credentials);
         await configFilesWriter.WriteJobAsync(jobDefinitionPath, jobConfigContext, cancellationToken);
         var caCertPath = Path.Join(options.CertsDirectory, "cert.crt");
 
@@ -116,7 +108,7 @@ internal partial class UpdateRunner(IFeatureManagerSnapshot featureManager,
             ["DEPENDABOT_API_URL"] = $"{options.JobsApiUrl}".TrimEnd('/'), // make sure to remove trailing slash so we match incoming requests
             ["UPDATER_ONE_CONTAINER"] = "true",
             ["UPDATER_DETERMINISTIC"] = "true",
-            ["DEPENDABOT_DEBUG"] = debug.ToString().ToLower(),
+            ["DEPENDABOT_DEBUG"] = project.Debug.ToString().ToLower(),
             ["FLAMEGRAPH"] = "1",
         };
         var updateEnvNamesForProxyUrl = new List<string> { "http_proxy", "HTTP_PROXY", "https_proxy", "HTTPS_PROXY" };
@@ -364,19 +356,6 @@ internal partial class UpdateRunner(IFeatureManagerSnapshot featureManager,
         var network = await dockerClient.Networks.CreateNetworkAsync(parameters, cancellationToken);
         var inspection = await dockerClient.Networks.InspectNetworkAsync(network.ID, cancellationToken);
         return new DockerNetworkRepresentation(inspection.Name, network.ID);
-    }
-
-    internal static TargetingContext MakeTargetingContext(Project project, UpdateJob job)
-    {
-        return new TargetingContext
-        {
-            Groups =
-            [
-                $"provider:{project.Type.GetEnumMemberAttrValueOrDefault()}",
-                $"project:{project.Id}",
-                $"ecosystem:{job.PackageEcosystem}",
-            ],
-        };
     }
 }
 
