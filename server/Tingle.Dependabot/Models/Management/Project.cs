@@ -90,9 +90,6 @@ public class Project : IProtectable
     /// <summary>Time at which the synchronization was last done for the project.</summary>
     public DateTimeOffset? Synchronized { get; set; }
 
-    [Timestamp]
-    public Etag? Etag { get; set; } // TODO: remove nullability once we reset the migrations
-
     /// <inheritdoc/>
     public void Protect()
     {

@@ -1,50 +1,16 @@
 services:
-  # mongo:
-  #   image: mongo
-  #   environment:
-  #     MONGO_INITDB_ROOT_USERNAME: 'dependabot'
-  #     MONGO_INITDB_ROOT_PASSWORD: 'My!P#ssw0rd1'
-  #   volumes:
-  #     - mongo_data:/data/db
-  #     - mongo_configdb:/data/configdb
-  #   networks: [server]
-  #   healthcheck:
-  #     test: ["CMD", "bash", "-c", "</dev/tcp/localhost/27017"]
-  #     interval: 10s
-  #     timeout: 5s
-  #     retries: 6
-
-  mssql:
-    image: mcr.microsoft.com/mssql/server
-    environment:
-      SA_PASSWORD: 'My!P#ssw0rd1'
-      ACCEPT_EULA: 'Y'
-    volumes:
-      - mssql_data:/var/opt/mssql
-    networks: [server]
-    healthcheck:
-      test: ['CMD', 'bash', '-c', '</dev/tcp/localhost/1433']
-      interval: 10s
-      timeout: 3s
-      retries: 6
-
   server:
     image: ghcr.io/tinglesoftware/dependabot:${IMAGE_TAG:-latest}
     ports: [8080:8080]
     restart: unless-stopped
     user: root # required to write to the mounted volumes
-    depends_on:
-      # mongo: { condition: service_healthy }
-      mssql: { condition: service_healthy }
     environment:
       GITHUB_SHA: '${GITHUB_SHA:-unknown}'
       GITHUB_REF_NAME: '${GITHUB_REF_NAME:-unknown}'
 
       EFCORE_PERFORM_MIGRATIONS: 'true' # Perform migrations on startup
       # InitialSetup__Projects: '[{"url":"https://dev.azure.com/tingle/dependabot","token":"dummy","AutoComplete":true, "GithubToken":"${GITHUB_TOKEN}"}]'
-      Database__Kind: 'SqlServer'
-      # ConnectionStrings__Mongo: 'mongodb://dependabot:My!P#ssw0rd1@mongo:27017/dependabot'
-      ConnectionStrings__Sql: 'Server=mssql;Database=dependabot;User Id=sa;Password=My!P#ssw0rd1;TrustServerCertificate=True;MultipleActiveResultSets=False;'
+      ConnectionStrings__Sqlite: 'Data Source=mnt/dependabot/db/database.db'
       DistributedLocking__FilePath: '/mnt/dependabot/locks'
       Workflow__JobsApiUrl: 'http://server/'
       Workflow__ArtifactsDirectory: '/mnt/dependabot/artifacts'
@@ -59,22 +25,18 @@ services:
       Logging__OpenTelemetry__LogLevel__Polly: None # too many logs (one above seems not sufficient)
       Logging__LogLevel__Microsoft.AspNetCore.DataProtection.KeyManagement.XmlKeyManager: Error
     volumes:
+      - db:/mnt/dependabot/db
       - artifacts:/mnt/dependabot/artifacts
       - certs:/mnt/dependabot/certs
       - locks:/mnt/dependabot/locks
       - proxy:/mnt/dependabot/proxy
       - jobs:/mnt/dependabot/jobs
       - /var/run/docker.sock:/var/run/docker.sock # Allows the container to create/manage other containers
-    networks: [server]
 
 volumes:
+  db:
   artifacts:
   certs:
   locks:
-  mssql_data:
   proxy:
   jobs:
-
-networks:
-  server:
-    driver: bridge

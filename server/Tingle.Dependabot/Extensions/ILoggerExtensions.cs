@@ -107,7 +107,7 @@ internal static partial class ILoggerExtensions
     [LoggerMessage(602, LogLevel.Information, "Removed {UpdateJobsCount} jobs stale since {Cutoff}")]
     public static partial void UpdateJobRemovedStaleJobs(this ILogger logger, int updateJobsCount, DateTimeOffset cutoff);
 
-    [LoggerMessage(603, LogLevel.Information, "Removed {UpdateJobsCount} jobs that older than {Cutoff}")]
+    [LoggerMessage(603, LogLevel.Information, "Removed {UpdateJobsCount} jobs older than {Cutoff}")]
     public static partial void UpdateJobRemovedOldJobs(this ILogger logger, int updateJobsCount, DateTimeOffset cutoff);
 
     [LoggerMessage(604, LogLevel.Warning, "Skipping trigger for update because project '{ProjectId}' does not exist.")]

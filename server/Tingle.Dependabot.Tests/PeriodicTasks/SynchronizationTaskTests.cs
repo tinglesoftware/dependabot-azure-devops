@@ -36,14 +36,15 @@ public class SynchronizationTaskTests(ITestOutputHelper outputHelper)
 
     private async Task TestAsync(Func<InMemoryTestHarness, SynchronizationTask, Task> executeAndVerify)
     {
+        using var dbFixture = new DbFixture();
+
         var host = Host.CreateDefaultBuilder()
                        .ConfigureLogging(builder => builder.AddXUnit(outputHelper))
                        .ConfigureServices((context, services) =>
                        {
-                           var dbName = Guid.NewGuid().ToString();
                            services.AddDbContext<MainDbContext>(options =>
                            {
-                               options.UseInMemoryDatabase(dbName, o => o.EnableNullChecks());
+                               options.UseSqlite(dbFixture.ConnectionString);
                                options.EnableDetailedErrors();
                            });
                            services.AddEventBus(builder => builder.AddInMemoryTransport().AddInMemoryTestHarness());
@@ -54,7 +55,7 @@ public class SynchronizationTaskTests(ITestOutputHelper outputHelper)
         var provider = scope.ServiceProvider;
 
         var context = provider.GetRequiredService<MainDbContext>();
-        await context.Database.EnsureCreatedAsync();
+        await context.Database.MigrateAsync();
 
         await context.Projects.AddAsync(new Project
         {

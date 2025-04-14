@@ -59,9 +59,6 @@ public class Repository
     [JsonIgnore] // only for internal use
     public Dictionary<string, DependabotRegistry> Registries { get; set; } = [];
 
-    [Timestamp]
-    public Etag? Etag { get; set; } // TODO: remove nullability once we reset the migrations
-
     public RepositoryUpdate? GetUpdate(UpdateJob job)
     {
         // find the update (we assume that there is only one matching the ecosystem and directory/directories)

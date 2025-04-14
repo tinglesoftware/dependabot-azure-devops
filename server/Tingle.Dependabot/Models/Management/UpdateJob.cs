@@ -90,9 +90,6 @@ public class UpdateJob : IProtectable
     /// <summary>Error recorded by the job, if any.</summary>
     public UpdateJobError? Error { get; set; }
 
-    [Timestamp]
-    public Etag? Etag { get; set; } // TODO: remove nullability once we reset the migrations
-
     public string ResourceName => $"dependabot-{Id}";
     public string ResourceNameProxy => $"{ResourceName}-proxy";
 

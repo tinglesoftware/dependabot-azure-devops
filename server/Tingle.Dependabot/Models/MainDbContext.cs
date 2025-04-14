@@ -20,16 +20,14 @@ public class MainDbContext(DbContextOptions<MainDbContext> options) : DbContext(
     {
         base.ConfigureConventions(configurationBuilder);
 
-        if (Database.IsSqlServer())
-        {
-            configurationBuilder.AddEtagToBytesConventions();
-        }
-
         configurationBuilder.Properties<AzureDevOpsProjectUrl>()
                             .HaveConversion<AzureDevOpsProjectUrlConverter, AzureDevOpsProjectUrlComparer>();
 
         configurationBuilder.Properties<DockerImage>()
                             .HaveConversion<DockerImageConverter, DockerImageComparer>();
+
+        configurationBuilder.Properties<DateTimeOffset>()
+                            .HaveConversion<DateTimeOffsetToBinaryConverter>();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -78,8 +76,6 @@ public class MainDbContext(DbContextOptions<MainDbContext> options) : DbContext(
             builder.OwnsOne(j => j.Resources);
         });
     }
-
-    public bool SupportsBulk => Database.IsSqlServer();
 
     private class AzureDevOpsProjectUrlConverter : ValueConverter<AzureDevOpsProjectUrl, string>
     {

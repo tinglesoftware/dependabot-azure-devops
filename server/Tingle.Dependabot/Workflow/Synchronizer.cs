@@ -79,19 +79,10 @@ internal class Synchronizer(MainDbContext dbContext, AzureDevOpsProvider adoProv
         // remove repositories that are no longer tracked (i.e. the repository was removed)
         var providerIdsToKeep = syncPairs.Where(p => p.Item1.HasConfiguration).Select(p => p.Item1.Id).ToList();
         var toDeleteQuery = dbContext.Repositories.Where(r => !providerIdsToKeep.Contains(r.ProviderId!));
-        int deleted = -1;
-        if (dbContext.SupportsBulk)
-        {
-            deleted = await toDeleteQuery.ExecuteDeleteAsync(cancellationToken);
-        }
-        else
-        {
-            var deletable = await toDeleteQuery.ToListAsync(cancellationToken);
-            dbContext.RemoveRange(deletable);
-            await dbContext.SaveChangesAsync(cancellationToken);
-            deleted = deletable.Count;
-        }
-        if (deleted > 0) logger.SyncDeletedRepositories(deleted, project.Id);
+        var deletable = await toDeleteQuery.ToListAsync(cancellationToken);
+        dbContext.RemoveRange(deletable);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        if (deletable.Count > 0) logger.SyncDeletedRepositories(deletable.Count, project.Id);
 
         // synchronize each repository
         foreach (var (pi, repository) in syncPairs)

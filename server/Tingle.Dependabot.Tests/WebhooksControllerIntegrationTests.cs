@@ -179,7 +179,8 @@ public class WebhooksControllerIntegrationTests(ITestOutputHelper outputHelper)
 
     private async Task TestAsync(Func<InMemoryTestHarness, HttpClient, Task> executeAndVerify)
     {
-        // Arrange
+        using var dbFixture = new DbFixture();
+
         var builder = new WebHostBuilder()
             .ConfigureLogging(builder => builder.AddXUnit(outputHelper))
             .ConfigureServices((context, services) =>
@@ -188,11 +189,9 @@ public class WebhooksControllerIntegrationTests(ITestOutputHelper outputHelper)
                         .AddApplicationPart(typeof(MainDbContext).Assembly)
                         .AddJsonOptions(options => options.JsonSerializerOptions.UseStandard());
 
-                var dbName = Guid.NewGuid().ToString();
-                var configuration = context.Configuration;
                 services.AddDbContext<MainDbContext>(options =>
                 {
-                    options.UseInMemoryDatabase(dbName, o => o.EnableNullChecks());
+                    options.UseSqlite(dbFixture.ConnectionString);
                     options.EnableDetailedErrors();
                 });
                 services.AddRouting();
@@ -226,7 +225,7 @@ public class WebhooksControllerIntegrationTests(ITestOutputHelper outputHelper)
         var provider = scope.ServiceProvider;
 
         var context = provider.GetRequiredService<MainDbContext>();
-        await context.Database.EnsureCreatedAsync();
+        await context.Database.MigrateAsync();
 
         await context.Projects.AddAsync(new Dependabot.Models.Management.Project
         {

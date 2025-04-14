@@ -58,7 +58,6 @@ internal static class IHostApplicationBuilderExtensions
             ]);
             tracing.AddHttpClientInstrumentation(o => o.RecordException = true);
             tracing.AddEntityFrameworkCoreInstrumentation();
-            tracing.AddSqlClientInstrumentation(o => o.RecordException = true);
             tracing.AddAspNetCoreInstrumentation(o => o.RecordException = true);
 
             // add enrichers

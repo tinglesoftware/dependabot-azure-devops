@@ -29,8 +29,7 @@ builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
 
     ["AllowedHosts"] = "*",
 
-    // ["ConnectionStrings:Sql"] = "Server=(localdb)\\mssqllocaldb;Database=dependabot;Trusted_Connection=True;MultipleActiveResultSets=true",
-    ["ConnectionStrings:Sql"] = "Server=localhost,1433;Database=dependabot;User Id=sa;Password=My!P#ssw0rd1;TrustServerCertificate=True;MultipleActiveResultSets=False;",
+    ["ConnectionStrings:Sqlite"] = "Data Source=work/db/dependabot.db",
 
     ["EventBus:SelectedTransport"] = "InMemory", // InMemory|ServiceBus
     ["EventBus:DefaultTransportWaitStarted"] = "false", // defaults to true which causes startup tasks to hang
@@ -52,7 +51,7 @@ builder.Services.AddHttpContextAccessor(); // needed by custom enrichers
 // Add DbContext
 builder.Services.AddDbContext<MainDbContext>(options =>
 {
-    options.UseSqlServer(builder.Configuration.GetConnectionString("Sql"), options => options.EnableRetryOnFailure());
+    options.UseSqlite(builder.Configuration.GetConnectionString("Sqlite"));
     options.EnableDetailedErrors();
 });
 builder.Services.AddDatabaseSetup<MainDbContext>();
