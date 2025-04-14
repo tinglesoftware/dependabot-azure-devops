@@ -31,7 +31,7 @@ internal class CertificateManager(IOptions<WorkflowOptions> optionsAccessor, ILo
         // if either of the files are missing, we should generate new ones
         if (!File.Exists(certPath) || !File.Exists(keyPath))
         {
-            logger.LogInformation("Cert file (or its key file) is missing. A new one shall be generated.");
+            logger.ProxyCertificatesMissing();
             ca = null;
         }
         else
@@ -45,7 +45,7 @@ internal class CertificateManager(IOptions<WorkflowOptions> optionsAccessor, ILo
                 var cert = X509Certificate2.CreateFromPem(certPem, keyPem);
                 if (cert.NotAfter <= DateTimeOffset.UtcNow)
                 {
-                    logger.LogInformation("Existing certificate is expired ({NotAfter}). A new one shall be generated.", cert.NotAfter);
+                    logger.ProxyCertificatesExpired(cert.NotAfter);
                     ca = null;
                 }
 
@@ -54,7 +54,7 @@ internal class CertificateManager(IOptions<WorkflowOptions> optionsAccessor, ILo
             catch (Exception ex)
             {
                 // loading failed, so we generate a new one
-                logger.LogWarning(ex, "Loading existing certificate failed. A new one shall be generated.");
+                logger.ProxyCertificatesLoadingFailed(ex);
                 ca = null;
             }
         }

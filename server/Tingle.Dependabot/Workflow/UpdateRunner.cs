@@ -324,7 +324,7 @@ internal partial class UpdateRunner(ConfigFilesWriter configFilesWriter,
         var image = images.FirstOrDefault(i => i.RepoTags?.Contains(imageName) ?? false);
         if (image is null)
         {
-            logger.LogInformation("Pulling image: {Image}", imageName);
+            logger.PullImage(imageName);
             var pullParams = new Docker.DotNet.Models.ImagesCreateParameters
             {
                 FromImage = imageName,
@@ -340,7 +340,7 @@ internal partial class UpdateRunner(ConfigFilesWriter configFilesWriter,
         // find the image digest and set it in the job
         images = await dockerClient.Images.ListImagesAsync(new() { All = true, }, cancellationToken);
         image = images.Single(i => i.RepoTags?.Contains(imageName) ?? false);
-        logger.LogInformation("Using image {Image} at {Digest}", imageName, image.ID);
+        logger.UsingImage(imageName, image.ID);
         return DockerImage.Parse(image.RepoDigests[0]);
     }
 

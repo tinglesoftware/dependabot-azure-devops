@@ -110,21 +110,36 @@ internal static partial class ILoggerExtensions
     [LoggerMessage(603, LogLevel.Information, "Removed {UpdateJobsCount} jobs that older than {Cutoff}")]
     public static partial void UpdateJobRemovedOldJobs(this ILogger logger, int updateJobsCount, DateTimeOffset cutoff);
 
-    #endregion
-
-    #region Update Jobs (7xx)
-
-    [LoggerMessage(700, LogLevel.Warning, "Skipping trigger for update because project '{ProjectId}' does not exist.")]
+    [LoggerMessage(604, LogLevel.Warning, "Skipping trigger for update because project '{ProjectId}' does not exist.")]
     public static partial void SkippingTriggerProjectNotFound(this ILogger logger, string projectId);
 
-    [LoggerMessage(701, LogLevel.Warning, "Skipping trigger for update because repository '{RepositoryId}' in project '{ProjectId}' does not exist.")]
+    [LoggerMessage(605, LogLevel.Warning, "Skipping trigger for update because repository '{RepositoryId}' in project '{ProjectId}' does not exist.")]
     public static partial void SkippingTriggerRepositoryNotFound(this ILogger logger, string repositoryId, string? projectId);
 
-    [LoggerMessage(702, LogLevel.Warning, "Skipping trigger for update because repository update '{RepositoryId}({RepositoryUpdateId})' in project '{ProjectId}' does not exist.")]
+    [LoggerMessage(606, LogLevel.Warning, "Skipping trigger for update because repository update '{RepositoryId}({RepositoryUpdateId})' in project '{ProjectId}' does not exist.")]
     public static partial void SkippingTriggerRepositoryUpdateNotFound(this ILogger logger, string repositoryId, int repositoryUpdateId, string? projectId);
 
-    [LoggerMessage(703, LogLevel.Warning, "A job for update '{RepositoryId}({RepositoryUpdateId})' in project '{ProjectId}' requested by event '{EventBusId}' already exists. Skipping it ...")]
+    [LoggerMessage(607, LogLevel.Warning, "A job for update '{RepositoryId}({RepositoryUpdateId})' in project '{ProjectId}' requested by event '{EventBusId}' already exists. Skipping it ...")]
     public static partial void SkippingTriggerJobAlreadyExists(this ILogger logger, string? repositoryId, int repositoryUpdateId, string? projectId, string? eventBusId);
+
+    [LoggerMessage(608, LogLevel.Information, "Pulling image: {Image}")]
+    public static partial void PullImage(this ILogger logger, string image);
+
+    [LoggerMessage(609, LogLevel.Information, "Using image {Image} at {Digest}")]
+    public static partial void UsingImage(this ILogger logger, string image, string digest);
+
+    #endregion
+
+    #region Certificates (7xx)
+
+    [LoggerMessage(701, LogLevel.Information, "Cert file (or its key file) is missing. A new one shall be generated.")]
+    public static partial void ProxyCertificatesMissing(this ILogger logger);
+
+    [LoggerMessage(702, LogLevel.Information, "Existing certificate is expired ({NotAfter}). A new one shall be generated.")]
+    public static partial void ProxyCertificatesExpired(this ILogger logger, DateTime notAfter);
+
+    [LoggerMessage(703, LogLevel.Warning, "Loading existing certificate failed. A new one shall be generated.")]
+    public static partial void ProxyCertificatesLoadingFailed(this ILogger logger, Exception ex);
 
     #endregion
 }
