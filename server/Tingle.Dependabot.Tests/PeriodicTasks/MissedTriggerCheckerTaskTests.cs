@@ -30,7 +30,7 @@ public class MissedTriggerCheckerTaskTests(ITestOutputHelper outputHelper)
             await pt.CheckAsync(referencePoint, TestContext.Current.CancellationToken);
 
             // Ensure the message was published
-            var evt_context = Assert.IsType<EventContext<TriggerUpdateJobsEvent>>(
+            var evt_context = Assert.IsType<EventContext<RunUpdateJobEvent>>(
                 Assert.Single(await harness.PublishedAsync(cancellationToken: TestContext.Current.CancellationToken)));
             var inner = evt_context.Event;
             Assert.NotNull(inner);
@@ -51,7 +51,7 @@ public class MissedTriggerCheckerTaskTests(ITestOutputHelper outputHelper)
             await pt.CheckAsync(referencePoint, TestContext.Current.CancellationToken);
 
             // Ensure the message was published
-            var evt_context = Assert.IsType<EventContext<TriggerUpdateJobsEvent>>(
+            var evt_context = Assert.IsType<EventContext<RunUpdateJobEvent>>(
                 Assert.Single(await harness.PublishedAsync(cancellationToken: TestContext.Current.CancellationToken)));
             var inner = evt_context.Event;
             Assert.NotNull(inner);

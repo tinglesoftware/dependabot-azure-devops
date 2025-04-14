@@ -1,6 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Runtime.Serialization;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+using Tingle.Extensions.Primitives.Converters;
 
 namespace Tingle.Dependabot.Models.Dependabot;
 
@@ -247,5 +249,40 @@ public class DependabotRegistry
     public string? PublicKeyFingerprint { get; set; }
 }
 
-public enum DependabotScheduleInterval { Daily, Weekly, Monthly, }
-public enum DependabotScheduleDay { Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, }
+[JsonConverter(typeof(JsonStringEnumMemberConverter<DependabotScheduleInterval>))]
+public enum DependabotScheduleInterval
+{
+    [EnumMember(Value = "daily")]
+    Daily,
+
+    [EnumMember(Value = "weekly")]
+    Weekly,
+
+    [EnumMember(Value = "monthly")]
+    Monthly,
+}
+
+[JsonConverter(typeof(JsonStringEnumMemberConverter<DependabotScheduleDay>))]
+public enum DependabotScheduleDay
+{
+    [EnumMember(Value = "sunday")]
+    Sunday,
+
+    [EnumMember(Value = "monday")]
+    Monday,
+
+    [EnumMember(Value = "tuesday")]
+    Tuesday,
+
+    [EnumMember(Value = "wednesday")]
+    Wednesday,
+
+    [EnumMember(Value = "thursday")]
+    Thursday,
+
+    [EnumMember(Value = "friday")]
+    Friday,
+
+    [EnumMember(Value = "saturday")]
+    Saturday,
+}

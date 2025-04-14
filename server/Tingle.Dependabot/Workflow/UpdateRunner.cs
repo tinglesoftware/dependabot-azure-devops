@@ -1,4 +1,4 @@
-﻿using Azure.Identity;
+﻿using System.Formats.Tar;
 using Docker.DotNet;
 using Microsoft.Extensions.Options;
 using Microsoft.FeatureManagement;
@@ -47,6 +47,16 @@ internal partial class UpdateRunner(IFeatureManagerSnapshot featureManager,
         // prepare credentials and job directory
         var credentials = configFilesWriter.MakeCredentials(context);
 
+        // prepare directories and path for artifacts
+        var artifactsDirectory = Path.Join(options.ArtifactsDirectory, job.Id);
+        if (!Directory.Exists(artifactsDirectory)) Directory.CreateDirectory(artifactsDirectory);
+        var logsPath = job.LogsPath = Path.Join(artifactsDirectory, "logs.txt");
+        var flameGraphPath = job.FlameGraphPath = Path.Join(artifactsDirectory, "flamegraph.html");
+        if (File.Exists(logsPath)) File.Delete(logsPath);
+        if (File.Exists(flameGraphPath)) File.Delete(flameGraphPath);
+        var logsStream = File.Open(logsPath, FileMode.OpenOrCreate);
+        using var flameGraphStream = File.Open(flameGraphPath, FileMode.OpenOrCreate);
+
         // write proxy config file
         var proxyDirectory = Path.Join(options.ProxyDirectory, job.Id);
         if (!Directory.Exists(proxyDirectory)) Directory.CreateDirectory(proxyDirectory);
@@ -61,11 +71,11 @@ internal partial class UpdateRunner(IFeatureManagerSnapshot featureManager,
         var mountedProxyConfigSubPath = Path.GetRelativePath(options.ProxyDirectory!, proxyConfigPath);
 
         // write job definition file
-        var jobsDirectory = Path.Join(options.JobsDirectory, job.Id);
-        if (!Directory.Exists(jobsDirectory)) Directory.CreateDirectory(jobsDirectory);
-        var jobDefinitionPath = Path.Join(jobsDirectory, "job.json");
+        var jobDirectory = Path.Join(options.JobsDirectory, job.Id);
+        if (!Directory.Exists(jobDirectory)) Directory.CreateDirectory(jobDirectory);
+        var jobDefinitionPath = Path.Join(jobDirectory, "job.json");
         if (File.Exists(jobDefinitionPath)) File.Delete(jobDefinitionPath);
-        var outputPath = Path.Join(jobsDirectory, "output.json");
+        var outputPath = Path.Join(jobDirectory, "output.json");
         if (File.Exists(outputPath)) File.Delete(outputPath);
 
         var jobConfigContext = new JobConfigContext(context, credentials, debug);
@@ -107,14 +117,13 @@ internal partial class UpdateRunner(IFeatureManagerSnapshot featureManager,
             ["UPDATER_ONE_CONTAINER"] = "true",
             ["UPDATER_DETERMINISTIC"] = "true",
             ["DEPENDABOT_DEBUG"] = debug.ToString().ToLower(),
+            ["FLAMEGRAPH"] = "1",
         };
         var updateEnvNamesForProxyUrl = new List<string> { "http_proxy", "HTTP_PROXY", "https_proxy", "HTTPS_PROXY" };
 
-        // fetch networks (should we cache this ?)
-        var networks = await GetDockerNetworksAsync(cancellationToken);
-        var serverNetwork = networks[DockerNetworkName.Server];
-        var proxyNetwork = networks[DockerNetworkName.Proxy];
-        var jobsNetwork = networks[DockerNetworkName.Jobs];
+        // create temporary networks which we can delete later
+        var internetNetwork = await CreateDockerNetworkAsync(@internal: false, cancellationToken);
+        var noInternetNetwork = await CreateDockerNetworkAsync(@internal: true, cancellationToken);
 
         // find and pull images we need
         job.ProxyImage = await GetImageWithDigestAsync(proxyImage, true, cancellationToken);
@@ -140,9 +149,8 @@ internal partial class UpdateRunner(IFeatureManagerSnapshot featureManager,
             {
                 EndpointsConfig = new Dictionary<string, Docker.DotNet.Models.EndpointSettings>
                 {
-                    [proxyNetwork.Name] = new() { NetworkID = proxyNetwork.Id, }, // where the proxies live
-                    [serverNetwork.Name] = new() { NetworkID = serverNetwork.Id, }, // allow the proxy to reach the API
-                    [jobsNetwork.Name] = new() { NetworkID = jobsNetwork.Id, }, // allow the update job to reach the proxy
+                    [internetNetwork.Name] = new() { NetworkID = internetNetwork.Id, },
+                    [noInternetNetwork.Name] = new() { NetworkID = noInternetNetwork.Id, },
                 }
             },
             Entrypoint = proxyEntrypoint,
@@ -151,7 +159,7 @@ internal partial class UpdateRunner(IFeatureManagerSnapshot featureManager,
 
         // create the proxy container
         var proxyContainer = await dockerClient.Containers.CreateContainerAsync(proxyContainerParams, cancellationToken);
-        logger.CreatedUpdaterProxy(job.Id);
+        logger.CreatedProxyContainer(job.Id);
 
         // // mounting the config.json file is so much gymnastics so we instead just write it into the container
         // using var tarStream = new MemoryStream();
@@ -166,12 +174,14 @@ internal partial class UpdateRunner(IFeatureManagerSnapshot featureManager,
         // tarStream.Seek(0, SeekOrigin.Begin);
         // await dockerClient.Containers.ExtractArchiveToContainerAsync(proxyContainer.ID, new() { Path = "/" }, tarStream, cancellationToken);
 
-        // start the proxy container
-        _ = await dockerClient.Containers.StartContainerAsync(proxyContainer.ID, new(), cancellationToken);
-        logger.StartedUpdaterProxy(job.Id);
+        // start the proxy container with streaming logs
+        await dockerClient.Containers.StartContainerAsync(proxyContainer.ID, new(), cancellationToken);
+        var proxyLogsTask = StreamLogsAsync(proxyContainer.ID, "  proxy | ", logsStream, cancellationToken);
+        logger.StartedProxyContainer(job.Id);
 
-        var proxyInspection = await dockerClient.Containers.InspectContainerAsync(proxyContainer.ID, cancellationToken);
-        var proxyUrl = $"http://{proxyInspection.NetworkSettings.Networks[jobsNetwork.Name].IPAddress}:{ProxyPort}";
+        // find the proxy URL
+        var inspection = await dockerClient.Containers.InspectContainerAsync(proxyContainer.ID, cancellationToken);
+        var proxyUrl = $"http://{inspection.NetworkSettings.Networks[noInternetNetwork.Name].IPAddress}:{ProxyPort}";
 
         // prepare the updater container
         var updaterResources = job.Resources!;
@@ -196,7 +206,7 @@ internal partial class UpdateRunner(IFeatureManagerSnapshot featureManager,
             {
                 EndpointsConfig = new Dictionary<string, Docker.DotNet.Models.EndpointSettings>
                 {
-                    [jobsNetwork.Name] = new() { NetworkID = jobsNetwork.Id, } // where the update jobs live
+                    [noInternetNetwork.Name] = new() { NetworkID = noInternetNetwork.Id, }
                 }
             },
             Cmd = updaterCommand,
@@ -206,103 +216,108 @@ internal partial class UpdateRunner(IFeatureManagerSnapshot featureManager,
 
         // create the updater container
         var updaterContainer = await dockerClient.Containers.CreateContainerAsync(updaterContainerParams, cancellationToken);
-        logger.CreatedUpdaterJob(job.Id);
+        logger.CreatedUpdaterContainer(job.Id);
 
-        // start the updater container
-        _ = await dockerClient.Containers.StartContainerAsync(updaterContainer.ID, new(), cancellationToken);
-        logger.StartedUpdaterJob(job.Id);
+        // start the updater container with streaming logs
+        await dockerClient.Containers.StartContainerAsync(updaterContainer.ID, new(), cancellationToken);
+        var updaterLogsTask = StreamLogsAsync(updaterContainer.ID, "updater | ", logsStream, cancellationToken);
+        logger.StartedUpdaterContainer(job.Id);
 
-        job.Status = UpdateJobStatus.Running;
+        // wait for the updater container to exit, then stop the proxy (if not stopped, logs will not complete collection)
+        await dockerClient.Containers.WaitContainerAsync(updaterContainer.ID, cancellationToken);
+        await dockerClient.Containers.StopContainerAsync(proxyContainer.ID, new() { WaitBeforeKillSeconds = 0 }, cancellationToken);
+
+        // collect the flamegraph
+        await ReadFlameGraphAsync(updaterContainer.ID, flameGraphStream, cancellationToken);
+        await flameGraphStream.FlushAsync(cancellationToken);
+
+        // complete the collection of logs
+        await Task.WhenAll(proxyLogsTask, updaterLogsTask);
+        await logsStream.FlushAsync(cancellationToken);
+
+        // update the job
+        inspection = await dockerClient.Containers.InspectContainerAsync(updaterContainer.ID, cancellationToken);
+        job.Status = inspection.State.ExitCode is 0 ? UpdateJobStatus.Succeeded : UpdateJobStatus.Failed;
+        job.Start = DateTimeOffset.Parse(inspection.State.StartedAt);
+        job.End = DateTimeOffset.Parse(inspection.State.FinishedAt);
+        job.Duration = Convert.ToInt64(Math.Ceiling((job.End - job.Start).Value.TotalMilliseconds));
+        if (update.LatestJobId == job.Id) update.LatestJobStatus = job.Status;
+
+        // delete the containers
+        await dockerClient.Containers.RemoveContainerAsync(updaterContainer.ID, new() { Force = true, }, cancellationToken);
+        await dockerClient.Containers.RemoveContainerAsync(proxyContainer.ID, new() { Force = true, }, cancellationToken);
+
+        // delete created directories
+        if (Directory.Exists(jobDirectory)) Directory.Delete(jobDirectory, recursive: true);
+        if (Directory.Exists(proxyDirectory)) Directory.Delete(proxyDirectory, recursive: true);
+
+        // delete the networks created
+        await dockerClient.Networks.DeleteNetworkAsync(noInternetNetwork.Id, cancellationToken);
+        await dockerClient.Networks.DeleteNetworkAsync(internetNetwork.Id, cancellationToken);
     }
 
-    public async Task DeleteAsync(UpdateJob job, CancellationToken cancellationToken = default)
+    internal async Task StreamLogsAsync(string containerId, string prefix, Stream destination, CancellationToken cancellationToken = default)
     {
-        var resourceName = job.ResourceName;
-
-        // delete the container
-        var containers = await dockerClient.Containers.ListContainersAsync(new() { All = true, }, cancellationToken);
-        var container = containers.FirstOrDefault(c => c.Names.Contains($"/{resourceName}"));
-        if (container is not null)
+        try
         {
-            await dockerClient.Containers.RemoveContainerAsync(container.ID, new() { Force = true, }, cancellationToken);
-        }
-        container = containers.FirstOrDefault(c => c.Names.Contains($"/{job.ResourceNameProxy}"));
-        if (container is not null)
-        {
-            await dockerClient.Containers.RemoveContainerAsync(container.ID, new() { Force = true, }, cancellationToken);
-        }
-    }
+#pragma warning disable CS0618 // Type or member is obsolete
+            using var logStream = await dockerClient.Containers.GetContainerLogsAsync(
+                containerId,
+                new Docker.DotNet.Models.ContainerLogsParameters
+                {
+                    ShowStdout = true,
+                    ShowStderr = true,
+                    Follow = true,
+                    Timestamps = false,
+                },
+                cancellationToken
+            );
+#pragma warning restore CS0618 // Type or member is obsolete
 
-    public async Task<UpdateRunnerState?> GetStateAsync(UpdateJob job, CancellationToken cancellationToken = default)
-    {
-        var resourceName = job.ResourceName;
-
-        var containers = await dockerClient.Containers.ListContainersAsync(new() { All = true, }, cancellationToken);
-        var container = containers.FirstOrDefault(c => c.Names.Contains($"/{resourceName}"));
-        if (container is null) return null;
-
-        var inspection = await dockerClient.Containers.InspectContainerAsync(container.ID, cancellationToken);
-        var status = inspection.State switch
-        {
-            { Running: true } => UpdateJobStatus.Running,
-            { Status: "created" } => UpdateJobStatus.Running,
-            { Status: "exited", ExitCode: 0 } => UpdateJobStatus.Succeeded,
-            { Status: "exited", ExitCode: not 0 } => UpdateJobStatus.Failed,
-            _ => UpdateJobStatus.Failed,
-        };
-
-        // there is no state for jobs that are running
-        if (status is UpdateJobStatus.Running) return null;
-
-        // get the period
-        var start = DateTimeOffset.Parse(inspection.State.StartedAt);
-        var end = DateTimeOffset.Parse(inspection.State.FinishedAt);
-
-        // delete the job directory
-        DeleteJobDirectory(job);
-
-        // create and return state
-        return new UpdateRunnerState(status, start, end);
-    }
-
-    public async Task<string?> GetLogsAsync(UpdateJob job, CancellationToken cancellationToken = default)
-    {
-        var logs = (string?)null;
-        var resourceName = job.ResourceName;
-
-        // pull docker container logs
-        // TODO: find out how we can merge with those for the proxy
-        var containers = await dockerClient.Containers.ListContainersAsync(new() { All = true, }, cancellationToken);
-        var container = containers.FirstOrDefault(c => c.Names.Contains($"/{resourceName}"));
-        if (container is not null)
-        {
-            var logParams = new Docker.DotNet.Models.ContainerLogsParameters
+            using var reader = new StreamReader(logStream);
+            using var writer = new StreamWriter(destination, leaveOpen: true) { AutoFlush = true };
+            string? line;
+            while ((line = await reader.ReadLineAsync(cancellationToken)) != null)
             {
-                ShowStdout = true,
-                ShowStderr = true,
-                Follow = false,
-                Timestamps = false,
-            };
-            using var stream = await dockerClient.Containers.GetContainerLogsAsync(container.ID, tty: true, logParams, cancellationToken);
-            using var stdin = new MemoryStream();
-            using var stdout = new MemoryStream();
-            using var stderr = new MemoryStream();
-
-            await stream.CopyOutputToAsync(stdin, stdout, stderr, cancellationToken);
-            stdout.Seek(0, SeekOrigin.Begin);
-            using var reader = new StreamReader(stdout);
-            logs = await reader.ReadToEndAsync(cancellationToken);
-            if (string.IsNullOrWhiteSpace(logs))
-            {
-                stderr.Seek(0, SeekOrigin.Begin);
-                using var errorReader = new StreamReader(stderr);
-                logs = await errorReader.ReadToEndAsync(cancellationToken);
+                await writer.WriteLineAsync($"{prefix}{line}");
             }
+
         }
-
-        return logs;
+        catch (OperationCanceledException)
+        {
+            // do nothing, we stopped everything
+        }
     }
+    internal async Task ReadFlameGraphAsync(string containerId, Stream destination, CancellationToken cancellationToken = default)
+    {
+        const string fileName = "dependabot-flamegraph.html";
+        var @params = new Docker.DotNet.Models.GetArchiveFromContainerParameters { Path = $"/tmp/{fileName}" };
+        var response = await dockerClient.Containers.GetArchiveFromContainerAsync(containerId, @params, false, cancellationToken);
+        try
+        {
+            using var reader = new TarReader(response.Stream, leaveOpen: true);
+            TarEntry? entry;
+            while ((entry = reader.GetNextEntry()) is not null)
+            {
+                if (entry.EntryType == TarEntryType.RegularFile &&
+                    entry.Name.EndsWith(fileName, StringComparison.OrdinalIgnoreCase))
+                {
+                    // Copy file contents directly to the target stream
+                    await entry.DataStream!.CopyToAsync(destination, cancellationToken);
+                    return;
+                }
+            }
+            throw new FileNotFoundException($"'/tmp/{fileName}' not found in container archive.");
+        }
+        catch (EndOfStreamException) // for some reason it is thrown after the file is already copied
+        {
+            // Safely ignore if the file was already found and copied
+            if (destination.Length > 0)
+                return;
 
+            throw new IOException("Unexpected end of stream while reading archive.");
+        }
+    }
     internal async Task<DockerImage> GetImageWithDigestAsync(string imageName, bool pull, CancellationToken cancellationToken = default)
     {
         var original = (DockerImage)imageName;
@@ -337,41 +352,18 @@ internal partial class UpdateRunner(IFeatureManagerSnapshot featureManager,
         return DockerImage.Parse(image.RepoDigests[0]);
     }
 
-    internal enum DockerNetworkName { Server, Proxy, Jobs } // each should be prefixed with "dependabot_" e.g. "dependabot_jobs"
     internal record DockerNetworkRepresentation(string Name, string Id);
-    internal async Task<Dictionary<DockerNetworkName, DockerNetworkRepresentation>> GetDockerNetworksAsync(CancellationToken cancellationToken = default)
+    internal async Task<DockerNetworkRepresentation> CreateDockerNetworkAsync(bool @internal, CancellationToken cancellationToken = default)
     {
-        var results = new Dictionary<DockerNetworkName, DockerNetworkRepresentation>();
-        var networks = await dockerClient.Networks.ListNetworksAsync(cancellationToken: cancellationToken);
-        foreach (var value in Enum.GetValues<DockerNetworkName>())
+        var parameters = new Docker.DotNet.Models.NetworksCreateParameters
         {
-            var name = $"dependabot_{value.ToString().ToLower()}";
-            var network = networks.FirstOrDefault(n => n.Name == name)
-                ?? throw new InvalidOperationException($"The '{name}' network is missing. Make sure it is setup using compose.");
-
-            results[value] = new DockerNetworkRepresentation(name, network.ID);
-        }
-
-        return results;
-    }
-
-    internal void DeleteJobDirectory(UpdateJob job)
-    {
-        ArgumentNullException.ThrowIfNull(job);
-
-        // delete the directories associated with the job if they exist
-        string[] directories = [
-            Path.Join(options.ProxyDirectory, job.Id),
-            Path.Join(options.JobsDirectory, job.Id),
-        ];
-
-        foreach (var directory in directories)
-        {
-            if (Directory.Exists(directory))
-            {
-                Directory.Delete(directory, recursive: true);
-            }
-        }
+            Name = Keygen.Create(10).ToLowerInvariant(),
+            Driver = "bridge",
+            Internal = @internal,
+        };
+        var network = await dockerClient.Networks.CreateNetworkAsync(parameters, cancellationToken);
+        var inspection = await dockerClient.Networks.InspectNetworkAsync(network.ID, cancellationToken);
+        return new DockerNetworkRepresentation(inspection.Name, network.ID);
     }
 
     internal static TargetingContext MakeTargetingContext(Project project, UpdateJob job)

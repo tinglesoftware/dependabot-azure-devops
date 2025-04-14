@@ -32,7 +32,6 @@ public class AzureDevOpsProvider(HttpClient httpClient, IOptions<WorkflowOptions
     * Pull request property names used to store metadata about the pull request.
     * https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-properties
     */
-    private const string PrPropertyMicrosoftGitSourceRef = "Microsoft.Git.PullRequest.SourceRefName";
     private const string PrPropertyDependabotPackageManager = "Dependabot.PackageManager";
     private const string PrPropertyDependabotDependencies = "Dependabot.Dependencies";
 
@@ -47,8 +46,7 @@ public class AzureDevOpsProvider(HttpClient httpClient, IOptions<WorkflowOptions
             Scheme = url.Scheme,
             Host = url.Hostname,
             Port = url.Port ?? -1,
-            Path = $"{url.OrganizationName}/{url.ProjectIdOrName}/_apis/ConnectionData",
-            Query = "?api-version=7.1",
+            Path = $"{url.OrganizationName}/_apis/connectionData",
         }.Uri;
         var request = new HttpRequestMessage(HttpMethod.Get, uri);
         return await SendAsync(token, request, SC.Default.AzdoConnectionData, cancellationToken);

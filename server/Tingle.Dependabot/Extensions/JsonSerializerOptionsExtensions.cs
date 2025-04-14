@@ -16,7 +16,7 @@ public static class JsonSerializerOptionsExtensions
         options.AllowTrailingCommas = true;
         options.ReadCommentHandling = JsonCommentHandling.Skip;
 
-        options.TypeInfoResolverChain.Add(Tingle.Dependabot.DependabotSerializerContext.Default);
+        options.TypeInfoResolverChain.Insert(0, Tingle.Dependabot.DependabotSerializerContext.Default);
 
         return options;
     }

@@ -46,6 +46,8 @@ public class MainDbContext(DbContextOptions<MainDbContext> options) : DbContext(
             builder.HasIndex(p => p.Created).IsDescending(); // faster filtering
             builder.HasIndex(p => p.ProviderId).IsUnique();
             builder.HasIndex(p => p.Password).IsUnique(); // password should be unique per project
+
+            builder.HasMany<Repository>().WithOne().HasForeignKey(uc => uc.ProjectId).IsRequired();
         });
 
         modelBuilder.Entity<Repository>(builder =>

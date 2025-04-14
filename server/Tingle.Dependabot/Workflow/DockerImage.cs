@@ -90,7 +90,7 @@ public readonly struct DockerImage(string repository, string? tag, string? diges
             }
 
             var str = reader.GetString();
-            return DockerImage.Parse(str!);
+            return Parse(str!);
         }
 
         public override void Write(Utf8JsonWriter writer, DockerImage value, JsonSerializerOptions options)

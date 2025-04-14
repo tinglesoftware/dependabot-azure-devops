@@ -10,7 +10,7 @@ namespace Tingle.Dependabot.Models.Management;
 
 // This class independent of one-to-many relationships for detached and prolonged tracking.
 // The records are cleaned up on a schedule.
-public class UpdateJob
+public class UpdateJob : IProtectable
 {
     [Key, MaxLength(50)]
     public string? Id { get; set; }
@@ -25,15 +25,14 @@ public class UpdateJob
 
     /// <summary>Identifier of the project.</summary>
     [JsonIgnore] // only for internal use
-    public required string ProjectId { get; set; }
+    public string ProjectId { get; set; } = default!; // marking required does not play well with JsonIgnore
 
     /// <summary>Identifier of the repository.</summary>
     [JsonIgnore] // only for internal use
-    public required string RepositoryId { get; set; }
+    public string RepositoryId { get; set; } = default!; // marking required does not play well with JsonIgnore
 
     /// <summary>Slug of the repository.</summary>
     [Required]
-    [JsonIgnore] // only for internal use
     public string? RepositorySlug { get; set; }
 
     /// <summary>Identifier of the event on the EventBus, if any.</summary>
@@ -48,7 +47,6 @@ public class UpdateJob
     public string? Commit { get; set; }
 
     /// <summary>Ecosystem for the update.</summary>
-    [JsonIgnore] // only for internal use
     public required string PackageEcosystem { get; set; }
 
     /// <summary>Directory targeted by the repository update.</summary>
@@ -70,7 +68,6 @@ public class UpdateJob
     /// Authorization key for the job.
     /// Used by the updater to make API calls.
     /// </summary>
-    [JsonIgnore] // only for internal use
     public required string AuthKey { get; set; }
 
     /// <summary>When the job started.</summary>
@@ -82,9 +79,13 @@ public class UpdateJob
     /// <summary>Duration in milliseconds.</summary>
     public long? Duration { get; set; }
 
-    /// <summary>Detailed log output.</summary>
-    [JsonIgnore]
-    public string? Log { get; set; }
+    /// <summary>Path containing the collected.</summary>
+    [JsonIgnore] // only for internal use
+    public string? LogsPath { get; set; }
+
+    /// <summary>Path for the FlameGraph file.</summary>
+    [JsonIgnore] // only for internal use
+    public string? FlameGraphPath { get; set; }
 
     /// <summary>Error recorded by the job, if any.</summary>
     public UpdateJobError? Error { get; set; }
@@ -94,6 +95,18 @@ public class UpdateJob
 
     public string ResourceName => $"dependabot-{Id}";
     public string ResourceNameProxy => $"{ResourceName}-proxy";
+
+    public void DeleteFiles()
+    {
+        string?[] files = [LogsPath, FlameGraphPath];
+        foreach (var f in files)
+            if (f is not null && File.Exists(f)) File.Delete(f);
+    }
+
+    public void Protect()
+    {
+        AuthKey = AuthKey.Protect();
+    }
 }
 
 public class UpdateJobError
@@ -105,22 +118,30 @@ public class UpdateJobError
 [JsonConverter(typeof(JsonStringEnumMemberConverter<UpdateJobTrigger>))]
 public enum UpdateJobTrigger
 {
+    [EnumMember(Value = "scheduled")]
     Scheduled = 0,
 
     [EnumMember(Value = "missed_schedule")]
     MissedSchedule = 1,
 
+    [EnumMember(Value = "synchronization")]
     Synchronization = 2,
 
+    [EnumMember(Value = "manual")]
     Manual = 3,
 }
 
+[JsonConverter(typeof(JsonStringEnumMemberConverter<UpdateJobStatus>))]
 public enum UpdateJobStatus
 {
-    Scheduled = 0,
-    Running = 1,
-    Succeeded = 2,
-    Failed = 3,
+    [EnumMember(Value = "running")]
+    Running = 0,
+
+    [EnumMember(Value = "succeeded")]
+    Succeeded = 1,
+
+    [EnumMember(Value = "failed")]
+    Failed = 2,
 }
 
 public class UpdateJobResources

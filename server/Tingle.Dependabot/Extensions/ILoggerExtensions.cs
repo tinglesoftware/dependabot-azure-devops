@@ -82,17 +82,17 @@ internal static partial class ILoggerExtensions
     [LoggerMessage(501, LogLevel.Information, "Written proxy config file for {UpdateJobId} at {ProxyConfigPath}")]
     public static partial void WrittenProxyConfigFile(this ILogger logger, string? updateJobId, string? proxyConfigPath);
 
-    [LoggerMessage(502, LogLevel.Information, "Created Updater Proxy for {UpdateJobId}")]
-    public static partial void CreatedUpdaterProxy(this ILogger logger, string? updateJobId);
+    [LoggerMessage(502, LogLevel.Information, "Created Proxy container for {UpdateJobId}")]
+    public static partial void CreatedProxyContainer(this ILogger logger, string? updateJobId);
 
-    [LoggerMessage(503, LogLevel.Information, "Started Updater Proxy for {UpdateJobId}")]
-    public static partial void StartedUpdaterProxy(this ILogger logger, string? updateJobId);
+    [LoggerMessage(503, LogLevel.Information, "Started Proxy container for {UpdateJobId}")]
+    public static partial void StartedProxyContainer(this ILogger logger, string? updateJobId);
 
-    [LoggerMessage(504, LogLevel.Information, "Created Updater Job for {UpdateJobId}")]
-    public static partial void CreatedUpdaterJob(this ILogger logger, string? updateJobId);
+    [LoggerMessage(504, LogLevel.Information, "Created Updater container for {UpdateJobId}")]
+    public static partial void CreatedUpdaterContainer(this ILogger logger, string? updateJobId);
 
-    [LoggerMessage(505, LogLevel.Information, "Started Updater Job for {UpdateJobId}")]
-    public static partial void StartedUpdaterJob(this ILogger logger, string? updateJobId);
+    [LoggerMessage(505, LogLevel.Information, "Started Updater container for {UpdateJobId}")]
+    public static partial void StartedUpdaterContainer(this ILogger logger, string? updateJobId);
 
     #endregion
 
@@ -104,22 +104,10 @@ internal static partial class ILoggerExtensions
     [LoggerMessage(601, LogLevel.Warning, "Cannot update state for job '{UpdateJobId}' as it is already in a terminal state.")]
     public static partial void UpdateJobCannotUpdateStateTerminalState(this ILogger logger, string? updateJobId);
 
-    [LoggerMessage(602, LogLevel.Information, "The runner did not provide a state for job '{UpdateJobId}'.")]
-    public static partial void UpdateJobRunnerNoState(this ILogger logger, string? updateJobId);
+    [LoggerMessage(602, LogLevel.Information, "Removed {UpdateJobsCount} jobs stale since {Cutoff}")]
+    public static partial void UpdateJobRemovedStaleJobs(this ILogger logger, int updateJobsCount, DateTimeOffset cutoff);
 
-    [LoggerMessage(603, LogLevel.Warning, "Deleting job '{UpdateJobId}' as it has been pending for more than 90 minutes.")]
-    public static partial void UpdateJobPendingTooLong(this ILogger logger, string? updateJobId);
-
-    [LoggerMessage(604, LogLevel.Warning, "Cannot collect logs for job '{UpdateJobId}' as it does not exist.")]
-    public static partial void UpdateJobCannotCollectLogsNotFound(this ILogger logger, string? updateJobId);
-
-    [LoggerMessage(605, LogLevel.Warning, "Cannot collect logs for job '{UpdateJobId}' with status '{UpdateJobStatus}'.")]
-    public static partial void UpdateJobCannotCollectLogsInvalidStatus(this ILogger logger, string? updateJobId, UpdateJobStatus updateJobStatus);
-
-    [LoggerMessage(606, LogLevel.Information, "Found {UpdateJobsCount} jobs that are still pending for more than 10 min. Requesting manual resolution ...")]
-    public static partial void UpdateJobRequestingManualResolution(this ILogger logger, int updateJobsCount);
-
-    [LoggerMessage(607, LogLevel.Information, "Removed {UpdateJobsCount} jobs that older than {Cutoff}")]
+    [LoggerMessage(603, LogLevel.Information, "Removed {UpdateJobsCount} jobs that older than {Cutoff}")]
     public static partial void UpdateJobRemovedOldJobs(this ILogger logger, int updateJobsCount, DateTimeOffset cutoff);
 
     #endregion

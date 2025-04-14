@@ -69,9 +69,8 @@ internal partial class ConfigFilesWriter(CertificateManager certificateManager,
             RejectExternalCode: string.Equals(update.InsecureExternalCodeExecution, "deny"),
             RepoPrivate: null, // TODO: add config for this?
             CommitMessageOptions: MapCommitMessage(update.CommitMessage),
-            // credentials do not go to the updater, just the metadata
-            CredentialsMetadata: credentialsMetadata
-        // MaxUpdaterRunTime: 2700
+            CredentialsMetadata: credentialsMetadata, // credentials do not go to the updater, just the metadata
+            MaxUpdaterRunTime: 2700
         );
 
         // serialize the job config

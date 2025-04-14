@@ -157,11 +157,11 @@ export function buildUpdateJobConfig(
       'vendor-dependencies': update.vendor,
       'debug': taskInputs.debug,
       'update-subdependencies': false, // usually added by dependabot-cli (but for consistency with server it is added here)
+      'max-updater-run-time': 2700,
 
       // TODO: Investigate if these options are needed or are now obsolete.
       //       These options don't appear to be used by dependabot-core yet/anymore,
       //       but do appear in GitHub Dependabot job logs seen in the wild.
-      //'max-updater-run-time': 2700,
       //'proxy-log-response-body-on-auth-failure': true,
     },
     credentials: mapRegistryCredentialsFromDependabotConfigToJobConfig(taskInputs, registries),

@@ -1,11 +1,13 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 using Tingle.Dependabot.Workflow;
 using Tingle.Extensions.Primitives;
+using Tingle.Extensions.Primitives.Converters;
 
 namespace Tingle.Dependabot.Models.Management;
 
-public class Project
+public class Project : IProtectable
 {
     [Key, MaxLength(50)]
     public required string Id { get; set; }
@@ -28,7 +30,7 @@ public class Project
 
     /// <summary>Identifier of the repository as per provider.</summary>
     [JsonIgnore] // only for internal use
-    public required string ProviderId { get; set; }
+    public string ProviderId { get; set; } = default!; // marking required does not play well with JsonIgnore
 
     /// <summary>URL for the project.</summary>
     /// <example>https://dev.azure.com/tingle/dependabot</example>
@@ -38,14 +40,13 @@ public class Project
     /// <summary>
     /// Token for accessing the project with permissions for repositories, pull requests, and service hooks.
     /// </summary>
-    [JsonIgnore] // expose this once we know how to protect the values
     public required string Token { get; set; }
 
     /// <summary>
     /// User identifier for the provided token.
     /// </summary>
     [JsonIgnore] // only for internal use
-    public required string UserId { get; set; }
+    public string UserId { get; set; } = default!; // marking required does not play well with JsonIgnore
 
     /// <summary>Whether the project is private.</summary>
     public bool Private { get; set; }
@@ -63,7 +64,6 @@ public class Project
     /// <summary>
     /// Secrets that can be replaced in the registries section of the dependabot configuration file.
     /// </summary>
-    [JsonIgnore] // expose this once we know how to protect the values
     public Dictionary<string, string> Secrets { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
@@ -79,21 +79,26 @@ public class Project
     /// When provided, it must have <c>read</c> access to public repositories.
     /// </summary>
     /// <example>ghp_1234567890</example>
-    [JsonIgnore] // expose this once we know how to protect the values
     public string? GithubToken { get; set; }
 
     /// <summary>Location/region where to create update jobs.</summary>
     /// <example>westeurope</example>
     public string? Location { get; set; }
 
-    [JsonIgnore] // only for internal use
-    public List<Repository> Repositories { get; set; } = [];
-
     /// <summary>Time at which the synchronization was last done for the project.</summary>
     public DateTimeOffset? Synchronized { get; set; }
 
     [Timestamp]
     public Etag? Etag { get; set; } // TODO: remove nullability once we reset the migrations
+
+    /// <inheritdoc/>
+    public void Protect()
+    {
+        Token = Token.Protect();
+        GithubToken = GithubToken?.Protect();
+        Password = Password.Protect();
+        Secrets = Secrets.ToDictionary(p => p.Key, p => p.Key.Protect());
+    }
 }
 
 public class ProjectAutoComplete
@@ -114,7 +119,14 @@ public class ProjectAutoApprove
     public bool Enabled { get; set; }
 }
 
+[JsonConverter(typeof(JsonStringEnumMemberConverter<ProjectType>))]
 public enum ProjectType
 {
+    [EnumMember(Value = "azure")]
     Azure,
+}
+
+public interface IProtectable
+{
+    void Protect();
 }

@@ -30,7 +30,7 @@ internal class Synchronizer(MainDbContext dbContext, AzureDevOpsProvider adoProv
 
         // update the project (it may have changed name or visibility)
         var tp = await adoProvider.GetProjectAsync(project, cancellationToken);
-        var @private = tp.Visibility is not Models.Azure.AzdoProjectVisibility.Public;
+        var @private = tp.Visibility is not AzdoProjectVisibility.Public;
         if (!string.Equals(project.Name, tp.Name, StringComparison.Ordinal)
             || !string.Equals(project.Description, tp.Description, StringComparison.Ordinal)
             || @private != project.Private)
@@ -262,15 +262,16 @@ internal class Synchronizer(MainDbContext dbContext, AzureDevOpsProvider adoProv
 
             if (trigger)
             {
-                // trigger update jobs for the whole repository
-                var evt = new TriggerUpdateJobsEvent
+                // publish events to run update jobs for the whole repository
+                var evts = repository.Updates.Select((update, index) => new RunUpdateJobEvent
                 {
                     ProjectId = project.Id,
                     RepositoryId = repository.Id,
-                    RepositoryUpdateId = null, // run all
+                    RepositoryUpdateId = index,
                     Trigger = UpdateJobTrigger.Synchronization,
-                };
-                await publisher.PublishAsync(evt, cancellationToken: cancellationToken);
+                }).ToList();
+
+                await publisher.PublishAsync<RunUpdateJobEvent>(evts, cancellationToken: cancellationToken);
             }
         }
     }

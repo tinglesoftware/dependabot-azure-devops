@@ -16,7 +16,7 @@ public class Repository
 
     /// <summary>Identifier of the project.</summary>
     [JsonIgnore] // only for internal use
-    public required string ProjectId { get; set; }
+    public string ProjectId { get; set; } = default!; // marking required does not play well with JsonIgnore
 
     /// <summary>Name of the repository as per provider.</summary>
     public string? Name { get; set; }
@@ -27,7 +27,7 @@ public class Repository
 
     /// <summary>Identifier of the repository as per provider.</summary>
     [JsonIgnore] // only for internal use
-    public required string ProviderId { get; set; }
+    public string ProviderId { get; set; } = default!; // marking required does not play well with JsonIgnore
 
     /// <summary>
     /// Latest commit SHA synchronized for the configuration file.

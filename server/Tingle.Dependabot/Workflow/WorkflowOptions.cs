@@ -41,6 +41,13 @@ public class WorkflowOptions
     public string? UpdaterImageTag { get; set; } = "latest";
 
     /// <summary>
+    /// Directory where job artifacts are stored (logs, etc).
+    /// The files stored here live as long as the relevant update job lives.
+    /// </summary>
+    /// <example>/mnt/dependabot/store</example>
+    public string? ArtifactsDirectory { get; set; }
+
+    /// <summary>
     /// Directory where certificate files are stored.
     /// </summary>
     /// <example>/mnt/dependabot/certs</example>
@@ -126,31 +133,15 @@ internal class WorkflowConfigureOptions : IPostConfigureOptions<WorkflowOptions>
 {
     public void PostConfigure(string? name, WorkflowOptions options)
     {
+        static string? MakeRooted(string? input)
+            => !Path.IsPathRooted(input) && !string.IsNullOrWhiteSpace(input) ? Path.Combine(Directory.GetCurrentDirectory(), input) : input;
+
         if (!options.IsInContainer)
         {
-            if (!string.IsNullOrWhiteSpace(options.CertsDirectory))
-            {
-                if (!Path.IsPathRooted(options.CertsDirectory))
-                {
-                    options.CertsDirectory = Path.Combine(Directory.GetCurrentDirectory(), options.CertsDirectory);
-                }
-            }
-
-            if (!string.IsNullOrWhiteSpace(options.ProxyDirectory))
-            {
-                if (!Path.IsPathRooted(options.ProxyDirectory))
-                {
-                    options.ProxyDirectory = Path.Combine(Directory.GetCurrentDirectory(), options.ProxyDirectory);
-                }
-            }
-
-            if (!string.IsNullOrWhiteSpace(options.JobsDirectory))
-            {
-                if (!Path.IsPathRooted(options.JobsDirectory))
-                {
-                    options.JobsDirectory = Path.Combine(Directory.GetCurrentDirectory(), options.JobsDirectory);
-                }
-            }
+            options.ArtifactsDirectory = MakeRooted(options.ArtifactsDirectory);
+            options.CertsDirectory = MakeRooted(options.CertsDirectory);
+            options.ProxyDirectory = MakeRooted(options.ProxyDirectory);
+            options.JobsDirectory = MakeRooted(options.JobsDirectory);
         }
     }
 

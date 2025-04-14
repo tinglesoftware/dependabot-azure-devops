@@ -2,18 +2,16 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
-using Tingle.Dependabot.Events;
 using Tingle.Dependabot.Models;
 using Tingle.Dependabot.Models.Dependabot;
 using Tingle.Dependabot.Models.Management;
-using Tingle.EventBus;
 
 namespace Tingle.Dependabot.Controllers;
 
 [ApiController]
 [Route("update_jobs")]
 [Authorize(AuthConstants.PolicyNameUpdater)]
-public class UpdateJobsController(MainDbContext dbContext, IEventPublisher publisher, ILogger<UpdateJobsController> logger) : ControllerBase // TODO: unit and integration test this
+public class UpdateJobsController(MainDbContext dbContext, ILogger<UpdateJobsController> logger) : ControllerBase // TODO: unit and integration test this
 {
     // TODO: implement logic for *pull_request endpoints
 
@@ -77,18 +75,7 @@ public class UpdateJobsController(MainDbContext dbContext, IEventPublisher publi
     }
 
     [HttpPatch("{id}/mark_as_processed")]
-    public async Task<IActionResult> MarkAsProcessedAsync([FromRoute] string id, [FromBody] DependabotRequest<DependabotMarkAsProcessed> model)
-    {
-        var (_, _, job, _) = await GetEntitiesAsync(id);
-
-        // the update jobs needs sometime to exit after calling this endpoint, usually up to 1 minute
-        // we publish an event in the future that will run update the job and collect logs
-        var evt = new UpdateJobCheckStateEvent { JobId = job.Id, };
-        var scheduleTime = DateTimeOffset.UtcNow.AddMinutes(1.5f);
-        await publisher.PublishAsync(evt, scheduleTime);
-
-        return Ok();
-    }
+    public IActionResult MarkAsProcessedAsync([FromRoute] string id, [FromBody] DependabotRequest<DependabotMarkAsProcessed> model) => Ok();
 
     [HttpPost("{id}/update_dependency_list")]
     public async Task<IActionResult> UpdateDependencyListAsync([FromRoute] string id, [FromBody] DependabotRequest<DependabotUpdateDependencyList> model)
@@ -106,20 +93,10 @@ public class UpdateJobsController(MainDbContext dbContext, IEventPublisher publi
     }
 
     [HttpPost("{id}/record_ecosystem_versions")]
-    public async Task<IActionResult> RecordEcosystemVersionsAsync([FromRoute] string id, [FromBody] DependabotRequest<DependabotRecordEcosystemVersions> model)
-    {
-        var (_, _, job, _) = await GetEntitiesAsync(id);
-        logger.LogInformation("Received request to record ecosystem version from job {JobId} but we did nothing.\r\n{ModelJson}", job.Id, JsonSerializer.Serialize(model));
-        return Ok();
-    }
+    public IActionResult RecordEcosystemVersionsAsync([FromRoute] string id, [FromBody] DependabotRequest<DependabotRecordEcosystemVersions> model) => Ok();
 
     [HttpPost("{id}/increment_metric")]
-    public async Task<IActionResult> IncrementMetricAsync([FromRoute] string id, [FromBody] DependabotRequest<DependabotIncrementMetric> model)
-    {
-        var (_, _, job, _) = await GetEntitiesAsync(id);
-        logger.LogInformation("Received metrics from job {JobId} but we did nothing with them.\r\n{ModelJson}", job.Id, JsonSerializer.Serialize(model));
-        return Ok();
-    }
+    public IActionResult IncrementMetricAsync([FromRoute] string id, [FromBody] DependabotRequest<DependabotIncrementMetric> model) => Ok();
 
     private record Entities(Project Project, Repository Repository, UpdateJob Job, RepositoryUpdate? update);
     private async Task<Entities> GetEntitiesAsync(string id, CancellationToken cancellationToken = default)

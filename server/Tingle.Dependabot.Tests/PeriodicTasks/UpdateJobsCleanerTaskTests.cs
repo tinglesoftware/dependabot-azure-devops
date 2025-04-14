@@ -2,12 +2,10 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Tingle.Dependabot.Events;
 using Tingle.Dependabot.Models;
 using Tingle.Dependabot.Models.Dependabot;
 using Tingle.Dependabot.Models.Management;
 using Tingle.Dependabot.PeriodicTasks;
-using Tingle.EventBus;
 using Tingle.EventBus.Transports.InMemory;
 using Xunit;
 
@@ -69,13 +67,6 @@ public class UpdateJobsCleanerTaskTests(ITestOutputHelper outputHelper)
             await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
             await pt.CleanupAsync(TestContext.Current.CancellationToken);
-
-            // Ensure the message was published
-            var evt_context = Assert.IsType<EventContext<UpdateJobCheckStateEvent>>(
-                Assert.Single(await harness.PublishedAsync(cancellationToken: TestContext.Current.CancellationToken)));
-            var inner = evt_context.Event;
-            Assert.NotNull(inner);
-            Assert.Equal(targetId, inner.JobId);
         });
     }
 

@@ -92,15 +92,33 @@ builder.Services.AddEventBus(builder =>
     // Setup consumers
     builder.AddConsumer<ProcessSynchronizationConsumer>();
     builder.AddConsumer<RepositoryEventsConsumer>();
-    builder.AddConsumer<TriggerUpdateJobsEventConsumer>();
-    builder.AddConsumer<UpdateJobEventsConsumer>();
+    builder.AddConsumer<RunUpdateJobEventConsumer>();
 
     // Setup transports
     var credential = new Azure.Identity.DefaultAzureCredential();
     if (selectedTransport is EventBusTransportKind.ServiceBus)
     {
-        builder.AddAzureServiceBusTransport(
-            options => ((AzureServiceBusTransportCredentials)options.Credentials).TokenCredential = credential);
+        builder.AddAzureServiceBusTransport(options =>
+        {
+            ((AzureServiceBusTransportCredentials)options.Credentials).TokenCredential = credential;
+
+            options.SetupQueueOptions = (reg, opt) =>
+            {
+                if (reg.EventType == typeof(Tingle.Dependabot.Events.RunUpdateJobEvent))
+                {
+                    // an update job can run for up to 2700 seconds (add 2 minutes afterwards)
+                    opt.LockDuration = TimeSpan.FromSeconds(2700) + TimeSpan.FromMinutes(2);
+                }
+            };
+            options.SetupProcessorOptions = (reg, _, opt) =>
+            {
+                if (reg.EventType == typeof(Tingle.Dependabot.Events.RunUpdateJobEvent))
+                {
+                    opt.MaxAutoLockRenewalDuration = Timeout.InfiniteTimeSpan; // needs to be longer than LockDuration
+                    opt.MaxConcurrentCalls = 20; // run up to 20 update jobs concurrently (this should be configurable)
+                }
+            };
+        });
     }
     else if (selectedTransport is EventBusTransportKind.InMemory)
     {

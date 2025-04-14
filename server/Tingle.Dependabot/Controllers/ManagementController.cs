@@ -29,7 +29,7 @@ public class ManagementController(MainDbContext dbContext, IEventPublisher publi
         return Ok();
     }
 
-    [HttpPost("/webhooks/register")]
+    [HttpPost("webhooks/register")]
     public async Task<IActionResult> WebhooksRegisterAsync()
     {
         // ensure project exists
@@ -45,6 +45,7 @@ public class ManagementController(MainDbContext dbContext, IEventPublisher publi
     public async Task<IActionResult> GetProjectsAsync()
     {
         var projects = await dbContext.Projects.ToListAsync();
+        projects.ForEach(p => p.Protect());
         return Ok(projects);
     }
 
@@ -122,14 +123,17 @@ public class ManagementController(MainDbContext dbContext, IEventPublisher publi
         var job = await dbContext.UpdateJobs.Where(j => j.RepositoryId == repository.Id && j.Id == jobId).SingleOrDefaultAsync();
         if (job is null) return Problem(title: ErrorCodes.UpdateJobNotFound, statusCode: 400);
 
+        // delete associated files
+        job.DeleteFiles();
+
         // delete the job
         dbContext.UpdateJobs.Remove(job);
         await dbContext.SaveChangesAsync();
         return Ok();
     }
 
-    [HttpGet("repos/{id}/jobs/{jobId}/log")]
-    public async Task<IActionResult> GetJobLogAsync([FromRoute] string id, [FromRoute] string jobId)
+    [HttpGet("repos/{id}/jobs/{jobId}/logs")]
+    public async Task<IActionResult> GetJobLogsAsync([FromRoute] string id, [FromRoute] string jobId)
     {
         // ensure project exists
         var projectId = HttpContext.GetProjectId() ?? throw new InvalidOperationException("Project identifier must be provided");
@@ -144,7 +148,32 @@ public class ManagementController(MainDbContext dbContext, IEventPublisher publi
         var job = await dbContext.UpdateJobs.Where(j => j.RepositoryId == repository.Id && j.Id == jobId).SingleOrDefaultAsync();
         if (job is null) return Problem(title: ErrorCodes.UpdateJobNotFound, statusCode: 400);
 
-        return Ok(job.Log);
+        // read the file and respond with it
+        if (job.LogsPath is null) return NoContent();
+        var contents = await System.IO.File.ReadAllTextAsync(job.LogsPath);
+        return Content(contents, System.Net.Mime.MediaTypeNames.Text.Plain);
+    }
+
+    [HttpGet("repos/{id}/jobs/{jobId}/flamegraph")]
+    public async Task<IActionResult> GetJobFlameGraphAsync([FromRoute] string id, [FromRoute] string jobId)
+    {
+        // ensure project exists
+        var projectId = HttpContext.GetProjectId() ?? throw new InvalidOperationException("Project identifier must be provided");
+        var project = await dbContext.Projects.SingleOrDefaultAsync(p => p.Id == projectId);
+        if (project is null) return Problem(title: ErrorCodes.ProjectNotFound, statusCode: 400);
+
+        // ensure repository exists
+        var repository = await dbContext.Repositories.SingleOrDefaultAsync(r => r.ProjectId == project.Id && r.Id == id);
+        if (repository is null) return Problem(title: ErrorCodes.RepositoryNotFound, statusCode: 400);
+
+        // ensure job exists
+        var job = await dbContext.UpdateJobs.Where(j => j.RepositoryId == repository.Id && j.Id == jobId).SingleOrDefaultAsync();
+        if (job is null) return Problem(title: ErrorCodes.UpdateJobNotFound, statusCode: 400);
+
+        // read the file and respond with it
+        if (job.FlameGraphPath is null) return NoContent();
+        var contents = await System.IO.File.ReadAllTextAsync(job.FlameGraphPath);
+        return Content(contents, System.Net.Mime.MediaTypeNames.Text.Html);
     }
 
     [HttpPost("repos/{id}/sync")]
@@ -182,8 +211,8 @@ public class ManagementController(MainDbContext dbContext, IEventPublisher publi
         var update = repository.Updates.ElementAtOrDefault(model.Id);
         if (update is null) return Problem(title: ErrorCodes.RepositoryUpdateNotFound, statusCode: 400);
 
-        // trigger update for specific update
-        var evt = new TriggerUpdateJobsEvent
+        // publish event to run the job
+        var evt = new RunUpdateJobEvent
         {
             ProjectId = project.Id,
             RepositoryId = repository.Id,

@@ -78,8 +78,8 @@ internal class UpdateScheduler
             return;
         }
 
-        // publish event for the job to be run
-        var evt = new TriggerUpdateJobsEvent
+        // publish event to run the job
+        var evt = new RunUpdateJobEvent
         {
             ProjectId = payload.ProjectId,
             RepositoryId = payload.RepositoryId,

@@ -109,13 +109,13 @@ internal class InitialSetupService(IServiceScopeFactory serviceScopeFactory,
                 };
                 project.AutoApprove = new Models.Management.ProjectAutoApprove { Enabled = setup.AutoApprove, };
                 project.Secrets = setup.Secrets;
-            }
 
-            // if there are changes, set the Updated field
-            if (context.ChangeTracker.HasChanges())
-            {
-                project.Updated = DateTimeOffset.UtcNow;
-                logger.LogInformation("Project {Url} updated", url);
+                // if there are changes, set the Updated field
+                if (context.Entry(project).State == EntityState.Modified)
+                {
+                    project.Updated = DateTimeOffset.UtcNow;
+                    logger.LogInformation("Project {Url} updated", url);
+                }
             }
         }
 
