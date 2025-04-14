@@ -76,16 +76,6 @@ public class WorkflowOptions
     public string? JobsDirectory { get; set; }
 
     /// <summary>
-    /// Token for accessing GitHub APIs.
-    /// If no value is provided, calls to GitHub are not authenticated.
-    /// Providing a value avoids being rate limited in case when there
-    /// are many upgrades at the same time from the same IP.
-    /// When provided, it must have <c>read</c> access to public repositories.
-    /// </summary>
-    /// <example>ghp_1234567890</example>
-    public string? GithubToken { get; set; }
-
-    /// <summary>
     /// The default experiments known to be used by the GitHub Dependabot service.
     /// This changes often, update as needed by extracting them from a Dependabot GitHub Action run.
     ///  e.g. https://github.com/tinglesoftware/dependabot-azure-devops/actions/workflows/dependabot/dependabot-updates

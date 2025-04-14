@@ -73,7 +73,7 @@ public class Project : IProtectable
 
     /// <summary>
     /// Token for accessing GitHub APIs.
-    /// If no value is provided, a default token is used.
+    /// This is necessary for getting changelogs, commits, etc for dependencies.
     /// Providing a value avoids being rate limited in case when there
     /// are many calls at the same time from the same IP.
     /// When provided, it must have <c>read</c> access to public repositories.

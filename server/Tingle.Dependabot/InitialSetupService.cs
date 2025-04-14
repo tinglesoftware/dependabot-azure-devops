@@ -27,6 +27,7 @@ internal class InitialSetupService(IServiceScopeFactory serviceScopeFactory,
         public List<int>? AutoCompleteIgnoreConfigs { get; set; }
         public MergeStrategy? AutoCompleteMergeStrategy { get; set; }
         public bool AutoApprove { get; set; }
+        public string? GithubToken { get; set; }
         public Dictionary<string, string> Secrets { get; set; } = new(StringComparer.OrdinalIgnoreCase);
     }
 
@@ -87,6 +88,7 @@ internal class InitialSetupService(IServiceScopeFactory serviceScopeFactory,
                         MergeStrategy = setup.AutoCompleteMergeStrategy,
                     },
                     Secrets = setup.Secrets,
+                    GithubToken = setup.GithubToken,
                 };
                 logger.LogInformation("Adding new project to database: {Url}", url);
                 await context.Projects.AddAsync(project, cancellationToken);
@@ -109,9 +111,10 @@ internal class InitialSetupService(IServiceScopeFactory serviceScopeFactory,
                 };
                 project.AutoApprove = new Models.Management.ProjectAutoApprove { Enabled = setup.AutoApprove, };
                 project.Secrets = setup.Secrets;
+                project.GithubToken = setup.GithubToken;
 
                 // if there are changes, set the Updated field
-                if (context.Entry(project).State == EntityState.Modified)
+                if (context.Entry(project).State is EntityState.Modified)
                 {
                     project.Updated = DateTimeOffset.UtcNow;
                     logger.LogInformation("Project {Url} updated", url);

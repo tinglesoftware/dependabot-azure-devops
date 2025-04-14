@@ -100,7 +100,7 @@ internal partial class ConfigFilesWriter(CertificateManager certificateManager,
         var project = context.Project;
         var secrets = new Dictionary<string, string>(project.Secrets) { ["DEFAULT_TOKEN"] = project.Token, };
         var registries = context.Update.Registries?.Select(r => context.Repository.Registries[r]).ToList() ?? [];
-        return MakeCredentials(registries, secrets, project, options.GithubToken);
+        return MakeCredentials(registries, secrets, project);
     }
 
     internal static IReadOnlyList<DependabotCredential> MakeCredentialsMetadata(IReadOnlyList<DependabotCredential> credentials)
@@ -118,7 +118,7 @@ internal partial class ConfigFilesWriter(CertificateManager certificateManager,
 
         return metadata;
     }
-    internal static IReadOnlyList<DependabotCredential> MakeCredentials(IReadOnlyCollection<DependabotRegistry> registries, IReadOnlyDictionary<string, string> secrets, Project project, string? githubToken)
+    internal static IReadOnlyList<DependabotCredential> MakeCredentials(IReadOnlyCollection<DependabotRegistry> registries, IReadOnlyDictionary<string, string> secrets, Project project)
     {
         var credentials = new List<DependabotCredential>()
         {
@@ -131,6 +131,7 @@ internal partial class ConfigFilesWriter(CertificateManager certificateManager,
             },
         };
 
+        var githubToken = project.GithubToken;
         if (!string.IsNullOrWhiteSpace(githubToken))
         {
             credentials.Add(new DependabotCredential
