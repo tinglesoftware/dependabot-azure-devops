@@ -10,8 +10,6 @@ internal partial class UpdateRunner(ConfigFilesWriter configFilesWriter,
                                     IOptions<WorkflowOptions> optionsAccessor,
                                     ILogger<UpdateRunner> logger)
 {
-    private const string ContainerNameProxy = "proxy";
-    private const string ContainerNameUpdater = "updater";
     private const string VolumeNameCerts = "certs";
     private const string VolumeNameJobs = "jobs";
     private const string VolumeNameProxy = "proxy";

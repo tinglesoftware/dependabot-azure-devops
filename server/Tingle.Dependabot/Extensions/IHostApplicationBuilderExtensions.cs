@@ -52,7 +52,6 @@ internal static class IHostApplicationBuilderExtensions
         otel.WithTracing(tracing =>
         {
             tracing.AddSource([
-                "Azure.*",
                 "Tingle.EventBus",
                 "Tingle.PeriodicTasks",
             ]);
