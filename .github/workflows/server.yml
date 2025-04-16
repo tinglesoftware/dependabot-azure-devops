@@ -28,13 +28,14 @@ env:
   GITHUB_SHA: ${{ github.sha }} # not discovered by default
   GITHUB_REF_NAME: ${{ github.ref_name }} # not discovered by default
 
+  DOCKER_TAGS: '' # helps with intellisense
+
 jobs:
   Build:
     runs-on: ubuntu-latest
     env:
       DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
       IMAGE_NAME: 'dependabot-server'
-      DOCKER_BUILDKIT: 1 # Enable Docker BuildKit
 
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
@@ -154,7 +155,7 @@ jobs:
             }
 
             // result is list or CSV
-            core.setOutput('tags', tags.join(','));
+            core.exportVariable('DOCKER_TAGS', tags.join(','));
         env:
           IMAGE_NAME: ${{ env.IMAGE_NAME }}
           SHORT_SHA: ${{ steps.gitversion.outputs.shortSha }}
@@ -179,7 +180,7 @@ jobs:
           push: ${{ !startsWith(github.ref, 'refs/pull') }}
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
           cache-to: type=inline # sets BUILDKIT_INLINE_CACHE=1
-          tags: ${{ steps.docker-tags-generator.outputs.tags }}
+          tags: ${{ env.DOCKER_TAGS }}
           labels: |
             org.opencontainers.image.source=${{ github.repository }}
             org.opencontainers.image.version=${{ steps.gitversion.outputs.fullSemVer }}
