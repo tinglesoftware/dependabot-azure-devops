@@ -5,6 +5,12 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Server Launch (simple)",
+      "type": "dotnet",
+      "request": "launch",
+      "projectPath": "${workspaceFolder}/server/Tingle.Dependabot/Tingle.Dependabot.csproj"
+    },
+    {
       "name": "Server Launch (web)",
       "type": "coreclr",
       "request": "launch",

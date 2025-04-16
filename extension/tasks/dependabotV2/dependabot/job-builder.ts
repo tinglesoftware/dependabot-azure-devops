@@ -15,7 +15,7 @@ import { IDependabotUpdateOperation } from './models';
  */
 export class DependabotJobBuilder {
   /**
-   * Create a dependabot update job that updates nothing, but will discover the dependency list for a package ecyosystem
+   * Create a dependabot update job that updates nothing, but will discover the dependency list for a package ecosystem
    * @param taskInputs
    * @param update
    * @param registries
@@ -42,7 +42,7 @@ export class DependabotJobBuilder {
   }
 
   /**
-   * Create a dependabot update job that updates all dependencies for a package ecyosystem
+   * Create a dependabot update job that updates all dependencies for a package ecosystem
    * @param taskInputs
    * @param update
    * @param registries
@@ -381,7 +381,7 @@ export function mapExperiments(experiments: Record<string, string | boolean>): R
 }
 
 export function mapPackageEcosystemToPackageManager(ecosystem: string) {
-  // Map the dependabot config "package ecyosystem" to the equlivent dependabot-core/cli "package manager".
+  // Map the dependabot config "package ecosystem" to the equivalent dependabot-core/cli "package manager".
   // Config values: https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#package-ecosystem-
   // Core/CLI values: https://github.com/dependabot/dependabot-core/blob/main/common/lib/dependabot/config/file.rb#L60-L81
   switch (ecosystem?.toLocaleLowerCase()) {
