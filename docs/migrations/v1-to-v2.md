@@ -22,8 +22,6 @@ The task now uses [Dependabot CLI](https://github.com/dependabot/cli) to perform
 
 Security-only updates (i.e. `open-pull-requests-limit: 0`) incur a slight performance overhead due to limitations in Dependabot CLI, detailed in [dependabot/cli#360](https://github.com/dependabot/cli/issues/360). To work around this, vulnerable dependencies will first be discovered using an "ignore everything" update job; After which, security advisories for the discovered dependencies will be checked against the [GitHub Advisory Database](https://github.com/advisories) before finally performing the requested security-only update job.
 
-Currently the [`securityAdvisoriesFile`](../../README.md#configuring-security-advisories-and-known-vulnerabilities) task input is not supported, but is expected to be supported in the near future.
-
 ## New pipeline agent requirements; "Go" must be installed
 
 Dependabot CLI requires [Go](https://go.dev/doc/install) (1.22+) and [Docker](https://docs.docker.com/engine/install/) (with Linux containers).

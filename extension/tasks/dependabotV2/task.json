@@ -26,11 +26,6 @@
       "isExpanded": true
     },
     {
-      "name": "security_updates",
-      "displayName": "Security advisories and vulnerabilities",
-      "isExpanded": false
-    },
-    {
       "name": "devops",
       "displayName": "Azure DevOps authentication",
       "isExpanded": false
@@ -146,15 +141,6 @@
       "defaultValue": "",
       "required": false,
       "helpMarkDown": "The name to use as the git commit author of the pull requests. Defaults to `dependabot[bot]`."
-    },
-
-    {
-      "name": "securityAdvisoriesFile",
-      "type": "string",
-      "label": "Path for the file containing security advisories in JSON format.",
-      "groupName": "security_updates",
-      "helpMarkDown": "The file containing security advisories.",
-      "required": false
     },
 
     {
