@@ -10,9 +10,6 @@
 /.env
 /.envrc
 /tmp
-Gemfile.lock
-!updater/spec/fixtures/**/Gemfile.lock
-!updater/Gemfile.lock
 *.pyc
 /.vscode-server/
 /.vscode-server-insiders/
