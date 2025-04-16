@@ -20,6 +20,12 @@ updates:
       interval: 'weekly'
       time: '02:00'
 
+  - package-ecosystem: 'dotnet-sdk'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      time: '02:00'
+
   - package-ecosystem: 'docker'
     directories: ['**/*']
     schedule:
