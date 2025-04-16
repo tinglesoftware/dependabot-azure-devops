@@ -150,6 +150,7 @@ jobs:
             }
 
             // result is list or CSV
+            core.info(`Computed tags: "${tags.join(',')}"`);
             core.exportVariable('DOCKER_TAGS', tags.join(','));
         env:
           IMAGE_NAME: ${{ env.IMAGE_NAME }}
