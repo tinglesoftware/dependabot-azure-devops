@@ -2,6 +2,9 @@
 
 This is the unofficial [dependabot](https://github.com/Dependabot/dependabot-core) extension for [Azure DevOps](https://azure.microsoft.com/en-gb/services/devops/). It will allow you to run Dependabot inside a build pipeline.
 
+> [!WARNING]
+> It is strongly recommended that you complete (or abandon) all active pull requests created by the same user that were created manually or using earlier versions of the task.
+
 ## Usage
 
 Add a configuration file stored at `.azuredevops/dependabot.yml` or `.github/dependabot.yml` conforming to the [official spec](https://docs.github.com/en/github/administering-a-repository/configuration-options-for-dependency-updates).
@@ -20,13 +23,13 @@ An example of a YAML pipeline:
 trigger: none # Disable CI trigger
 
 schedules:
-- cron: '0 0 * * 0' # weekly on sunday at midnight UTC
-  always: true # run even when there are no code changes
-  branches:
-    include:
-      - master
-  batch: true
-  displayName: Weekly
+  - cron: '0 0 * * 0' # weekly on sunday at midnight UTC
+    always: true # run even when there are no code changes
+    branches:
+      include:
+        - master
+    batch: true
+    displayName: Weekly
 
 pool:
   vmImage: 'ubuntu-latest' # requires macos or ubuntu (windows is not supported)
@@ -36,9 +39,9 @@ pool:
 #  System.Secrets: true
 
 steps:
-- task: dependabot@2
-  inputs:
-    mergeStrategy: 'squash'
+  - task: dependabot@2
+    inputs:
+      mergeStrategy: 'squash'
 ```
 
 ## Task Requirements
@@ -49,9 +52,6 @@ If you use [Microsoft-hosted agents](https://learn.microsoft.com/en-us/azure/dev
 Dependabot uses Docker containers, which may take time to install if not already cached. Subsequent dependabot tasks in the same job will be faster after initially pulling the images. An alternative way to run your pipelines faster is by leveraging Docker caching in Azure Pipelines (See [#113](https://github.com/tinglesoftware/dependabot-azure-devops/issues/113#issuecomment-894771611)).
 
 ## Task Parameters
-
-<details open>
-<summary>dependabot@2</summary>
 
 |Input|Description|
 |--|--|
@@ -73,14 +73,12 @@ Dependabot uses Docker containers, which may take time to install if not already
 |targetProjectName|**_Optional_**. The Name/ID of the project to target for processing. If this value is not supplied then the Build Project ID is used. Supplying this value allows creation of a single pipeline that runs Dependabot against multiple projects in an organisation by running a `dependabot` task for each project to update. This must be used together with `targetRepositoryName`. Ensure the PAT provided also has access to the project specified.|
 |targetRepositoryName|**_Optional_**. The name of the repository to target for processing. If this value is not supplied then the Build Repository Name is used. Supplying this value allows creation of a single pipeline that runs Dependabot against multiple repositories in a project by running a `dependabot` task for each repository to update.|
 |targetUpdateIds|**_Optional_**. A semicolon (`;`) delimited list of update identifiers run. Index are zero-based and in the order written in the configuration file. When not present, all the updates are run. This is meant to be used in scenarios where you want to run updates a different times from the same configuration file given you cannot schedule them independently in the pipeline.|
-| dependabotCliPackage | **_Optional_**. The [Dependabot CLI package](https://pkg.go.dev/github.com/dependabot/cli) to use for updates. This is intended to be used in scenarios where 'latest' has issues and you want to pin a known working version, or use a custom package. Defaults to `github.com/dependabot/cli/cmd/dependabot@latest` |
-| dependabotCliApiUrl | **_Optional_**. The --api-url argument of `dependabot update` command                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| dependabotCliApiListeningPort | **_Optional_**. This set fixed listening port for of the dependabot cli using `FAKE_API_PORT`. It should match the dependabotCliApiUrl option  |
-| dependabotUpdaterImage | **_Optional_**. The [Dependabot CLI container image](https://github.com/dependabot/dependabot-core/pkgs/container/dependabot-updater-bundler) to use for updates. The image must contain a '{ecosystem}' placeholder, which will be substituted with the package ecosystem for each update operation. This is intended to be used in scenarios where 'latest' has issues and you want to pin a known working version, or use a custom package. Defaults to `ghcr.io/dependabot/dependabot-updater-{ecosystem}:latest` |
-| proxyCertPath | **_Optional_**. This is useful when the proxy is expected to connect to a server using a self-signed certificate. The default one is located at `/usr/local/share/ca-certificates/custom-ca-cert.crt` in the closed-source updater proxy container image. |
+|dependabotCliPackage|**_Optional_**. The [Dependabot CLI package](https://pkg.go.dev/github.com/dependabot/cli) to use for updates. This is intended to be used in scenarios where 'latest' has issues and you want to pin a known working version, or use a custom package. Defaults to `github.com/dependabot/cli/cmd/dependabot@latest`|
+|dependabotCliApiUrl|**_Optional_**. The --api-url argument of `dependabot update` command|
+|dependabotCliApiListeningPort|**_Optional_**. This set fixed listening port for of the dependabot cli using `FAKE_API_PORT`. It should match the `dependabotCliApiUrl` option|
+|dependabotUpdaterImage|**_Optional_**. The [Dependabot CLI container image](https://github.com/dependabot/dependabot-core/pkgs/container/dependabot-updater-bundler) to use for updates. The image must contain a '{ecosystem}' placeholder, which will be substituted with the package ecosystem for each update operation. This is intended to be used in scenarios where 'latest' has issues and you want to pin a known working version, or use a custom package. Defaults to `ghcr.io/dependabot/dependabot-updater-{ecosystem}:latest`|
+|proxyCertPath|**_Optional_**. This is useful when the proxy is expected to connect to a server using a self-signed certificate. The default one is located at `/usr/local/share/ca-certificates/custom-ca-cert.crt` in the closed-source updater proxy container image.|
 |experiments|**_Optional_**. Comma separated list of Dependabot experiments; available options depend on the ecosystem. Example: `tidy=true,vendor=true,goprivate=*`. If specified, this overrides the [default experiments](https://github.com/tinglesoftware/dependabot-azure-devops/blob/main/extension/tasks/dependabotV2/utils/dependabot/experiments.ts). See: [Configuring experiments](https://github.com/tinglesoftware/dependabot-azure-devops/#configuring-experiments)|
-
-</details>
 
 ## Advanced
 
@@ -89,4 +87,3 @@ Dependabot uses Docker containers, which may take time to install if not already
 - [Configuring experiments](https://github.com/tinglesoftware/dependabot-azure-devops/#configuring-experiments)
 - [Configuring assignees and reviewers](https://github.com/tinglesoftware/dependabot-azure-devops/#configuring-assignees-and-reviewers)
 - [Unsupported features and configurations](https://github.com/tinglesoftware/dependabot-azure-devops/#unsupported-features-and-configurations)
-- [Task migration guide for V1 → V2](https://github.com/tinglesoftware/dependabot-azure-devops/blob/main/docs/migrations/v1-to-v2.md)

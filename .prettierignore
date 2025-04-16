@@ -10,8 +10,6 @@ out
 .turbo
 .vercel
 .next
-.markdownlayer
-.react-email
 
 .idea
 
@@ -20,9 +18,7 @@ out
 .github/ISSUE_TEMPLATE/**
 .vscode/settings.json
 README.md
-CONTRIBUTING.md
 docs/**/*.md
-.rubocop*.yml
 advisories-example.json
 server/main.json
 server/Tingle.Dependabot/work
