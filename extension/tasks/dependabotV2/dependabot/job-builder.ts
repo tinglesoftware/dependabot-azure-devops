@@ -2,6 +2,7 @@ import { ISecurityVulnerability } from '../github';
 import { ISharedVariables } from '../utils/shared-variables';
 import {
   IDependabotAllowCondition,
+  IDependabotCooldown,
   IDependabotGroup,
   IDependabotIgnoreCondition,
   IDependabotRegistry,
@@ -149,6 +150,7 @@ export function buildUpdateJobConfig(
               'include-scope':
                 update['commit-message']?.['include']?.toLocaleLowerCase()?.trim() == 'scope' ? true : undefined,
             },
+      'cooldown': mapCooldownFromDependabotConfigToJobConfig(update.cooldown),
       'experiments': mapExperiments(taskInputs.experiments),
       'reject-external-code': update['insecure-external-code-execution']?.toLocaleLowerCase()?.trim() == 'allow',
       'repo-private': undefined, // TODO: add config for this?
@@ -255,6 +257,20 @@ export function mapIgnoreConditionsFromDependabotConfigToJobConfig(
         : <string>ignore['versions'],
     };
   });
+}
+
+export function mapCooldownFromDependabotConfigToJobConfig(cooldown: IDependabotCooldown): any {
+  if (!cooldown) {
+    return undefined;
+  }
+  return {
+    'default-days': cooldown['default-days'],
+    'semver-major-days': cooldown['semver-major-days'],
+    'semver-minor-days': cooldown['semver-minor-days'],
+    'semver-patch-days': cooldown['semver-patch-days'],
+    'include': cooldown.include,
+    'exclude': cooldown.exclude,
+  };
 }
 
 export function mapSecurityAdvisories(securityVulnerabilities: ISecurityVulnerability[]): any[] {
