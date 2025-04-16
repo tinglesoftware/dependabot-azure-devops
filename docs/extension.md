@@ -1,4 +1,3 @@
-
 # Table of Contents
 
 - [Using the extension](#using-the-extension)

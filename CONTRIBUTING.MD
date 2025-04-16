@@ -65,6 +65,7 @@ codespell --write-changes   # to automatically fix misspellings
 ## Automatically run quality checks on commit
 
 If you'd like spelling, formatting, and linting checks to be run automatically on commit, enable the [Husky](https://typicode.github.io/husky/how-to.html) git hooks using:
+
 ```bash
 npx husky
 ```

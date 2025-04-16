@@ -25,12 +25,14 @@ In this repository you'll find:
     - [dependabot@2](#dependabot2)
     - [dependabot@1](#dependabot1)
   - [Dependabot Server](#dependabot-server)
-- [Migration Guide](#migration-guide)
 - [Contributing](#contributing)
   - [Reporting issues and feature requests](#reporting-issues-and-feature-requests)
   - [Submitting pull requests](#submitting-pull-requests)
 
 ## Getting started
+
+> [!WARNING]
+> It is strongly recommended that you complete (or abandon) all active pull requests created by the same user that were created manually or using earlier versions of the task.
 
 Dependabot for Azure DevOps must be explicitly configured to run in your organisation; creating a `dependabot.yml` file alone is **not** enough to enable updates. There are two ways to enable Dependabot, using:
 
@@ -43,13 +45,13 @@ Dependabot for Azure DevOps must be explicitly configured to run in your organis
   trigger: none # Disable CI trigger
 
   schedules:
-  - cron: '0 0 * * 0' # weekly on sunday at midnight UTC
-    always: true # run even when there are no code changes
-    branches:
-      include:
-        - master
-    batch: true
-    displayName: Weekly
+    - cron: '0 0 * * 0' # weekly on sunday at midnight UTC
+      always: true # run even when there are no code changes
+      branches:
+        include:
+          - master
+      batch: true
+      displayName: Weekly
 
   pool:
     vmImage: 'ubuntu-latest' # requires macos or ubuntu (windows is not supported)
@@ -59,9 +61,9 @@ Dependabot for Azure DevOps must be explicitly configured to run in your organis
   #  System.Secrets: true
 
   steps:
-  - task: dependabot@2
-    inputs:
-      mergeStrategy: 'squash'
+    - task: dependabot@2
+      inputs:
+        mergeStrategy: 'squash'
   ```
 
   See [task requirements](/extension/README.md#task-requirements) and [task parameters](/extension/README.md#task-parameters) for more information.
@@ -96,7 +98,6 @@ Private registries are configured in `dependabot.yml`, refer to the [official do
 ```yml
 version: 2
 registries:
-
   # Azure DevOps private feed, all views
   my-analyzers:
     type: nuget-feed
@@ -124,7 +125,7 @@ registries:
     token: ${{ MY_TELERIK_USERNAME }}:${{ MY_TELERIK_PASSWORD }}
 
 updates:
-  ...
+  # ...
 ```
 
 </details>
@@ -132,18 +133,18 @@ updates:
 Note when using authentication secrets in configuration files:
 
 > [!IMPORTANT]
-> `${{ VARIABLE_NAME }}` notation is used liked described [here](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/managing-encrypted-secrets-for-dependabot)
-BUT the values will be used from pipeline environment variables. Template variables are not supported for this replacement. Replacement only works for values considered secret in the registries section i.e. `username`, `password`, `token`, and `key`
-
-> [!IMPORTANT]
+> The `${{ VARIABLE_NAME }}` notation is used liked described [here](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/managing-encrypted-secrets-for-dependabot) BUT the values will be used from pipeline environment variables. Template variables are not supported for this replacement. Replacement only works for values considered secret in the registries section i.e. `username`, `password`, `token`, and `key`
+>
 > When using an Azure DevOps Artifact feed, the token format must be `PAT:${{ VARIABLE_NAME }}` where `VARIABLE_NAME` is a pipeline/environment variable containing the PAT token. The PAT must:
 >
->    1. Have `Packaging (Read)` permission.
->    2. Be issued by a user with permission to the feed either directly or via a group. An easy way for this is to give `Contributor` permissions the `[{project_name}]\Contributors` group under the `Feed Settings -> Permissions` page. The page has the url format: `https://dev.azure.com/{organization}/{project}/_packaging?_a=settings&feed={feed-name}&view=permissions`.
+> 1. Have `Packaging (Read)` permission.
+> 2. Be issued by a user with permission to the feed either directly or via a group. An easy way for this is to give `Contributor` permissions the `[{project_name}]\Contributors` group under the `Feed Settings -> Permissions` page. The page has the url format: `https://dev.azure.com/{organization}/{project}/_packaging?_a=settings&feed={feed-name}&view=permissions`.
 
 ## Configuring security advisories and known vulnerabilities
 
-Security-only updates is a mechanism to only create pull requests for dependencies with vulnerabilities by updating them to the earliest available non-vulnerable version. [Security updates are supported in the same way as the GitHub-hosted version](https://docs.github.com/en/code-security/dependabot/dependabot-security-updates/configuring-dependabot-security-updates#overriding-the-default-behavior-with-a-configuration-file) provided that a GitHub access token with `public_repo` access is provided in the `gitHubAccessToken` or `gitHubConnection` task inputs.
+Security-only updates (i.e. `open-pull-requests-limit: 0`) is a mechanism to only create pull requests for dependencies with vulnerabilities by updating them to the earliest available non-vulnerable version. [Security updates are supported in the same way as the GitHub-hosted version](https://docs.github.com/en/code-security/dependabot/dependabot-security-updates/configuring-dependabot-security-updates#overriding-the-default-behavior-with-a-configuration-file) provided that a GitHub access token with `public_repo` access is provided in the `gitHubAccessToken` or `gitHubConnection` task inputs.
+
+Security-only updates incur a slight performance overhead due to limitations in Dependabot CLI, detailed in [dependabot/cli#360](https://github.com/dependabot/cli/issues/360). To work around this, vulnerable dependencies will first be discovered using an "ignore everything" update job; After which, security advisories for the discovered dependencies will be checked against the [GitHub Advisory Database](https://github.com/advisories) before finally performing the requested security-only update job.
 
 ## Configuring experiments
 
@@ -170,8 +171,8 @@ By default, the enabled experiments will mirror the GitHub-hosted version of Dep
 | All | enable_shared_helpers_command_timeout | true/false | <https://github.com/dependabot/dependabot-core/pull/11125> |
 | All | allow_refresh_for_existing_pr_dependencies | true/false | <https://github.com/dependabot/dependabot-core/pull/11382> |
 | Bun | enable_bun_ecosystem | true/false | <https://github.com/dependabot/dependabot-core/pull/11446> |
-| Composer | exclude_local_composer_packages | true/false| <https://github.com/dependabot/dependabot-core/pull/11527> |
-| Docker | docker_tag_component_comparison | true/false | https://github.com/dependabot/dependabot-core/pull/11679 |
+| Composer | exclude_local_composer_packages | true/false | <https://github.com/dependabot/dependabot-core/pull/11527> |
+| Docker | docker_tag_component_comparison | true/false | <https://github.com/dependabot/dependabot-core/pull/11679> |
 | Go | tidy | true/false | |
 | Go | vendor | true/false | |
 | Go | goprivate | string | |
@@ -184,8 +185,8 @@ By default, the enabled experiments will mirror the GitHub-hosted version of Dep
 | NuGet | nuget_legacy_dependency_solver | true/false | <https://github.com/dependabot/dependabot-core/pull/10671> |
 | NuGet | nuget_use_direct_discovery | true/false | <https://github.com/dependabot/dependabot-core/pull/10597> |
 | NuGet | nuget_install_dotnet_sdks | true/false | <https://github.com/dependabot/dependabot-core/pull/11090> |
-| Pip | enable_cooldown_for_python | true/false | https://github.com/dependabot/dependabot-core/pull/11693 |
-| Pip & UV | enable_file_parser_python_local | true/false | https://github.com/dependabot/dependabot-core/pull/11040 |
+| Pip | enable_cooldown_for_python | true/false | <https://github.com/dependabot/dependabot-core/pull/11693> |
+|Pip & UV| enable_file_parser_python_local | true/false | <https://github.com/dependabot/dependabot-core/pull/11040> |
 
 > [!NOTE]
 > Dependabot experiment names are not [publicly] documented and these may be out-of-date at the time of reading. To find the latest list of experiments, search the `dependabot-core` GitHub repository using queries like ["enabled?(x)"](https://github.com/search?q=repo%3Adependabot%2Fdependabot-core+%2Fenabled%5CW%5C%28.*%5C%29%2F&type=code) and ["options.fetch(x)"](https://github.com/search?q=repo%3Adependabot%2Fdependabot-core+%2Foptions%5C.fetch%5C%28.*%2C%2F&type=code).
@@ -229,10 +230,6 @@ No longer functional.
 - [`groups`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#groups) are not supported.
 - [`assignees`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#assignees) and [`reviewers`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#reviewers) must be a list of user GUIDs; email addresses and group/team names are not supported.
 - Private feed/registry authentication may not work with all package ecosystems. See [problems with authentication](https://github.com/tinglesoftware/dependabot-azure-devops/discussions/1317) for more.
-
-## Migration Guide
-
-- [Extension Task V1 → V2](./docs/migrations/v1-to-v2.md)
 
 ## Contributing
 
