@@ -1,8 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Tingle.Dependabot.Models.Dependabot;
 using Xunit;
-using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
 
 namespace Tingle.Dependabot.Tests.Models;
 
@@ -16,7 +14,7 @@ public class DependabotUpdateTests
             PackageEcosystem = "npm",
             Directory = "/",
             Directories = null,
-            Schedule = new()
+            Schedule = new DependabotUpdateSchedule
             {
                 Interval = DependabotScheduleInterval.Monthly,
                 Time = new(2, 0),

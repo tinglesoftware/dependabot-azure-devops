@@ -1,5 +1,6 @@
 ﻿using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
+using Tingle.Extensions.Primitives.Converters;
 
 namespace Tingle.Dependabot.Models.Azure;
 
@@ -48,13 +49,11 @@ public class AzdoSubscriptionsQueryInputFilterCondition
     public AzdoSubscriptionsQueryInputFilterOperator Operator { get; set; }
 }
 
-[JsonConverter(typeof(JsonStringEnumMemberConverter))]
+[JsonConverter(typeof(JsonStringEnumMemberConverter<AzdoSubscriptionsQueryInputFilterOperator>))]
 public enum AzdoSubscriptionsQueryInputFilterOperator
 {
-    [EnumMember(Value = "equals")]
-    Equals,
-    [EnumMember(Value = "notEquals")]
-    NotEquals
+    [EnumMember(Value = "equals")] Equals,
+    [EnumMember(Value = "notEquals")] NotEquals
 }
 
 public class AzdoSubscriptionsQueryResponse : AzdoSubscriptionsQuery
@@ -99,21 +98,12 @@ public class AzdoSubscription
     public string? ActionDescription { get; set; }
 }
 
-[JsonConverter(typeof(JsonStringEnumMemberConverter))]
+[JsonConverter(typeof(JsonStringEnumMemberConverter<AzdoSubscriptionStatus>))]
 public enum AzdoSubscriptionStatus
 {
-    [EnumMember(Value = "enabled")]
-    Enabled,
-
-    [EnumMember(Value = "onProbation")]
-    OnProbation,
-
-    [EnumMember(Value = "disabledByUser")]
-    DisabledByUser,
-
-    [EnumMember(Value = "disabledBySystem")]
-    DisabledBySystem,
-
-    [EnumMember(Value = "disabledByInactiveIdentity")]
-    DisabledByInactiveIdentity,
+    [EnumMember(Value = "enabled")] Enabled,
+    [EnumMember(Value = "onProbation")] OnProbation,
+    [EnumMember(Value = "disabledByUser")] DisabledByUser,
+    [EnumMember(Value = "disabledBySystem")] DisabledBySystem,
+    [EnumMember(Value = "disabledByInactiveIdentity")] DisabledByInactiveIdentity,
 }

@@ -7,6 +7,7 @@ public record RepositoryUpdate : DependabotUpdate
 {
     public RepositoryUpdate() { } // required for deserialization
 
+    [System.Diagnostics.CodeAnalysis.SetsRequiredMembers]
     public RepositoryUpdate(DependabotUpdate update) : base(update) { }
 
     /// <summary>The dependency files.</summary>

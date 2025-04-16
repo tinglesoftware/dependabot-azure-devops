@@ -1,0 +1,6 @@
+@Server_HostAddress = http://localhost:44390
+
+GET {{Server_HostAddress}}/mgnt/projects
+Accept: application/json
+
+###

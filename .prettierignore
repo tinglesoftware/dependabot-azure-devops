@@ -26,6 +26,7 @@ docs/**/*.md
 advisories-example.json
 updater/spec/fixtures/**
 server/main.json
+server/Tingle.Dependabot/work
 
 updater/.bundle/**
 updater/tmp/**

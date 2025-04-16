@@ -1,6 +1,5 @@
 ﻿using Medallion.Threading;
 using Medallion.Threading.FileSystem;
-using Microsoft.FeatureManagement;
 using Tingle.Dependabot;
 using Tingle.Dependabot.Workflow;
 
@@ -17,7 +16,7 @@ internal static class IServiceCollectionExtensions
         // when the path is null in development, set one
         if (string.IsNullOrWhiteSpace(path) && environment.IsDevelopment())
         {
-            path = Path.Combine(environment.ContentRootPath, "distributed-locks");
+            path = Path.Combine(environment.ContentRootPath, "work/locks");
         }
 
         if (string.IsNullOrWhiteSpace(path))
@@ -30,30 +29,25 @@ internal static class IServiceCollectionExtensions
         return services;
     }
 
-    public static IServiceCollection AddStandardFeatureManagement(this IServiceCollection services)
-    {
-        var builder = services.AddFeatureManagement();
-
-        builder.AddFeatureFilter<FeatureManagement.FeatureFilters.PercentageFilter>();
-        builder.AddFeatureFilter<FeatureManagement.FeatureFilters.TimeWindowFilter>();
-        builder.AddFeatureFilter<FeatureManagement.FeatureFilters.ContextualTargetingFilter>();
-        builder.Services.Configure<FeatureManagement.FeatureFilters.TargetingEvaluationOptions>(o => o.IgnoreCase = true);
-
-        builder.UseDisabledFeaturesHandler(new CustomDisabledFeaturesHandler());
-
-        return services;
-    }
-
     public static IServiceCollection AddWorkflowServices(this IServiceCollection services, IConfiguration configuration)
     {
         services.Configure<WorkflowOptions>(configuration);
         services.ConfigureOptions<WorkflowConfigureOptions>();
 
-        services.AddScoped<UpdateRunner>();
-        services.AddSingleton<UpdateScheduler>();
+        services.AddScoped<IConfigFilesWriter, ConfigFilesWriter>();
+        services.AddScoped<ISynchronizer, Synchronizer>();
+        services.AddScoped<IUpdateRunner, UpdateRunner>();
+
+        services.AddSingleton<ICertificateManager, CertificateManager>();
+        services.AddSingleton<IScenarioStore, ScenarioStore>();
+        services.AddSingleton<IUpdateScheduler, UpdateScheduler>();
+
+        services.AddHostedService<CertificateManagerInitializerService>();
 
         services.AddHttpClient<AzureDevOpsProvider>();
-        services.AddScoped<Synchronizer>();
+        services.AddHttpClient<GitHubGraphClient>();
+
+        services.AddTransient<IAzureDevOpsProvider>(provider => provider.GetRequiredService<AzureDevOpsProvider>());
 
         return services;
     }

@@ -1,23 +1,21 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using Tingle.Dependabot.Models.Dependabot;
-using Tingle.Extensions.Primitives;
 
 namespace Tingle.Dependabot.Models.Management;
 
 public class Repository
 {
     [Key, MaxLength(50)]
-    public string? Id { get; set; }
+    public required string Id { get; set; }
 
     public DateTimeOffset Created { get; set; }
 
     public DateTimeOffset Updated { get; set; }
 
     /// <summary>Identifier of the project.</summary>
-    [Required]
     [JsonIgnore] // only for internal use
-    public string? ProjectId { get; set; }
+    public string ProjectId { get; set; } = default!; // marking required does not play well with JsonIgnore
 
     /// <summary>Name of the repository as per provider.</summary>
     public string? Name { get; set; }
@@ -27,9 +25,8 @@ public class Repository
     public string? Slug { get; set; }
 
     /// <summary>Identifier of the repository as per provider.</summary>
-    [Required]
     [JsonIgnore] // only for internal use
-    public string? ProviderId { get; set; }
+    public string ProviderId { get; set; } = default!; // marking required does not play well with JsonIgnore
 
     /// <summary>
     /// Latest commit SHA synchronized for the configuration file.
@@ -61,6 +58,13 @@ public class Repository
     [JsonIgnore] // only for internal use
     public Dictionary<string, DependabotRegistry> Registries { get; set; } = [];
 
-    [Timestamp]
-    public Etag? Etag { get; set; } // TODO: remove nullability once we reset the migrations
+    public RepositoryUpdate? GetUpdate(UpdateJob job)
+    {
+        // find the update (we assume that there is only one matching the ecosystem and directory/directories)
+        return (from u in Updates
+                where u.PackageEcosystem == job.PackageEcosystem
+                where u.Directory == job.Directory
+                where u.Directories == job.Directories
+                select u).SingleOrDefault();
+    }
 }

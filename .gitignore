@@ -29,3 +29,4 @@ local/**.sh
 node_modules/
 
 docker-compose.local.yml
+server/Tingle.Dependabot/work

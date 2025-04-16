@@ -15,7 +15,7 @@ import { IDependabotUpdateOperation } from './models';
  */
 export class DependabotJobBuilder {
   /**
-   * Create a dependabot update job that updates nothing, but will discover the dependency list for a package ecyosystem
+   * Create a dependabot update job that updates nothing, but will discover the dependency list for a package ecosystem
    * @param taskInputs
    * @param update
    * @param registries
@@ -42,7 +42,7 @@ export class DependabotJobBuilder {
   }
 
   /**
-   * Create a dependabot update job that updates all dependencies for a package ecyosystem
+   * Create a dependabot update job that updates all dependencies for a package ecosystem
    * @param taskInputs
    * @param update
    * @param registries
@@ -154,18 +154,17 @@ export function buildUpdateJobConfig(
       'experiments': mapExperiments(taskInputs.experiments),
       'reject-external-code': update['insecure-external-code-execution']?.toLocaleLowerCase()?.trim() == 'allow',
       'repo-private': undefined, // TODO: add config for this?
-      'repo-contents-path': undefined, // TODO: add config for this?
       'requirements-update-strategy': mapVersionStrategyToRequirementsUpdateStrategy(update['versioning-strategy']),
       'lockfile-only': update['versioning-strategy'] === 'lockfile-only',
       'vendor-dependencies': update.vendor,
       'debug': taskInputs.debug,
+      'update-subdependencies': false, // usually added by dependabot-cli (but for consistency with server it is added here)
+      'max-updater-run-time': 2700,
 
       // TODO: Investigate if these options are needed or are now obsolete.
       //       These options don't appear to be used by dependabot-core yet/anymore,
       //       but do appear in GitHub Dependabot job logs seen in the wild.
-      //'max-updater-run-time': 2700,
       //'proxy-log-response-body-on-auth-failure': true,
-      //'update-subdependencies': false,
     },
     credentials: mapRegistryCredentialsFromDependabotConfigToJobConfig(taskInputs, registries),
   };
@@ -381,7 +380,7 @@ export function mapExperiments(experiments: Record<string, string | boolean>): R
 }
 
 export function mapPackageEcosystemToPackageManager(ecosystem: string) {
-  // Map the dependabot config "package ecyosystem" to the equlivent dependabot-core/cli "package manager".
+  // Map the dependabot config "package ecosystem" to the equivalent dependabot-core/cli "package manager".
   // Config values: https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#package-ecosystem-
   // Core/CLI values: https://github.com/dependabot/dependabot-core/blob/main/common/lib/dependabot/config/file.rb#L60-L81
   switch (ecosystem?.toLocaleLowerCase()) {
