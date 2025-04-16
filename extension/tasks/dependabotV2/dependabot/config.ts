@@ -32,7 +32,7 @@ export interface IDependabotConfig {
 
   /**
    * Optional. Enables updates for ecosystems that are not yet generally available.
-   * https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#enable-beta-ecosystems
+   * https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#enable-beta-ecosystems-
    */
   'enable-beta-ecosystems'?: boolean;
 }
