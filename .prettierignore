@@ -24,13 +24,8 @@ CONTRIBUTING.md
 docs/**/*.md
 .rubocop*.yml
 advisories-example.json
-updater/spec/fixtures/**
 server/main.json
 server/Tingle.Dependabot/work
-
-updater/.bundle/**
-updater/tmp/**
-updater/job/**
 
 # JSON array formatting by Visual Studio is different from prettier
 server/Tingle.Dependabot/appsettings.json
