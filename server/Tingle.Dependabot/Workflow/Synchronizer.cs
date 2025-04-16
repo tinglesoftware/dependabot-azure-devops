@@ -13,7 +13,17 @@ using YamlDotNet.Serialization.NamingConventions;
 
 namespace Tingle.Dependabot.Workflow;
 
-internal class Synchronizer(MainDbContext dbContext, AzureDevOpsProvider adoProvider, IEventPublisher publisher, ILogger<Synchronizer> logger)
+public interface ISynchronizer
+{
+    Task SynchronizeAsync(Project project, bool trigger, CancellationToken cancellationToken = default);
+    Task SynchronizeAsync(Project project, Repository repository, bool trigger, CancellationToken cancellationToken = default);
+    Task SynchronizeAsync(Project project, string? repositoryProviderId, bool trigger, CancellationToken cancellationToken = default);
+}
+
+internal class Synchronizer(MainDbContext dbContext,
+                            IAzureDevOpsProvider adoProvider,
+                            IEventPublisher publisher,
+                            ILogger<Synchronizer> logger) : ISynchronizer
 {
     private readonly IDeserializer yamlDeserializer = new DeserializerBuilder().WithNamingConvention(HyphenatedNamingConvention.Instance)
                                                                                .IgnoreUnmatchedProperties()

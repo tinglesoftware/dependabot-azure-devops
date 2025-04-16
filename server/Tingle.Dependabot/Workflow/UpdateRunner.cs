@@ -7,7 +7,14 @@ using Tingle.Extensions.Primitives;
 
 namespace Tingle.Dependabot.Workflow;
 
-internal partial class UpdateRunner(ConfigFilesWriter configFilesWriter, IOptions<WorkflowOptions> optionsAccessor, ILogger<UpdateRunner> logger)
+public interface IUpdateRunner
+{
+    Task RunAsync(UpdaterContext context, CancellationToken cancellationToken = default);
+}
+
+internal partial class UpdateRunner(IConfigFilesWriter configFilesWriter,
+                                    IOptions<WorkflowOptions> optionsAccessor,
+                                    ILogger<UpdateRunner> logger) : IUpdateRunner
 {
     private const string VolumeNameCerts = "certs";
     private const string VolumeNameJobs = "jobs";
@@ -34,7 +41,7 @@ internal partial class UpdateRunner(ConfigFilesWriter configFilesWriter, IOption
         if (container is not null) return;
 
         // prepare credentials and job directory
-        var credentials = ConfigFilesWriter.MakeCredentials(context);
+        var credentials = configFilesWriter.MakeCredentials(context);
 
         // prepare directories and path for artifacts
         var artifactsDirectory = Path.Join(options.ArtifactsDirectory, job.Id);

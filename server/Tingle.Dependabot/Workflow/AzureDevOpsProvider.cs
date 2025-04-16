@@ -10,7 +10,28 @@ using SC = Tingle.Dependabot.DependabotSerializerContext;
 
 namespace Tingle.Dependabot.Workflow;
 
-public class AzureDevOpsProvider(HttpClient httpClient, IOptions<WorkflowOptions> optionsAccessor)
+public interface IAzureDevOpsProvider
+{
+    Task<AzdoConnectionData> GetConnectionDataAsync(Project project, CancellationToken cancellationToken = default);
+    Task<AzdoConnectionData> GetConnectionDataAsync(AzureDevOpsProjectUrl url, string token, CancellationToken cancellationToken = default);
+
+    Task<AzdoProject> GetProjectAsync(Project project, CancellationToken cancellationToken);
+    Task<AzdoProject> GetProjectAsync(AzureDevOpsProjectUrl url, string token, CancellationToken cancellationToken);
+
+    Task<List<string>> CreateOrUpdateSubscriptionsAsync(Project project, CancellationToken cancellationToken = default);
+
+    Task<List<AzdoRepository>> GetRepositoriesAsync(Project project, CancellationToken cancellationToken);
+    Task<AzdoRepository> GetRepositoryAsync(Project project, string repositoryIdOrName, CancellationToken cancellationToken);
+    Task<string?> GetDefaultBranchAsync(Project project, string repositoryIdOrName, CancellationToken cancellationToken);
+    Task<AzdoRepositoryItem?> GetConfigurationFileAsync(Project project, string repositoryIdOrName, CancellationToken cancellationToken = default);
+
+    Task<List<AzdoPullRequest>> GetActivePullRequestsAsync(Project project, string repositoryIdOrName, CancellationToken cancellationToken = default);
+    Task<PullRequestProperties?> GetPullRequestPropertiesAsync(Project project, string repositoryIdOrName, int pullRequestId, CancellationToken cancellationToken = default);
+
+    Task AbandonPullRequestAsync(Project project, string repositoryIdOrName, int pullRequestId, string? comment, CancellationToken cancellationToken = default);
+}
+
+internal class AzureDevOpsProvider(HttpClient httpClient, IOptions<WorkflowOptions> optionsAccessor) : IAzureDevOpsProvider
 {
     // Possible/allowed paths for the configuration files in a repository.
     private static readonly IReadOnlyList<string> ConfigurationFilePaths = [
@@ -201,7 +222,6 @@ public class AzureDevOpsProvider(HttpClient httpClient, IOptions<WorkflowOptions
         var repository = await GetRepositoryAsync(project, repositoryIdOrName, cancellationToken);
         return NormalizeBranchName(repository.DefaultBranch);
     }
-
     public async Task<AzdoRepositoryItem?> GetConfigurationFileAsync(Project project, string repositoryIdOrName, CancellationToken cancellationToken = default)
     {
         var url = project.Url;
@@ -271,11 +291,7 @@ public class AzureDevOpsProvider(HttpClient httpClient, IOptions<WorkflowOptions
         return new PullRequestProperties(packageManager, dependencies);
     }
 
-    public async Task AbandonPullRequestAsync(Project project,
-                                              string repositoryIdOrName,
-                                              int pullRequestId,
-                                              string? comment,
-                                              CancellationToken cancellationToken = default)
+    public async Task AbandonPullRequestAsync(Project project, string repositoryIdOrName, int pullRequestId, string? comment, CancellationToken cancellationToken = default)
     {
         // Add a comment to the pull request, if supplied
         var url = project.Url;

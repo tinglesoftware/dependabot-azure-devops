@@ -7,7 +7,13 @@ using Tingle.PeriodicTasks;
 
 namespace Tingle.Dependabot.Workflow;
 
-internal class UpdateScheduler
+public interface IUpdateScheduler
+{
+    Task CreateOrUpdateAsync(Repository repository, CancellationToken cancellationToken = default);
+    Task RemoveAsync(string repositoryId, CancellationToken cancellationToken = default);
+}
+
+internal class UpdateScheduler : IUpdateScheduler
 {
     private readonly IEventPublisher publisher;
     private readonly ILogger logger;

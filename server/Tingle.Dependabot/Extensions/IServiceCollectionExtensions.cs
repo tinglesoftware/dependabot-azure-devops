@@ -34,19 +34,20 @@ internal static class IServiceCollectionExtensions
         services.Configure<WorkflowOptions>(configuration);
         services.ConfigureOptions<WorkflowConfigureOptions>();
 
-        services.AddScoped<ConfigFilesWriter>();
+        services.AddScoped<IConfigFilesWriter, ConfigFilesWriter>();
+        services.AddScoped<ISynchronizer, Synchronizer>();
+        services.AddScoped<IUpdateRunner, UpdateRunner>();
 
-        services.AddSingleton<CertificateManager>();
+        services.AddSingleton<ICertificateManager, CertificateManager>();
+        services.AddSingleton<IScenarioStore, ScenarioStore>();
+        services.AddSingleton<IUpdateScheduler, UpdateScheduler>();
+
         services.AddHostedService<CertificateManagerInitializerService>();
-
-        services.AddSingleton<ScenarioStore>();
-
-        services.AddScoped<UpdateRunner>();
-        services.AddSingleton<UpdateScheduler>();
 
         services.AddHttpClient<AzureDevOpsProvider>();
         services.AddHttpClient<GitHubGraphClient>();
-        services.AddScoped<Synchronizer>();
+
+        services.AddTransient<IAzureDevOpsProvider>(provider => provider.GetRequiredService<AzureDevOpsProvider>());
 
         return services;
     }

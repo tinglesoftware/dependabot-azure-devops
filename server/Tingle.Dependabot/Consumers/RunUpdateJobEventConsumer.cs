@@ -9,9 +9,9 @@ using Tingle.Extensions.Primitives;
 namespace Tingle.Dependabot.Consumers;
 
 internal class RunUpdateJobEventConsumer(MainDbContext dbContext,
-                                         UpdateRunner runner,
-                                         ScenarioStore scenarioStore,
-                                         AzureDevOpsProvider adoProvider,
+                                         IUpdateRunner runner,
+                                         IScenarioStore scenarioStore,
+                                         IAzureDevOpsProvider adoProvider,
                                          GitHubGraphClient gitHubGraphClient,
                                          ILogger<RunUpdateJobEventConsumer> logger) : IEventConsumer<RunUpdateJobEvent>
 {

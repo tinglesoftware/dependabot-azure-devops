@@ -31,7 +31,7 @@ public static class UpdateJobsEndpoints
     {
         builder.MapMethods($"{{id}}/{type.GetEnumMemberAttrValue()}",
                            methods ?? [HttpMethods.Post],
-                           async ([FromRoute] string id, [FromBody] DependabotRequest<T> input, [FromServices] ScenarioStore store) =>
+                           async ([FromRoute] string id, [FromBody] DependabotRequest<T> input, [FromServices] IScenarioStore store) =>
                            {
                                if (!MiniValidator.TryValidate(input, out var errors)) return Results.ValidationProblem(errors);
                                await store.AddAsync(id, type, input);

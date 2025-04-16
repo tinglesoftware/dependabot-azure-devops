@@ -52,7 +52,7 @@ public static class ManagementEndpoints
     }
 
     private static async Task<IResult> WebhooksRegisterAsync([FromServices] MainDbContext dbContext,
-                                                             [FromServices] AzureDevOpsProvider adoProvider,
+                                                             [FromServices] IAzureDevOpsProvider adoProvider,
                                                              HttpContext context)
     {
         // ensure project exists

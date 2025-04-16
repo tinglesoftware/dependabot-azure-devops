@@ -4,18 +4,28 @@ using Tingle.Dependabot.Models.Management;
 
 namespace Tingle.Dependabot.Workflow;
 
-// We store scenarios so that we can apply then all at once at the end.
-// Otherwise, if we did apply them on every HTTP request, the database may not be coherent, especially with Sqlite
-// It also prevents us from storing pull requests in the database or querying azure devops on every request
-internal class ScenarioStore(ILogger<ScenarioStore> logger)
+public interface IScenarioStore
 {
-    private readonly DependabotConcurrentDictionary<string, (SemaphoreSlim, List<ScenarioOutput>)> store = new();
-
     /// <summary>Add an operation in the singleton store for applying later.</summary>
     /// <param name="id">Identifier of the update job.</param>
     /// <param name="type">Type of operation.</param>
     /// <param name="input">The request input received for the operation.</param>
     /// <param name="cancellationToken"></param>
+    Task AddAsync(string id, DependabotOperationType type, object input, CancellationToken cancellationToken = default);
+
+    /// <summary>Apply operations for a given update job.</summary>
+    /// <param name="context">Context containing all the objects necessary for applying.</param>
+    /// <param name="cancellationToken"></param>
+    Task ApplyAsync(ScenarioApplicationContext context, CancellationToken cancellationToken = default);
+}
+
+// We store scenarios so that we can apply then all at once at the end.
+// Otherwise, if we did apply them on every HTTP request, the database may not be coherent, especially with Sqlite
+// It also prevents us from storing pull requests in the database or querying azure devops on every request
+internal class ScenarioStore(ILogger<ScenarioStore> logger) : IScenarioStore
+{
+    private readonly DependabotConcurrentDictionary<string, (SemaphoreSlim, List<ScenarioOutput>)> store = new();
+
     public async Task AddAsync(string id, DependabotOperationType type, object input, CancellationToken cancellationToken = default)
     {
         static Task<(SemaphoreSlim, List<ScenarioOutput>)> StoreItemCreator(string id, CancellationToken ct)
@@ -27,9 +37,6 @@ internal class ScenarioStore(ILogger<ScenarioStore> logger)
         limiter.Release();
     }
 
-    /// <summary>Apply operations for a given update job.</summary>
-    /// <param name="context">Context containing all the objects necessary for applying.</param>
-    /// <param name="cancellationToken"></param>
     public async Task ApplyAsync(ScenarioApplicationContext context, CancellationToken cancellationToken = default)
     {
         var job = context.Job;
@@ -156,7 +163,11 @@ internal class ScenarioStore(ILogger<ScenarioStore> logger)
         // Close the pull request
         var adoProvider = context.AdoProvider;
         var comment = GetPullRequestCloseReasonForOutputData(data);
-        await adoProvider.AbandonPullRequestAsync(context.Project, context.Repository.ProviderId, pullRequestToClose.Value, comment, cancellationToken);
+        await adoProvider.AbandonPullRequestAsync(project: context.Project,
+                                                  repositoryIdOrName: context.Repository.ProviderId,
+                                                  pullRequestId: pullRequestToClose.Value,
+                                                  comment: comment,
+                                                  cancellationToken: cancellationToken);
 
         await Task.Yield();
     }
@@ -250,7 +261,7 @@ public readonly struct ScenarioApplicationContext
     /// This is not injected because the applier is singleton whereas the caller is scoped.
     /// It also helps to keep within the scope of the creator.
     /// </summary>
-    public required AzureDevOpsProvider AdoProvider { get; init; }
+    public required IAzureDevOpsProvider AdoProvider { get; init; }
 
     /// <summary>
     /// Save the changed made at a given point during the application of scenarios.

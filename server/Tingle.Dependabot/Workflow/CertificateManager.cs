@@ -5,7 +5,24 @@ using Tingle.Dependabot.Models.Dependabot;
 
 namespace Tingle.Dependabot.Workflow;
 
-internal class CertificateManager(IOptions<WorkflowOptions> optionsAccessor, ILogger<CertificateManager> logger)
+public interface ICertificateManager
+{
+    /// <summary>
+    /// Get the current authority.
+    /// This may throw an exception if not initialized.
+    /// </summary>
+    CertificateAuthority Get();
+
+    /// <summary>
+    /// Initialize the manager.
+    /// This should not be called by the application because once the application starts,
+    /// it is automatically done via an implementation of <see cref="IHostedService"/>.
+    /// </summary>
+    /// <param name="cancellationToken"></param>
+    ValueTask InitializeAsync(CancellationToken cancellationToken = default);
+}
+
+internal class CertificateManager(IOptions<WorkflowOptions> optionsAccessor, ILogger<CertificateManager> logger) : ICertificateManager
 {
     private const int KeySize = 2048;
     private const int KeyExpiryYears = 2;
@@ -19,9 +36,9 @@ internal class CertificateManager(IOptions<WorkflowOptions> optionsAccessor, ILo
 
     private CertificateAuthority? ca;
 
-    internal CertificateAuthority Get() => ca ?? throw new InvalidOperationException($"'{nameof(InitializeAsync)}()' needs to be called prior to this");
+    public CertificateAuthority Get() => ca ?? throw new InvalidOperationException($"'{nameof(InitializeAsync)}()' needs to be called prior to this");
 
-    internal async ValueTask InitializeAsync(CancellationToken cancellationToken = default)
+    public async ValueTask InitializeAsync(CancellationToken cancellationToken = default)
     {
         if (ca is not null) return;
 
@@ -111,7 +128,7 @@ internal class CertificateManagerInitializerService(IServiceScopeFactory scopeFa
         // use scope just to be safe
         using var scope = scopeFactory.CreateScope();
         var provider = scope.ServiceProvider;
-        var manager = provider.GetRequiredService<CertificateManager>();
+        var manager = provider.GetRequiredService<ICertificateManager>();
         await manager.InitializeAsync(cancellationToken);
     }
 

@@ -50,7 +50,7 @@ internal class InitialSetupService(IServiceScopeFactory serviceScopeFactory,
         logger.LogInformation("Found {Count} projects to setup", setups.Count);
 
         // add projects if there are projects to be added
-        var adoProvider = provider.GetRequiredService<AzureDevOpsProvider>();
+        var adoProvider = provider.GetRequiredService<IAzureDevOpsProvider>();
         var context = provider.GetRequiredService<MainDbContext>();
         var projects = await context.Projects.ToListAsync(cancellationToken);
         foreach (var setup in setups)
@@ -58,8 +58,8 @@ internal class InitialSetupService(IServiceScopeFactory serviceScopeFactory,
             // pull the project from the provider
             var url = setup.Url;
             var token = setup.Token;
-            var adoProject = await adoProvider.GetProjectAsync(url, token, cancellationToken);
-            var adoUser = await adoProvider.GetConnectionDataAsync(url, token, cancellationToken);
+            var azdoProject = await adoProvider.GetProjectAsync(url, token, cancellationToken);
+            var azdoUser = await adoProvider.GetConnectionDataAsync(url, token, cancellationToken);
 
             logger.LogInformation("Setting up project: {Url}", url);
             var project = projects.SingleOrDefault(p => p.Url == url);
@@ -73,13 +73,13 @@ internal class InitialSetupService(IServiceScopeFactory serviceScopeFactory,
                     Url = url,
                     Type = Models.Management.ProjectType.Azure,
 
-                    Name = adoProject.Name,
-                    Description = adoProject.Description,
-                    ProviderId = adoProject.Id,
+                    Name = azdoProject.Name,
+                    Description = azdoProject.Description,
+                    ProviderId = azdoProject.Id,
                     Slug = url.Slug,
-                    Private = adoProject.Visibility is not Models.Azure.AzdoProjectVisibility.Public,
+                    Private = azdoProject.Visibility is not Models.Azure.AzdoProjectVisibility.Public,
                     Token = token,
-                    UserId = adoUser.AuthenticatedUser.Id,
+                    UserId = azdoUser.AuthenticatedUser.Id,
                     AutoApprove = new Models.Management.ProjectAutoApprove { Enabled = setup.AutoApprove, },
                     AutoComplete = new Models.Management.ProjectAutoComplete
                     {
@@ -96,13 +96,13 @@ internal class InitialSetupService(IServiceScopeFactory serviceScopeFactory,
             else
             {
                 // update project using values from the setup
-                project.Name = adoProject.Name;
-                project.Description = adoProject.Description;
-                project.ProviderId = adoProject.Id;
+                project.Name = azdoProject.Name;
+                project.Description = azdoProject.Description;
+                project.ProviderId = azdoProject.Id;
                 project.Slug = url.Slug;
-                project.Private = adoProject.Visibility is not Models.Azure.AzdoProjectVisibility.Public;
+                project.Private = azdoProject.Visibility is not Models.Azure.AzdoProjectVisibility.Public;
                 project.Token = token;
-                project.UserId = adoUser.AuthenticatedUser.Id;
+                project.UserId = azdoUser.AuthenticatedUser.Id;
                 project.AutoComplete = new Models.Management.ProjectAutoComplete
                 {
                     Enabled = setup.AutoComplete,
@@ -130,7 +130,7 @@ internal class InitialSetupService(IServiceScopeFactory serviceScopeFactory,
             projects = await context.Projects.ToListAsync(cancellationToken);
 
             // synchronize and create/update subscriptions if we have setups
-            var synchronizer = provider.GetRequiredService<Synchronizer>();
+            var synchronizer = provider.GetRequiredService<ISynchronizer>();
             foreach (var project in projects)
             {
                 // synchronize project
@@ -145,7 +145,7 @@ internal class InitialSetupService(IServiceScopeFactory serviceScopeFactory,
         if (!options.SkipLoadSchedules)
         {
             var repositories = await context.Repositories.ToListAsync(cancellationToken);
-            var scheduler = provider.GetRequiredService<UpdateScheduler>();
+            var scheduler = provider.GetRequiredService<IUpdateScheduler>();
             foreach (var repository in repositories)
             {
                 await scheduler.CreateOrUpdateAsync(repository, cancellationToken);

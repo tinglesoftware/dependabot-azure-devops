@@ -7,9 +7,30 @@ using SC = Tingle.Dependabot.DependabotSerializerContext;
 
 namespace Tingle.Dependabot.Workflow;
 
-internal partial class ConfigFilesWriter(CertificateManager certificateManager, IOptions<WorkflowOptions> optionsAccessor, ILogger<ConfigFilesWriter> logger)
+public interface IConfigFilesWriter
+{
+    IReadOnlyList<DependabotCredential> MakeCredentials(UpdaterContext context);
+    Task WriteJobAsync(string path, JobConfigContext context, CancellationToken cancellationToken = default);
+    Task WriteJobAsync(Stream stream, JobConfigContext context, CancellationToken cancellationToken = default);
+    Task WriteProxyAsync(string path, ProxyConfigContext context, CancellationToken cancellationToken = default);
+    Task WriteProxyAsync(Stream stream, ProxyConfigContext context, CancellationToken cancellationToken = default);
+}
+
+internal partial class ConfigFilesWriter(ICertificateManager certificateManager,
+                                         IOptions<WorkflowOptions> optionsAccessor,
+                                         ILogger<ConfigFilesWriter> logger) : IConfigFilesWriter
 {
     private readonly WorkflowOptions options = optionsAccessor?.Value ?? throw new ArgumentNullException(nameof(optionsAccessor));
+
+    public IReadOnlyList<DependabotCredential> MakeCredentials(UpdaterContext context)
+    {
+        // prepare credentials with replaced secrets
+        var project = context.Project;
+        var secrets = new Dictionary<string, string>(project.Secrets) { ["DEFAULT_TOKEN"] = project.Token, };
+        var registries = context.Update.Registries?.Select(r => context.Repository.Registries[r]).ToList() ?? [];
+        return MakeCredentials(registries, secrets, project);
+    }
+
     public async Task WriteJobAsync(string path, JobConfigContext context, CancellationToken cancellationToken = default)
     {
         // write the job definition file
@@ -90,15 +111,6 @@ internal partial class ConfigFilesWriter(CertificateManager certificateManager, 
 
         // serialize the proxy config
         await JsonSerializer.SerializeAsync(stream, config, SC.Default.DependabotProxyConfig, cancellationToken);
-    }
-
-    public static IReadOnlyList<DependabotCredential> MakeCredentials(UpdaterContext context)
-    {
-        // prepare credentials with replaced secrets
-        var project = context.Project;
-        var secrets = new Dictionary<string, string>(project.Secrets) { ["DEFAULT_TOKEN"] = project.Token, };
-        var registries = context.Update.Registries?.Select(r => context.Repository.Registries[r]).ToList() ?? [];
-        return MakeCredentials(registries, secrets, project);
     }
 
     internal static IReadOnlyList<DependabotCredential> MakeCredentials(IReadOnlyCollection<DependabotRegistry> registries, IReadOnlyDictionary<string, string> secrets, Project project)
@@ -320,7 +332,7 @@ internal partial class ConfigFilesWriter(CertificateManager certificateManager, 
     private static partial Regex PlaceholderPattern();
 }
 
-internal readonly struct JobConfigContext(UpdaterContext context, IReadOnlyList<DependabotCredential> credentials)
+public readonly struct JobConfigContext(UpdaterContext context, IReadOnlyList<DependabotCredential> credentials)
 {
     public Project Project { get; } = context.Project;
     public RepositoryUpdate Update { get; } = context.Update;
@@ -333,7 +345,7 @@ internal readonly struct JobConfigContext(UpdaterContext context, IReadOnlyList<
     public List<string> DependencyNamesToUpdate { get; } = context.DependencyNamesToUpdate;
 }
 
-internal readonly struct ProxyConfigContext(UpdaterContext context, IReadOnlyList<DependabotCredential> credentials)
+public readonly struct ProxyConfigContext(UpdaterContext context, IReadOnlyList<DependabotCredential> credentials)
 {
     public UpdateJob Job { get; } = context.Job;
     public IReadOnlyList<DependabotCredential> Credentials { get; } = credentials;
