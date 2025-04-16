@@ -7,9 +7,7 @@ using Tingle.Extensions.Primitives;
 
 namespace Tingle.Dependabot.Workflow;
 
-internal partial class UpdateRunner(ConfigFilesWriter configFilesWriter,
-                                    IOptions<WorkflowOptions> optionsAccessor,
-                                    ILogger<UpdateRunner> logger)
+internal partial class UpdateRunner(ConfigFilesWriter configFilesWriter, IOptions<WorkflowOptions> optionsAccessor, ILogger<UpdateRunner> logger)
 {
     private const string VolumeNameCerts = "certs";
     private const string VolumeNameJobs = "jobs";
@@ -22,7 +20,7 @@ internal partial class UpdateRunner(ConfigFilesWriter configFilesWriter,
     private readonly ILogger logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly DockerClient dockerClient = new DockerClientConfiguration().CreateClient();
 
-    public async Task CreateAsync(UpdaterContext context, CancellationToken cancellationToken = default)
+    public async Task RunAsync(UpdaterContext context, CancellationToken cancellationToken = default)
     {
         var project = context.Project;
         var update = context.Update;
@@ -36,7 +34,7 @@ internal partial class UpdateRunner(ConfigFilesWriter configFilesWriter,
         if (container is not null) return;
 
         // prepare credentials and job directory
-        var credentials = configFilesWriter.MakeCredentials(context);
+        var credentials = ConfigFilesWriter.MakeCredentials(context);
 
         // prepare directories and path for artifacts
         var artifactsDirectory = Path.Join(options.ArtifactsDirectory, job.Id);
@@ -283,9 +281,9 @@ internal partial class UpdateRunner(ConfigFilesWriter configFilesWriter,
     {
         const string fileName = "dependabot-flamegraph.html";
         var @params = new Docker.DotNet.Models.GetArchiveFromContainerParameters { Path = $"/tmp/{fileName}" };
-        var response = await dockerClient.Containers.GetArchiveFromContainerAsync(containerId, @params, false, cancellationToken);
         try
         {
+            var response = await dockerClient.Containers.GetArchiveFromContainerAsync(containerId, @params, false, cancellationToken);
             using var reader = new TarReader(response.Stream, leaveOpen: true);
             TarEntry? entry;
             while ((entry = reader.GetNextEntry()) is not null)
@@ -299,6 +297,10 @@ internal partial class UpdateRunner(ConfigFilesWriter configFilesWriter,
                 }
             }
             throw new FileNotFoundException($"'/tmp/{fileName}' not found in container archive.");
+        }
+        catch (DockerContainerNotFoundException) // happens when the container did not succeed
+        {
+            return;
         }
         catch (EndOfStreamException) // for some reason it is thrown after the file is already copied
         {
@@ -370,14 +372,15 @@ public readonly record struct UpdateRunnerState(UpdateJobStatus Status, DateTime
 
 public readonly struct UpdaterContext
 {
-    public UpdaterContext() { }
-
     public required Project Project { get; init; }
     public required Repository Repository { get; init; }
     public required RepositoryUpdate Update { get; init; }
     public required UpdateJob Job { get; init; }
 
-    public bool UpdatingPullRequest { get; init; } = false;
-    public string? UpdateDependencyGroupName { get; init; } = null;
-    public List<string> UpdateDependencyNames { get; init; } = [];
+    public required IReadOnlyDictionary<string, Models.Azure.PullRequestProperties> ExistingPullRequests { get; init; }
+    public required IReadOnlyList<Models.Dependabot.DependabotSecurityAdvisory> SecurityAdvisories { get; init; }
+
+    public required bool UpdatingPullRequest { get; init; }
+    public required string? DependencyGroupToRefresh { get; init; }
+    public required List<string> DependencyNamesToUpdate { get; init; }
 }

@@ -16,7 +16,7 @@ using Xunit;
 
 namespace Tingle.Dependabot.Tests;
 
-public class WebhooksControllerIntegrationTests(ITestOutputHelper outputHelper)
+public class WebhooksEndpointsIntegrationTests(ITestOutputHelper outputHelper)
 {
     private const string ProjectId = "prj_1234567890";
 
@@ -52,11 +52,7 @@ public class WebhooksControllerIntegrationTests(ITestOutputHelper outputHelper)
             request.Content = new StringContent("", Encoding.UTF8, "application/json");
             var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-            var body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
-            Assert.Contains("\"type\":\"https://tools.ietf.org/html/rfc9110#section-15.5.1\"", body);
-            Assert.Contains("\"title\":\"One or more validation errors occurred.\"", body);
-            Assert.Contains("\"status\":400", body);
-            Assert.Contains("\"errors\":{\"\":[\"A non-empty request body is required.\"],\"model\":[\"The model field is required.\"]}", body);
+            Assert.Empty(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
             Assert.Empty(await harness.PublishedAsync(cancellationToken: TestContext.Current.CancellationToken));
         });
     }
@@ -93,10 +89,7 @@ public class WebhooksControllerIntegrationTests(ITestOutputHelper outputHelper)
             request.Content = new StreamContent(stream);
             var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
             Assert.Equal(HttpStatusCode.UnsupportedMediaType, response.StatusCode);
-            var body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
-            Assert.Contains("\"type\":\"https://tools.ietf.org/html/rfc9110#section-15.5.16\"", body);
-            Assert.Contains("\"title\":\"Unsupported Media Type\"", body);
-            Assert.Contains("\"status\":415", body);
+            Assert.Empty(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
             Assert.Empty(await harness.PublishedAsync(cancellationToken: TestContext.Current.CancellationToken));
         });
     }
@@ -185,9 +178,7 @@ public class WebhooksControllerIntegrationTests(ITestOutputHelper outputHelper)
             .ConfigureLogging(builder => builder.AddXUnit(outputHelper))
             .ConfigureServices((context, services) =>
             {
-                services.AddControllers()
-                        .AddApplicationPart(typeof(MainDbContext).Assembly)
-                        .AddJsonOptions(options => options.JsonSerializerOptions.UseStandard());
+                services.ConfigureHttpJsonOptions(options => options.SerializerOptions.UseStandard());
 
                 services.AddDbContext<MainDbContext>(options =>
                 {
@@ -216,7 +207,7 @@ public class WebhooksControllerIntegrationTests(ITestOutputHelper outputHelper)
                 app.UseAuthorization();
                 app.UseEndpoints(endpoints =>
                 {
-                    endpoints.MapControllers();
+                    endpoints.MapWebhooks();
                 });
             });
         using var server = new TestServer(builder);

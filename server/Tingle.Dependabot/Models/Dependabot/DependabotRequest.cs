@@ -1,5 +1,7 @@
-﻿using System.Text.Json.Nodes;
+﻿using System.Runtime.Serialization;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+using Tingle.Extensions.Primitives.Converters;
 
 namespace Tingle.Dependabot.Models.Dependabot;
 
@@ -41,8 +43,8 @@ public record DependabotDependencyFile(
     [property: JsonPropertyName("mode")] string? Mode);
 
 public record DependabotClosePullRequest(
-    [property: JsonPropertyName("dependency-names")] List<string>? DependencyNames,
-    [property: JsonPropertyName("reason")] string? Reason);
+    [property: JsonPropertyName("dependency-names")] List<string> DependencyNames,
+    [property: JsonPropertyName("reason")] string Reason);
 
 public record DependabotMarkAsProcessed(
     [property: JsonPropertyName("base-commit-sha")] string? BaseCommitSha);
@@ -61,3 +63,17 @@ public record DependabotRecordUpdateJobUnknownError(
 public record DependabotIncrementMetric(
     [property: JsonPropertyName("metric")] string? Metric,
     [property: JsonPropertyName("tags")] JsonObject? Tags);
+
+[JsonConverter(typeof(JsonStringEnumMemberConverter<DependabotOperationType>))]
+public enum DependabotOperationType
+{
+    [EnumMember(Value = "create_pull_request")] CreatePullRequest,
+    [EnumMember(Value = "update_pull_request")] UpdatePullRequest,
+    [EnumMember(Value = "close_pull_request")] ClosePullRequest,
+    [EnumMember(Value = "record_update_job_error")] RecordUpdateJobError,
+    [EnumMember(Value = "record_update_job_unknown_error")] RecordUpdateJobUnknownError,
+    [EnumMember(Value = "mark_as_processed")] MarkAsProcessed,
+    [EnumMember(Value = "update_dependency_list")] UpdateDependencyList,
+    [EnumMember(Value = "record_ecosystem_versions")] RecordEcosystemVersions,
+    [EnumMember(Value = "increment_metric")] IncrementMetric,
+}

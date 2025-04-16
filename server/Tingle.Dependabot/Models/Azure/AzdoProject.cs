@@ -34,16 +34,8 @@ public class AzdoProjectReference
 [JsonConverter(typeof(JsonStringEnumMemberConverter<AzdoProjectVisibility>))]
 public enum AzdoProjectVisibility
 {
-
-    [EnumMember(Value = "private")]
-    Private,
-
-    [EnumMember(Value = "organization")]
-    Organization,
-
-    [EnumMember(Value = "public")]
-    Public,
-
-    [EnumMember(Value = "systemPrivate")]
-    SystemPrivate,
+    [EnumMember(Value = "private")] Private,
+    [EnumMember(Value = "organization")] Organization,
+    [EnumMember(Value = "public")] Public,
+    [EnumMember(Value = "systemPrivate")] SystemPrivate,
 }

@@ -135,12 +135,8 @@ app.UseAuthorization();
 app.MapHealthChecks("/health");
 app.MapHealthChecks("/liveness", new HealthCheckOptions { Predicate = _ => false, });
 
-app.MapUpdateJobs()
-   .RequireAuthorization(AuthConstants.PolicyNameUpdater);
-
-app.MapWebhooks()
-   .RequireAuthorization(AuthConstants.PolicyNameServiceHooks);
-
+app.MapUpdateJobs();
+app.MapWebhooks();
 app.MapManagement();
 
 await app.RunAsync();

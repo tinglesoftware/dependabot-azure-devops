@@ -83,8 +83,8 @@ public partial class InitialCreate : Migration
                 Duration = table.Column<long>(type: "INTEGER", nullable: true),
                 LogsPath = table.Column<string>(type: "TEXT", nullable: true),
                 FlameGraphPath = table.Column<string>(type: "TEXT", nullable: true),
-                Error_Type = table.Column<string>(type: "TEXT", nullable: true),
-                Error_Detail = table.Column<string>(type: "TEXT", nullable: true)
+                Errors = table.Column<string>(type: "TEXT", nullable: false),
+                UnknownErrors = table.Column<string>(type: "TEXT", nullable: false)
             },
             constraints: table =>
             {
@@ -165,11 +165,6 @@ public partial class InitialCreate : Migration
             table: "UpdateJobs",
             column: "Created",
             descending: new bool[0]);
-
-        migrationBuilder.CreateIndex(
-            name: "IX_UpdateJobs_Error_Type",
-            table: "UpdateJobs",
-            column: "Error_Type");
 
         migrationBuilder.CreateIndex(
             name: "IX_UpdateJobs_PackageEcosystem_Directory_Directories",

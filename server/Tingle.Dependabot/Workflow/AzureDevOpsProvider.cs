@@ -196,6 +196,11 @@ public class AzureDevOpsProvider(HttpClient httpClient, IOptions<WorkflowOptions
         var request = new HttpRequestMessage(HttpMethod.Get, uri);
         return await SendAsync(project.Token, request, SC.Default.AzdoRepository, cancellationToken);
     }
+    public async Task<string?> GetDefaultBranchAsync(Project project, string repositoryIdOrName, CancellationToken cancellationToken)
+    {
+        var repository = await GetRepositoryAsync(project, repositoryIdOrName, cancellationToken);
+        return NormalizeBranchName(repository.DefaultBranch);
+    }
 
     public async Task<AzdoRepositoryItem?> GetConfigurationFileAsync(Project project, string repositoryIdOrName, CancellationToken cancellationToken = default)
     {
@@ -238,7 +243,7 @@ public class AzureDevOpsProvider(HttpClient httpClient, IOptions<WorkflowOptions
         var request = new HttpRequestMessage(HttpMethod.Get, uri);
         return await SendAsync(project.Token, request, SC.Default.AzdoResponseListAzdoPullRequest, cancellationToken);
     }
-    public async Task<PullRequestProperties> GetPullRequestPropertiesAsync(Project project, string repositoryIdOrName, int pullRequestId, CancellationToken cancellationToken = default)
+    public async Task<PullRequestProperties?> GetPullRequestPropertiesAsync(Project project, string repositoryIdOrName, int pullRequestId, CancellationToken cancellationToken = default)
     {
         var url = project.Url;
         var uri = new UriBuilder
@@ -251,7 +256,103 @@ public class AzureDevOpsProvider(HttpClient httpClient, IOptions<WorkflowOptions
         }.Uri;
         var request = new HttpRequestMessage(HttpMethod.Get, uri);
         var response = await SendAsync(project.Token, request, SC.Default.AzdoResponseAzdoPullRequestProperties, cancellationToken);
-        return ParsePullRequestProperties(response);
+
+        // parse the properties
+        string? packageManager = null;
+        PullRequestStoredDependencies? dependencies = null;
+        foreach (var (key, value) in response.Value)
+        {
+            var inner = value.Value;
+            if (key == PrPropertyDependabotPackageManager) packageManager = inner;
+            else if (key == PrPropertyDependabotDependencies)
+                dependencies = JsonSerializer.Deserialize(inner, SC.Default.PullRequestStoredDependencies);
+        }
+        if (packageManager is null || dependencies is null) return null;
+        return new PullRequestProperties(packageManager, dependencies);
+    }
+
+    public async Task AbandonPullRequestAsync(Project project,
+                                              string repositoryIdOrName,
+                                              int pullRequestId,
+                                              string? comment,
+                                              CancellationToken cancellationToken = default)
+    {
+        // Add a comment to the pull request, if supplied
+        var url = project.Url;
+        HttpRequestMessage? request = null;
+        Uri? uri = null;
+        if (comment is not null)
+        {
+            uri = new UriBuilder
+            {
+                Scheme = url.Scheme,
+                Host = url.Hostname,
+                Port = url.Port ?? -1,
+                Path = $"{url.OrganizationName}/{url.ProjectIdOrName}/_apis/git/repositories/{repositoryIdOrName}/pullrequests/{pullRequestId}/threads",
+                Query = $"?api-version=7.1"
+            }.Uri;
+            var thread = new AzdoPullRequestCommentThreadCreate(
+                Status: AzdoPullRequestCommentThreadStatus.Closed,
+                Comments: [new AzdoPullRequestCommentThreadComment(
+                Content: comment,
+                CommentType: AzdoPullRequestCommentThreadCommentType.System,
+                Author: new AzdoIdentity(Id: project.UserId)
+            )]
+            );
+            request = new HttpRequestMessage(HttpMethod.Post, uri)
+            {
+                Content = JsonContent.Create(thread, SC.Default.AzdoPullRequestCommentThreadCreate),
+            };
+            await SendAsync(project.Token, request, SC.Default.AzdoPullRequestCommentThread, cancellationToken);
+        }
+
+        // Abandon the pull request
+        uri = new UriBuilder
+        {
+            Scheme = url.Scheme,
+            Host = url.Hostname,
+            Port = url.Port ?? -1,
+            Path = $"{url.OrganizationName}/{url.ProjectIdOrName}/_apis/git/repositories/{repositoryIdOrName}/pullrequests/{pullRequestId}",
+            Query = $"?api-version=7.1"
+        }.Uri;
+        request = new HttpRequestMessage(HttpMethod.Patch, uri)
+        {
+            Content = JsonContent.Create(new System.Text.Json.Nodes.JsonObject
+            {
+                ["status"] = "abandoned",
+                ["closedBy"] = new System.Text.Json.Nodes.JsonObject
+                {
+                    ["id"] = project.UserId,
+                },
+            }, SC.Default.JsonObject),
+        };
+        var abandonedPullRequest = await SendAsync(project.Token, request, SC.Default.AzdoPullRequest, cancellationToken);
+        if (!string.Equals(abandonedPullRequest.Status, "abandoned", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new Exception("Failed to abandon pull request, status was not updated");
+        }
+
+        // Delete the source branch if required
+        uri = new UriBuilder
+        {
+            Scheme = url.Scheme,
+            Host = url.Hostname,
+            Port = url.Port ?? -1,
+            Path = $"{url.OrganizationName}/{url.ProjectIdOrName}/_apis/git/repositories/{repositoryIdOrName}/refs",
+            Query = $"?api-version=7.1"
+        }.Uri;
+        var refUpdate = new AzdoRefUpdate(
+            IsLocked: false,
+            Name: abandonedPullRequest.SourceRefName,
+            NewObjectId: "0000000000000000000000000000000000000000",
+            OldObjectId: abandonedPullRequest.LastMergeSourceCommit.CommitId
+        );
+        request = new HttpRequestMessage(HttpMethod.Post, uri)
+        {
+            Content = JsonContent.Create([refUpdate], SC.Default.ListAzdoRefUpdate),
+        };
+        var result = await SendAsync(project.Token, request, SC.Default.AzdoResponseListAzdoRefUpdateResult, cancellationToken);
+        if (result.Value[0].Success != true) throw new Exception("Failed to delete the source branch");
     }
 
     private async Task<T> SendAsync<T>(string token, HttpRequestMessage request, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken)
@@ -264,17 +365,12 @@ public class AzureDevOpsProvider(HttpClient httpClient, IOptions<WorkflowOptions
         return (await response.Content.ReadFromJsonAsync(jsonTypeInfo, cancellationToken))!;
     }
 
-    internal static PullRequestProperties ParsePullRequestProperties(AzdoPullRequestProperties properties)
+    internal static string? NormalizeBranchName(string? branch)
     {
-        var relevant = new PullRequestProperties { };
-        foreach (var (key, value) in properties)
-        {
-            var inner = value.Value;
-            if (key == PrPropertyDependabotPackageManager) relevant.PackageManager = inner;
-            else if (key == PrPropertyDependabotDependencies) relevant.Dependencies = JsonSerializer.Deserialize(inner, SC.Default.ListString);
-        }
-        return relevant;
+        // Strip the 'refs/heads/' prefix from the branch name, if present
+        return branch is not null && branch.StartsWith("refs/heads/") ? branch["refs/heads/".Length..] : branch;
     }
+
     internal static Dictionary<string, string> MakeTfsPublisherInputs(string type, string projectId)
     {
         // possible inputs are available via an authenticated request to
@@ -309,10 +405,4 @@ public class AzureDevOpsProvider(HttpClient httpClient, IOptions<WorkflowOptions
             ["basicAuthPassword"] = project.Password,
         };
     }
-}
-
-public class PullRequestProperties
-{
-    public string? PackageManager { get; set; }
-    public List<string>? Dependencies { get; set; }
 }

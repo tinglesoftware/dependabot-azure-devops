@@ -7,9 +7,7 @@ using SC = Tingle.Dependabot.DependabotSerializerContext;
 
 namespace Tingle.Dependabot.Workflow;
 
-internal partial class ConfigFilesWriter(CertificateManager certificateManager,
-                                         IOptions<WorkflowOptions> optionsAccessor,
-                                         ILogger<ConfigFilesWriter> logger)
+internal partial class ConfigFilesWriter(CertificateManager certificateManager, IOptions<WorkflowOptions> optionsAccessor, ILogger<ConfigFilesWriter> logger)
 {
     private readonly WorkflowOptions options = optionsAccessor?.Value ?? throw new ArgumentNullException(nameof(optionsAccessor));
     public async Task WriteJobAsync(string path, JobConfigContext context, CancellationToken cancellationToken = default)
@@ -38,15 +36,15 @@ internal partial class ConfigFilesWriter(CertificateManager certificateManager,
             AllowedUpdates: GetAllowDependencies(update.Allow, update.SecurityOnly),
             Debug: project.Debug,
             DependencyGroups: [.. (update.Groups ?? []).Select(p => MapDependencyGroup(p.Key, p.Value))],
-            Dependencies: context.UpdateDependencyNames,
-            DependencyGroupToRefresh: context.UpdateDependencyGroupName,
-            ExistingPullRequests: [], // TODO: filter out PRs for the given dependency-group-name similar to the extension
-            ExistingGroupPullRequests: [], // TODO: filter out PRs for the given dependency-group-name similar to the extension
+            Dependencies: context.DependencyNamesToUpdate,
+            DependencyGroupToRefresh: context.DependencyGroupToRefresh,
+            ExistingPullRequests: [.. context.ExistingPullRequests.Where(p => p.Value.Dependencies.DependencyGroupName is null).Select(MapExistingPR)],
+            ExistingGroupPullRequests: [.. context.ExistingPullRequests.Where(p => p.Value.Dependencies.DependencyGroupName is not null).Select(MapExistingGroupPR)],
             Experiments: MapExperiments(experiments),
             IgnoreConditions: [.. (update.Ignore ?? []).Select(MapIgnoreDependency)],
             LockfileOnly: update.VersioningStrategy == "lockfile-only",
             RequirementsUpdateStrategy: MapRequirementsUpdateStrategy(update.VersioningStrategy),
-            SecurityAdvisories: [], // TODO: needs mapping similar to the extension
+            SecurityAdvisories: context.SecurityAdvisories,
             SecurityUpdatesOnly: update.SecurityOnly,
             Source: new DependabotSource(
                 Provider: "azure",
@@ -94,7 +92,7 @@ internal partial class ConfigFilesWriter(CertificateManager certificateManager,
         await JsonSerializer.SerializeAsync(stream, config, SC.Default.DependabotProxyConfig, cancellationToken);
     }
 
-    public IReadOnlyList<DependabotCredential> MakeCredentials(UpdaterContext context)
+    public static IReadOnlyList<DependabotCredential> MakeCredentials(UpdaterContext context)
     {
         // prepare credentials with replaced secrets
         var project = context.Project;
@@ -103,21 +101,6 @@ internal partial class ConfigFilesWriter(CertificateManager certificateManager,
         return MakeCredentials(registries, secrets, project);
     }
 
-    internal static IReadOnlyList<DependabotCredential> MakeCredentialsMetadata(IReadOnlyList<DependabotCredential> credentials)
-    {
-        var metadata = new List<DependabotCredential>();
-
-        // remove the sensitive values
-        string[] sensitive = ["username", "token", "password", "key", "auth-key"];
-        foreach (var cred in credentials)
-        {
-            metadata.Add(
-                new DependabotCredential(
-                    cred.Where(k => !sensitive.Contains(k.Key, StringComparer.OrdinalIgnoreCase))));
-        }
-
-        return metadata;
-    }
     internal static IReadOnlyList<DependabotCredential> MakeCredentials(IReadOnlyCollection<DependabotRegistry> registries, IReadOnlyDictionary<string, string> secrets, Project project)
     {
         var credentials = new List<DependabotCredential>()
@@ -193,6 +176,21 @@ internal partial class ConfigFilesWriter(CertificateManager certificateManager,
         }
 
         return credentials;
+    }
+    internal static IReadOnlyList<DependabotCredential> MakeCredentialsMetadata(IReadOnlyList<DependabotCredential> credentials)
+    {
+        var metadata = new List<DependabotCredential>();
+
+        // remove the sensitive values
+        string[] sensitive = ["username", "token", "password", "key", "auth-key"];
+        foreach (var cred in credentials)
+        {
+            metadata.Add(
+                new DependabotCredential(
+                    cred.Where(k => !sensitive.Contains(k.Key, StringComparer.OrdinalIgnoreCase))));
+        }
+
+        return metadata;
     }
     internal static string? ConvertPlaceholder(string? input, IReadOnlyDictionary<string, string> secrets)
     {
@@ -308,6 +306,15 @@ internal partial class ConfigFilesWriter(CertificateManager certificateManager,
             _ => throw new InvalidOperationException($"Versioning strategy: '{value}' is not supported"),
         };
     }
+    internal static DependabotExistingPR[] MapExistingPR(KeyValuePair<string, Models.Azure.PullRequestProperties> pair)
+        => [.. pair.Value.Dependencies.Dependencies.Select(dep => (DependabotExistingPR)dep)];
+    internal static DependabotExistingGroupPR MapExistingGroupPR(KeyValuePair<string, Models.Azure.PullRequestProperties> pair)
+    {
+        var (_, (_, outer)) = pair;
+        return new DependabotExistingGroupPR(
+            outer.DependencyGroupName!,
+            [.. outer.Dependencies.Select(dep => (DependabotExistingPR)dep)]);
+    }
 
     [GeneratedRegex("\\${{\\s*([a-zA-Z_]+[a-zA-Z0-9_-]*)\\s*}}", RegexOptions.Compiled)]
     private static partial Regex PlaceholderPattern();
@@ -319,9 +326,11 @@ internal readonly struct JobConfigContext(UpdaterContext context, IReadOnlyList<
     public RepositoryUpdate Update { get; } = context.Update;
     public UpdateJob Job { get; } = context.Job;
     public IReadOnlyList<DependabotCredential> Credentials { get; } = credentials;
+    public IReadOnlyDictionary<string, Models.Azure.PullRequestProperties> ExistingPullRequests { get; } = context.ExistingPullRequests;
+    public IReadOnlyList<DependabotSecurityAdvisory>? SecurityAdvisories { get; } = context.SecurityAdvisories;
     public bool UpdatingPullRequest { get; } = context.UpdatingPullRequest;
-    public string? UpdateDependencyGroupName { get; } = context.UpdateDependencyGroupName;
-    public List<string> UpdateDependencyNames { get; } = context.UpdateDependencyNames;
+    public string? DependencyGroupToRefresh { get; } = context.DependencyGroupToRefresh;
+    public List<string> DependencyNamesToUpdate { get; } = context.DependencyNamesToUpdate;
 }
 
 internal readonly struct ProxyConfigContext(UpdaterContext context, IReadOnlyList<DependabotCredential> credentials)

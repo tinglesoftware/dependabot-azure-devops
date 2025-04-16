@@ -6,24 +6,11 @@ using Tingle.Extensions.Primitives.Converters;
 
 namespace Tingle.Dependabot.Models.Azure;
 
-public class AzureDevOpsEvent
-{
-    [Required]
-    [JsonPropertyName("subscriptionId")]
-    public string? SubscriptionId { get; set; }
-
-    [Required]
-    [JsonPropertyName("notificationId")]
-    public int NotificationId { get; set; }
-
-    [Required]
-    [JsonPropertyName("eventType")]
-    public AzureDevOpsEventType? EventType { get; set; }
-
-    [Required]
-    [JsonPropertyName("resource")]
-    public JsonObject? Resource { get; set; }
-}
+public record AzureDevOpsEvent(
+    [property: Required][property: JsonPropertyName("subscriptionId")] string? SubscriptionId,
+    [property: Required][property: JsonPropertyName("notificationId")] int NotificationId,
+    [property: Required][property: JsonPropertyName("eventType")] AzureDevOpsEventType? EventType,
+    [property: Required][property: JsonPropertyName("resource")] JsonObject? Resource);
 
 [JsonConverter(typeof(JsonStringEnumMemberConverter<AzureDevOpsEventType>))]
 public enum AzureDevOpsEventType
@@ -52,59 +39,24 @@ public enum AzureDevOpsEventType
     GitPullRequestCommentEvent,
 }
 
-public class AzureDevOpsEventCodePushResource
-{
-    /// <summary>List of updated references.</summary>
-    [Required]
-    [JsonPropertyName("refUpdates")]
-    public List<AzureDevOpsEventRefUpdate>? RefUpdates { get; set; }
+/// <param name="RefUpdates">List of updated references.</param>
+/// <param name="Repository">Details about the repository.</param>
+public record AzureDevOpsEventCodePushResource(
+    [property: JsonPropertyName("refUpdates")] List<AzureDevOpsEventRefUpdate> RefUpdates,
+    [property: JsonPropertyName("repository")] AzdoRepository Repository);
 
-    /// <summary>Details about the repository.</summary>
-    [JsonPropertyName("repository")]
-    public required AzdoRepository Repository { get; set; }
-}
+public record AzureDevOpsEventCommentResource(
+    [property: JsonPropertyName("id")] int Id,
+    [property: JsonPropertyName("parentCommentId")] int? ParentCommentId,
+    [property: JsonPropertyName("content")] string Content,
+    [property: JsonPropertyName("commentType")] string? CommentType,
+    [property: JsonPropertyName("publishedDate")] DateTimeOffset PublishedDate);
 
-public class AzureDevOpsEventCommentResource
-{
-    [Required]
-    [JsonPropertyName("id")]
-    public int? Id { get; set; }
+public record AzureDevOpsEventPullRequestCommentEventResource(
+    [property: JsonPropertyName("comment")] AzureDevOpsEventCommentResource Comment,
+    [property: JsonPropertyName("pullRequest")] AzdoPullRequest PullRequest);
 
-    [JsonPropertyName("parentCommentId")]
-    public int? ParentCommentId { get; set; }
-
-    [Required]
-    [JsonPropertyName("content")]
-    public string? Content { get; set; }
-
-    [JsonPropertyName("commentType")]
-    public string? CommentType { get; set; }
-
-    [Required]
-    [JsonPropertyName("publishedDate")]
-    public DateTimeOffset? PublishedDate { get; set; }
-}
-
-public class AzureDevOpsEventPullRequestCommentEventResource
-{
-    [Required]
-    [JsonPropertyName("comment")]
-    public AzureDevOpsEventCommentResource? Comment { get; set; }
-
-    [Required]
-    [JsonPropertyName("pullRequest")]
-    public AzdoPullRequest? PullRequest { get; set; }
-}
-
-public class AzureDevOpsEventRefUpdate
-{
-    [Required]
-    [JsonPropertyName("name")]
-    public string? Name { get; set; }
-
-    [JsonPropertyName("oldObjectId")]
-    public string? OldObjectId { get; set; }
-
-    [JsonPropertyName("newObjectId")]
-    public string? NewObjectId { get; set; }
-}
+public record AzureDevOpsEventRefUpdate(
+    [property: JsonPropertyName("name")] string Name,
+    [property: JsonPropertyName("oldObjectId")] string? OldObjectId,
+    [property: JsonPropertyName("newObjectId")] string? NewObjectId);

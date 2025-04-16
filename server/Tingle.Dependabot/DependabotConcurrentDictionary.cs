@@ -47,8 +47,7 @@ public sealed class DependabotConcurrentDictionary<TKey, TValue> : ConcurrentDic
     /// </returns>
     public async Task<TValue> GetOrAddAsync(TKey key, Func<TKey, CancellationToken, Task<TValue>> valueFactory, CancellationToken cancellationToken = default)
     {
-        if (key is null) throw new ArgumentNullException(nameof(key));
-        if (valueFactory is null) throw new ArgumentNullException(nameof(valueFactory));
+        ArgumentNullException.ThrowIfNull(valueFactory);
 
         while (true)
         {

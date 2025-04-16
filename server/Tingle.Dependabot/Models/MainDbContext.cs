@@ -59,11 +59,8 @@ public class MainDbContext(DbContextOptions<MainDbContext> options) : DbContext(
         modelBuilder.Entity<UpdateJob>(builder =>
         {
             builder.Property(j => j.PackageEcosystem).IsRequired();
-            builder.OwnsOne(j => j.Error, ownedBuilder =>
-            {
-                ownedBuilder.Property(e => e.Detail).HasJsonConversion(SC.Default.JsonNode);
-                ownedBuilder.HasIndex(e => e.Type); // faster filtering
-            });
+            builder.Property(e => e.Errors).HasJsonConversion(SC.Default.ListUpdateJobError);
+            builder.Property(e => e.UnknownErrors).HasJsonConversion(SC.Default.ListUpdateJobError);
 
             builder.HasIndex(j => j.Created).IsDescending(); // faster filtering
             builder.HasIndex(j => j.ProjectId);

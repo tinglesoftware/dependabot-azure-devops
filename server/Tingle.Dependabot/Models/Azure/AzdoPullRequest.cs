@@ -1,4 +1,6 @@
+using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
+using Tingle.Extensions.Primitives.Converters;
 
 namespace Tingle.Dependabot.Models.Azure;
 
@@ -40,9 +42,62 @@ public class AzdoPullRequest
     [JsonPropertyName("mergeId")]
     public required string MergeId { get; set; }
 
+    /// <summary>The commit at the head of the source branch at the time of the last pull request merge.</summary>
+    [JsonPropertyName("lastMergeSourceCommit")]
+    public required AzdoPullRequestLastMergeSourceCommit LastMergeSourceCommit { get; set; }
+
     /// <summary>The URL for the Pull Request.</summary>
     [JsonPropertyName("url")]
     public required string Url { get; set; }
 }
 
+/// <param name="CommitId">The URL for the Pull Request.</param>
+/// <param name="Url">The URL for the Pull Request.</param>
+public record AzdoPullRequestLastMergeSourceCommit(
+    [property: JsonPropertyName("commitId")] string CommitId,
+    [property: JsonPropertyName("url")] string Url);
+
 public class AzdoPullRequestProperties : Dictionary<string, AzdoProperty> { }
+
+public record AzdoPullRequestCommentThreadCreate(
+    [property: JsonPropertyName("status")] AzdoPullRequestCommentThreadStatus Status,
+    [property: JsonPropertyName("comments")] List<AzdoPullRequestCommentThreadComment> Comments);
+
+public record AzdoPullRequestCommentThread(
+    [property: JsonPropertyName("id")] string Id);
+
+public record AzdoPullRequestCommentThreadComment(
+    [property: JsonPropertyName("content")] string Content,
+    [property: JsonPropertyName("commentType")] AzdoPullRequestCommentThreadCommentType CommentType,
+    [property: JsonPropertyName("author")] AzdoIdentity Author);
+
+[JsonConverter(typeof(JsonStringEnumMemberConverter<AzdoPullRequestCommentThreadStatus>))]
+public enum AzdoPullRequestCommentThreadStatus
+{
+    [EnumMember(Value = "active")] Active,
+    [EnumMember(Value = "byDesign")] ByDesign,
+    [EnumMember(Value = "closed")] Closed,
+    [EnumMember(Value = "fixed")] Fixed,
+    [EnumMember(Value = "pending")] Pending,
+    [EnumMember(Value = "unknown")] Unknown,
+    [EnumMember(Value = "wontFix")] WontFix,
+}
+
+[JsonConverter(typeof(JsonStringEnumMemberConverter<AzdoPullRequestCommentThreadCommentType>))]
+public enum AzdoPullRequestCommentThreadCommentType
+{
+    [EnumMember(Value = "codeChange")] CodeChange,
+    [EnumMember(Value = "system")] System,
+    [EnumMember(Value = "text")] Text,
+    [EnumMember(Value = "unknown")] Unknown,
+}
+
+public record AzdoRefUpdate(
+    [property: JsonPropertyName("isLocked")] bool IsLocked,
+    [property: JsonPropertyName("name")] string Name,
+    [property: JsonPropertyName("newObjectId")] string NewObjectId,
+    [property: JsonPropertyName("oldObjectId")] string OldObjectId);
+
+/// <param name="Success">True if the ref update succeeded, false otherwise.</param>
+public record AzdoRefUpdateResult(
+    [property: JsonPropertyName("success")] bool Success);

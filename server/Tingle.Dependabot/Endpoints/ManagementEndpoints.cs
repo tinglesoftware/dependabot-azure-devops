@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using MiniValidation;
 using Tingle.Dependabot;
 using Tingle.Dependabot.Events;
 using Tingle.Dependabot.Models;
@@ -36,6 +37,8 @@ public static class ManagementEndpoints
                                                         [FromServices] IEventPublisher publisher,
                                                         HttpContext context)
     {
+        if (!MiniValidator.TryValidate(model, out var errors)) return Results.ValidationProblem(errors);
+
         // ensure project exists
         var projectId = context.GetProjectId() ?? throw new InvalidOperationException("Project identifier must be provided");
         var project = await dbContext.Projects.SingleOrDefaultAsync(p => p.Id == projectId);
@@ -208,6 +211,8 @@ public static class ManagementEndpoints
                                                      [FromServices] IEventPublisher publisher,
                                                      HttpContext context)
     {
+        if (!MiniValidator.TryValidate(model, out var errors)) return Results.ValidationProblem(errors);
+
         // ensure project exists
         var projectId = context.GetProjectId() ?? throw new InvalidOperationException("Project identifier must be provided");
         var project = await dbContext.Projects.SingleOrDefaultAsync(p => p.Id == projectId);
@@ -230,6 +235,8 @@ public static class ManagementEndpoints
                                                     [FromServices] IEventPublisher publisher,
                                                     HttpContext context)
     {
+        if (!MiniValidator.TryValidate(model, out var errors)) return Results.ValidationProblem(errors);
+
         // ensure project exists
         var projectId = context.GetProjectId() ?? throw new InvalidOperationException("Project identifier must be provided");
         var project = await dbContext.Projects.SingleOrDefaultAsync(p => p.Id == projectId);

@@ -1,5 +1,4 @@
 ﻿using Tingle.Dependabot.Models.Azure;
-using Tingle.Dependabot.Models.Management;
 
 namespace Microsoft.Extensions.Logging;
 

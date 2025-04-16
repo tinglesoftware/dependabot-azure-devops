@@ -201,6 +201,10 @@ namespace Tingle.Dependabot.Migrations
                     b.Property<long?>("End")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("Errors")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("EventBusId")
                         .HasColumnType("TEXT");
 
@@ -241,6 +245,10 @@ namespace Tingle.Dependabot.Migrations
 
                     b.Property<int>("Trigger")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("UnknownErrors")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("UpdaterImage")
                         .HasColumnType("TEXT");
@@ -323,28 +331,6 @@ namespace Tingle.Dependabot.Migrations
 
             modelBuilder.Entity("Tingle.Dependabot.Models.Management.UpdateJob", b =>
                 {
-                    b.OwnsOne("Tingle.Dependabot.Models.Management.UpdateJobError", "Error", b1 =>
-                        {
-                            b1.Property<string>("UpdateJobId")
-                                .HasColumnType("TEXT");
-
-                            b1.Property<string>("Detail")
-                                .HasColumnType("TEXT");
-
-                            b1.Property<string>("Type")
-                                .IsRequired()
-                                .HasColumnType("TEXT");
-
-                            b1.HasKey("UpdateJobId");
-
-                            b1.HasIndex("Type");
-
-                            b1.ToTable("UpdateJobs");
-
-                            b1.WithOwner()
-                                .HasForeignKey("UpdateJobId");
-                        });
-
                     b.OwnsOne("Tingle.Dependabot.Models.Management.UpdateJobResources", "Resources", b1 =>
                         {
                             b1.Property<string>("UpdateJobId")
@@ -363,8 +349,6 @@ namespace Tingle.Dependabot.Migrations
                             b1.WithOwner()
                                 .HasForeignKey("UpdateJobId");
                         });
-
-                    b.Navigation("Error");
 
                     b.Navigation("Resources")
                         .IsRequired();

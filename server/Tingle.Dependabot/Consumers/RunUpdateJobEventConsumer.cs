@@ -11,6 +11,8 @@ namespace Tingle.Dependabot.Consumers;
 internal class RunUpdateJobEventConsumer(MainDbContext dbContext,
                                          UpdateRunner runner,
                                          ScenarioStore scenarioStore,
+                                         AzureDevOpsProvider adoProvider,
+                                         GitHubGraphClient gitHubGraphClient,
                                          ILogger<RunUpdateJobEventConsumer> logger) : IEventConsumer<RunUpdateJobEvent>
 {
     public async Task ConsumeAsync(EventContext<RunUpdateJobEvent> context, CancellationToken cancellationToken)
@@ -61,53 +63,90 @@ internal class RunUpdateJobEventConsumer(MainDbContext dbContext,
                                                     repositoryUpdateId: repository.Updates.IndexOf(update),
                                                     projectId: project.Id,
                                                     eventBusId: eventBusId);
+            return;
         }
-        else
+
+        // create the job
+        var resources = UpdateJobResources.FromEcosystem(ecosystem); // decide the resources based on the ecosystem
+        var jobId = $"{SequenceNumber.Generate()}";
+        job = new UpdateJob
         {
-            // decide the resources based on the ecosystem
-            var resources = UpdateJobResources.FromEcosystem(ecosystem);
+            Id = jobId,
+            Created = DateTimeOffset.UtcNow,
+            Status = UpdateJobStatus.Running,
+            Trigger = evt.Trigger,
 
-            // create the job
-            var jobId = $"{SequenceNumber.Generate()}";
-            job = new UpdateJob
+            ProjectId = project.Id,
+            RepositoryId = repository.Id,
+            RepositorySlug = repository.Slug,
+            EventBusId = eventBusId,
+
+            Commit = repository.LatestCommit,
+            PackageEcosystem = ecosystem,
+            PackageManager = ConvertEcosystemToPackageManager(ecosystem),
+            Directory = update.Directory,
+            Directories = update.Directories,
+            Resources = resources,
+            AuthKey = Keygen.Create(32, Keygen.OutputFormat.Base62),
+
+            ProxyImage = null,
+            UpdaterImage = null,
+            LogsPath = null,
+            FlameGraphPath = null,
+
+            Start = null,
+            End = null,
+            Duration = null,
+        };
+        await dbContext.UpdateJobs.AddAsync(job, cancellationToken);
+
+        // update the RepositoryUpdate
+        update.LatestJobId = job.Id;
+        update.LatestJobStatus = job.Status;
+        update.LatestUpdate = job.Created;
+
+        // save to the database
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        // fetch existing pull requests
+        Dictionary<string, Models.Azure.PullRequestProperties> existingPullRequestsMapped = [];
+        var existingPullRequests = await adoProvider.GetActivePullRequestsAsync(project, repository.ProviderId, cancellationToken);
+        foreach (var pr in existingPullRequests)
+        {
+            var props = await adoProvider.GetPullRequestPropertiesAsync(project, repository.ProviderId, pr.PullRequestId, cancellationToken);
+            if (props is null) continue;
+            existingPullRequestsMapped[$"{pr.PullRequestId}"] = new Models.Azure.PullRequestProperties(
+                PackageManager: props.PackageManager,
+                Dependencies: props.Dependencies
+            );
+        }
+
+        List<string> dependencyNamesToUpdate = [];
+        List<Models.Dependabot.DependabotSecurityAdvisory>? securityAdvisories = [];
+
+        if (update.SecurityOnly)
+        {
+            // TODO; we need to ensure we have the dependencies prior to security only updates
+
+            List<Models.GitHub.GitHubPackage> packages = [];
+
+            var ghsaEcosystem = ConvertDependabotPackageManagerToGhsaEcosystem(job.PackageManager);
+            var vulnerabilities = await gitHubGraphClient.GetSecurityVulnerabilitiesAsync(project.Token, ghsaEcosystem, packages, cancellationToken);
+            foreach (var vulnerability in vulnerabilities)
             {
-                Id = jobId,
-                Created = DateTimeOffset.UtcNow,
-                Status = UpdateJobStatus.Running,
-                Trigger = evt.Trigger,
+                var vulnerableVersionRange = vulnerability.VulnerableVersionRange;
+                var firstPatchedVersion = vulnerability.FirstPatchedVersion;
+                securityAdvisories.Add(
+                    new Models.Dependabot.DependabotSecurityAdvisory(
+                        DependencyName: vulnerability.Package.Name,
+                        AffectedVersions: string.IsNullOrEmpty(vulnerableVersionRange) ? [] : [vulnerableVersionRange],
+                        PatchedVersions: string.IsNullOrEmpty(firstPatchedVersion) ? [] : [firstPatchedVersion],
+                        UnaffectedVersions: []
+                    ));
+            }
 
-                ProjectId = project.Id,
-                RepositoryId = repository.Id,
-                RepositorySlug = repository.Slug,
-                EventBusId = eventBusId,
-
-                Commit = repository.LatestCommit,
-                PackageEcosystem = ecosystem,
-                PackageManager = ConvertEcosystemToPackageManager(ecosystem),
-                Directory = update.Directory,
-                Directories = update.Directories,
-                Resources = resources,
-                AuthKey = Keygen.Create(32, Keygen.OutputFormat.Base62),
-
-                ProxyImage = null,
-                UpdaterImage = null,
-                LogsPath = null,
-                FlameGraphPath = null,
-
-                Start = null,
-                End = null,
-                Duration = null,
-                Error = null,
-            };
-            await dbContext.UpdateJobs.AddAsync(job, cancellationToken);
-
-            // update the RepositoryUpdate
-            update.LatestJobId = job.Id;
-            update.LatestJobStatus = job.Status;
-            update.LatestUpdate = job.Created;
-
-            // save to the database
-            await dbContext.SaveChangesAsync(cancellationToken);
+            // Only update dependencies that have vulnerabilities
+            dependencyNamesToUpdate = [.. vulnerabilities.Select(v => v.Package.Name)];
         }
 
         // call the update runner to run the update
@@ -118,22 +157,30 @@ internal class RunUpdateJobEventConsumer(MainDbContext dbContext,
             Update = update,
             Job = job,
 
+            ExistingPullRequests = existingPullRequestsMapped,
+            SecurityAdvisories = securityAdvisories,
+
             UpdatingPullRequest = false, // TODO: fix this
-            UpdateDependencyGroupName = null, // TODO: fix this
-            UpdateDependencyNames = [], // TODO: fix this
+            DependencyGroupToRefresh = evt.DependencyGroupToRefresh,
+            DependencyNamesToUpdate = dependencyNamesToUpdate,
         };
-        await runner.CreateAsync(updaterContext, cancellationToken);
+        await runner.RunAsync(updaterContext, cancellationToken);
 
         // save changes made by the runner
         await dbContext.SaveChangesAsync(cancellationToken);
 
         // call the scenario store to apply
-        var scenarioContext = new ScenarioApplicationContext
+        var defaultBranch = await adoProvider.GetDefaultBranchAsync(project, repository.ProviderId, cancellationToken);
+        var scenarioContext = new ScenarioApplicationContext(dbContext.SaveChangesAsync)
         {
             Project = project,
             Repository = repository,
             Update = update,
             Job = job,
+
+            AdoProvider = adoProvider,
+            DefaultBranch = defaultBranch,
+            ExistingPullRequests = existingPullRequestsMapped,
         };
         await scenarioStore.ApplyAsync(scenarioContext, cancellationToken);
 
@@ -162,7 +209,27 @@ internal class RunUpdateJobEventConsumer(MainDbContext dbContext,
             _ => ecosystem,
         };
     }
+    internal static string ConvertDependabotPackageManagerToGhsaEcosystem(string packageManager)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(packageManager);
 
+        return packageManager switch
+        {
+            "compose" => "COMPOSER",
+            "elm" => "ERLANG",
+            "github_actions" => "ACTIONS",
+            "go_modules" => "GO",
+            "maven" => "MAVEN",
+            "npm_and_yarn" => "NPM",
+            "nuget" => "NUGET",
+            "pip" => "PIP",
+            "pub" => "PUB",
+            "bundler" => "RUBYGEMS",
+            "cargo" => "RUST",
+            "swift" => "SWIFT",
+            _ => throw new InvalidOperationException($"Unknown dependabot package manager: {packageManager}"),
+        };
+    }
 
     private record Entities(Project Project, Repository Repository, UpdateJob Job, RepositoryUpdate? Update);
     private async Task<Entities> GetEntitiesAsync(string id, CancellationToken cancellationToken = default)

@@ -20,6 +20,12 @@ public record RunUpdateJobEvent : AbstractRepositoryEvent
 
     /// <summary>The trigger.</summary>
     public required UpdateJobTrigger Trigger { get; set; }
+
+    /// <summary>
+    /// Name of the dependency group to be refreshed.
+    /// This is only set when we detect merge conflicts and trigger a refresh.
+    /// </summary>
+    public string? DependencyGroupToRefresh { get; set; } // TODO: find where to set this
 }
 
 public abstract record AbstractRepositoryEvent : AbstractProjectEvent

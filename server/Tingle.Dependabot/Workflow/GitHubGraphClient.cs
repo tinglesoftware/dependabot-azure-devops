@@ -130,26 +130,4 @@ public class GitHubGraphClient(HttpClient httpClient)
 
         destination.AddRange(result);
     }
-
-    internal static string ConvertDependabotPackageManagerToGhsaEcosystem(string packageManager)
-    {
-        ArgumentException.ThrowIfNullOrEmpty(packageManager);
-
-        return packageManager switch
-        {
-            "compose" => "COMPOSER",
-            "elm" => "ERLANG",
-            "github-actions" => "ACTIONS",
-            "go_modules" => "GO",
-            "maven" => "MAVEN",
-            "npm_and_yarn" => "NPM",
-            "nuget" => "NUGET",
-            "pip" => "PIP",
-            "pub" => "PUB",
-            "bundler" => "RUBYGEMS",
-            "cargo" => "RUST",
-            "swift" => "SWIFT",
-            _ => throw new InvalidOperationException($"Unknown dependabot package manager: {packageManager}"),
-        };
-    }
 }

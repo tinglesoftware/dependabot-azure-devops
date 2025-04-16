@@ -44,6 +44,11 @@ namespace Tingle.Dependabot;
 [JsonSerializable(typeof(Models.Azure.AzdoRepositoryItem))]
 [JsonSerializable(typeof(Models.Azure.AzdoResponse<List<Models.Azure.AzdoPullRequest>>))]
 [JsonSerializable(typeof(Models.Azure.AzdoResponse<Models.Azure.AzdoPullRequestProperties>))]
+[JsonSerializable(typeof(List<Models.Azure.AzdoRefUpdate>))]
+[JsonSerializable(typeof(Models.Azure.AzdoResponse<List<Models.Azure.AzdoRefUpdateResult>>))]
+[JsonSerializable(typeof(Models.Azure.AzdoPullRequestCommentThreadCreate))]
+[JsonSerializable(typeof(Models.Azure.AzdoPullRequestCommentThread))]
+[JsonSerializable(typeof(Models.Azure.PullRequestStoredDependencies))]
 
 // github graphql
 [JsonSerializable(typeof(Models.GitHub.GhsaGraphQlRequest))]

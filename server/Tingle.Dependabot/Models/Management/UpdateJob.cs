@@ -2,7 +2,6 @@
 using System.Runtime.Serialization;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
-using Tingle.Extensions.Primitives;
 using Tingle.Extensions.Primitives.Converters;
 
 namespace Tingle.Dependabot.Models.Management;
@@ -89,8 +88,11 @@ public class UpdateJob : IProtectable
     [JsonIgnore] // only for internal use
     public string? FlameGraphPath { get; set; }
 
-    /// <summary>Error recorded by the job, if any.</summary>
-    public UpdateJobError? Error { get; set; }
+    /// <summary>Errors recorded by the job.</summary>
+    public List<UpdateJobError> Errors { get; set; } = [];
+
+    /// <summary>Unknown errors recorded by the job.</summary>
+    public List<UpdateJobError> UnknownErrors { get; set; } = [];
 
     public string ResourceName => $"dependabot-{Id}";
     public string ResourceNameProxy => $"{ResourceName}-proxy";
@@ -117,30 +119,18 @@ public class UpdateJobError
 [JsonConverter(typeof(JsonStringEnumMemberConverter<UpdateJobTrigger>))]
 public enum UpdateJobTrigger
 {
-    [EnumMember(Value = "scheduled")]
-    Scheduled = 0,
-
-    [EnumMember(Value = "missed_schedule")]
-    MissedSchedule = 1,
-
-    [EnumMember(Value = "synchronization")]
-    Synchronization = 2,
-
-    [EnumMember(Value = "manual")]
-    Manual = 3,
+    [EnumMember(Value = "scheduled")] Scheduled = 0,
+    [EnumMember(Value = "missed_schedule")] MissedSchedule = 1,
+    [EnumMember(Value = "synchronization")] Synchronization = 2,
+    [EnumMember(Value = "manual")] Manual = 3,
 }
 
 [JsonConverter(typeof(JsonStringEnumMemberConverter<UpdateJobStatus>))]
 public enum UpdateJobStatus
 {
-    [EnumMember(Value = "running")]
-    Running = 0,
-
-    [EnumMember(Value = "succeeded")]
-    Succeeded = 1,
-
-    [EnumMember(Value = "failed")]
-    Failed = 2,
+    [EnumMember(Value = "running")] Running = 0,
+    [EnumMember(Value = "succeeded")] Succeeded = 1,
+    [EnumMember(Value = "failed")] Failed = 2,
 }
 
 public class UpdateJobResources

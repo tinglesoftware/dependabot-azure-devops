@@ -252,37 +252,19 @@ public class DependabotRegistry
 [JsonConverter(typeof(JsonStringEnumMemberConverter<DependabotScheduleInterval>))]
 public enum DependabotScheduleInterval
 {
-    [EnumMember(Value = "daily")]
-    Daily,
-
-    [EnumMember(Value = "weekly")]
-    Weekly,
-
-    [EnumMember(Value = "monthly")]
-    Monthly,
+    [EnumMember(Value = "daily")] Daily,
+    [EnumMember(Value = "weekly")] Weekly,
+    [EnumMember(Value = "monthly")] Monthly,
 }
 
 [JsonConverter(typeof(JsonStringEnumMemberConverter<DependabotScheduleDay>))]
 public enum DependabotScheduleDay
 {
-    [EnumMember(Value = "sunday")]
-    Sunday,
-
-    [EnumMember(Value = "monday")]
-    Monday,
-
-    [EnumMember(Value = "tuesday")]
-    Tuesday,
-
-    [EnumMember(Value = "wednesday")]
-    Wednesday,
-
-    [EnumMember(Value = "thursday")]
-    Thursday,
-
-    [EnumMember(Value = "friday")]
-    Friday,
-
-    [EnumMember(Value = "saturday")]
-    Saturday,
+    [EnumMember(Value = "sunday")] Sunday,
+    [EnumMember(Value = "monday")] Monday,
+    [EnumMember(Value = "tuesday")] Tuesday,
+    [EnumMember(Value = "wednesday")] Wednesday,
+    [EnumMember(Value = "thursday")] Thursday,
+    [EnumMember(Value = "friday")] Friday,
+    [EnumMember(Value = "saturday")] Saturday,
 }

@@ -65,33 +65,15 @@ public class AzdoRepositoryItem
 [JsonConverter(typeof(JsonStringEnumMemberConverter<AzdoRepositoryItemType>))]
 public enum AzdoRepositoryItemType
 {
-    [EnumMember(Value = "bad")]
-    Bad,
-
-    [EnumMember(Value = "blob")]
-    Blob,
-
-    [EnumMember(Value = "commit")]
-    Commit,
-
-    [EnumMember(Value = "ext2")]
-    Ext2,
-
-    [EnumMember(Value = "ofsDelta")]
-    OfsDelta,
-
-    [EnumMember(Value = "refDelta")]
-    RefDelta,
-
-    [EnumMember(Value = "tree")]
-    Tree,
-
-    [EnumMember(Value = "tag")]
-    Tag,
+    [EnumMember(Value = "bad")] Bad,
+    [EnumMember(Value = "blob")] Blob,
+    [EnumMember(Value = "commit")] Commit,
+    [EnumMember(Value = "ext2")] Ext2,
+    [EnumMember(Value = "ofsDelta")] OfsDelta,
+    [EnumMember(Value = "refDelta")] RefDelta,
+    [EnumMember(Value = "tree")] Tree,
+    [EnumMember(Value = "tag")] Tag,
 }
 
-public class AzdoCommitRef
-{
-    [JsonPropertyName("commitId")]
-    public required string CommitId { get; set; }
-}
+public record AzdoCommitRef(
+    [property: JsonPropertyName("commitId")] string CommitId);

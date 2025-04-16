@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using MiniValidation;
 using System.Text.Json;
 using Tingle.Dependabot;
 using Tingle.Dependabot.Events;
@@ -15,8 +16,9 @@ public static class WebhooksEndpoints
     public static IEndpointConventionBuilder MapWebhooks(this IEndpointRouteBuilder endpoints)
     {
         var group = endpoints.MapGroup("/webhooks")
-                             .WithGroupName("webhooks");
-        endpoints.MapPost("azure", HandleAzureAsync);
+                             .WithGroupName("webhooks")
+                             .RequireAuthorization(AuthConstants.PolicyNameServiceHooks);
+        group.MapPost("azure", HandleAzureAsync);
         return group;
     }
 
@@ -26,6 +28,7 @@ public static class WebhooksEndpoints
                                                         [FromServices] ILoggerFactory loggerFactory)
     {
         var logger = loggerFactory.CreateLogger(typeof(WebhooksEndpoints).FullName!);
+        if (!MiniValidator.TryValidate(model, out var errors)) return Results.ValidationProblem(errors);
 
         var type = model.EventType;
         logger.WebhooksReceivedEvent(type, model.NotificationId, model.SubscriptionId?.Replace(Environment.NewLine, ""));

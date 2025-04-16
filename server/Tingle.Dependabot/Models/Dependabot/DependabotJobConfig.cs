@@ -14,7 +14,7 @@ public record DependabotJobConfig(
     [property: JsonPropertyName("dependency-groups")] IReadOnlyList<DependabotGroup>? DependencyGroups,
     [property: JsonPropertyName("dependencies")] IReadOnlyList<string> Dependencies,
     [property: JsonPropertyName("dependency-group-to-refresh")] string? DependencyGroupToRefresh,
-    [property: JsonPropertyName("existing-pull-requests")] IReadOnlyList<DependabotExistingPR>? ExistingPullRequests,
+    [property: JsonPropertyName("existing-pull-requests")] IReadOnlyList<DependabotExistingPR[]>? ExistingPullRequests,
     [property: JsonPropertyName("existing-group-pull-requests")] IReadOnlyList<DependabotExistingGroupPR>? ExistingGroupPullRequests,
     [property: JsonPropertyName("experiments")] DependabotExperiment? Experiments,
     [property: JsonPropertyName("ignore-conditions")] IReadOnlyList<DependabotCondition>? IgnoreConditions,
@@ -76,7 +76,7 @@ public record DependabotSecurityAdvisory(
     [property: JsonPropertyName("unaffected-versions")] List<string> UnaffectedVersions);
 
 public record DependabotDependency(
-    [property: JsonPropertyName("name")] string? Name,
+    [property: JsonPropertyName("name")] string Name,
     [property: JsonPropertyName("previous-requirements")] List<DependabotRequirement>? PreviousRequirements,
     [property: JsonPropertyName("previous-version")] string? PreviousVersion,
     [property: JsonPropertyName("version")] string? Version,

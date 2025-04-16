@@ -52,10 +52,8 @@ public class AzdoSubscriptionsQueryInputFilterCondition
 [JsonConverter(typeof(JsonStringEnumMemberConverter<AzdoSubscriptionsQueryInputFilterOperator>))]
 public enum AzdoSubscriptionsQueryInputFilterOperator
 {
-    [EnumMember(Value = "equals")]
-    Equals,
-    [EnumMember(Value = "notEquals")]
-    NotEquals
+    [EnumMember(Value = "equals")] Equals,
+    [EnumMember(Value = "notEquals")] NotEquals
 }
 
 public class AzdoSubscriptionsQueryResponse : AzdoSubscriptionsQuery
@@ -103,18 +101,9 @@ public class AzdoSubscription
 [JsonConverter(typeof(JsonStringEnumMemberConverter<AzdoSubscriptionStatus>))]
 public enum AzdoSubscriptionStatus
 {
-    [EnumMember(Value = "enabled")]
-    Enabled,
-
-    [EnumMember(Value = "onProbation")]
-    OnProbation,
-
-    [EnumMember(Value = "disabledByUser")]
-    DisabledByUser,
-
-    [EnumMember(Value = "disabledBySystem")]
-    DisabledBySystem,
-
-    [EnumMember(Value = "disabledByInactiveIdentity")]
-    DisabledByInactiveIdentity,
+    [EnumMember(Value = "enabled")] Enabled,
+    [EnumMember(Value = "onProbation")] OnProbation,
+    [EnumMember(Value = "disabledByUser")] DisabledByUser,
+    [EnumMember(Value = "disabledBySystem")] DisabledBySystem,
+    [EnumMember(Value = "disabledByInactiveIdentity")] DisabledByInactiveIdentity,
 }

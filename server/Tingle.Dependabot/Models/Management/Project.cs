@@ -1,7 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
-using Tingle.Extensions.Primitives;
 using Tingle.Extensions.Primitives.Converters;
 
 namespace Tingle.Dependabot.Models.Management;
@@ -127,15 +126,8 @@ public enum ProjectType
 [JsonConverter(typeof(JsonStringEnumMemberConverter<MergeStrategy>))]
 public enum MergeStrategy
 {
-    [EnumMember(Value = "noFastForward")]
-    NoFastForward = 0,
-
-    [EnumMember(Value = "rebase")]
-    Rebase = 1,
-
-    [EnumMember(Value = "rebaseMerge")]
-    RebaseMerge = 2,
-
-    [EnumMember(Value = "squash")]
-    Squash = 3,
+    [EnumMember(Value = "noFastForward")] NoFastForward = 0,
+    [EnumMember(Value = "rebase")] Rebase = 1,
+    [EnumMember(Value = "rebaseMerge")] RebaseMerge = 2,
+    [EnumMember(Value = "squash")] Squash = 3,
 }

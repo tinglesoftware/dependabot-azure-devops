@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using MiniValidation;
+using Tingle.Dependabot;
 using Tingle.Dependabot.Models.Dependabot;
 using Tingle.Dependabot.Workflow;
 
@@ -9,27 +11,30 @@ public static class UpdateJobsEndpoints
     public static IEndpointConventionBuilder MapUpdateJobs(this IEndpointRouteBuilder endpoints)
     {
         var group = endpoints.MapGroup("/update_jobs")
-                             .WithGroupName("update_jobs");
+                             .WithGroupName("update_jobs")
+                             .RequireAuthorization(AuthConstants.PolicyNameUpdater);
 
-        group.MapOperation<DependabotCreatePullRequest>("create_pull_request");
-        group.MapOperation<DependabotUpdatePullRequest>("update_pull_request");
-        group.MapOperation<DependabotClosePullRequest>("close_pull_request");
-        group.MapOperation<DependabotRecordUpdateJobError>("record_update_job_error");
-        group.MapOperation<DependabotRecordUpdateJobUnknownError>("record_update_job_unknown_error");
-        group.MapOperation<DependabotMarkAsProcessed>("mark_as_processed", [HttpMethods.Patch]);
-        group.MapOperation<DependabotUpdateDependencyList>("update_dependency_list");
-        group.MapOperation<DependabotRecordEcosystemVersions>("record_ecosystem_versions");
-        group.MapOperation<DependabotIncrementMetric>("increment_metric");
+        group.MapOperation<DependabotCreatePullRequest>(DependabotOperationType.CreatePullRequest);
+        group.MapOperation<DependabotUpdatePullRequest>(DependabotOperationType.UpdatePullRequest);
+        group.MapOperation<DependabotClosePullRequest>(DependabotOperationType.ClosePullRequest);
+        group.MapOperation<DependabotRecordUpdateJobError>(DependabotOperationType.RecordUpdateJobError);
+        group.MapOperation<DependabotRecordUpdateJobUnknownError>(DependabotOperationType.RecordUpdateJobUnknownError);
+        group.MapOperation<DependabotMarkAsProcessed>(DependabotOperationType.MarkAsProcessed, [HttpMethods.Patch]);
+        group.MapOperation<DependabotUpdateDependencyList>(DependabotOperationType.UpdateDependencyList);
+        group.MapOperation<DependabotRecordEcosystemVersions>(DependabotOperationType.RecordEcosystemVersions);
+        group.MapOperation<DependabotIncrementMetric>(DependabotOperationType.IncrementMetric);
 
         return group;
     }
 
-    private static void MapOperation<T>(this IEndpointRouteBuilder builder, string operation, string []? methods = null)
+    private static void MapOperation<T>(this IEndpointRouteBuilder builder, DependabotOperationType type, string[]? methods = null)
     {
-        builder.MapMethods($"{{id}}/{operation}", methods ?? [HttpMethods.Post],
+        builder.MapMethods($"{{id}}/{type.GetEnumMemberAttrValue()}",
+                           methods ?? [HttpMethods.Post],
                            async ([FromRoute] string id, [FromBody] DependabotRequest<T> input, [FromServices] ScenarioStore store) =>
                            {
-                               await store.AddAsync(id, operation, input);
+                               if (!MiniValidator.TryValidate(input, out var errors)) return Results.ValidationProblem(errors);
+                               await store.AddAsync(id, type, input);
                                return Results.Ok();
                            });
     }

@@ -1,7 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using Tingle.Dependabot.Models.Dependabot;
-using Tingle.Extensions.Primitives;
 
 namespace Tingle.Dependabot.Models.Management;
 

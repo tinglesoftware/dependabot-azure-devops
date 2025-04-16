@@ -28,6 +28,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="9.0.4" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.4" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="9.0.4" />
+    <PackageReference Include="MiniValidation" Version="0.9.2" /> <!-- TODO: Remove in .NET 10 -->
     <PackageReference Include="NuGet.Versioning" Version="6.13.2" />
     <PackageReference Include="System.Linq.Async" Version="6.0.1" />
     <PackageReference Include="Tingle.EventBus.Transports.InMemory" Version="0.23.1" />

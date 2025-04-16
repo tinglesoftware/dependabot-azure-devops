@@ -1,14 +1,23 @@
 using Tingle.Dependabot.Consumers;
 using Xunit;
 
+namespace Tingle.Dependabot.Tests.Consumers;
+
 public class RunUpdateJobEventConsumerTests
 {
-
     [Theory]
     [MemberData(nameof(ConvertEcosystemToPackageManagerValues))]
     public void ConvertEcosystemToPackageManager_Works(string ecosystem, string expected)
     {
         var actual = RunUpdateJobEventConsumer.ConvertEcosystemToPackageManager(ecosystem);
+        Assert.Equal(expected, actual);
+    }
+
+    [Theory]
+    [MemberData(nameof(ConvertDependabotPackageManagerToGhsaEcosystemValues))]
+    public void ConvertDependabotPackageManagerToGhsaEcosystem_Works(string packageManager, string expected)
+    {
+        var actual = RunUpdateJobEventConsumer.ConvertDependabotPackageManagerToGhsaEcosystem(packageManager);
         Assert.Equal(expected, actual);
     }
 
@@ -34,5 +43,21 @@ public class RunUpdateJobEventConsumerTests
         { "devcontainers", "devcontainers" },
         { "terraform", "terraform" },
         { "docker", "docker" },
+    };
+
+    public static TheoryData<string, string> ConvertDependabotPackageManagerToGhsaEcosystemValues => new()
+    {
+        { "compose", "COMPOSER" },
+        { "elm", "ERLANG" },
+        { "github_actions", "ACTIONS" },
+        { "go_modules", "GO" },
+        { "maven", "MAVEN" },
+        { "npm_and_yarn", "NPM" },
+        { "nuget", "NUGET" },
+        { "pip", "PIP" },
+        { "pub", "PUB" },
+        { "bundler", "RUBYGEMS" },
+        { "cargo", "RUST" },
+        { "swift", "SWIFT" },
     };
 }
