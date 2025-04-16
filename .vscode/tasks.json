@@ -29,20 +29,13 @@
       "label": "watch",
       "command": "dotnet",
       "type": "process",
-      "args": [
-        "watch",
-        "run",
-        "--project",
-        "${workspaceFolder}/Tingle.Dependabot.sln"
-      ],
+      "args": ["watch", "run", "--project", "${workspaceFolder}/Tingle.Dependabot.sln"],
       "problemMatcher": "$msCompile"
     },
     {
       "type": "docker-build",
       "label": "docker-build: debug",
-      "dependsOn": [
-        "build"
-      ],
+      "dependsOn": ["build"],
       "dockerBuild": {
         "tag": "dependabotazuredevops:dev",
         "target": "base",
@@ -57,9 +50,7 @@
     {
       "type": "docker-build",
       "label": "docker-build: release",
-      "dependsOn": [
-        "build"
-      ],
+      "dependsOn": ["build"],
       "dockerBuild": {
         "tag": "dependabotazuredevops:latest",
         "dockerfile": "${workspaceFolder}/server/Tingle.Dependabot/Dockerfile",
@@ -77,9 +68,7 @@
     {
       "type": "docker-run",
       "label": "docker-run: debug",
-      "dependsOn": [
-        "docker-build: debug"
-      ],
+      "dependsOn": ["docker-build: debug"],
       "dockerRun": {},
       "netCore": {
         "appProject": "${workspaceFolder}/server/Tingle.Dependabot/Tingle.Dependabot.csproj",
@@ -89,9 +78,7 @@
     {
       "type": "docker-run",
       "label": "docker-run: release",
-      "dependsOn": [
-        "docker-build: release"
-      ],
+      "dependsOn": ["docker-build: release"],
       "dockerRun": {},
       "netCore": {
         "appProject": "${workspaceFolder}/server/Tingle.Dependabot/Tingle.Dependabot.csproj"
