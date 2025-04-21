@@ -30,7 +30,7 @@
   "dependencies": {
     "axios": "1.8.4",
     "azure-devops-node-api": "14.1.0",
-    "azure-pipelines-task-lib": "5.1.0",
+    "azure-pipelines-task-lib": "5.2.0",
     "js-yaml": "4.1.0",
     "semver": "7.7.1",
     "zod": "3.24.2"
