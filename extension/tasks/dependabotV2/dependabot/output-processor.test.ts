@@ -214,6 +214,12 @@ describe('DependabotOutputProcessor', () => {
       expect(result).toBe(true);
     });
 
+    it('should process "record_ecosystem_meta"', async () => {
+      const result = await processor.process(update, 'record_ecosystem_meta', data);
+
+      expect(result).toBe(true);
+    });
+
     it('should process "record_update_job_error"', async () => {
       const result = await processor.process(update, 'record_update_job_error', data);
 
