@@ -11,6 +11,9 @@ public class DependabotUpdateScheduleTests
     [InlineData(DependabotScheduleInterval.Weekly, "10:00", DependabotScheduleDay.Saturday, "00 10 * * 6")]
     [InlineData(DependabotScheduleInterval.Weekly, "15:00", null, "00 15 * * 1")] // defaults to Mondays
     [InlineData(DependabotScheduleInterval.Monthly, "17:30", DependabotScheduleDay.Saturday, "30 17 1 * *")] // ignores day
+    [InlineData(DependabotScheduleInterval.Quarterly, null, null, "00 02 1 1,4,7,10 *")]
+    [InlineData(DependabotScheduleInterval.Semiannually, null, null, "00 02 1 1,7 * ")]
+    [InlineData(DependabotScheduleInterval.Yearly, null, null, "00 02 1 1 *")]
     public void GenerateCronSchedule_Works(DependabotScheduleInterval interval, string? time, DependabotScheduleDay? day, string expected)
     {
         var schedule = new DependabotUpdateSchedule { Interval = interval, };
