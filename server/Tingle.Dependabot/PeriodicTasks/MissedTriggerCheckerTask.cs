@@ -26,7 +26,7 @@ internal class MissedTriggerCheckerTask(MainDbContext dbContext, IEventPublisher
             {
                 foreach (var update in repository.Updates)
                 {
-                    var schedule = (CronSchedule)update.Schedule!.GenerateCron();
+                    var schedule = update.Schedule!.GenerateCron();
                     var timezone = TimeZoneInfo.FindSystemTimeZoneById(update.Schedule.Timezone);
 
                     // check if we missed an execution

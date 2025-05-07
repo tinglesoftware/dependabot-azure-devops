@@ -1,5 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
+using Tingle.PeriodicTasks;
 
 namespace Tingle.Dependabot.Models.Dependabot;
 
@@ -93,13 +95,13 @@ public record DependabotUpdate : IValidatableObject
         if (string.IsNullOrWhiteSpace(Directory) && (Directories is null || Directories.Count == 0))
         {
             yield return new ValidationResult(
-                "Either 'directory' or 'directories' must be provided",
+                errorMessage: "Either 'directory' or 'directories' must be provided",
                 memberNames: [nameof(Directory), nameof(Directories)]);
         }
     }
 }
 
-public class DependabotUpdateSchedule
+public class DependabotUpdateSchedule : IValidatableObject
 {
     [Required]
     [JsonPropertyName("interval")]
@@ -117,24 +119,57 @@ public class DependabotUpdateSchedule
     [JsonPropertyName("timezone")]
     public string Timezone { get; set; } = "Etc/UTC";
 
+    // [CronExpression]
+    [JsonPropertyName("cronjob")]
+    public string? Cronjob { get; set; }
+
     /// <summary>Generate the appropriate CRON schedule.</summary>
-    public string GenerateCron()
+    public CronSchedule GenerateCron()
     {
+        if (Interval == DependabotScheduleInterval.Cron)
+            return Cronjob ?? throw new InvalidOperationException($"'{nameof(Cronjob)}' cannot be null at this point");
+
         // format to use:
         // minute, hour, day of month, month, day of week
 
         var time = Time ?? throw new InvalidOperationException($"'{nameof(Time)}' cannot be null at this point");
         var day = Day ?? throw new InvalidOperationException($"'{nameof(Day)}' cannot be null at this point");
-        return $"{time:mm} {time:HH} " + Interval switch
+        var cron = $"{time:mm} {time:HH} " + Interval switch
         {
             DependabotScheduleInterval.Daily => "* * 1-5",          // any day of the month, any month, but on weekdays
             DependabotScheduleInterval.Weekly => $"* * {(int)day}", // any day of the month, any month, but on a given day
             DependabotScheduleInterval.Monthly => "1 * *",          // first day of the month, any month, any day of the week
             DependabotScheduleInterval.Quarterly => "1 1,4,7,10 *", // first day of each quarter (January, April, July, and October)
-            DependabotScheduleInterval.Semiannually => "1 1,7 * ",  // every six months, on the first day of January and July
+            DependabotScheduleInterval.Semiannually => "1 1,7 *",  // every six months, on the first day of January and July
             DependabotScheduleInterval.Yearly => "1 1 *",           // first day of January
             _ => throw new NotImplementedException(),
         };
+        return new CronSchedule(cron);
+    }
+
+    // TODO: remove this once CronSchedule supports TryParse or the library has CronExpressionAttribute
+    static bool TryParse(string? value, [NotNullWhen(true)] out CronSchedule? expression)
+    {
+        expression = null;
+        if (string.IsNullOrWhiteSpace(value)) return false;
+
+        var spaces = value.Count(c => c == ' ');
+        if (Cronos.CronExpression.TryParse(value, spaces == 5 ? Cronos.CronFormat.IncludeSeconds : Cronos.CronFormat.Standard, out var result))
+        {
+            expression = result;
+            return true;
+        }
+        return false;
+    }
+
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (Interval is DependabotScheduleInterval.Cron && !TryParse(Cronjob, out _))
+        {
+            yield return new ValidationResult(
+                errorMessage: "'cronjob' must be a valid CRON expression when 'interval' is set to 'cron'",
+                memberNames: [nameof(Interval), nameof(Cronjob)]);
+        }
     }
 }
 
@@ -246,5 +281,5 @@ public class DependabotRegistry
     public string? PublicKeyFingerprint { get; set; }
 }
 
-public enum DependabotScheduleInterval { Daily, Weekly, Monthly, Quarterly, Semiannually, Yearly }
+public enum DependabotScheduleInterval { Daily, Weekly, Monthly, Quarterly, Semiannually, Yearly, Cron }
 public enum DependabotScheduleDay { Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, }
