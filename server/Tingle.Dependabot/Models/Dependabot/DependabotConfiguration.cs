@@ -130,6 +130,9 @@ public class DependabotUpdateSchedule
             DependabotScheduleInterval.Daily => "* * 1-5",          // any day of the month, any month, but on weekdays
             DependabotScheduleInterval.Weekly => $"* * {(int)day}", // any day of the month, any month, but on a given day
             DependabotScheduleInterval.Monthly => "1 * *",          // first day of the month, any month, any day of the week
+            DependabotScheduleInterval.Quarterly => "1 1,4,7,10 *", // first day of each quarter (January, April, July, and October)
+            DependabotScheduleInterval.Semiannually => "1 1,7 * ",  // every six months, on the first day of January and July
+            DependabotScheduleInterval.Yearly => "1 1 *",           // first day of January
             _ => throw new NotImplementedException(),
         };
     }
@@ -243,5 +246,5 @@ public class DependabotRegistry
     public string? PublicKeyFingerprint { get; set; }
 }
 
-public enum DependabotScheduleInterval { Daily, Weekly, Monthly, }
+public enum DependabotScheduleInterval { Daily, Weekly, Monthly, Quarterly, Semiannually, Yearly }
 public enum DependabotScheduleDay { Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, }
