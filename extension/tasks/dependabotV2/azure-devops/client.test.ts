@@ -70,12 +70,11 @@ describe('AzureDevOpsWebApiClient', () => {
 
       // Act
       pr.assignees = ['user1', 'user2'];
-      pr.reviewers = ['user1', 'user3'];
       const pullRequestId = await client.createPullRequest(pr);
 
       // Assert
       expect(mockRestApiPost).toHaveBeenCalledTimes(2);
-      expect((mockRestApiPost.mock.calls[1] as any)[1].reviewers.length).toBe(3);
+      expect((mockRestApiPost.mock.calls[1] as any)[1].reviewers.length).toBe(2);
       expect((mockRestApiPost.mock.calls[1] as any)[1].reviewers).toContainEqual({
         id: 'user1',
         isRequired: true,
@@ -86,7 +85,6 @@ describe('AzureDevOpsWebApiClient', () => {
         isRequired: true,
         isFlagged: true,
       });
-      expect((mockRestApiPost.mock.calls[1] as any)[1].reviewers).toContainEqual({ id: 'user3' });
       expect(pullRequestId).toBe(1);
     });
   });

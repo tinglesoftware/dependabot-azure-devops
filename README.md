@@ -19,7 +19,7 @@ In this repository you'll find:
 - [Configuring private feeds and registries](#configuring-private-feeds-and-registries)
 - [Configuring security advisories and known vulnerabilities](#configuring-security-advisories-and-known-vulnerabilities)
 - [Configuring experiments](#configuring-experiments)
-- [Configuring assignees and reviewers](#configuring-assignees-and-reviewers)
+- [Configuring assignees](#configuring-assignees)
 - [Unsupported features and configurations](#unsupported-features-and-configurations)
   - [Dependabot Task](#dependabot-task)
     - [dependabot@2](#dependabot2)
@@ -193,14 +193,13 @@ By default, the enabled experiments will mirror the GitHub-hosted version of Dep
 
 </details>
 
-## Configuring assignees and reviewers
+## Configuring assignees
 
-Dependabot supports [`assignees`](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#assignees--) and [`reviewers`](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#reviewers--). However, Azure DevOps does not have the concept of pull request assignees. To work around this:
+Dependabot supports [`assignees`](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#assignees--). However, Azure DevOps does not have the concept of pull request assignees. To work around this:
 
 - [`assignees`](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#assignees--) are treated as **required** pull request reviewers.
-- [`reviewers`](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#reviewers--) are treated as **optional** pull request reviewers.
 
-The following values can be used as assignees or reviewers:
+The following values can be used as assignees:
 
 - User GUID
 - User username
@@ -228,7 +227,7 @@ No longer functional.
 - [`cooldown`](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#cooldown-) is not supported.
 - [`directories`](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#directories-or-directory--) are not supported.
 - [`groups`](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#groups--) are not supported.
-- [`assignees`](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#assignees--) and [`reviewers`](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#reviewers--) must be a list of user GUIDs; email addresses and group/team names are not supported.
+- [`assignees`](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#assignees--) must be a list of user GUIDs; email addresses and group/team names are not supported.
 - Private feed/registry authentication may not work with all package ecosystems. See [problems with authentication](https://github.com/tinglesoftware/dependabot-azure-devops/discussions/1317) for more.
 
 ## Contributing
