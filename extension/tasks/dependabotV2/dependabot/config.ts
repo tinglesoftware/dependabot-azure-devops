@@ -54,7 +54,6 @@ export interface IDependabotUpdate {
   'pull-request-branch-name'?: IDependabotPullRequestBranchName;
   'rebase-strategy'?: string;
   'registries'?: string[];
-  'reviewers'?: string[];
   'schedule'?: IDependabotSchedule;
   'target-branch'?: string;
   'vendor'?: boolean;

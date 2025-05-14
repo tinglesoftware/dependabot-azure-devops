@@ -55,7 +55,6 @@ export interface ICreatePullRequest {
     mergeStrategy?: GitPullRequestMergeStrategy;
   };
   assignees?: string[];
-  reviewers?: string[];
   labels?: string[];
   workItems?: string[];
   changes: IFileChange[];

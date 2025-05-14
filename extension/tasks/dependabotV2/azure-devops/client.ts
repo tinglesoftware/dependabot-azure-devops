@@ -176,7 +176,7 @@ export class AzureDevOpsWebApiClient {
   /**
    * Create a new pull request.
    * Requires scope "Code (Write)" (vso.code_write).
-   * Requires scope "Identity (Read)" (vso.identity), if assignees or reviewers are specified.
+   * Requires scope "Identity (Read)" (vso.identity), if assignees are specified.
    * @param pr
    * @returns
    */
@@ -186,7 +186,7 @@ export class AzureDevOpsWebApiClient {
       const userId = await this.getUserId();
 
       // Map the list of the pull request reviewer ids
-      // NOTE: Azure DevOps does not have a concept of assignees, only reviewers.
+      // NOTE: Azure DevOps does not have a concept of assignees.
       //       We treat assignees as required reviewers and all other reviewers as optional.
       const allReviewers: IdentityRefWithVote[] = [];
       if (pr.assignees?.length > 0) {
@@ -200,18 +200,6 @@ export class AzureDevOpsWebApiClient {
             });
           } else {
             warning(`Unable to resolve assignee identity '${assignee}'`);
-          }
-        }
-      }
-      if (pr.reviewers?.length > 0) {
-        for (const reviewer of pr.reviewers) {
-          const identityId = isGuid(reviewer) ? reviewer : await this.resolveIdentityId(reviewer);
-          if (identityId && !allReviewers.some((r) => r.id === identityId)) {
-            allReviewers.push({
-              id: identityId,
-            });
-          } else {
-            warning(`Unable to resolve reviewer identity '${reviewer}'`);
           }
         }
       }

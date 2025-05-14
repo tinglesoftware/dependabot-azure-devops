@@ -185,7 +185,6 @@ export class DependabotOutputProcessor {
               }
             : undefined,
           assignees: update.config.assignees,
-          reviewers: update.config.reviewers,
           labels: update.config.labels?.map((label) => label?.trim()) || [],
           workItems: update.config.milestone ? [update.config.milestone] : [],
           changes: changedFiles,
