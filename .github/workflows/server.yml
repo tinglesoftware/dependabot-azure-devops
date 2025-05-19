@@ -117,12 +117,6 @@ jobs:
           name: deploy
           retention-days: 1
 
-      - name: Pull Docker base image & warm Docker cache
-        run: docker pull "ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest"
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
       # Generate tags to use in multi-arch build.
       # This is because we cannot build multi-arch images and load them for later pushing.
       # Different tags are pushed depending on the current ref.
@@ -160,6 +154,9 @@ jobs:
           FULL_SEMVER: ${{ steps.gitversion.outputs.fullSemVer }}
           MAJOR: ${{ steps.gitversion.outputs.major }}
           MINOR: ${{ steps.gitversion.outputs.minor }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Log into registry
         if: ${{ !startsWith(github.ref, 'refs/pull') }}
