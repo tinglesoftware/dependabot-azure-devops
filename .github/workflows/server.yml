@@ -161,8 +161,7 @@ jobs:
       - name: Provenance Attestation
         uses: actions/attest-build-provenance@v2
         # Only if we have pushed the image (otherwise the digest is not available)
-        # Skip non-tag triggers for now
-        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        if: ${{ !startsWith(github.ref, 'refs/pull') }}
         with:
           subject-name: ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
           subject-digest: ${{ steps.push.outputs.digest }}
