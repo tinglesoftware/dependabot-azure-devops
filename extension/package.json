@@ -9,7 +9,7 @@
     "start:V1": "node dist/task-v1.js",
     "start:V2": "node dist/task-v2.js",
     "test": "jest",
-    "package": "pnpm dlx tfx-cli extension create --json5"
+    "package": "pnpm tfx extension create --json5"
   },
   "repository": {
     "type": "git",

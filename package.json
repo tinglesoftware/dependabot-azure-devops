@@ -12,6 +12,7 @@
     "prettier": "3.5.3",
     "prettier-plugin-organize-imports": "4.1.0",
     "pretty-quick": "4.1.1",
+    "tfx-cli": "0.12.0",
     "tsup": "8.5.0",
     "typescript": "5.8.3"
   },

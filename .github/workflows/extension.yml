@@ -94,7 +94,7 @@ jobs:
 
       - name: Create Extension (dev)
         run: >
-          pnpm dlx tfx-cli extension create
+          pnpm tfx extension create
           --root extension
           --manifest-globs vss-extension.json
           --output-path ${{ github.workspace }}/drop/dev
@@ -103,7 +103,7 @@ jobs:
 
       - name: Create Extension (prod)
         run: >
-          pnpm dlx tfx-cli extension create
+          pnpm tfx extension create
           --root extension
           --manifest-globs vss-extension.json
           --output-path ${{ github.workspace }}/drop/prod
@@ -161,7 +161,7 @@ jobs:
       - name: Publish to marketplace (dev)
         if: github.ref == 'refs/heads/main'
         run: >
-          pnpm dlx tfx-cli extension publish
+          pnpm tfx extension publish
           --vsix ${{ github.workspace }}/dev/*.vsix
           --auth-type pat
           --token ${{ secrets.AZURE_DEVOPS_EXTENSION_TOKEN }}
@@ -170,7 +170,7 @@ jobs:
       - name: Publish to marketplace (prod)
         if: startsWith(github.ref, 'refs/tags/')
         run: >
-          pnpm dlx tfx-cli extension publish
+          pnpm tfx extension publish
           --vsix ${{ github.workspace }}/prod/*.vsix
           --auth-type pat
           --token ${{ secrets.AZURE_DEVOPS_EXTENSION_TOKEN }}
