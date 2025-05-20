@@ -7,11 +7,7 @@
   "version": "2.0.0",
   "publisher": "tingle-software",
   "public": false,
-  "targets": [
-    {
-      "id": "Microsoft.VisualStudio.Services"
-    }
-  ],
+  "targets": [{ "id": "Microsoft.VisualStudio.Services" }],
   "demands": ["api-version/5.0"],
   "categories": ["Azure Pipelines"],
   "tags": [
@@ -28,21 +24,11 @@
     "default": "images/icon.png"
   },
   "links": {
-    "home": {
-      "uri": "https://github.com/tinglesoftware/dependabot-azure-devops"
-    },
-    "getstarted": {
-      "uri": "https://github.com/tinglesoftware/dependabot-azure-devops/blob/main/extension/README.md#usage"
-    },
-    "issues": {
-      "uri": "https://github.com/tinglesoftware/dependabot-azure-devops/issues"
-    },
-    "support": {
-      "uri": "https://github.com/tinglesoftware/dependabot-azure-devops/issues"
-    },
-    "license": {
-      "uri": "https://github.com/tinglesoftware/dependabot-azure-devops/blob/main/LICENSE"
-    }
+    "home": { "uri": "https://github.com/tinglesoftware/dependabot-azure-devops" },
+    "getstarted": { "uri": "https://github.com/tinglesoftware/dependabot-azure-devops/blob/main/extension/README.md" },
+    "issues": { "uri": "https://github.com/tinglesoftware/dependabot-azure-devops/issues" },
+    "support": { "uri": "https://github.com/tinglesoftware/dependabot-azure-devops/issues" },
+    "license": { "uri": "https://github.com/tinglesoftware/dependabot-azure-devops/blob/main/LICENSE" }
   },
   "customerQnASupport": {
     "enablemarketplaceqna": true,
@@ -57,23 +43,13 @@
       "path": "README.md"
     }
   },
-  "files": [
-    {
-      "path": "tasks"
-    },
-    {
-      "path": "images",
-      "addressable": true
-    }
-  ],
+  "files": [{ "path": "dist" }, { "path": "tasks" }, { "path": "images", "addressable": true }],
   "contributions": [
     {
       "id": "dependabot",
       "type": "ms.vss-distributed-task.task",
       "targets": ["ms.vss-distributed-task.tasks"],
-      "properties": {
-        "name": "tasks"
-      }
+      "properties": { "name": "tasks" }
     }
   ]
 }

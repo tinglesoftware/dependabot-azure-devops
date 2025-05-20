@@ -1,5 +1,5 @@
 [codespell]
-skip = .git,package-lock.json,node_modules
+skip = .git,pnpm-lock.yaml,node_modules
 # some modules, parts of regexes, and variable names to ignore, some
 # misspellings in fixtures/external responses we do not own
 ignore-words-list = NWO,kernal

@@ -54,32 +54,31 @@ jobs:
         with:
           useConfigFile: true
 
-      - name: Use Node.js 18.x
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup node
         uses: actions/setup-node@v4
         with:
-          node-version: '18.x'
-          cache: npm
+          node-version: 20
+          cache: pnpm
 
-      - name: Install (root)
-        run: npm install
+      - name: Download deps
+        run: pnpm install
 
-      - name: Format check (root)
-        run: npm run format:check
-
-      - name: Install
-        run: npm install
-        working-directory: '${{ github.workspace }}/extension'
+      - name: Format check
+        run: pnpm format:check
 
       - name: Test
-        run: npm run test
+        run: pnpm test
         working-directory: '${{ github.workspace }}/extension'
 
       - name: Build
-        run: npm run build
+        run: pnpm build
         working-directory: '${{ github.workspace }}/extension'
 
       - name: Install tfx-cli
-        run: npm install -g tfx-cli@0.12.0
+        run: pnpm install -g tfx-cli@0.12.0
 
       - name: Update version numbers in vss-extension.json overrides files
         uses: cschleiden/replace-tokens@v1
@@ -129,6 +128,9 @@ jobs:
       cancel-in-progress: false # wait for previous runs to complete
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Download Artifact
         uses: actions/download-artifact@v4
         with:
@@ -151,13 +153,16 @@ jobs:
           draft: true
           allowUpdates: true
 
-      - name: Use Node.js 18.x
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup node
         uses: actions/setup-node@v4
         with:
-          node-version: '18.x'
+          node-version: 20
 
       - name: Install tfx-cli
-        run: npm install -g tfx-cli@0.12.0
+        run: pnpm install -g tfx-cli@0.12.0
 
       - name: Publish to marketplace (dev)
         if: github.ref == 'refs/heads/main'

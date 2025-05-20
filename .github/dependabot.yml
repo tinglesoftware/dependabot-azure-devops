@@ -77,6 +77,10 @@ updates:
       time: '02:00'
     groups:
       jest:
-        patterns: ['*jest*']
+        patterns:
+          - 'jest*'
+          - '@jest/*'
       js-yaml:
-        patterns: ['*js-yaml*']
+        patterns:
+          - 'js-yaml'
+          - '@types/js-yaml'
