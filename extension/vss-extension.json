@@ -43,7 +43,7 @@
       "path": "README.md"
     }
   },
-  "files": [{ "path": "dist" }, { "path": "tasks" }, { "path": "images", "addressable": true }],
+  "files": [{ "path": "tasks" }, { "path": "images", "addressable": true }],
   "contributions": [
     {
       "id": "dependabot",
