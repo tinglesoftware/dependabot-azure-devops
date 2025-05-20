@@ -264,7 +264,7 @@
   ],
   "execution": {
     "Node20_1": {
-      "target": "../../dist/task-v2.js"
+      "target": "dist/task-v2.js"
     }
   }
 }

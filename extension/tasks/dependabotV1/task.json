@@ -25,7 +25,7 @@
   "inputs": [],
   "execution": {
     "Node20_1": {
-      "target": "../../dist/task-v1.js"
+      "target": "dist/task-v1.js"
     }
   }
 }
