@@ -1,5 +1,7 @@
 import { error, warning } from 'azure-pipelines-task-lib/task';
 import * as fs from 'fs';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { AzureDevOpsWebApiClient } from '../../src/azure-devops/client';
 import {
   DEVOPS_PR_PROPERTY_DEPENDABOT_DEPENDENCIES,
@@ -11,9 +13,9 @@ import { IDependabotUpdateOperation } from '../../src/dependabot/models';
 import { DependabotDependenciesSchema, DependabotOutputProcessor } from '../../src/dependabot/output-processor';
 import { ISharedVariables } from '../../src/utils/shared-variables';
 
-jest.mock('../../src/azure-devops/client');
-jest.mock('../../src/utils/shared-variables');
-jest.mock('azure-pipelines-task-lib/task');
+vi.mock('../../src/azure-devops/client');
+vi.mock('../../src/utils/shared-variables');
+vi.mock('azure-pipelines-task-lib/task');
 
 describe('DependabotOutputProcessor', () => {
   let processor: DependabotOutputProcessor;
@@ -44,7 +46,7 @@ describe('DependabotOutputProcessor', () => {
     let data: any;
 
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
       update = {
         job: {} as any,
         credentials: {} as any,
@@ -94,9 +96,9 @@ describe('DependabotOutputProcessor', () => {
         'updated-dependency-files': [],
       };
 
-      prAuthorClient.createPullRequest = jest.fn().mockResolvedValue(1);
-      prAuthorClient.getDefaultBranch = jest.fn().mockResolvedValue('main');
-      prApproverClient.approvePullRequest = jest.fn().mockResolvedValue(true);
+      prAuthorClient.createPullRequest = vi.fn().mockResolvedValue(1);
+      prAuthorClient.getDefaultBranch = vi.fn().mockResolvedValue('main');
+      prApproverClient.approvePullRequest = vi.fn().mockResolvedValue(true);
 
       const result = await processor.process(update, 'create_pull_request', data);
 
@@ -146,8 +148,8 @@ describe('DependabotOutputProcessor', () => {
         ],
       });
 
-      prAuthorClient.updatePullRequest = jest.fn().mockResolvedValue(true);
-      prApproverClient.approvePullRequest = jest.fn().mockResolvedValue(true);
+      prAuthorClient.updatePullRequest = vi.fn().mockResolvedValue(true);
+      prApproverClient.approvePullRequest = vi.fn().mockResolvedValue(true);
 
       const result = await processor.process(update, 'update_pull_request', data);
 
@@ -194,7 +196,7 @@ describe('DependabotOutputProcessor', () => {
         ],
       });
 
-      prAuthorClient.abandonPullRequest = jest.fn().mockResolvedValue(true);
+      prAuthorClient.abandonPullRequest = vi.fn().mockResolvedValue(true);
 
       const result = await processor.process(update, 'close_pull_request', data);
 

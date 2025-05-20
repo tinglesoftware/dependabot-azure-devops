@@ -76,10 +76,6 @@ updates:
       interval: 'weekly'
       time: '02:00'
     groups:
-      jest:
-        patterns:
-          - 'jest*'
-          - '@jest/*'
       js-yaml:
         patterns:
           - 'js-yaml'
