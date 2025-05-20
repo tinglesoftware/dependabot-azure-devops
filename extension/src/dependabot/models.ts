@@ -82,8 +82,6 @@ export interface IDependabotUpdateJobConfig {
     'experiments'?: Record<string, string | boolean>;
     'max-updater-run-time'?: number;
     'reject-external-code'?: boolean;
-    'repo-private'?: boolean;
-    'repo-contents-path'?: string;
     'requirements-update-strategy'?: string;
     'lockfile-only'?: boolean;
     'vendor-dependencies'?: boolean;

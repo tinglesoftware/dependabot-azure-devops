@@ -153,19 +153,11 @@ export function buildUpdateJobConfig(
       'cooldown': mapCooldownFromDependabotConfigToJobConfig(update.cooldown),
       'experiments': mapExperiments(taskInputs.experiments),
       'reject-external-code': update['insecure-external-code-execution']?.toLocaleLowerCase()?.trim() == 'allow',
-      'repo-private': undefined, // TODO: add config for this?
-      'repo-contents-path': undefined, // TODO: add config for this?
       'requirements-update-strategy': mapVersionStrategyToRequirementsUpdateStrategy(update['versioning-strategy']),
       'lockfile-only': update['versioning-strategy'] === 'lockfile-only',
       'vendor-dependencies': update.vendor,
       'debug': taskInputs.debug,
-
-      // TODO: Investigate if these options are needed or are now obsolete.
-      //       These options don't appear to be used by dependabot-core yet/anymore,
-      //       but do appear in GitHub Dependabot job logs seen in the wild.
-      //'max-updater-run-time': 2700,
-      //'proxy-log-response-body-on-auth-failure': true,
-      //'update-subdependencies': false,
+      'max-updater-run-time': 2700,
     },
     credentials: mapRegistryCredentialsFromDependabotConfigToJobConfig(taskInputs, registries),
   };
