@@ -49,9 +49,9 @@ View the corresponding instructions for each component:
 ## Formatters
 
 ```bash
-npm install
-npm run format:check        # to check for formatting issues
-npm run format              # to automatically fix formatting issues
+pnpm install
+pnpm format:check        # to check for formatting issues
+pnpm format              # to automatically fix formatting issues
 ```
 
 ## Spelling
@@ -67,7 +67,7 @@ codespell --write-changes   # to automatically fix misspellings
 If you'd like spelling, formatting, and linting checks to be run automatically on commit, enable the [Husky](https://typicode.github.io/husky/how-to.html) git hooks using:
 
 ```bash
-npx husky
+pnpm dlx husky
 ```
 
 When enabled, your local commits will be rejected if any of the quality checks fail; Unit tests are **not** run due to their long execution time, you must still run them manually.

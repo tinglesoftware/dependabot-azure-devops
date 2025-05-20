@@ -3,15 +3,17 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "postinstall": "npm --prefix extension install",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
   "devDependencies": {
+    "@types/node": "22.15.19",
     "husky": "9.1.7",
     "prettier": "3.5.3",
     "prettier-plugin-organize-imports": "4.1.0",
-    "pretty-quick": "4.0.0"
+    "pretty-quick": "4.0.0",
+    "tsup": "8.4.0",
+    "typescript": "5.8.3"
   },
   "packageManager": "pnpm@10.11.0"
 }

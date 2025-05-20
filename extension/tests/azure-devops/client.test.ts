@@ -3,8 +3,12 @@ import { jest } from '@jest/globals';
 import { VersionControlChangeType } from 'azure-devops-node-api/interfaces/TfvcInterfaces';
 
 import { IHttpClientResponse } from 'typed-rest-client/Interfaces';
-import { AzureDevOpsWebApiClient, isErrorTemporaryFailure, sendRestApiRequestWithRetry } from '../azure-devops/client';
-import { HttpRequestError, ICreatePullRequest } from './models';
+import {
+  AzureDevOpsWebApiClient,
+  isErrorTemporaryFailure,
+  sendRestApiRequestWithRetry,
+} from '../../src/azure-devops/client';
+import { HttpRequestError, ICreatePullRequest } from '../../src/azure-devops/models';
 import exp = require('constants');
 
 jest.mock('azure-devops-node-api');
@@ -134,7 +138,7 @@ describe('sendRestApiRequestWithRetry', () => {
 
     await expect(
       sendRestApiRequestWithRetry('GET', 'https://example.com', undefined, mockRequestAsync),
-    ).rejects.toThrow(/unexpected token .* in JSON/i);
+    ).rejects.toThrow('Unexpected token \'i\', "invalid json" is not valid JSON');
   });
 
   it('should throw an error after retrying a request three times', async () => {

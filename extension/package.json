@@ -4,13 +4,12 @@
   "description": "Dependabot Azure DevOps task",
   "main": "''",
   "scripts": {
-    "postdependencies": "cp -r node_modules tasks/dependabotV1/node_modules && cp -r node_modules tasks/dependabotV2/node_modules",
-    "build": "tsc -p .",
-    "start": "npm run start:V2",
-    "start:V1": "node tasks/dependabotV1/index.js",
-    "start:V2": "node tasks/dependabotV2/index.js",
+    "build": "tsup",
+    "start": "pnpm start:V2",
+    "start:V1": "node dist/task-v1.js",
+    "start:V2": "node dist/task-v2.js",
     "test": "jest",
-    "package": "npx tfx-cli extension create --json5"
+    "package": "pnpm dlx tfx-cli extension create --json5"
   },
   "repository": {
     "type": "git",
@@ -33,18 +32,18 @@
     "azure-pipelines-task-lib": "5.2.0",
     "js-yaml": "4.1.0",
     "semver": "7.7.2",
+    "typed-rest-client": "2.1.0",
     "zod": "3.24.4"
   },
   "devDependencies": {
+    "@jest/globals": "29.7.0",
+    "@jest/types": "29.6.3",
     "@types/jest": "29.5.14",
     "@types/js-yaml": "4.0.9",
     "@types/node": "22.15.19",
     "@types/q": "1.5.8",
     "@types/semver": "7.7.0",
     "jest": "29.7.0",
-    "ts-jest": "29.3.4",
-    "ts-node": "10.9.2",
-    "typescript": "5.8.3"
-  },
-  "packageManager": "npm@11.2.0"
+    "ts-jest": "29.3.4"
+  }
 }

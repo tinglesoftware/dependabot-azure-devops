@@ -32,24 +32,24 @@ When verbose logs are enable, Dependabot will also generate a [Flame Graph perfo
 
 ## Getting the development environment ready
 
-Install [Node.js](https://docs.docker.com/engine/install/) (18+), [Go](https://go.dev/doc/install) (1.22+), and [Docker](https://docs.docker.com/engine/install/) (with Linux containers); Install project dependencies using NPM:
+Install [Node.js](https://docs.docker.com/engine/install/) (18+), [Go](https://go.dev/doc/install) (1.22+), and [Docker](https://docs.docker.com/engine/install/) (with Linux containers); Install project dependencies using PNPM:
 
 ```bash
 cd extension
-npm install
+pnpm install
 ```
 
 ## Building the extension
 
 ```bash
 cd extension
-npm run build
+pnpm build
 ```
 
-To then generate the a Azure DevOps `.vsix` extension package for testing, you'll first need to [create a publisher account](https://learn.microsoft.com/en-us/azure/devops/extend/publish/overview?view=azure-devops#create-a-publisher) for the [Visual Studio Marketplace Publishing Portal](https://marketplace.visualstudio.com/manage/createpublisher?managePageRedirect=true). After this, use `npm run package` to build the package, with an override for your publisher ID:
+To then generate the a Azure DevOps `.vsix` extension package for testing, you'll first need to [create a publisher account](https://learn.microsoft.com/en-us/azure/devops/extend/publish/overview?view=azure-devops#create-a-publisher) for the [Visual Studio Marketplace Publishing Portal](https://marketplace.visualstudio.com/manage/createpublisher?managePageRedirect=true). After this, use `pnpm package` to build the package, with an override for your publisher ID:
 
 ```bash
-npm run package -- --overrides-file overrides.local.json --rev-version --publisher your-publisher-id-here
+pnpm package -- --overrides-file overrides.local.json --rev-version --publisher your-publisher-id-here
 ```
 
 ## Installing the extension
@@ -65,21 +65,21 @@ To test the extension in a Azure DevOps organisation:
 To run the latest task version:
 
 ```bash
-npm start
+pnpm start
 ```
 
 To run a specific task version:
 
 ```bash
-npm run start:V1 # runs dependabot@1 task
-npm run start:V2 # runs dependabot@2 task
+pnpm start:V1 # runs dependabot@1 task
+pnpm start:V2 # runs dependabot@2 task
 ```
 
 ## Running the unit tests
 
 ```bash
 cd extension
-npm test
+pnpm test
 ```
 
 # Architecture

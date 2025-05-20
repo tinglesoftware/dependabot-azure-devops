@@ -1,26 +1,26 @@
 import { TaskResult } from 'azure-pipelines-task-lib';
-import { AzureDevOpsWebApiClient } from './azure-devops/client';
+import { AzureDevOpsWebApiClient } from '../src/azure-devops/client';
 import {
   DEVOPS_PR_PROPERTY_DEPENDABOT_DEPENDENCIES,
   DEVOPS_PR_PROPERTY_DEPENDABOT_PACKAGE_MANAGER,
   DEVOPS_PR_PROPERTY_MICROSOFT_GIT_SOURCE_REF_NAME,
   IPullRequestProperties,
-} from './azure-devops/models';
-import { DependabotCli } from './dependabot/cli';
-import { IDependabotConfig } from './dependabot/config';
-import { DependabotJobBuilder } from './dependabot/job-builder';
-import { IDependabotUpdateOperationResult } from './dependabot/models';
-import { GitHubGraphClient } from './github';
-import { abandonPullRequestsWhereSourceRefIsDeleted, performDependabotUpdatesAsync } from './index';
-import { ISharedVariables } from './utils/shared-variables';
+} from '../src/azure-devops/models';
+import { DependabotCli } from '../src/dependabot/cli';
+import { IDependabotConfig } from '../src/dependabot/config';
+import { DependabotJobBuilder } from '../src/dependabot/job-builder';
+import { IDependabotUpdateOperationResult } from '../src/dependabot/models';
+import { GitHubGraphClient } from '../src/github';
+import { abandonPullRequestsWhereSourceRefIsDeleted, performDependabotUpdatesAsync } from '../src/task-v2';
+import { ISharedVariables } from '../src/utils/shared-variables';
 
-jest.mock('./azure-devops/client');
-jest.mock('./dependabot/cli');
-jest.mock('./dependabot/job-builder');
-jest.mock('./github');
+jest.mock('../src/azure-devops/client');
+jest.mock('../src/dependabot/cli');
+jest.mock('../src/dependabot/job-builder');
+jest.mock('../src/github');
 
-const tsDependabotJobBuilder = require('./dependabot/job-builder');
-const tsDependabotOutputProcessor = require('./dependabot/output-processor');
+const tsDependabotJobBuilder = require('../src/dependabot/job-builder');
+const tsDependabotOutputProcessor = require('../src/dependabot/output-processor');
 
 describe('abandonPullRequestsWhereSourceRefIsDeleted', () => {
   let taskInputs: ISharedVariables;
