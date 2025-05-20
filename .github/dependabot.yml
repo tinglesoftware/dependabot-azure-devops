@@ -71,7 +71,7 @@ updates:
         patterns: ['Xunit*']
 
   - package-ecosystem: 'npm'
-    directories: ['/', '/extension']
+    directory: '/'
     schedule:
       interval: 'weekly'
       time: '02:00'
