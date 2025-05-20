@@ -93,23 +93,14 @@ jobs:
           echo "`jq '.version.Minor=${{ steps.gitversion.outputs.minor }}' extension/tasks/dependabotV2/task.json`" > extension/tasks/dependabotV2/task.json
           echo "`jq '.version.Patch=${{ github.run_number }}' extension/tasks/dependabotV2/task.json`" > extension/tasks/dependabotV2/task.json
 
-      - name: Create Extension (dev)
+      - name: Create Extension
         run: >
           pnpm tfx extension create
-          --root extension
           --manifest-globs vss-extension.json
-          --output-path ${{ github.workspace }}/drop/dev
+          --output-path ${{ github.workspace }}/drop
           --json5
-          --overrides-file ${{ github.workspace }}/extension/overrides.dev.json
-
-      - name: Create Extension (prod)
-        run: >
-          pnpm tfx extension create
-          --root extension
-          --manifest-globs vss-extension.json
-          --output-path ${{ github.workspace }}/drop/prod
-          --json5
-          --overrides-file ${{ github.workspace }}/extension/overrides.prod.json
+          --overrides-file overrides.${{ (startsWith(github.ref, 'refs/tags/') && 'prod') || 'dev' }}.json
+        working-directory: extension
 
       - name: Upload Artifact (drop)
         uses: actions/upload-artifact@v4
@@ -121,32 +112,22 @@ jobs:
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
         uses: actions/attest-build-provenance@v2
         with:
-          subject-path: |
-            ${{ github.workspace }}/drop/prod/*.vsix
-            ${{ github.workspace }}/drop/dev/*.vsix
+          subject-path: ${{ github.workspace }}/drop/*.vsix
 
       - name: Upload Release
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
         uses: ncipollo/release-action@v1
         with:
-          artifacts: '${{ github.workspace }}/drop/prod/*.vsix,${{ github.workspace }}/drop/dev/*.vsix'
+          artifacts: '${{ github.workspace }}/drop/*.vsix'
           token: ${{ secrets.GITHUB_TOKEN }}
           draft: true
           allowUpdates: true
 
-      - name: Publish to marketplace (dev)
-        if: ${{ github.ref == 'refs/heads/main' }}
+      - name: Publish to marketplace
+        if: ${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/') }}
         run: >
           pnpm tfx extension publish
-          --vsix ${{ github.workspace }}/drop/dev/*.vsix
+          --vsix ${{ github.workspace }}/drop/*.vsix
           --auth-type pat
           --token ${{ secrets.AZURE_DEVOPS_EXTENSION_TOKEN }}
-          --share-with tingle rhyskoedijk
-
-      - name: Publish to marketplace (prod)
-        if: ${{ startsWith(github.ref, 'refs/tags/') }}
-        run: >
-          pnpm tfx extension publish
-          --vsix ${{ github.workspace }}/prod/drop/*.vsix
-          --auth-type pat
-          --token ${{ secrets.AZURE_DEVOPS_EXTENSION_TOKEN }}
+          ${{ (github.ref == 'refs/heads/main' && '--share-with tingle rhyskoedijk') || '' }}
