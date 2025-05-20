@@ -245,7 +245,7 @@ export async function parseConfigFile(taskInputs: ISharedVariables): Promise<IDe
   };
 }
 
-function parseUpdates(config: any, configPath: string): IDependabotUpdate[] {
+export function parseUpdates(config: any, configPath: string): IDependabotUpdate[] {
   var updates: IDependabotUpdate[] = [];
 
   // Check the updates parsed
@@ -296,7 +296,7 @@ function parseUpdates(config: any, configPath: string): IDependabotUpdate[] {
   return updates;
 }
 
-function parseRegistries(config: any): Record<string, IDependabotRegistry> {
+export function parseRegistries(config: any): Record<string, IDependabotRegistry> {
   var registries: Record<string, IDependabotRegistry> = {};
 
   var rawRegistries = config['registries'];
@@ -399,7 +399,7 @@ function parseRegistries(config: any): Record<string, IDependabotRegistry> {
   return registries;
 }
 
-function validateConfiguration(updates: IDependabotUpdate[], registries: Record<string, IDependabotRegistry>) {
+export function validateConfiguration(updates: IDependabotUpdate[], registries: Record<string, IDependabotRegistry>) {
   const configured = Object.keys(registries);
   const referenced: string[] = [];
   for (const u of updates) referenced.push(...(u.registries ?? []));
