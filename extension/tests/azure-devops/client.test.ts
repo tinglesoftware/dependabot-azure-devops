@@ -1,8 +1,7 @@
-import { jest } from '@jest/globals';
-
 import { VersionControlChangeType } from 'azure-devops-node-api/interfaces/TfvcInterfaces';
-
 import { IHttpClientResponse } from 'typed-rest-client/Interfaces';
+import { beforeEach, describe, expect, it, MockedFunction, vi } from 'vitest';
+
 import {
   AzureDevOpsWebApiClient,
   isErrorTemporaryFailure,
@@ -11,8 +10,8 @@ import {
 import { HttpRequestError, ICreatePullRequest } from '../../src/azure-devops/models';
 import exp = require('constants');
 
-jest.mock('azure-devops-node-api');
-jest.mock('azure-pipelines-task-lib/task');
+vi.mock('azure-devops-node-api');
+vi.mock('azure-pipelines-task-lib/task');
 
 describe('AzureDevOpsWebApiClient', () => {
   const organisationApiUrl = 'https://dev.azure.com/mock-organization';
@@ -21,7 +20,7 @@ describe('AzureDevOpsWebApiClient', () => {
 
   beforeEach(() => {
     client = new AzureDevOpsWebApiClient(organisationApiUrl, accessToken);
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('createPullRequest', () => {
@@ -54,13 +53,13 @@ describe('AzureDevOpsWebApiClient', () => {
 
     it('should create a pull request without duplicate reviewer and assignee identities', async () => {
       // Arange
-      const mockGetUserId = jest.spyOn(client, 'getUserId').mockResolvedValue('my-user-id');
-      const mockResolveIdentityId = jest
+      const mockGetUserId = vi.spyOn(client, 'getUserId').mockResolvedValue('my-user-id');
+      const mockResolveIdentityId = vi
         .spyOn(client, 'resolveIdentityId')
         .mockImplementation(async (identity?: string) => {
           return identity || '';
         });
-      const mockRestApiPost = jest
+      const mockRestApiPost = vi
         .spyOn(client as any, 'restApiPost')
         .mockResolvedValueOnce({
           commits: [{ commitId: 'new-commit-id' }],
@@ -68,7 +67,7 @@ describe('AzureDevOpsWebApiClient', () => {
         .mockResolvedValueOnce({
           pullRequestId: 1,
         });
-      const mockRestApiPatch = jest.spyOn(client as any, 'restApiPatch').mockResolvedValueOnce({
+      const mockRestApiPatch = vi.spyOn(client as any, 'restApiPatch').mockResolvedValueOnce({
         count: 1,
       });
 
@@ -95,15 +94,15 @@ describe('AzureDevOpsWebApiClient', () => {
 });
 
 describe('sendRestApiRequestWithRetry', () => {
-  let mockRequestAsync: jest.MockedFunction<() => Promise<IHttpClientResponse>>;
+  let mockRequestAsync: MockedFunction<() => Promise<IHttpClientResponse>>;
   let mockResponseBody: any;
   let mockResponse: Partial<IHttpClientResponse>;
 
   beforeEach(() => {
-    mockRequestAsync = jest.fn();
+    mockRequestAsync = vi.fn();
     mockResponseBody = {};
     mockResponse = {
-      readBody: jest.fn(async () => JSON.stringify(mockResponseBody)),
+      readBody: vi.fn(async () => JSON.stringify(mockResponseBody)),
       message: {
         statusCode: 200,
         statusMessage: 'OK',
@@ -134,7 +133,7 @@ describe('sendRestApiRequestWithRetry', () => {
 
   it('should throw an error if the response cannot be parsed as JSON', async () => {
     mockRequestAsync.mockResolvedValue(mockResponse as IHttpClientResponse);
-    mockResponse.readBody = jest.fn(async () => 'invalid json');
+    mockResponse.readBody = vi.fn(async () => 'invalid json');
 
     await expect(
       sendRestApiRequestWithRetry('GET', 'https://example.com', undefined, mockRequestAsync),

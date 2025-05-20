@@ -1,4 +1,6 @@
 import { TaskResult } from 'azure-pipelines-task-lib';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { AzureDevOpsWebApiClient } from '../src/azure-devops/client';
 import {
   DEVOPS_PR_PROPERTY_DEPENDABOT_DEPENDENCIES,
@@ -14,13 +16,10 @@ import { GitHubGraphClient } from '../src/github';
 import { abandonPullRequestsWhereSourceRefIsDeleted, performDependabotUpdatesAsync } from '../src/task-v2';
 import { ISharedVariables } from '../src/utils/shared-variables';
 
-jest.mock('../src/azure-devops/client');
-jest.mock('../src/dependabot/cli');
-jest.mock('../src/dependabot/job-builder');
-jest.mock('../src/github');
-
-const tsDependabotJobBuilder = require('../src/dependabot/job-builder');
-const tsDependabotOutputProcessor = require('../src/dependabot/output-processor');
+vi.mock('../src/azure-devops/client');
+vi.mock('../src/dependabot/cli');
+vi.mock('../src/dependabot/job-builder');
+vi.mock('../src/github');
 
 describe('abandonPullRequestsWhereSourceRefIsDeleted', () => {
   let taskInputs: ISharedVariables;
@@ -29,12 +28,12 @@ describe('abandonPullRequestsWhereSourceRefIsDeleted', () => {
   let existingPullRequests: IPullRequestProperties[];
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     taskInputs = {
       abandonUnwantedPullRequests: true,
     } as ISharedVariables;
     devOpsPrAuthorClient = new AzureDevOpsWebApiClient('https://dev.azure.com/test-org', 'fake-token', true);
-    devOpsPrAuthorClient.abandonPullRequest = jest.fn().mockResolvedValue(true);
+    devOpsPrAuthorClient.abandonPullRequest = vi.fn().mockResolvedValue(true);
     existingBranchNames = [];
     existingPullRequests = [
       {
@@ -148,7 +147,7 @@ describe('performDependabotUpdatesAsync', () => {
   let existingPullRequests: IPullRequestProperties[];
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     taskInputs = {} as ISharedVariables;
     dependabotConfig = {
       updates: [
@@ -160,7 +159,7 @@ describe('performDependabotUpdatesAsync', () => {
       registries: {},
     } as IDependabotConfig;
     dependabotCli = new DependabotCli(DependabotCli.CLI_PACKAGE_LATEST, null, true);
-    dependabotCli.update = jest
+    dependabotCli.update = vi
       .fn()
       .mockResolvedValue([
         { success: true, output: { type: 'mark_as_processed', data: {} } },
@@ -200,7 +199,8 @@ describe('performDependabotUpdatesAsync', () => {
       ],
     });
 
-    jest.spyOn(tsDependabotOutputProcessor, 'parsePullRequestProperties').mockReturnValue('npm_and_yarn');
+    const tsDependabotOutputProcessor = await import('../src/dependabot/output-processor');
+    vi.spyOn(tsDependabotOutputProcessor, 'parsePullRequestProperties').mockReturnValue('npm_and_yarn' as any);
 
     const updateResult = await performDependabotUpdatesAsync(
       taskInputs,
@@ -218,7 +218,7 @@ describe('performDependabotUpdatesAsync', () => {
   it('should perform "update security-only" job if open pull request limit is zero', async () => {
     dependabotConfig.updates[0]['open-pull-requests-limit'] = 0;
     const ghsaClient = new GitHubGraphClient('fake-token');
-    ghsaClient.getSecurityVulnerabilitiesAsync = jest.fn().mockResolvedValue([]);
+    ghsaClient.getSecurityVulnerabilitiesAsync = vi.fn().mockResolvedValue([]);
 
     const updateResult = await performDependabotUpdatesAsync(
       taskInputs,
@@ -249,7 +249,8 @@ describe('performDependabotUpdatesAsync', () => {
       ],
     });
 
-    jest.spyOn(tsDependabotJobBuilder, 'mapPackageEcosystemToPackageManager').mockReturnValue('npm_and_yarn');
+    const tsDependabotJobBuilder = await import('../src/dependabot/job-builder');
+    vi.spyOn(tsDependabotJobBuilder, 'mapPackageEcosystemToPackageManager').mockReturnValue('npm_and_yarn');
 
     const updateResult = await performDependabotUpdatesAsync(
       taskInputs,
@@ -265,7 +266,7 @@ describe('performDependabotUpdatesAsync', () => {
   });
 
   it('should return Succeeded when all updates are successful', async () => {
-    dependabotCli.update = jest
+    dependabotCli.update = vi
       .fn()
       .mockResolvedValue([{ success: true, output: {} }] as IDependabotUpdateOperationResult[]);
 
@@ -282,7 +283,7 @@ describe('performDependabotUpdatesAsync', () => {
   });
 
   it('should return SucceededWithIssues result when updates are mixture of success and failure', async () => {
-    dependabotCli.update = jest.fn().mockResolvedValue([
+    dependabotCli.update = vi.fn().mockResolvedValue([
       { success: true, output: {} },
       { success: false, output: {} },
     ] as IDependabotUpdateOperationResult[]);
@@ -300,7 +301,7 @@ describe('performDependabotUpdatesAsync', () => {
   });
 
   it('should return Failed result when all updates are failure', async () => {
-    dependabotCli.update = jest
+    dependabotCli.update = vi
       .fn()
       .mockResolvedValue([{ success: false, output: {} }] as IDependabotUpdateOperationResult[]);
 
@@ -317,7 +318,7 @@ describe('performDependabotUpdatesAsync', () => {
   });
 
   it('should return Skipped result when no updates are performed', async () => {
-    dependabotCli.update = jest.fn().mockResolvedValue([]);
+    dependabotCli.update = vi.fn().mockResolvedValue([]);
 
     const updateResult = await performDependabotUpdatesAsync(
       taskInputs,
