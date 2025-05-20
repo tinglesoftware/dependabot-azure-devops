@@ -52,8 +52,8 @@ const GHSA_SECURITY_VULNERABILITIES_QUERY = `
 export enum PackageEcosystem {
   Composer = 'COMPOSER',
   Erlang = 'ERLANG',
-  Actions = 'ACTIONS',
   Go = 'GO',
+  Actions = 'ACTIONS',
   Maven = 'MAVEN',
   Npm = 'NPM',
   Nuget = 'NUGET',

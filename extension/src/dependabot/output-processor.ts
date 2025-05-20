@@ -411,7 +411,6 @@ function getPullRequestCloseReasonForOutputData(data: any): string {
 }
 
 function getPullRequestDependenciesPropertyValueForOutputData(data: any): any {
-  const dependencyGroupName = data['dependency-group']?.['name'];
   let dependencies: any = data['dependencies']?.map((dep) => {
     return {
       'dependency-name': dep['name'],
@@ -419,6 +418,7 @@ function getPullRequestDependenciesPropertyValueForOutputData(data: any): any {
       'directory': dep['directory'],
     };
   });
+  const dependencyGroupName = data['dependency-group']?.['name'];
   if (dependencyGroupName) {
     dependencies = {
       'dependency-group-name': dependencyGroupName,
