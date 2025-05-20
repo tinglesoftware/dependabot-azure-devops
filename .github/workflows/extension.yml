@@ -129,7 +129,7 @@ jobs:
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
         uses: ncipollo/release-action@v1
         with:
-          artifacts: '${{ github.workspace }}/drop/prod/*.vsix,${{ github.workspace }}/dev/drop/*.vsix'
+          artifacts: '${{ github.workspace }}/drop/prod/*.vsix,${{ github.workspace }}/drop/dev/*.vsix'
           token: ${{ secrets.GITHUB_TOKEN }}
           draft: true
           allowUpdates: true
@@ -138,7 +138,7 @@ jobs:
         if: ${{ github.ref == 'refs/heads/main' }}
         run: >
           pnpm tfx extension publish
-          --vsix ${{ github.workspace }}/dev/drop/*.vsix
+          --vsix ${{ github.workspace }}/drop/dev/*.vsix
           --auth-type pat
           --token ${{ secrets.AZURE_DEVOPS_EXTENSION_TOKEN }}
           --share-with tingle rhyskoedijk
