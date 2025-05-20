@@ -146,6 +146,8 @@ Security-only updates (i.e. `open-pull-requests-limit: 0`) is a mechanism to onl
 
 Security-only updates incur a slight performance overhead due to limitations in Dependabot CLI, detailed in [dependabot/cli#360](https://github.com/dependabot/cli/issues/360). To work around this, vulnerable dependencies will first be discovered using an "ignore everything" update job; After which, security advisories for the discovered dependencies will be checked against the [GitHub Advisory Database](https://github.com/advisories) before finally performing the requested security-only update job.
 
+You can provide extra security advisories, such as those for an internal dependency, in a JSON file via the `securityAdvisoriesFile` task input e.g. `securityAdvisoriesFile: '$(Pipeline.Workspace)/advisories.json'`. An example file is available in [./advisories-example.json](./advisories-example.json).
+
 ## Configuring experiments
 
 Dependabot uses an internal feature flag system called "experiments". Typically, experiments represent new features or changes in logic which are still being internally tested before becoming generally available. In some cases, you may want to opt-in to experiments to work around known issues or to opt-in to preview features ahead of general availability (GA).

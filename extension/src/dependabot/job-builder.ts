@@ -1,4 +1,4 @@
-import { type ISecurityVulnerability } from '../github';
+import { type SecurityVulnerability } from '../github';
 import { type ISharedVariables } from '../utils/shared-variables';
 import {
   type IDependabotAllowCondition,
@@ -58,7 +58,7 @@ export class DependabotJobBuilder {
     registries: Record<string, IDependabotRegistry>,
     dependencyNamesToUpdate?: string[],
     existingPullRequests?: any[], // eslint-disable-line @typescript-eslint/no-explicit-any
-    securityVulnerabilities?: ISecurityVulnerability[],
+    securityVulnerabilities?: SecurityVulnerability[],
   ): IDependabotUpdateOperation {
     const securityUpdatesOnly = update['open-pull-requests-limit'] == 0;
     return buildUpdateJobConfig(
@@ -93,7 +93,7 @@ export class DependabotJobBuilder {
     registries: Record<string, IDependabotRegistry>,
     existingPullRequests: any[], // eslint-disable-line @typescript-eslint/no-explicit-any
     pullRequestToUpdate: any, // eslint-disable-line @typescript-eslint/no-explicit-any
-    securityVulnerabilities?: ISecurityVulnerability[],
+    securityVulnerabilities?: SecurityVulnerability[],
   ): IDependabotUpdateOperation {
     const dependencyGroupName = pullRequestToUpdate['dependency-group-name'];
     const dependencyNames = (dependencyGroupName ? pullRequestToUpdate['dependencies'] : pullRequestToUpdate)?.map(
@@ -122,7 +122,7 @@ export function buildUpdateJobConfig(
   updateDependencyGroupName?: string | undefined,
   updateDependencyNames?: string[] | undefined,
   existingPullRequests?: any[], // eslint-disable-line @typescript-eslint/no-explicit-any
-  securityVulnerabilities?: ISecurityVulnerability[],
+  securityVulnerabilities?: SecurityVulnerability[],
 ): IDependabotUpdateOperation {
   const securityOnlyUpdate = update['open-pull-requests-limit'] == 0;
   return {
@@ -261,14 +261,14 @@ export function mapCooldownFromDependabotConfigToJobConfig(cooldown: IDependabot
   };
 }
 
-export function mapSecurityAdvisories(securityVulnerabilities: ISecurityVulnerability[]) {
+export function mapSecurityAdvisories(securityVulnerabilities: SecurityVulnerability[]) {
   if (!securityVulnerabilities) {
     return undefined;
   }
 
   // A single security advisory can cause a vulnerability in multiple versions of a package.
   // We need to map each unique security advisory to a list of affected-versions and patched-versions.
-  const vulnerabilitiesGroupedByPackageNameAndAdvisoryId = new Map<string, ISecurityVulnerability[]>();
+  const vulnerabilitiesGroupedByPackageNameAndAdvisoryId = new Map<string, SecurityVulnerability[]>();
   for (const vuln of securityVulnerabilities) {
     const key = `${vuln.package.name}/${vuln.advisory.identifiers.map((i) => `${i.type}:${i.value}`).join('/')}`;
     if (!vulnerabilitiesGroupedByPackageNameAndAdvisoryId.has(key)) {
@@ -280,7 +280,7 @@ export function mapSecurityAdvisories(securityVulnerabilities: ISecurityVulnerab
     return {
       'dependency-name': vulns[0].package.name,
       'affected-versions': vulns.map((v) => v.vulnerableVersionRange).filter((v) => v && v.length > 0),
-      'patched-versions': vulns.map((v) => v.firstPatchedVersion).filter((v) => v && v.length > 0),
+      'patched-versions': vulns.map((v) => v.firstPatchedVersion?.identifier).filter((v) => v && v.length > 0),
       'unaffected-versions': [],
     };
   });
