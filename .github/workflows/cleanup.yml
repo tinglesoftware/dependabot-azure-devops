@@ -9,7 +9,7 @@ permissions:
   packages: write
 
 jobs:
-  cleanup-server:
+  Server:
     runs-on: ubuntu-latest
 
     steps:

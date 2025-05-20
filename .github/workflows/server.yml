@@ -36,7 +36,7 @@ env:
   GITHUB_REF_NAME: ${{ github.ref_name }} # not discovered by default
 
 jobs:
-  Build:
+  Server:
     runs-on: ubuntu-latest
     env:
       DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
