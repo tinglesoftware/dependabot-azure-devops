@@ -26,6 +26,23 @@ updates:
       interval: 'weekly'
       time: '02:00'
 
+  - package-ecosystem: 'bundler'
+    directory: '/updater'
+    schedule:
+      interval: 'weekly'
+      time: '02:00'
+    groups:
+      opentelemetry:
+        patterns: ['opentelemetry-*']
+      rubocop:
+        patterns: ['*rubocop*']
+        exclude-patterns: ['rubocop-rspec'] # has a bug
+      sentry:
+        patterns: ['sentry-*']
+    ignore:
+      # ignored because there are some major changes
+      - dependency-name: 'dependabot-omnibus'
+
   - package-ecosystem: 'docker'
     directories: ['**/*']
     schedule:

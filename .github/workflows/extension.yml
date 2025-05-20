@@ -93,6 +93,8 @@ jobs:
         run: |
           # Major versions are left out here because they are fixed in the task.json files.
           # The minor and patch versions are updated to make sure we keep recent changes deployed.
+          echo "`jq '.version.Minor=${{ steps.gitversion.outputs.minor }}' extension/tasks/dependabotV1/task.json`" > extension/tasks/dependabotV1/task.json
+          echo "`jq '.version.Patch=${{ github.run_number }}' extension/tasks/dependabotV1/task.json`" > extension/tasks/dependabotV1/task.json
           echo "`jq '.version.Minor=${{ steps.gitversion.outputs.minor }}' extension/tasks/dependabotV2/task.json`" > extension/tasks/dependabotV2/task.json
           echo "`jq '.version.Patch=${{ github.run_number }}' extension/tasks/dependabotV2/task.json`" > extension/tasks/dependabotV2/task.json
 

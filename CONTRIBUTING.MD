@@ -25,6 +25,7 @@ Before contributing, you'll need to configure your local development environment
 
 - [Azure DevOps Extension](./docs/extension.md#development-guide)
 - [Dependabot Server](./docs/server.md#development-guide)
+- [Dependabot Updater image](./docs/updater.md#development-guide)
 
 # Submitting pull requests
 
@@ -37,14 +38,14 @@ View the corresponding unit test instructions for the component you'd like to te
 
 - [Azure DevOps Extension](./docs/extension.md#running-the-unit-tests)
 - [Dependabot Server](./docs/server.md#running-the-unit-tests)
+- [Dependabot Updater image](./docs/updater.md#running-the-unit-tests)
 
 ## Static code analyzers and linters
 
 Some components use static code analyzers and linters.
 View the corresponding instructions for each component:
 
-- [Azure DevOps Extension](./docs/extension.md#running-prettier)
-- [Dependabot Server](./docs/server.md#formatting)
+- [Dependabot Updater image](./docs/updater.md#running-the-code-linter)
 
 ## Formatters
 

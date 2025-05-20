@@ -3,7 +3,7 @@
   "id": "d98b873d-cf18-41eb-8ff5-234f14697896",
   "name": "dependabot",
   "friendlyName": "Dependabot",
-  "description": "Automatically update dependencies and vulnerabilities in your code using [Dependabot](https://github.com/dependabot/dependabot-core)",
+  "description": "Automatically update dependencies and vulnerabilities in your code using [Dependabot Updater](https://github.com/dependabot/dependabot-core/tree/main/updater)",
   "helpMarkDown": "For help please visit https://github.com/tinglesoftware/dependabot-azure-devops/issues",
   "helpUrl": "https://github.com/tinglesoftware/dependabot-azure-devops/issues",
   "releaseNotes": "https://github.com/tinglesoftware/dependabot-azure-devops/releases",
@@ -15,14 +15,246 @@
   "demands": [],
   "version": {
     "Major": 1,
-    "Minor": 45,
-    "Patch": 1400
+    "Minor": 0,
+    "Patch": 0
   },
   "deprecated": true,
-  "deprecationMessage": "This task version is deprecated and is no longer function. Please use version 2 or later.",
+  "deprecationMessage": "This task version is deprecated and is no longer maintained. Please upgrade to the latest version to continue receiving fixes and features. More details: https://github.com/tinglesoftware/dependabot-azure-devops/discussions/1317.",
   "instanceNameFormat": "Dependabot update",
-  "groups": [],
-  "inputs": [],
+  "groups": [
+    {
+      "name": "security_updates",
+      "displayName": "Security advisories and vulnerabilities",
+      "isExpanded": false
+    },
+    {
+      "name": "pull_requests",
+      "displayName": "Pull request options",
+      "isExpanded": false
+    },
+    {
+      "name": "devops",
+      "displayName": "Azure DevOps authentication",
+      "isExpanded": false
+    },
+    {
+      "name": "github",
+      "displayName": "GitHub authentication",
+      "isExpanded": false
+    },
+    {
+      "name": "advanced",
+      "displayName": "Advanced",
+      "isExpanded": false
+    }
+  ],
+  "inputs": [
+    {
+      "name": "useUpdateScriptvNext",
+      "type": "boolean",
+      "groupName": "advanced",
+      "label": "Use latest update script (vNext) (Experimental)",
+      "defaultValue": "false",
+      "required": false,
+      "helpMarkDown": "Determines if the task will use the newest 'vNext' update script instead of the default update script. This Defaults to `false`. See the [vNext update script documentation](https://github.com/tinglesoftware/dependabot-azure-devops/pull/1186) for more information."
+    },
+
+    {
+      "name": "failOnException",
+      "type": "boolean",
+      "groupName": "advanced",
+      "label": "Fail task when an update exception occurs.",
+      "defaultValue": true,
+      "required": false,
+      "helpMarkDown": "When set to `true`, a failure in updating a single dependency will cause the container execution to fail thereby causing the task to fail. This is important when you want a single failure to prevent trying to update other dependencies."
+    },
+
+    {
+      "name": "skipPullRequests",
+      "type": "boolean",
+      "groupName": "pull_requests",
+      "label": "Skip creation and updating of pull requests.",
+      "defaultValue": false,
+      "required": false,
+      "helpMarkDown": "When set to `true` the logic to update the dependencies is executed but the actual Pull Requests are not created/updated. Defaults to `false`."
+    },
+    {
+      "name": "commentPullRequests",
+      "type": "boolean",
+      "groupName": "pull_requests",
+      "label": "Comment on abandoned pull requests with close reason.",
+      "defaultValue": false,
+      "required": false,
+      "helpMarkDown": "When set to `true` a comment will be added to abandoned pull requests explanating why it was closed. Defaults to `false`."
+    },
+    {
+      "name": "abandonUnwantedPullRequests",
+      "type": "boolean",
+      "groupName": "pull_requests",
+      "label": "Abandon unwanted pull requests.",
+      "defaultValue": false,
+      "required": false,
+      "helpMarkDown": "When set to `true` pull requests that are no longer needed are closed at the tail end of the execution. Defaults to `false`."
+    },
+    {
+      "name": "setAutoComplete",
+      "type": "boolean",
+      "groupName": "pull_requests",
+      "label": "Auto-complete pull requests when all policies pass",
+      "defaultValue": false,
+      "required": false,
+      "helpMarkDown": "When set to `true`, pull requests that pass all policies will be merged automatically. Defaults to `false`."
+    },
+    {
+      "name": "mergeStrategy",
+      "type": "pickList",
+      "groupName": "pull_requests",
+      "label": "Merge Strategy",
+      "defaultValue": "squash",
+      "required": true,
+      "helpMarkDown": "The merge strategy to use. Learn more [here](https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-requests/update?view=azure-devops-rest-5.1&tabs=HTTP#gitpullrequestmergestrategy).",
+      "options": {
+        "noFastForward": "No fast forward",
+        "rebase": "Rebase",
+        "rebaseMerge": "Rebase merge",
+        "squash": "Squash"
+      },
+      "visibleRule": "setAutoComplete=true"
+    },
+    {
+      "name": "autoCompleteIgnoreConfigIds",
+      "type": "string",
+      "groupName": "pull_requests",
+      "label": "Semicolon delimited list of any policy configuration IDs which auto-complete should not wait for.",
+      "defaultValue": "",
+      "required": false,
+      "helpMarkDown": "A semicolon (`;`) delimited list of any policy configuration IDs which auto-complete should not wait for. Only applies to optional policies (isBlocking == false). Auto-complete always waits for required policies (isBlocking == true).",
+      "visibleRule": "setAutoComplete=true"
+    },
+    {
+      "name": "autoApprove",
+      "type": "boolean",
+      "groupName": "pull_requests",
+      "label": "Auto-approve pull requests",
+      "defaultValue": false,
+      "required": false,
+      "helpMarkDown": "When set to `true`, pull requests will automatically be approved by the specified user. Defaults to `false`. Requires [Azure DevOps REST API 7.1](https://learn.microsoft.com/en-us/azure/devops/integrate/concepts/rest-api-versioning?view=azure-devops#supported-versions)"
+    },
+    {
+      "name": "autoApproveUserToken",
+      "type": "string",
+      "groupName": "pull_requests",
+      "label": "A personal access token of the user that should approve the PR.",
+      "defaultValue": "",
+      "required": false,
+      "helpMarkDown": "A personal access token of the user of that shall be used to approve the created PR automatically. If the same user that creates the PR should approve, this can be left empty. This won't work with if the Build Service with the build service account!",
+      "visibleRule": "autoApprove=true"
+    },
+
+    {
+      "name": "gitHubConnection",
+      "type": "connectedService:github:OAuth,PersonalAccessToken,InstallationToken,Token",
+      "groupName": "github",
+      "label": "GitHub connection (OAuth or PAT)",
+      "defaultValue": "",
+      "required": false,
+      "helpMarkDown": "Specify the name of the GitHub service connection to use to connect to the GitHub repositories. The connection must be based on a GitHub user's OAuth or a GitHub personal access token. Learn more about service connections [here](https://aka.ms/AA3am5s)."
+    },
+    {
+      "name": "gitHubAccessToken",
+      "type": "string",
+      "groupName": "github",
+      "label": "GitHub Personal Access Token.",
+      "defaultValue": "",
+      "required": false,
+      "helpMarkDown": "The raw Personal Access Token for accessing GitHub repositories. Use this in place of `gitHubConnection` such as when it is not possible to create a service connection."
+    },
+
+    {
+      "name": "securityAdvisoriesFile",
+      "type": "string",
+      "label": "Path for the file containing security advisories in JSON format.",
+      "groupName": "security_updates",
+      "helpMarkDown": "The file containing security advisories.",
+      "required": false
+    },
+
+    {
+      "name": "azureDevOpsServiceConnection",
+      "type": "connectedService:Externaltfs",
+      "groupName": "devops",
+      "label": "Azure DevOps Service Connection to use.",
+      "required": false,
+      "helpMarkDown": "Specify a service connection to use, if you want to use a different service principal than the default to create your PRs."
+    },
+    {
+      "name": "azureDevOpsAccessToken",
+      "type": "string",
+      "groupName": "devops",
+      "label": "Azure DevOps Personal Access Token.",
+      "required": false,
+      "helpMarkDown": "The Personal Access Token for accessing Azure DevOps repositories. Supply a value here to avoid using permissions for the Build Service either because you cannot change its permissions or because you prefer that the Pull Requests be done by a different user. Use this in place of `azureDevOpsServiceConnection` such as when it is not possible to create a service connection."
+    },
+    {
+      "name": "targetRepositoryName",
+      "type": "string",
+      "groupName": "advanced",
+      "label": "Target Repository Name",
+      "required": false,
+      "helpMarkDown": "The name of the repository to target for processing. If this value is not supplied then the Build Repository Name is used. Supplying this value allows creation of a single pipeline that runs Dependabot against multiple repositories in a project."
+    },
+    {
+      "name": "targetUpdateIds",
+      "type": "string",
+      "groupName": "advanced",
+      "label": "Semicolon delimited list of update identifiers to run.",
+      "defaultValue": "",
+      "required": false,
+      "helpMarkDown": "A semicolon (`;`) delimited list of update identifiers run. Index are zero-based and in the order written in the configuration file. When not present, all the updates are run. This is meant to be used in scenarios where you want to run updates a different times from the same configuration file given you cannot schedule them independently in the pipeline."
+    },
+    {
+      "name": "updaterOptions",
+      "type": "string",
+      "groupName": "advanced",
+      "label": "Comma separated list of Dependabot experiments (updater options).",
+      "required": false,
+      "helpMarkDown": "Set a list of Dependabot experiments (updater options) in CSV format. Available options depend on the ecosystem. Example: `goprivate=true,kubernetes_updates=true`."
+    },
+    {
+      "name": "excludeRequirementsToUnlock",
+      "type": "string",
+      "groupName": "advanced",
+      "label": "Space-separated list of dependency updates requirements to be excluded.",
+      "required": false,
+      "helpMarkDown": "Exclude certain dependency updates requirements. See list of allowed values [here](https://github.com/dependabot/dependabot-core/issues/600#issuecomment-407808103). Useful if you have lots of dependencies and the update script too slow. The values provided are space-separated. Example: `own all` to only use the `none` version requirement."
+    },
+    {
+      "name": "dockerImageTag",
+      "type": "string",
+      "groupName": "advanced",
+      "label": "Tag of the docker image to be pulled.",
+      "required": false,
+      "helpMarkDown": "The image tag to use when pulling the docker container used by the task. A tag also defines the version. By default, the task decides which tag/version to use. This can be the latest or most stable version. You can also use `major.minor` format to get the latest patch"
+    },
+    {
+      "name": "extraEnvironmentVariables",
+      "type": "string",
+      "groupName": "advanced",
+      "label": "Semicolon delimited list of environment variables",
+      "required": false,
+      "defaultValue": "",
+      "helpMarkDown": "A semicolon (`;`) delimited list of environment variables that are sent to the docker container. See possible use case [here](https://github.com/tinglesoftware/dependabot-azure-devops/issues/138)"
+    },
+    {
+      "name": "forwardHostSshSocket",
+      "type": "boolean",
+      "groupName": "advanced",
+      "label": "Forward the host ssh socket",
+      "defaultValue": "false",
+      "required": false,
+      "helpMarkDown": "Ensure that the host ssh socket is forwarded to the container to authenticate with ssh"
+    }
+  ],
   "execution": {
     "Node20_1": {
       "target": "index.js"

@@ -9,6 +9,46 @@ permissions:
   packages: write
 
 jobs:
+  cleanup-updater:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        suite:
+          - { ecosystem: bun }
+          - { ecosystem: bundler }
+          - { ecosystem: cargo }
+          - { ecosystem: composer }
+          - { ecosystem: docker }
+          - { ecosystem: docker-compose }
+          - { ecosystem: dotnet-sdk }
+          - { ecosystem: elm }
+          - { ecosystem: gitsubmodule }
+          - { ecosystem: github-actions }
+          - { ecosystem: gomod }
+          - { ecosystem: gradle }
+          - { ecosystem: helm }
+          - { ecosystem: mix }
+          - { ecosystem: maven }
+          - { ecosystem: npm }
+          - { ecosystem: nuget }
+          - { ecosystem: pub }
+          - { ecosystem: pip }
+          - { ecosystem: swift }
+          - { ecosystem: devcontainers }
+          - { ecosystem: terraform }
+          - { ecosystem: uv }
+
+    steps:
+      - name: Delete old dependabot-updater-${{ matrix.suite.ecosystem }} images
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: 'dependabot-updater-${{ matrix.suite.ecosystem }}'
+          package-type: 'container'
+          min-versions-to-keep: 20
+          # exclude major and minor versions as per SemVer e.g. 1.20
+          ignore-versions: '^([0-9]\\d*)\\.([0-9]\\d*)$'
+
   cleanup-server:
     runs-on: ubuntu-latest
 

@@ -18,9 +18,17 @@ out
 .github/ISSUE_TEMPLATE/**
 .vscode/settings.json
 README.md
+CONTRIBUTING.md
 docs/**/*.md
+.rubocop*.yml
 advisories-example.json
+updater/spec/fixtures/**
 server/main.json
+updater/spec/fixtures/**
+
+updater/.bundle/**
+updater/tmp/**
+updater/job/**
 server/Tingle.Dependabot/work
 
 # JSON array formatting by Visual Studio is different from prettier

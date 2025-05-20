@@ -3,6 +3,7 @@
 This repository contains tools for updating dependencies in Azure DevOps repositories using [Dependabot](https://dependabot.com).
 
 ![Extension](https://img.shields.io/github/actions/workflow/status/tinglesoftware/dependabot-azure-devops/extension.yml?branch=main&label=Extension&style=flat-square)
+![Updater](https://img.shields.io/github/actions/workflow/status/tinglesoftware/dependabot-azure-devops/updater.yml?branch=main&style=flat-square)
 ![Server](https://img.shields.io/github/actions/workflow/status/tinglesoftware/dependabot-azure-devops/server.yml?branch=main&label=Server&style=flat-square)
 [![Release](https://img.shields.io/github/release/tinglesoftware/dependabot-azure-devops.svg?style=flat-square)](https://github.com/tinglesoftware/dependabot-azure-devops/releases/latest)
 [![license](https://img.shields.io/github/license/tinglesoftware/dependabot-azure-devops.svg?style=flat-square)](LICENSE)
@@ -10,7 +11,8 @@ This repository contains tools for updating dependencies in Azure DevOps reposit
 In this repository you'll find:
 
 1. Azure DevOps [Extension](https://marketplace.visualstudio.com/items?itemName=tingle-software.dependabot), [source code](./extension) and [docs](./docs/extension.md).
-2. Dependabot Server, [source code](./server/) and [docs](./docs/server.md).
+1. Dependabot Server, [source code](./server/) and [docs](./docs/server.md).
+1. Dependabot Updater image, [Dockerfile](./updater/Dockerfile), [source code](./updater/) and [docs](./docs/updater.md). **(deprecated)**
 
 ## Table of Contents
 
@@ -24,6 +26,7 @@ In this repository you'll find:
   - [Dependabot Task](#dependabot-task)
     - [dependabot@2](#dependabot2)
     - [dependabot@1](#dependabot1)
+  - [Dependabot Updater Docker image](#dependabot-updater-docker-image)
   - [Dependabot Server](#dependabot-server)
 - [Contributing](#contributing)
   - [Reporting issues and feature requests](#reporting-issues-and-feature-requests)
@@ -146,6 +149,8 @@ Security-only updates (i.e. `open-pull-requests-limit: 0`) is a mechanism to onl
 
 Security-only updates incur a slight performance overhead due to limitations in Dependabot CLI, detailed in [dependabot/cli#360](https://github.com/dependabot/cli/issues/360). To work around this, vulnerable dependencies will first be discovered using an "ignore everything" update job; After which, security advisories for the discovered dependencies will be checked against the [GitHub Advisory Database](https://github.com/advisories) before finally performing the requested security-only update job.
 
+You can provide extra security advisories, such as those for an internal dependency, in a JSON file via the `securityAdvisoriesFile` task input e.g. `securityAdvisoriesFile: '$(Pipeline.Workspace)/advisories.json'`. An example file is available in [./advisories-example.json](./advisories-example.json).
+
 ## Configuring experiments
 
 Dependabot uses an internal feature flag system called "experiments". Typically, experiments represent new features or changes in logic which are still being internally tested before becoming generally available. In some cases, you may want to opt-in to experiments to work around known issues or to opt-in to preview features ahead of general availability (GA).
@@ -217,10 +222,23 @@ We aim to support all [official configuration options](https://docs.github.com/e
 #### `dependabot@2`
 
 - [`schedule`](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#schedule-) is ignored, use [pipeline scheduled triggers](https://learn.microsoft.com/en-us/azure/devops/pipelines/process/scheduled-triggers?view=azure-devops&tabs=yaml#scheduled-triggers) instead.
+- [`securityAdvisoriesFile`](#configuring-security-advisories-and-known-vulnerabilities) task input is not yet supported.
 
 #### `dependabot@1`
 
-No longer functional.
+- [`schedule`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#scheduleinterval) is ignored, use [pipeline scheduled triggers](https://learn.microsoft.com/en-us/azure/devops/pipelines/process/scheduled-triggers?view=azure-devops&tabs=yaml#scheduled-triggers) instead.
+- [`cooldown`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#cooldown) is not supported.
+- [`directories`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#directories) are only supported if task input `useUpdateScriptVNext: true` is set.
+- [`groups`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#groups) are only supported if task input `useUpdateScriptVNext: true` is set.
+- [`ignore`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#ignore) may not behave to official specifications unless task input `useUpdateScriptVNext: true` is set. If you are having issues, search for related issues such as <https://github.com/tinglesoftware/dependabot-azure-devops/pull/582> before creating a new issue.
+- [`assignees`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#assignees) and [`reviewers`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#reviewers) must be a list of user GUIDs or email addresses; group/team names are not supported.
+- Private feed/registry authentication may not work with all package ecosystems. See [problems with authentication](https://github.com/tinglesoftware/dependabot-azure-devops/discussions/1317) for more.
+
+### Dependabot Updater Docker Image
+
+- [`cooldown`](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#cooldown) is not supported.
+- `DEPENDABOT_ASSIGNEES` and `DEPENDABOT_REVIEWERS` must be a list of user GUIDs; email addresses and group/team names are not supported.
+- Private feed/registry authentication may not work with all package ecosystems. See [problems with authentication](https://github.com/tinglesoftware/dependabot-azure-devops/discussions/1317) for more.
 
 ### Dependabot Server
 

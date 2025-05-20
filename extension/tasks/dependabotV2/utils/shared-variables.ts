@@ -61,6 +61,8 @@ export interface ISharedVariables {
   /** List of update identifiers to run */
   targetUpdateIds: number[];
 
+  securityAdvisoriesFile: string | undefined;
+
   /** Determines whether to skip creating/updating pull requests */
   skipPullRequests: boolean;
   /** Determines whether to comment on pull requests which an explanation of the reason for closing */
@@ -176,6 +178,7 @@ export default function getSharedVariables(): ISharedVariables {
   let targetUpdateIds = tl.getDelimitedInput('targetUpdateIds', ';', false).map(Number);
 
   // Prepare other variables
+  let securityAdvisoriesFile: string | undefined = tl.getInput('securityAdvisoriesFile');
   let skipPullRequests: boolean = tl.getBoolInput('skipPullRequests', false);
   let commentPullRequests: boolean = tl.getBoolInput('commentPullRequests', false);
   let abandonUnwantedPullRequests: boolean = tl.getBoolInput('abandonUnwantedPullRequests', true);
@@ -222,6 +225,7 @@ export default function getSharedVariables(): ISharedVariables {
     secrets,
 
     targetUpdateIds,
+    securityAdvisoriesFile,
 
     skipPullRequests,
     commentPullRequests,
