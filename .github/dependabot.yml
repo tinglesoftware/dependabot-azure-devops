@@ -79,6 +79,7 @@ updates:
       eslint:
         patterns:
           - 'eslint'
+          - 'eslint-config-prettier'
           - '@eslint/*'
           - '@typescript-eslint/*'
       js-yaml:
