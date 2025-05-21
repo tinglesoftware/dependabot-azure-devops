@@ -116,9 +116,6 @@ export class DependabotCli {
       if (options?.apiUrl) {
         dependabotArguments.push('--api-url', options.apiUrl);
       }
-      if (this.debug) {
-        dependabotArguments.push('--debug');
-      }
 
       // Generate the job input file
       writeJobConfigFile(jobInputPath, operation);
