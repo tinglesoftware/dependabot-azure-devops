@@ -116,6 +116,7 @@ export class DependabotCli {
       if (options?.apiUrl) {
         dependabotArguments.push('--api-url', options.apiUrl);
       }
+      // do not add debug here because the CLI hangs when --debug is passed (i.e. it becomes interactive)
 
       // Generate the job input file
       writeJobConfigFile(jobInputPath, operation);
