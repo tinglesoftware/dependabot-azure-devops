@@ -259,7 +259,7 @@
       "groupName": "advanced",
       "label": "Dependabot Updater experiments",
       "required": false,
-      "helpMarkDown": "Comma-seperated list of key/value pairs representing the enabled Dependabot experiments e.g. `experiments: 'tidy=true,vendor=true,goprivate=*'`. Available options vary depending on the package ecosystem. If specified, this overrides the [default experiments](https://github.com/tinglesoftware/dependabot-azure-devops/blob/main/extension/tasks/dependabotV2/utils/dependabot/experiments.ts). See [configuring experiments](https://github.com/tinglesoftware/dependabot-azure-devops/#configuring-experiments) for more details."
+      "helpMarkDown": "Comma-seperated list of key/value pairs representing the enabled Dependabot experiments e.g. `experiments: 'tidy=true,vendor=true,goprivate=*'`. Available options vary depending on the package ecosystem. If specified, this overrides the [default experiments](https://github.com/tinglesoftware/dependabot-azure-devops/blob/main/extension/src/dependabot/experiments.ts). See [configuring experiments](https://github.com/tinglesoftware/dependabot-azure-devops/#configuring-experiments) for more details."
     }
   ],
   "execution": {

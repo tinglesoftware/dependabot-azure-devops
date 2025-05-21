@@ -66,7 +66,7 @@ Dependabot for Azure DevOps must be explicitly configured to run in your organis
         mergeStrategy: 'squash'
   ```
 
-  See [task requirements](/extension/README.md#task-requirements) and [task parameters](/extension/README.md#task-parameters) for more information.
+  See [task requirements](./extension/README.md#task-requirements) and [task parameters](./extension/README.md#task-parameters) for more information.
 
 </details>
 
@@ -152,7 +152,7 @@ Dependabot uses an internal feature flag system called "experiments". Typically,
 
 Experiments vary depending on the package ecosystem used; They can be enabled using the `experiments` task input with a comma-separated list of key/value pairs representing the experiments e.g. `experiments: 'tidy=true,vendor=true,goprivate=*'`.
 
-By default, the enabled experiments will mirror the GitHub-hosted version of Dependabot, which can be found [here](/extension/tasks/dependabotV2/utils/dependabot/experiments.ts). Specifying experiments in the task input parameters will override all defaults.
+By default, the enabled experiments will mirror the GitHub-hosted version of Dependabot, which can be found [here](./extension/src/dependabot/experiments.ts). Specifying experiments in the task input parameters will override all defaults.
 
 <details open>
 <summary>List of known experiments:</summary>
