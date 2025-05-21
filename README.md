@@ -159,9 +159,7 @@ By default, the enabled experiments will mirror the GitHub-hosted version of Dep
 
 ## Configuring assignees
 
-Dependabot supports [`assignees`](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#assignees--). However, Azure DevOps does not have the concept of pull request assignees. To work around this:
-
-- [`assignees`](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#assignees--) are treated as **required** pull request reviewers.
+Dependabot supports [`assignees`](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#assignees--). However, Azure DevOps does not have the concept of pull request assignees. To work around this [`assignees`](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#assignees--) are treated as **required** pull request reviewers.
 
 The following values can be used as assignees:
 
