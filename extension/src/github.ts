@@ -1,5 +1,6 @@
 import axios from 'axios';
 import * as semver from 'semver';
+import { z } from 'zod';
 
 import { warning } from 'azure-pipelines-task-lib/task';
 
@@ -49,102 +50,114 @@ const GHSA_SECURITY_VULNERABILITIES_QUERY = `
   }
 `;
 
-export enum PackageEcosystem {
-  Composer = 'COMPOSER',
-  Erlang = 'ERLANG',
-  Go = 'GO',
-  Actions = 'ACTIONS',
-  Maven = 'MAVEN',
-  Npm = 'NPM',
-  Nuget = 'NUGET',
-  Pip = 'PIP',
-  Pub = 'PUB',
-  Rubygems = 'RUBYGEMS',
-  Rust = 'RUST',
-  Swift = 'SWIFT',
-}
+export const PackageEcosystemSchema = z.enum([
+  'COMPOSER',
+  'ERLANG',
+  'GO',
+  'ACTIONS',
+  'MAVEN',
+  'NPM',
+  'NUGET',
+  'PIP',
+  'PUB',
+  'RUBYGEMS',
+  'RUST',
+  'SWIFT',
+]);
+export type PackageEcosystem = z.infer<typeof PackageEcosystemSchema>;
 
-export interface IPackage {
-  name: string;
-  version?: string;
-}
+export const PackageSchema = z.object({
+  name: z.string(),
+  version: z.string().optional(),
+});
+export type Package = z.infer<typeof PackageSchema>;
 
-export interface ISecurityVulnerability {
-  ecosystem: PackageEcosystem;
-  package: IPackage;
-  advisory: ISecurityAdvisory;
-  vulnerableVersionRange: string;
-  firstPatchedVersion: string;
-}
+export const SecurityAdvisoryIdentifierSchema = z.enum(['CVE', 'GHSA']);
+export type SecurityAdvisoryIdentifierType = z.infer<typeof SecurityAdvisoryIdentifierSchema>;
 
-export enum SecurityAdvisoryIdentifierType {
-  Cve = 'CVE',
-  Ghsa = 'GHSA',
-}
+export const SecurityAdvisorySeveritySchema = z.enum(['LOW', 'MODERATE', 'HIGH', 'CRITICAL']);
+export type SecurityAdvisorySeverity = z.infer<typeof SecurityAdvisorySeveritySchema>;
 
-export enum SecurityAdvisorySeverity {
-  Low = 'LOW',
-  Moderate = 'MODERATE',
-  High = 'HIGH',
-  Critical = 'CRITICAL',
-}
+export const SecurityAdvisorySchema = z.object({
+  identifiers: z
+    .array(
+      z.object({
+        type: z.union([SecurityAdvisoryIdentifierSchema, z.string()]),
+        value: z.string(),
+      }),
+    )
+    .optional(),
+  severity: SecurityAdvisorySeveritySchema.optional(),
+  summary: z.string(),
+  description: z.string().optional(),
+  references: z.array(z.object({ url: z.string() })).optional(),
+  cvss: z
+    .object({
+      score: z.number(),
+      vectorString: z.string(),
+    })
+    .optional(),
+  epss: z
+    .object({
+      percentage: z.number(),
+      percentile: z.number(),
+    })
+    .optional(),
+  cwes: z
+    .array(
+      z.object({
+        cweId: z.string(),
+        name: z.string(),
+        description: z.string(),
+      }),
+    )
+    .optional(),
+  publishedAt: z.string().optional(),
+  updatedAt: z.string().optional(),
+  withdrawnAt: z.string().optional(),
+  permalink: z.string().optional(),
+});
+export type SecurityAdvisory = z.infer<typeof SecurityAdvisorySchema>;
 
-export interface ISecurityAdvisory {
-  identifiers: {
-    type: SecurityAdvisoryIdentifierType | string;
-    value: string;
-  }[];
-  severity: SecurityAdvisorySeverity;
-  summary: string;
-  description: string;
-  references: string[];
-  cvss: {
-    score: number;
-    vectorString: string;
-  };
-  epss: {
-    percentage: number;
-    percentile: number;
-  };
-  cwes: {
-    id: string;
-    name: string;
-    description: string;
-  }[];
-  publishedAt: string;
-  updatedAt: string;
-  withdrawnAt: string;
-  permalink: string;
-}
+const FirstPatchedVersionSchema = z.object({ identifier: z.string() });
+export type FirstPatchedVersion = z.infer<typeof FirstPatchedVersionSchema>;
+
+export const SecurityVulnerabilitySchema = z.object({
+  package: PackageSchema,
+  advisory: SecurityAdvisorySchema,
+  vulnerableVersionRange: z.string(),
+  firstPatchedVersion: FirstPatchedVersionSchema.optional(),
+});
+export type SecurityVulnerability = z.infer<typeof SecurityVulnerabilitySchema>;
 
 export function getGhsaPackageEcosystemFromDependabotPackageManager(
   dependabotPackageManager: string,
 ): PackageEcosystem {
   switch (dependabotPackageManager) {
     case 'composer':
-      return PackageEcosystem.Composer;
+      return 'COMPOSER';
     case 'elm':
-      return PackageEcosystem.Erlang;
+      return 'ERLANG';
     case 'github_actions':
-      return PackageEcosystem.Actions;
+      return 'ACTIONS';
     case 'go_modules':
-      return PackageEcosystem.Go;
+      return 'GO';
     case 'maven':
-      return PackageEcosystem.Maven;
+      return 'MAVEN';
     case 'npm_and_yarn':
-      return PackageEcosystem.Npm;
+      return 'NPM';
     case 'nuget':
-      return PackageEcosystem.Nuget;
+      return 'NUGET';
     case 'pip':
-      return PackageEcosystem.Pip;
+      return 'PIP';
     case 'pub':
-      return PackageEcosystem.Pub;
+      return 'PUB';
     case 'bundler':
-      return PackageEcosystem.Rubygems;
+      return 'RUBYGEMS';
     case 'cargo':
-      return PackageEcosystem.Rust;
+      return 'RUST';
     case 'swift':
-      return PackageEcosystem.Swift;
+      return 'SWIFT';
     default:
       throw new Error(`Unknown dependabot package manager: ${dependabotPackageManager}`);
   }
@@ -164,15 +177,17 @@ export class GitHubGraphClient {
    * Get the list of security vulnerabilities for a given package ecosystem and list of packages
    * @param packageEcosystem
    * @param packages
+   * @param privateVulnerabilities Private vulnerabilities
    */
   public async getSecurityVulnerabilitiesAsync(
     packageEcosystem: PackageEcosystem,
-    packages: IPackage[],
-  ): Promise<ISecurityVulnerability[]> {
+    packages: Package[],
+    privateVulnerabilities: SecurityVulnerability[],
+  ): Promise<SecurityVulnerability[]> {
     // GitHub API doesn't support querying multiple package at once, so we need to make a request for each package individually.
     // To speed up the process, we can make the requests in parallel, 100 at a time. We batch the requests to avoid hitting the rate limit too quickly.
     // https://docs.github.com/en/graphql/overview/rate-limits-and-node-limits-for-the-graphql-api
-    const securityVulnerabilities = await this.batchGraphQueryAsync<IPackage, ISecurityVulnerability>(
+    const securityVulnerabilities = await this.batchGraphQueryAsync<Package, SecurityVulnerability>(
       100,
       packages,
       async (pkg) => {
@@ -202,57 +217,16 @@ export class GitHubGraphClient {
         }
 
         const vulnerabilities = response.data?.data?.securityVulnerabilities?.nodes;
-        return (
-          vulnerabilities
-            ?.filter((v: any) => v?.advisory) // eslint-disable-line @typescript-eslint/no-explicit-any
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            ?.map((v: any) => {
-              return {
-                ecosystem: packageEcosystem,
-                package: pkg,
-                advisory: {
-                  identifiers: v.advisory.identifiers?.map((i: Record<string, unknown>) => {
-                    return {
-                      type: i.type,
-                      value: i.value,
-                    };
-                  }),
-                  severity: v.advisory.severity,
-                  summary: v.advisory.summary,
-                  description: v.advisory.description,
-                  references: v.advisory.references?.map((r: Record<string, string>) => r.url),
-                  cvss: !v.advisory.cvss
-                    ? undefined
-                    : {
-                        score: v.advisory.cvss.score,
-                        vectorString: v.advisory.cvss.vectorString,
-                      },
-                  epss: !v.advisory.epss
-                    ? undefined
-                    : {
-                        percentage: v.advisory.epss.percentage,
-                        percentile: v.advisory.epss.percentile,
-                      },
-                  cwes: v.advisory.cwes?.nodes?.map((c: Record<string, string>) => {
-                    return {
-                      id: c.cweId,
-                      name: c.name,
-                      description: c.description,
-                    };
-                  }),
-                  publishedAt: v.advisory.publishedAt,
-                  updatedAt: v.advisory.updatedAt,
-                  withdrawnAt: v.advisory.withdrawnAt,
-                  permalink: v.advisory.permalink,
-                },
-                vulnerableVersionRange: v.vulnerableVersionRange,
-                firstPatchedVersion: v.firstPatchedVersion?.identifier,
-              };
-            })
-        );
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return vulnerabilities?.filter((v: any) => v?.advisory)?.map((v: any) => ({ package: pkg, ...v }));
       },
     );
 
+    const merged = privateVulnerabilities.concat(securityVulnerabilities);
+    return this.filter(merged);
+  }
+
+  public filter(securityVulnerabilities: SecurityVulnerability[]): SecurityVulnerability[] {
     // Filter out vulnerabilities that have been withdrawn or that are not relevant the current version of the package
     const affectedVulnerabilities = securityVulnerabilities
       .filter((v) => !v.advisory.withdrawnAt)
@@ -273,7 +247,6 @@ export class GitHubGraphClient {
         const versionRangeRequirements = v.vulnerableVersionRange.split(',').map((v) => v.trim());
         return versionRangeRequirements.every((r) => pkg.version && semver.satisfies(pkg.version, r));
       });
-
     return affectedVulnerabilities;
   }
 

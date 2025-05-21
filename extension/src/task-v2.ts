@@ -1,17 +1,21 @@
 import { debug, error, setResult, TaskResult, warning, which } from 'azure-pipelines-task-lib/task';
+import { existsSync } from 'fs';
+import { readFile } from 'fs/promises';
+
 import { AzureDevOpsWebApiClient } from './azure-devops/client';
 import { normalizeBranchName, section, setSecrets } from './azure-devops/formatting';
 import { DEVOPS_PR_PROPERTY_MICROSOFT_GIT_SOURCE_REF_NAME, type IPullRequestProperties } from './azure-devops/models';
 import { DependabotCli, type DependabotCliOptions } from './dependabot/cli';
-import { type IDependabotConfig, type IDependabotUpdate, parseConfigFile } from './dependabot/config';
+import { parseConfigFile, type IDependabotConfig, type IDependabotUpdate } from './dependabot/config';
 import { DependabotJobBuilder, mapPackageEcosystemToPackageManager } from './dependabot/job-builder';
 import { type IDependabotUpdateOperationResult } from './dependabot/models';
 import { DependabotOutputProcessor, parsePullRequestProperties } from './dependabot/output-processor';
 import {
   getGhsaPackageEcosystemFromDependabotPackageManager,
   GitHubGraphClient,
-  type IPackage,
-  type ISecurityVulnerability,
+  SecurityVulnerabilitySchema,
+  type Package,
+  type SecurityVulnerability,
 } from './github';
 import parseTaskInputConfiguration, { type ISharedVariables } from './utils/shared-variables';
 
@@ -257,7 +261,7 @@ export async function performDependabotUpdatesAsync(
     // that need updating and check each one for vulnerabilities. This is because Dependabot requires the list of vulnerable dependencies
     // to be supplied in the job definition of security-only update job, it will not automatically discover them like a versioned update does.
     // https://docs.github.com/en/code-security/dependabot/dependabot-security-updates/configuring-dependabot-security-updates#overriding-the-default-behavior-with-a-configuration-file
-    let securityVulnerabilities: ISecurityVulnerability[] = [];
+    let securityVulnerabilities: SecurityVulnerability[] = [];
     let dependencyNamesToUpdate: string[] = [];
     const securityUpdatesOnly = update['open-pull-requests-limit'] === 0;
     if (securityUpdatesOnly) {
@@ -270,16 +274,30 @@ export async function performDependabotUpdatesAsync(
       // Get the list of vulnerabilities that apply to the discovered dependencies
       section(`GHSA dependency vulnerability check`);
       const ghsaClient = new GitHubGraphClient(taskInputs.githubAccessToken);
-      const packagesToCheckForVulnerabilities: IPackage[] = discoveredDependencyListOutputs
+      const packagesToCheckForVulnerabilities: Package[] = discoveredDependencyListOutputs
         ?.find((x) => x.output.type == 'update_dependency_list')
         ?.output?.data?.dependencies?.map((d) => ({ name: d.name, version: d.version }));
       if (packagesToCheckForVulnerabilities?.length) {
         console.info(
           `Detected ${packagesToCheckForVulnerabilities.length} dependencies; Checking for vulnerabilities...`,
         );
+
+        // parse security advisories from file (private)
+        let privateVulnerabilities: SecurityVulnerability[];
+        if (taskInputs.securityAdvisoriesFile) {
+          const filePath = taskInputs.securityAdvisoriesFile;
+          if (existsSync(filePath)) {
+            const fileContents = await readFile(filePath, 'utf-8');
+            privateVulnerabilities = await SecurityVulnerabilitySchema.array().parseAsync(JSON.parse(fileContents));
+          } else {
+            console.info(`Private security advisories file '${filePath}' does not exist`);
+          }
+        }
+
         securityVulnerabilities = await ghsaClient.getSecurityVulnerabilitiesAsync(
           getGhsaPackageEcosystemFromDependabotPackageManager(packageManager),
           packagesToCheckForVulnerabilities || [],
+          privateVulnerabilities || [],
         );
 
         // Only update dependencies that have vulnerabilities
