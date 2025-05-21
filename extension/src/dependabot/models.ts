@@ -1,4 +1,4 @@
-import { IDependabotUpdate } from './config';
+import { type IDependabotUpdate } from './config';
 
 /**
  * Represents the Dependabot CLI update job.yaml configuration file options.
@@ -118,6 +118,6 @@ export interface IDependabotUpdateOperationResult {
   error: Error;
   output: {
     type: string;
-    data: any;
+    data: any; // eslint-disable-line @typescript-eslint/no-explicit-any
   };
 }

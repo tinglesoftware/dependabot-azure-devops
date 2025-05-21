@@ -1,19 +1,19 @@
 import { debug, error, setResult, TaskResult, warning, which } from 'azure-pipelines-task-lib/task';
 import { AzureDevOpsWebApiClient } from './azure-devops/client';
 import { normalizeBranchName, section, setSecrets } from './azure-devops/formatting';
-import { DEVOPS_PR_PROPERTY_MICROSOFT_GIT_SOURCE_REF_NAME, IPullRequestProperties } from './azure-devops/models';
-import { DependabotCli } from './dependabot/cli';
-import { IDependabotConfig, IDependabotUpdate, parseConfigFile } from './dependabot/config';
+import { DEVOPS_PR_PROPERTY_MICROSOFT_GIT_SOURCE_REF_NAME, type IPullRequestProperties } from './azure-devops/models';
+import { DependabotCli, type DependabotCliOptions } from './dependabot/cli';
+import { type IDependabotConfig, type IDependabotUpdate, parseConfigFile } from './dependabot/config';
 import { DependabotJobBuilder, mapPackageEcosystemToPackageManager } from './dependabot/job-builder';
-import { IDependabotUpdateOperationResult } from './dependabot/models';
+import { type IDependabotUpdateOperationResult } from './dependabot/models';
 import { DependabotOutputProcessor, parsePullRequestProperties } from './dependabot/output-processor';
 import {
   getGhsaPackageEcosystemFromDependabotPackageManager,
   GitHubGraphClient,
-  IPackage,
-  ISecurityVulnerability,
+  type IPackage,
+  type ISecurityVulnerability,
 } from './github';
-import parseTaskInputConfiguration, { ISharedVariables } from './utils/shared-variables';
+import parseTaskInputConfiguration, { type ISharedVariables } from './utils/shared-variables';
 
 async function run() {
   let dependabotCli: DependabotCli = undefined;
@@ -99,7 +99,7 @@ async function run() {
       taskInputs.debug,
     );
 
-    const dependabotCliUpdateOptions = {
+    const dependabotCliUpdateOptions: DependabotCliOptions = {
       sourceProvider: 'azure',
       azureDevOpsAccessToken: taskInputs.systemAccessToken,
       gitHubAccessToken: taskInputs.githubAccessToken,
@@ -108,7 +108,7 @@ async function run() {
       proxyCertPath: taskInputs.proxyCertPath,
       proxyImage: undefined, // TODO: Add config for this?
       updaterImage: taskInputs.dependabotUpdaterImage,
-      timeoutDuration: undefined, // TODO: Add config for this?
+      timeoutDurationMinutes: undefined, // TODO: Add config for this?
       flamegraph: taskInputs.debug,
       apiUrl: taskInputs.dependabotCliApiUrl,
       apiListeningPort: taskInputs.dependabotCliApiListeningPort,
@@ -236,11 +236,11 @@ export async function performDependabotUpdatesAsync(
   dependabotConfig: IDependabotConfig,
   dependabotUpdates: IDependabotUpdate[],
   dependabotCli: DependabotCli,
-  dependabotCliUpdateOptions: any,
+  dependabotCliUpdateOptions: DependabotCliOptions,
   existingPullRequests: IPullRequestProperties[],
 ): Promise<TaskResult> {
-  let successfulOperations: IDependabotUpdateOperationResult[] = [];
-  let failedOperations: IDependabotUpdateOperationResult[] = [];
+  const successfulOperations: IDependabotUpdateOperationResult[] = [];
+  const failedOperations: IDependabotUpdateOperationResult[] = [];
   for (const update of dependabotUpdates) {
     const updateId = dependabotUpdates.indexOf(update).toString();
     const packageEcosystem = update['package-ecosystem'];

@@ -2,17 +2,17 @@ import { GitPullRequestMergeStrategy, VersionControlChangeType } from 'azure-dev
 import { debug, error, warning } from 'azure-pipelines-task-lib/task';
 import * as path from 'path';
 import { z } from 'zod';
-import { AzureDevOpsWebApiClient } from '../azure-devops/client';
+import { type AzureDevOpsWebApiClient } from '../azure-devops/client';
 import { section } from '../azure-devops/formatting';
 import {
   DEVOPS_PR_PROPERTY_DEPENDABOT_DEPENDENCIES,
   DEVOPS_PR_PROPERTY_DEPENDABOT_PACKAGE_MANAGER,
-  IFileChange,
-  IPullRequestProperties,
+  type IFileChange,
+  type IPullRequestProperties,
 } from '../azure-devops/models';
-import { ISharedVariables } from '../utils/shared-variables';
+import { type ISharedVariables } from '../utils/shared-variables';
 import { getBranchNameForUpdate } from './branch-name';
-import { IDependabotUpdateOperation } from './models';
+import { type IDependabotUpdateOperation } from './models';
 
 export const DependabotDependenciesSchema = z.object({
   dependencies: z
@@ -76,7 +76,7 @@ export class DependabotOutputProcessor {
    * @param type The output type (e.g. "create-pull-request", "update-pull-request", etc.)
    * @param data The output data object related to the type
    */
-  public async process(update: IDependabotUpdateOperation, type: string, data: any): Promise<boolean> {
+  public async process(update: IDependabotUpdateOperation, type: string, data: unknown): Promise<boolean> {
     const project = this.taskInputs.project;
     const repository = this.taskInputs.repository;
     const packageManager = update?.job?.['package-manager'];
@@ -327,7 +327,7 @@ export class DependabotOutputProcessor {
   }
 }
 
-export function buildPullRequestProperties(packageManager: string, dependencies: any): any[] {
+export function buildPullRequestProperties(packageManager: string, dependencies: unknown) {
   return [
     {
       name: DEVOPS_PR_PROPERTY_DEPENDABOT_PACKAGE_MANAGER,
@@ -343,7 +343,7 @@ export function buildPullRequestProperties(packageManager: string, dependencies:
 export function parsePullRequestProperties(
   pullRequests: IPullRequestProperties[],
   packageManager: string | null,
-): Record<string, any[]> {
+): Record<string, unknown[]> {
   return Object.fromEntries(
     pullRequests
       .filter((pr) => {
@@ -362,7 +362,7 @@ export function parsePullRequestProperties(
   );
 }
 
-function getPullRequestChangedFilesForOutputData(data: any): IFileChange[] {
+function getPullRequestChangedFilesForOutputData(data: unknown): IFileChange[] {
   return data['updated-dependency-files']
     .filter((file) => file['type'] === 'file')
     .map((file) => {
@@ -383,7 +383,7 @@ function getPullRequestChangedFilesForOutputData(data: any): IFileChange[] {
     });
 }
 
-function getPullRequestCloseReasonForOutputData(data: any): string {
+function getPullRequestCloseReasonForOutputData(data: unknown): string {
   // The first dependency is the "lead" dependency in a multi-dependency update
   const leadDependencyName = data['dependency-names'][0];
   let reason: string = null;
@@ -410,8 +410,8 @@ function getPullRequestCloseReasonForOutputData(data: any): string {
   return reason;
 }
 
-function getPullRequestDependenciesPropertyValueForOutputData(data: any): any {
-  let dependencies: any = data['dependencies']?.map((dep) => {
+function getPullRequestDependenciesPropertyValueForOutputData(data: unknown): unknown {
+  let dependencies = data['dependencies']?.map((dep) => {
     return {
       'dependency-name': dep['name'],
       'dependency-version': dep['version'],
@@ -428,7 +428,7 @@ function getPullRequestDependenciesPropertyValueForOutputData(data: any): any {
   return dependencies;
 }
 
-function getDependencyNames(dependencies: any): string[] {
+function getDependencyNames(dependencies: unknown): string[] {
   return (dependencies['dependency-group-name'] ? dependencies['dependencies'] : dependencies)?.map((dep) =>
     dep['dependency-name']?.toString(),
   );
@@ -439,9 +439,9 @@ function areEqual(a: string[], b: string[]): boolean {
   return a.every((name) => b.includes(name));
 }
 
-function getPullRequestDescription(packageManager: string, body: string, dependencies: any[]): string {
+function getPullRequestDescription(packageManager: string, body: string, dependencies: unknown[]): string {
   let header = '';
-  let footer = '';
+  const footer = '';
 
   // Fix up GitHub mentions encoding issues by removing instances of the zero-width space '\u200B' as it does not render correctly in Azure DevOps.
   // https://github.com/dependabot/dependabot-core/issues/9572

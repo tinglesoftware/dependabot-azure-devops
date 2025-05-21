@@ -6,7 +6,7 @@ import { load } from 'js-yaml';
 import * as path from 'path';
 import { URL } from 'url';
 import { convertPlaceholder } from '../utils/placeholder';
-import { ISharedVariables } from '../utils/shared-variables';
+import { type ISharedVariables } from '../utils/shared-variables';
 
 /**
  * Represents the dependabot.yaml configuration file options.
@@ -151,11 +151,11 @@ export async function parseConfigFile(taskInputs: ISharedVariables): Promise<IDe
     tl.debug(`Attempting to fetch configuration file via REST API ...`);
     for (const fp of possibleFilePaths) {
       // make HTTP request
-      var url = `${taskInputs.organizationUrl}${taskInputs.project}/_apis/git/repositories/${taskInputs.repository}/items?path=${fp}`;
+      const url = `${taskInputs.organizationUrl}${taskInputs.project}/_apis/git/repositories/${taskInputs.repository}/items?path=${fp}`;
       tl.debug(`GET ${url}`);
 
       try {
-        var response = await axios.get(url, {
+        const response = await axios.get(url, {
           auth: {
             username: 'x-access-token',
             password: taskInputs.systemAccessToken,
@@ -171,7 +171,7 @@ export async function parseConfigFile(taskInputs: ISharedVariables): Promise<IDe
           break;
         }
       } catch (error) {
-        var responseStatusCode = error?.response?.status;
+        const responseStatusCode = error?.response?.status;
 
         if (responseStatusCode === 404) {
           tl.debug(`No configuration file at '${url}'`);
@@ -186,9 +186,9 @@ export async function parseConfigFile(taskInputs: ISharedVariables): Promise<IDe
       }
     }
   } else {
-    let rootDir = getVariable('Build.SourcesDirectory');
+    const rootDir = getVariable('Build.SourcesDirectory');
     for (const fp of possibleFilePaths) {
-      var filePath = path.join(rootDir, fp);
+      const filePath = path.join(rootDir, fp);
       if (fs.existsSync(filePath)) {
         tl.debug(`Found configuration file cloned at ${filePath}`);
         configContents = fs.readFileSync(filePath, 'utf-8');
@@ -207,7 +207,7 @@ export async function parseConfigFile(taskInputs: ISharedVariables): Promise<IDe
     tl.debug('Configuration file contents read.');
   }
 
-  let config: any = load(configContents);
+  const config = load(configContents);
 
   // Ensure the config object parsed is an object
   if (config === null || typeof config !== 'object') {
@@ -245,11 +245,11 @@ export async function parseConfigFile(taskInputs: ISharedVariables): Promise<IDe
   };
 }
 
-export function parseUpdates(config: any, configPath: string): IDependabotUpdate[] {
-  var updates: IDependabotUpdate[] = [];
+export function parseUpdates(config: unknown, configPath: string): IDependabotUpdate[] {
+  const updates: IDependabotUpdate[] = [];
 
   // Check the updates parsed
-  var rawUpdates = config['updates'];
+  const rawUpdates = config['updates'];
 
   // Check if the array of updates exists
   if (!Array.isArray(rawUpdates)) {
@@ -258,7 +258,7 @@ export function parseUpdates(config: any, configPath: string): IDependabotUpdate
 
   // Parse the value of each of the updates obtained from the file
   rawUpdates.forEach((update) => {
-    var dependabotUpdate: IDependabotUpdate = update;
+    const dependabotUpdate: IDependabotUpdate = update;
 
     if (!dependabotUpdate['package-ecosystem']) {
       throw new Error("The value 'package-ecosystem' in dependency update config is missing");
@@ -296,20 +296,20 @@ export function parseUpdates(config: any, configPath: string): IDependabotUpdate
   return updates;
 }
 
-export function parseRegistries(config: any): Record<string, IDependabotRegistry> {
-  var registries: Record<string, IDependabotRegistry> = {};
+export function parseRegistries(config: unknown): Record<string, IDependabotRegistry> {
+  const registries: Record<string, IDependabotRegistry> = {};
 
-  var rawRegistries = config['registries'];
+  const rawRegistries = config['registries'];
 
   if (rawRegistries == undefined) return registries;
 
   // Parse the value of each of the registries obtained from the file
   Object.entries(rawRegistries).forEach((item) => {
-    var registryConfigKey = item[0];
-    var registryConfig = item[1];
+    const registryConfigKey = item[0];
+    const registryConfig = item[1];
 
     // parse the type
-    var rawType = registryConfig['type'];
+    const rawType = registryConfig['type'];
     if (!rawType) {
       throw new Error(`The value for 'type' in dependency registry config '${registryConfigKey}' is missing`);
     }
@@ -320,14 +320,14 @@ export function parseRegistries(config: any): Record<string, IDependabotRegistry
         `The value '${rawType}' for 'type' in dependency registry config '${registryConfigKey}' is not among the supported values.`,
       );
     }
-    var type = rawType?.replace('-', '_');
+    const type = rawType?.replace('-', '_');
 
-    var parsed: IDependabotRegistry = { type: type };
+    const parsed: IDependabotRegistry = { type: type };
     registries[registryConfigKey] = parsed;
 
     // handle special fields for 'hex-organization' types
     if (type === 'hex_organization') {
-      var organization = registryConfig['organization'];
+      const organization = registryConfig['organization'];
       if (!organization) {
         throw new Error(`The value 'organization' in dependency registry config '${registryConfigKey}' is missing`);
       }
@@ -336,7 +336,7 @@ export function parseRegistries(config: any): Record<string, IDependabotRegistry
 
     // handle special fields for 'hex-repository' types
     if (type === 'hex_repository') {
-      var repo = registryConfig['repo'];
+      const repo = registryConfig['repo'];
       if (!repo) {
         throw new Error(`The value 'repo' in dependency registry config '${registryConfigKey}' is missing`);
       }
@@ -353,13 +353,13 @@ export function parseRegistries(config: any): Record<string, IDependabotRegistry
     parsed.token = convertPlaceholder(registryConfig['token']);
 
     // add "replaces-base" if present
-    var replacesBase = registryConfig['replaces-base'];
+    const replacesBase = registryConfig['replaces-base'];
     if (replacesBase !== undefined) {
       parsed['replaces-base'] = replacesBase;
     }
 
     // parse the url
-    var url = registryConfig['url'];
+    const url = registryConfig['url'];
     if (!url && type !== 'hex_organization') {
       throw new Error(`The value 'url' in dependency registry config '${registryConfigKey}' is missing`);
     }

@@ -8,6 +8,7 @@
     "start": "pnpm start:V2",
     "start:V1": "node tasks/dependabotV1/dist/task-v1.js",
     "start:V2": "node tasks/dependabotV2/dist/task-v2.js",
+    "lint": "eslint .",
     "test": "vitest",
     "package": "pnpm tfx extension create --json5"
   },

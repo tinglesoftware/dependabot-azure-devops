@@ -12,8 +12,8 @@ import {
 
 describe('Parse configuration file', () => {
   it('Parsing works as expected', () => {
-    let config: any = load(fs.readFileSync('tests/config/dependabot.yml', 'utf-8'));
-    let updates = parseUpdates(config, '');
+    const config = load(fs.readFileSync('tests/config/dependabot.yml', 'utf-8'));
+    const updates = parseUpdates(config, '');
     expect(updates.length).toBe(3);
 
     // first
@@ -45,12 +45,12 @@ describe('Parse configuration file', () => {
 
 describe('Parse registries', () => {
   it('Parsing works as expected', () => {
-    let config: any = load(fs.readFileSync('tests/config/sample-registries.yml', 'utf-8'));
-    let registries = parseRegistries(config);
+    const config = load(fs.readFileSync('tests/config/sample-registries.yml', 'utf-8'));
+    const registries = parseRegistries(config);
     expect(Object.keys(registries).length).toBe(11);
 
     // composer-repository
-    var registry = registries['composer'];
+    let registry = registries['composer'];
     expect(registry.type).toBe('composer_repository');
     expect(registry.url).toBe('https://repo.packagist.com/example-company/');
     expect(registry['index-url']).toBeUndefined();
@@ -243,7 +243,7 @@ describe('Validate registries', () => {
     // let updates = parseUpdates(config);
     // expect(updates.length).toBe(2);
 
-    var updates: IDependabotUpdate[] = [
+    const updates: IDependabotUpdate[] = [
       {
         'package-ecosystem': 'npm',
         'directory': '/',
@@ -252,7 +252,7 @@ describe('Validate registries', () => {
       },
     ];
 
-    var registries: Record<string, IDependabotRegistry> = {
+    const registries: Record<string, IDependabotRegistry> = {
       dummy1: {
         type: 'nuget',
         url: 'https://pkgs.dev.azure.com/contoso/_packaging/My_Feed/nuget/v3/index.json',

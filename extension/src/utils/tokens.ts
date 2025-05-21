@@ -67,13 +67,13 @@ export function getGithubAccessToken() {
  * @returns Azure DevOps Access Token
  */
 export function getAzureDevOpsAccessToken() {
-  let systemAccessToken: string = getInput('azureDevOpsAccessToken');
+  const systemAccessToken: string = getInput('azureDevOpsAccessToken');
   if (systemAccessToken) {
     debug('azureDevOpsAccessToken provided, using for authenticating');
     return systemAccessToken;
   }
 
-  let serviceConnectionName: string = getInput('azureDevOpsServiceConnection');
+  const serviceConnectionName: string = getInput('azureDevOpsServiceConnection');
   if (serviceConnectionName) {
     debug('TFS connection supplied. A token shall be extracted from it.');
     return getEndpointAuthorizationParameter(serviceConnectionName, 'apitoken', false);

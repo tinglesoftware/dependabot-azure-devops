@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  IDependabotCooldown,
-  IDependabotGroup,
-  IDependabotIgnoreCondition,
-  IDependabotUpdate,
+  type IDependabotCooldown,
+  type IDependabotGroup,
+  type IDependabotIgnoreCondition,
+  type IDependabotUpdate,
 } from '../../src/dependabot/config';
 import {
   mapAllowedUpdatesFromDependabotConfigToJobConfig,
@@ -14,7 +14,7 @@ import {
   mapIgnoreConditionsFromDependabotConfigToJobConfig,
   mapSourceFromDependabotConfigToJobConfig,
 } from '../../src/dependabot/job-builder';
-import { ISharedVariables } from '../../src/utils/shared-variables';
+import { type ISharedVariables } from '../../src/utils/shared-variables';
 
 describe('mapSourceFromDependabotConfigToJobConfig', () => {
   it('should map source correctly for Azure DevOps Services', () => {
@@ -82,7 +82,7 @@ describe('mapGroupsFromDependabotConfigToJobConfig', () => {
   });
 
   it('should filter out undefined groups', () => {
-    const dependencyGroups: Record<string, any> = {
+    const dependencyGroups: Record<string, IDependabotGroup> = {
       group1: undefined,
       group2: {
         patterns: ['pattern2'],
@@ -94,7 +94,7 @@ describe('mapGroupsFromDependabotConfigToJobConfig', () => {
   });
 
   it('should filter out null groups', () => {
-    const dependencyGroups: Record<string, any> = {
+    const dependencyGroups: Record<string, IDependabotGroup> = {
       group1: null,
       group2: {
         patterns: ['pattern2'],

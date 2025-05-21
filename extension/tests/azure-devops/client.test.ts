@@ -1,14 +1,14 @@
 import { VersionControlChangeType } from 'azure-devops-node-api/interfaces/TfvcInterfaces';
-import { IHttpClientResponse } from 'typed-rest-client/Interfaces';
-import { beforeEach, describe, expect, it, MockedFunction, vi } from 'vitest';
+import { type IncomingMessage } from 'http';
+import { type IHttpClientResponse } from 'typed-rest-client/Interfaces';
+import { beforeEach, describe, expect, it, vi, type MockedFunction } from 'vitest';
 
 import {
   AzureDevOpsWebApiClient,
   isErrorTemporaryFailure,
   sendRestApiRequestWithRetry,
 } from '../../src/azure-devops/client';
-import { HttpRequestError, ICreatePullRequest } from '../../src/azure-devops/models';
-import exp = require('constants');
+import { HttpRequestError, type ICreatePullRequest } from '../../src/azure-devops/models';
 
 vi.mock('azure-devops-node-api');
 vi.mock('azure-pipelines-task-lib/task');
@@ -60,14 +60,14 @@ describe('AzureDevOpsWebApiClient', () => {
           return identity || '';
         });
       const mockRestApiPost = vi
-        .spyOn(client as any, 'restApiPost')
+        .spyOn(client as never, 'restApiPost')
         .mockResolvedValueOnce({
           commits: [{ commitId: 'new-commit-id' }],
         })
         .mockResolvedValueOnce({
           pullRequestId: 1,
         });
-      const mockRestApiPatch = vi.spyOn(client as any, 'restApiPatch').mockResolvedValueOnce({
+      const mockRestApiPatch = vi.spyOn(client as never, 'restApiPatch').mockResolvedValueOnce({
         count: 1,
       });
 
@@ -77,13 +77,13 @@ describe('AzureDevOpsWebApiClient', () => {
 
       // Assert
       expect(mockRestApiPost).toHaveBeenCalledTimes(2);
-      expect((mockRestApiPost.mock.calls[1] as any)[1].reviewers.length).toBe(2);
-      expect((mockRestApiPost.mock.calls[1] as any)[1].reviewers).toContainEqual({
+      expect((mockRestApiPost.mock.calls[1] as unknown)[1].reviewers.length).toBe(2);
+      expect((mockRestApiPost.mock.calls[1] as unknown)[1].reviewers).toContainEqual({
         id: 'user1',
         isRequired: true,
         isFlagged: true,
       });
-      expect((mockRestApiPost.mock.calls[1] as any)[1].reviewers).toContainEqual({
+      expect((mockRestApiPost.mock.calls[1] as unknown)[1].reviewers).toContainEqual({
         id: 'user2',
         isRequired: true,
         isFlagged: true,
@@ -95,7 +95,7 @@ describe('AzureDevOpsWebApiClient', () => {
 
 describe('sendRestApiRequestWithRetry', () => {
   let mockRequestAsync: MockedFunction<() => Promise<IHttpClientResponse>>;
-  let mockResponseBody: any;
+  let mockResponseBody: unknown;
   let mockResponse: Partial<IHttpClientResponse>;
 
   beforeEach(() => {
@@ -106,7 +106,7 @@ describe('sendRestApiRequestWithRetry', () => {
       message: {
         statusCode: 200,
         statusMessage: 'OK',
-      } as any,
+      } as IncomingMessage,
     };
   });
 

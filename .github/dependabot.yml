@@ -76,7 +76,14 @@ updates:
       interval: 'weekly'
       time: '02:00'
     groups:
+      eslint:
+        patterns:
+          - 'eslint'
+          - '@eslint/*'
+          - '@typescript-eslint/*'
       js-yaml:
         patterns:
           - 'js-yaml'
           - '@types/js-yaml'
+      prettier:
+        patterns: ['prettier*']

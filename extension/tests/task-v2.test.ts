@@ -6,15 +6,15 @@ import {
   DEVOPS_PR_PROPERTY_DEPENDABOT_DEPENDENCIES,
   DEVOPS_PR_PROPERTY_DEPENDABOT_PACKAGE_MANAGER,
   DEVOPS_PR_PROPERTY_MICROSOFT_GIT_SOURCE_REF_NAME,
-  IPullRequestProperties,
+  type IPullRequestProperties,
 } from '../src/azure-devops/models';
-import { DependabotCli } from '../src/dependabot/cli';
-import { IDependabotConfig } from '../src/dependabot/config';
+import { DependabotCli, type DependabotCliOptions } from '../src/dependabot/cli';
+import { type IDependabotConfig } from '../src/dependabot/config';
 import { DependabotJobBuilder } from '../src/dependabot/job-builder';
-import { IDependabotUpdateOperationResult } from '../src/dependabot/models';
+import { type IDependabotUpdateOperationResult } from '../src/dependabot/models';
 import { GitHubGraphClient } from '../src/github';
 import { abandonPullRequestsWhereSourceRefIsDeleted, performDependabotUpdatesAsync } from '../src/task-v2';
-import { ISharedVariables } from '../src/utils/shared-variables';
+import { type ISharedVariables } from '../src/utils/shared-variables';
 
 vi.mock('../src/azure-devops/client');
 vi.mock('../src/dependabot/cli');
@@ -143,7 +143,7 @@ describe('performDependabotUpdatesAsync', () => {
   let taskInputs: ISharedVariables;
   let dependabotConfig: IDependabotConfig;
   let dependabotCli: DependabotCli;
-  let dependabotCliUpdateOptions: any;
+  let dependabotCliUpdateOptions: DependabotCliOptions;
   let existingPullRequests: IPullRequestProperties[];
 
   beforeEach(() => {
@@ -199,8 +199,8 @@ describe('performDependabotUpdatesAsync', () => {
       ],
     });
 
-    const tsDependabotOutputProcessor = await import('../src/dependabot/output-processor');
-    vi.spyOn(tsDependabotOutputProcessor, 'parsePullRequestProperties').mockReturnValue('npm_and_yarn' as any);
+    const tsDependabotOutputProcessor = await import('../src/dependabot/output-processor.js');
+    vi.spyOn(tsDependabotOutputProcessor, 'parsePullRequestProperties').mockReturnValue('npm_and_yarn' as never);
 
     const updateResult = await performDependabotUpdatesAsync(
       taskInputs,
@@ -249,7 +249,7 @@ describe('performDependabotUpdatesAsync', () => {
       ],
     });
 
-    const tsDependabotJobBuilder = await import('../src/dependabot/job-builder');
+    const tsDependabotJobBuilder = await import('../src/dependabot/job-builder.js');
     vi.spyOn(tsDependabotJobBuilder, 'mapPackageEcosystemToPackageManager').mockReturnValue('npm_and_yarn');
 
     const updateResult = await performDependabotUpdatesAsync(

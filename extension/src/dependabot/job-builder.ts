@@ -1,14 +1,14 @@
-import { ISecurityVulnerability } from '../github';
-import { ISharedVariables } from '../utils/shared-variables';
+import { type ISecurityVulnerability } from '../github';
+import { type ISharedVariables } from '../utils/shared-variables';
 import {
-  IDependabotAllowCondition,
-  IDependabotCooldown,
-  IDependabotGroup,
-  IDependabotIgnoreCondition,
-  IDependabotRegistry,
-  IDependabotUpdate,
+  type IDependabotAllowCondition,
+  type IDependabotCooldown,
+  type IDependabotGroup,
+  type IDependabotIgnoreCondition,
+  type IDependabotRegistry,
+  type IDependabotUpdate,
 } from './config';
-import { IDependabotUpdateOperation } from './models';
+import { type IDependabotUpdateOperation } from './models';
 
 /**
  * Wrapper class for building dependabot update job objects
@@ -57,7 +57,7 @@ export class DependabotJobBuilder {
     update: IDependabotUpdate,
     registries: Record<string, IDependabotRegistry>,
     dependencyNamesToUpdate?: string[],
-    existingPullRequests?: any[],
+    existingPullRequests?: any[], // eslint-disable-line @typescript-eslint/no-explicit-any
     securityVulnerabilities?: ISecurityVulnerability[],
   ): IDependabotUpdateOperation {
     const securityUpdatesOnly = update['open-pull-requests-limit'] == 0;
@@ -91,8 +91,8 @@ export class DependabotJobBuilder {
     id: string,
     update: IDependabotUpdate,
     registries: Record<string, IDependabotRegistry>,
-    existingPullRequests: any[],
-    pullRequestToUpdate: any,
+    existingPullRequests: any[], // eslint-disable-line @typescript-eslint/no-explicit-any
+    pullRequestToUpdate: any, // eslint-disable-line @typescript-eslint/no-explicit-any
     securityVulnerabilities?: ISecurityVulnerability[],
   ): IDependabotUpdateOperation {
     const dependencyGroupName = pullRequestToUpdate['dependency-group-name'];
@@ -121,7 +121,7 @@ export function buildUpdateJobConfig(
   updatingPullRequest?: boolean | undefined,
   updateDependencyGroupName?: string | undefined,
   updateDependencyNames?: string[] | undefined,
-  existingPullRequests?: any[],
+  existingPullRequests?: any[], // eslint-disable-line @typescript-eslint/no-explicit-any
   securityVulnerabilities?: ISecurityVulnerability[],
 ): IDependabotUpdateOperation {
   const securityOnlyUpdate = update['open-pull-requests-limit'] == 0;
@@ -163,7 +163,7 @@ export function buildUpdateJobConfig(
   };
 }
 
-export function mapSourceFromDependabotConfigToJobConfig(taskInputs: ISharedVariables, update: IDependabotUpdate): any {
+export function mapSourceFromDependabotConfigToJobConfig(taskInputs: ISharedVariables, update: IDependabotUpdate) {
   const isDevOpsServices = !taskInputs.virtualDirectory?.length; // Azure DevOps Services does not use a virtual directory
   return {
     'provider': 'azure',
@@ -179,9 +179,7 @@ export function mapSourceFromDependabotConfigToJobConfig(taskInputs: ISharedVari
   };
 }
 
-export function mapGroupsFromDependabotConfigToJobConfig(
-  dependencyGroups: Record<string, IDependabotGroup>,
-): any[] | undefined {
+export function mapGroupsFromDependabotConfigToJobConfig(dependencyGroups: Record<string, IDependabotGroup>) {
   if (!dependencyGroups || !Object.keys(dependencyGroups).length) {
     return undefined;
   }
@@ -208,7 +206,7 @@ export function mapGroupsFromDependabotConfigToJobConfig(
 export function mapAllowedUpdatesFromDependabotConfigToJobConfig(
   allowedUpdates: IDependabotAllowCondition[],
   securityOnlyUpdate?: boolean,
-): any[] {
+) {
   // If no allow conditions are specified, update direct dependencies by default; This is what GitHub does.
   // NOTE: 'update-type' appears to be a deprecated config, but still appears in the dependabot-core model and GitHub Dependabot job logs.
   //       See: https://github.com/dependabot/dependabot-core/blob/b3a0c1f86c20729494097ebc695067099f5b4ada/updater/lib/dependabot/job.rb#L253C1-L257C78
@@ -229,9 +227,7 @@ export function mapAllowedUpdatesFromDependabotConfigToJobConfig(
   });
 }
 
-export function mapIgnoreConditionsFromDependabotConfigToJobConfig(
-  ignoreConditions: IDependabotIgnoreCondition[],
-): any[] {
+export function mapIgnoreConditionsFromDependabotConfigToJobConfig(ignoreConditions: IDependabotIgnoreCondition[]) {
   if (!ignoreConditions) {
     return undefined;
   }
@@ -251,7 +247,7 @@ export function mapIgnoreConditionsFromDependabotConfigToJobConfig(
   });
 }
 
-export function mapCooldownFromDependabotConfigToJobConfig(cooldown: IDependabotCooldown): any {
+export function mapCooldownFromDependabotConfigToJobConfig(cooldown: IDependabotCooldown) {
   if (!cooldown) {
     return undefined;
   }
@@ -265,7 +261,7 @@ export function mapCooldownFromDependabotConfigToJobConfig(cooldown: IDependabot
   };
 }
 
-export function mapSecurityAdvisories(securityVulnerabilities: ISecurityVulnerability[]): any[] {
+export function mapSecurityAdvisories(securityVulnerabilities: ISecurityVulnerability[]) {
   if (!securityVulnerabilities) {
     return undefined;
   }
@@ -310,8 +306,8 @@ export function mapVersionStrategyToRequirementsUpdateStrategy(versioningStrateg
   }
 }
 
-export function mapCredentials(taskInputs: ISharedVariables, registries: Record<string, IDependabotRegistry>): any[] {
-  let credentials = new Array();
+export function mapCredentials(taskInputs: ISharedVariables, registries: Record<string, IDependabotRegistry>) {
+  const credentials = [];
   if (taskInputs.systemAccessToken) {
     // Required to authenticate with the Azure DevOps git repository when cloning the source code
     credentials.push({
