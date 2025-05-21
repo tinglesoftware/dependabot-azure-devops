@@ -237,13 +237,14 @@ export class DependabotCli {
 // Documentation on the job model can be found here:
 // https://github.com/dependabot/cli/blob/main/internal/model/job.go
 function writeJobConfigFile(path: string, config: IDependabotUpdateJobConfig): void {
-  fs.writeFileSync(
-    path,
-    yaml.dump({
-      job: config.job,
-      credentials: config.credentials,
-    }),
-  );
+  const contents = yaml.dump({
+    job: config.job,
+    credentials: config.credentials,
+  });
+  if (this.debug) {
+    debug(`JobConfig:\r\n${contents}`);
+  }
+  fs.writeFileSync(path, contents);
 }
 
 // Documentation on the scenario model can be found here:
