@@ -25,6 +25,6 @@ describe('Parse property placeholder', () => {
 
   it('With malformed brackets should be null', () => {
     var matches: RegExpExecArray[] = extractPlaceholder('${MY_DEPENDABOT_ADO_PAT}');
-    expect(matches[0]).toBe(undefined);
+    expect(matches[0]).toBeUndefined();
   });
 });
