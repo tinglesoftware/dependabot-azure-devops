@@ -119,7 +119,18 @@ async function run() {
     const targetIds = taskInputs.targetUpdateIds;
     if (targetIds && targetIds.length > 0) {
       for (const id of targetIds) {
-        dependabotUpdatesToPerform.push(dependabotConfig.updates[id]);
+        const upd = dependabotConfig.updates[id];
+        if (!upd) {
+          warning(
+            `
+            Unable to find target update id '${id}'.
+            This value should be a zero based index of the update in your config file.
+            Expected range: 0-${dependabotConfig.updates.length - 1}
+            `,
+          );
+        } else {
+          dependabotUpdatesToPerform.push(upd);
+        }
       }
     } else {
       dependabotUpdatesToPerform = dependabotConfig.updates;
