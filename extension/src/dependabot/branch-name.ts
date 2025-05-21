@@ -5,7 +5,7 @@ export function getBranchNameForUpdate(
   targetBranchName: string,
   directory: string,
   dependencyGroupName: string,
-  dependencies: any,
+  dependencies: Record<string, unknown>[],
   separator?: string,
 ): string {
   // Based on dependabot-core implementation:

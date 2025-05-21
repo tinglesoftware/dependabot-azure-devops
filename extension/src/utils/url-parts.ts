@@ -5,7 +5,7 @@
  */
 export function extractHostname(organizationUrl: URL): string {
   const visualStudioUrlRegex = /^(?<prefix>\S+)\.visualstudio\.com$/iu;
-  let hostname = organizationUrl.hostname;
+  const hostname = organizationUrl.hostname;
   if (visualStudioUrlRegex.test(hostname)) {
     return 'dev.azure.com';
   }
@@ -20,7 +20,7 @@ export function extractHostname(organizationUrl: URL): string {
  * @returns organization name
  */
 export function extractOrganization(organizationUrl: string): string {
-  let parts = organizationUrl.split('/');
+  const parts = organizationUrl.split('/');
 
   // Check for on-premise style: https://server.domain.com/tfs/x/
   if (parts.length === 6) {
@@ -35,7 +35,7 @@ export function extractOrganization(organizationUrl: string): string {
   // Check for old style: https://x.visualstudio.com/
   if (parts.length === 4) {
     // Get x.visualstudio.com part.
-    let part = parts[2];
+    const part = parts[2];
 
     // Return organization part (x).
     return part.split('.')[0];
@@ -57,7 +57,7 @@ export function extractOrganization(organizationUrl: string): string {
 export function extractVirtualDirectory(organizationUrl: URL): string {
   // extract the pathname from the url then split
   // pathname takes the shape '/tfs/x/'
-  let path = organizationUrl.pathname.split('/');
+  const path = organizationUrl.pathname.split('/');
 
   // Virtual Directories are sometimes used in on-premises
   // URLs typically are like this: https://server.domain.com/tfs/x/

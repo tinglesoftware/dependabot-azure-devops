@@ -87,22 +87,22 @@ export interface ISharedVariables {
  * @returns shared variables
  */
 export default function getSharedVariables(): ISharedVariables {
-  let organizationUrl = tl.getVariable('System.TeamFoundationCollectionUri');
+  const organizationUrl = tl.getVariable('System.TeamFoundationCollectionUri');
 
   //convert url string into a valid JS URL object
-  let formattedOrganizationUrl = new URL(organizationUrl);
-  let protocol: string = formattedOrganizationUrl.protocol.slice(0, -1);
-  let hostname: string = extractHostname(formattedOrganizationUrl);
-  let port: string = formattedOrganizationUrl.port;
-  let virtualDirectory: string = extractVirtualDirectory(formattedOrganizationUrl);
+  const formattedOrganizationUrl = new URL(organizationUrl);
+  const protocol: string = formattedOrganizationUrl.protocol.slice(0, -1);
+  const hostname: string = extractHostname(formattedOrganizationUrl);
+  const port: string = formattedOrganizationUrl.port;
+  const virtualDirectory: string = extractVirtualDirectory(formattedOrganizationUrl);
   if (!virtualDirectory) {
     tl.debug(`No virtual directory detected; Running for Azure DevOps Services.`);
   } else {
     tl.debug(`Virtual directory detected; Running for an on-premises Azure DevOps Server.`);
   }
-  let organization: string = extractOrganization(organizationUrl);
+  const organization: string = extractOrganization(organizationUrl);
   let project: string = tl.getInput('targetProjectName');
-  let projectOverridden = typeof project === 'string';
+  const projectOverridden = typeof project === 'string';
   if (!projectOverridden) {
     // We use the project name because it is very readable.
     // It may not work in all APIs and if it fails, we can switch from `System.TeamProject` to `System.TeamProjectId`.
@@ -114,7 +114,7 @@ export default function getSharedVariables(): ISharedVariables {
   project = encodeURI(project); // encode special characters like spaces
 
   let repository: string = tl.getInput('targetRepositoryName');
-  let repositoryOverridden = typeof repository === 'string';
+  const repositoryOverridden = typeof repository === 'string';
   if (projectOverridden && !repositoryOverridden) {
     throw new Error(`Target repository must be provided when target project is overridden`);
   }
@@ -127,26 +127,26 @@ export default function getSharedVariables(): ISharedVariables {
   repository = encodeURI(repository); // encode special characters like spaces
 
   const virtualDirectorySuffix = virtualDirectory?.length > 0 ? `${virtualDirectory}/` : '';
-  let apiEndpointUrl = `${protocol}://${hostname}:${port}/${virtualDirectorySuffix}`;
+  const apiEndpointUrl = `${protocol}://${hostname}:${port}/${virtualDirectorySuffix}`;
 
   // Prepare the access credentials
-  let githubAccessToken: string = getGithubAccessToken();
-  let systemAccessUser: string = tl.getInput('azureDevOpsUser');
-  let systemAccessToken: string = getAzureDevOpsAccessToken();
+  const githubAccessToken: string = getGithubAccessToken();
+  const systemAccessUser: string = tl.getInput('azureDevOpsUser');
+  const systemAccessToken: string = getAzureDevOpsAccessToken();
 
-  let authorEmail: string | undefined = tl.getInput('authorEmail');
-  let authorName: string | undefined = tl.getInput('authorName');
+  const authorEmail: string | undefined = tl.getInput('authorEmail');
+  const authorName: string | undefined = tl.getInput('authorName');
 
   // Prepare variables for auto complete
-  let setAutoComplete = tl.getBoolInput('setAutoComplete', false);
-  let mergeStrategy = tl.getInput('mergeStrategy', true);
-  let autoCompleteIgnoreConfigIds = tl.getDelimitedInput('autoCompleteIgnoreConfigIds', ';', false).map(Number);
+  const setAutoComplete = tl.getBoolInput('setAutoComplete', false);
+  const mergeStrategy = tl.getInput('mergeStrategy', true);
+  const autoCompleteIgnoreConfigIds = tl.getDelimitedInput('autoCompleteIgnoreConfigIds', ';', false).map(Number);
 
-  let storeDependencyList = tl.getBoolInput('storeDependencyList', false);
+  const storeDependencyList = tl.getBoolInput('storeDependencyList', false);
 
   // Prepare variables for auto approve
-  let autoApprove: boolean = tl.getBoolInput('autoApprove', false);
-  let autoApproveUserToken: string = tl.getInput('autoApproveUserToken');
+  const autoApprove: boolean = tl.getBoolInput('autoApprove', false);
+  const autoApproveUserToken: string = tl.getInput('autoApproveUserToken');
 
   // Convert experiments from comma separated key value pairs to a record
   let experiments = tl
@@ -154,7 +154,7 @@ export default function getSharedVariables(): ISharedVariables {
     ?.split(',')
     ?.reduce(
       (acc, cur) => {
-        let [key, value] = cur.split('=', 2);
+        const [key, value] = cur.split('=', 2);
         acc[key] = value || true;
         return acc;
       },
@@ -169,23 +169,23 @@ export default function getSharedVariables(): ISharedVariables {
 
   console.log('Experiments:', experiments);
 
-  let debug: boolean = tl.getVariable('System.Debug')?.match(/true/i) ? true : false;
-  let secrets: boolean = tl.getVariable('System.Secrets')?.match(/true/i) ? true : false;
+  const debug: boolean = tl.getVariable('System.Debug')?.match(/true/i) ? true : false;
+  const secrets: boolean = tl.getVariable('System.Secrets')?.match(/true/i) ? true : false;
 
   // Get the target identifiers
-  let targetUpdateIds = tl.getDelimitedInput('targetUpdateIds', ';', false).map(Number);
+  const targetUpdateIds = tl.getDelimitedInput('targetUpdateIds', ';', false).map(Number);
 
   // Prepare other variables
-  let skipPullRequests: boolean = tl.getBoolInput('skipPullRequests', false);
-  let commentPullRequests: boolean = tl.getBoolInput('commentPullRequests', false);
-  let abandonUnwantedPullRequests: boolean = tl.getBoolInput('abandonUnwantedPullRequests', true);
+  const skipPullRequests: boolean = tl.getBoolInput('skipPullRequests', false);
+  const commentPullRequests: boolean = tl.getBoolInput('commentPullRequests', false);
+  const abandonUnwantedPullRequests: boolean = tl.getBoolInput('abandonUnwantedPullRequests', true);
 
-  let dependabotCliPackage: string | undefined = tl.getInput('dependabotCliPackage');
-  let dependabotCliApiUrl: string | undefined = tl.getInput('dependabotCliApiUrl', false);
-  let dependabotCliApiListeningPort: string | undefined = tl.getInput('dependabotCliApiListeningPort', false);
-  let dependabotUpdaterImage: string | undefined = tl.getInput('dependabotUpdaterImage');
+  const dependabotCliPackage: string | undefined = tl.getInput('dependabotCliPackage');
+  const dependabotCliApiUrl: string | undefined = tl.getInput('dependabotCliApiUrl', false);
+  const dependabotCliApiListeningPort: string | undefined = tl.getInput('dependabotCliApiListeningPort', false);
+  const dependabotUpdaterImage: string | undefined = tl.getInput('dependabotUpdaterImage');
 
-  let proxyCertPath: string | undefined = tl.getInput('proxyCertPath');
+  const proxyCertPath: string | undefined = tl.getInput('proxyCertPath');
 
   return {
     organizationUrl: formattedOrganizationUrl,

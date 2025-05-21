@@ -70,12 +70,16 @@ jobs:
       - name: Format check
         run: pnpm format:check
 
-      - name: Test
-        run: pnpm test
-        working-directory: '${{ github.workspace }}/extension'
-
       - name: Build
         run: pnpm build
+        working-directory: '${{ github.workspace }}/extension'
+
+      - name: Lint
+        run: pnpm lint
+        working-directory: '${{ github.workspace }}/extension'
+
+      - name: Test
+        run: pnpm test
         working-directory: '${{ github.workspace }}/extension'
 
       - name: Update version numbers in vss-extension.json overrides files

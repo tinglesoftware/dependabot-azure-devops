@@ -202,51 +202,54 @@ export class GitHubGraphClient {
         }
 
         const vulnerabilities = response.data?.data?.securityVulnerabilities?.nodes;
-        return vulnerabilities
-          ?.filter((v: any) => v?.advisory)
-          ?.map((v: any) => {
-            return {
-              ecosystem: packageEcosystem,
-              package: pkg,
-              advisory: {
-                identifiers: v.advisory.identifiers?.map((i: any) => {
-                  return {
-                    type: i.type,
-                    value: i.value,
-                  };
-                }),
-                severity: v.advisory.severity,
-                summary: v.advisory.summary,
-                description: v.advisory.description,
-                references: v.advisory.references?.map((r: any) => r.url),
-                cvss: !v.advisory.cvss
-                  ? undefined
-                  : {
-                      score: v.advisory.cvss.score,
-                      vectorString: v.advisory.cvss.vectorString,
-                    },
-                epss: !v.advisory.epss
-                  ? undefined
-                  : {
-                      percentage: v.advisory.epss.percentage,
-                      percentile: v.advisory.epss.percentile,
-                    },
-                cwes: v.advisory.cwes?.nodes?.map((c: any) => {
-                  return {
-                    id: c.cweId,
-                    name: c.name,
-                    description: c.description,
-                  };
-                }),
-                publishedAt: v.advisory.publishedAt,
-                updatedAt: v.advisory.updatedAt,
-                withdrawnAt: v.advisory.withdrawnAt,
-                permalink: v.advisory.permalink,
-              },
-              vulnerableVersionRange: v.vulnerableVersionRange,
-              firstPatchedVersion: v.firstPatchedVersion?.identifier,
-            };
-          });
+        return (
+          vulnerabilities
+            ?.filter((v: any) => v?.advisory) // eslint-disable-line @typescript-eslint/no-explicit-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            ?.map((v: any) => {
+              return {
+                ecosystem: packageEcosystem,
+                package: pkg,
+                advisory: {
+                  identifiers: v.advisory.identifiers?.map((i: Record<string, unknown>) => {
+                    return {
+                      type: i.type,
+                      value: i.value,
+                    };
+                  }),
+                  severity: v.advisory.severity,
+                  summary: v.advisory.summary,
+                  description: v.advisory.description,
+                  references: v.advisory.references?.map((r: Record<string, string>) => r.url),
+                  cvss: !v.advisory.cvss
+                    ? undefined
+                    : {
+                        score: v.advisory.cvss.score,
+                        vectorString: v.advisory.cvss.vectorString,
+                      },
+                  epss: !v.advisory.epss
+                    ? undefined
+                    : {
+                        percentage: v.advisory.epss.percentage,
+                        percentile: v.advisory.epss.percentile,
+                      },
+                  cwes: v.advisory.cwes?.nodes?.map((c: Record<string, string>) => {
+                    return {
+                      id: c.cweId,
+                      name: c.name,
+                      description: c.description,
+                    };
+                  }),
+                  publishedAt: v.advisory.publishedAt,
+                  updatedAt: v.advisory.updatedAt,
+                  withdrawnAt: v.advisory.withdrawnAt,
+                  permalink: v.advisory.permalink,
+                },
+                vulnerableVersionRange: v.vulnerableVersionRange,
+                firstPatchedVersion: v.firstPatchedVersion?.identifier,
+              };
+            })
+        );
       },
     );
 

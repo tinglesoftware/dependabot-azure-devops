@@ -1,13 +1,33 @@
 import { command, debug, error, tool, which } from 'azure-pipelines-task-lib/task';
-import { ToolRunner } from 'azure-pipelines-task-lib/toolrunner';
+import { type ToolRunner } from 'azure-pipelines-task-lib/toolrunner';
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as os from 'os';
 import * as path from 'path';
 import { Writable } from 'stream';
 import { endgroup, group, section } from '../azure-devops/formatting';
-import { IDependabotUpdateJobConfig, IDependabotUpdateOperation, IDependabotUpdateOperationResult } from './models';
-import { DependabotOutputProcessor } from './output-processor';
+import {
+  type IDependabotUpdateJobConfig,
+  type IDependabotUpdateOperation,
+  type IDependabotUpdateOperationResult,
+} from './models';
+import { type DependabotOutputProcessor } from './output-processor';
+
+export type DependabotCliOptions = {
+  sourceProvider?: string;
+  sourceLocalPath?: string;
+  azureDevOpsAccessToken?: string;
+  gitHubAccessToken?: string;
+  collectorImage?: string;
+  collectorConfigPath?: string;
+  proxyCertPath?: string;
+  proxyImage?: string;
+  updaterImage?: string;
+  timeoutDurationMinutes?: number;
+  flamegraph?: boolean;
+  apiUrl?: string;
+  apiListeningPort?: string;
+};
 
 /**
  * Wrapper class for running updates using dependabot-cli
@@ -40,21 +60,7 @@ export class DependabotCli {
    */
   public async update(
     operation: IDependabotUpdateOperation,
-    options?: {
-      sourceProvider?: string;
-      sourceLocalPath?: string;
-      azureDevOpsAccessToken?: string;
-      gitHubAccessToken?: string;
-      collectorImage?: string;
-      collectorConfigPath?: string;
-      proxyCertPath?: string;
-      proxyImage?: string;
-      updaterImage?: string;
-      timeoutDurationMinutes?: number;
-      flamegraph?: boolean;
-      apiUrl?: string;
-      apiListeningPort?: string;
-    },
+    options?: DependabotCliOptions,
   ): Promise<IDependabotUpdateOperationResult[] | undefined> {
     try {
       group(`Job '${operation.job.id}'`);
@@ -75,7 +81,7 @@ export class DependabotCli {
       // Compile dependabot cmd arguments
       // See: https://github.com/dependabot/cli/blob/main/cmd/dependabot/internal/cmd/root.go
       //      https://github.com/dependabot/cli/blob/main/cmd/dependabot/internal/cmd/update.go
-      let dependabotArguments = ['update', '--file', jobInputPath, '--output', jobOutputPath];
+      const dependabotArguments = ['update', '--file', jobInputPath, '--output', jobOutputPath];
       if (options?.sourceProvider) {
         dependabotArguments.push('--provider', options.sourceProvider);
       }
@@ -162,7 +168,7 @@ export class DependabotCli {
             // https://github.com/dependabot/cli/blob/main/internal/model/scenario.go
             const type = output['type'];
             const data = output['expect']?.['data'];
-            var operationResult = {
+            const operationResult = {
               success: true,
               error: null,
               output: {
@@ -245,13 +251,13 @@ function writeJobConfigFile(path: string, config: IDependabotUpdateJobConfig): v
 
 // Documentation on the scenario model can be found here:
 // https://github.com/dependabot/cli/blob/main/internal/model/scenario.go
-function readJobScenarioOutputFile(path: string): any[] {
+function readJobScenarioOutputFile(path: string) {
   const scenarioContent = fs.readFileSync(path, 'utf-8');
   if (!scenarioContent || typeof scenarioContent !== 'string') {
     return []; // No outputs or failed scenario
   }
 
-  const scenario: any = yaml.load(scenarioContent);
+  const scenario = yaml.load(scenarioContent);
   if (scenario === null || typeof scenario !== 'object') {
     throw new Error('Invalid scenario object');
   }
@@ -262,7 +268,7 @@ function readJobScenarioOutputFile(path: string): any[] {
 // Log output from Dependabot based on the sub-component it originates from
 function logComponentOutput(
   verbose: boolean,
-  chunk: any,
+  chunk: unknown,
   encoding: BufferEncoding,
   callback: (error?: Error | null) => void,
 ): void {

@@ -2,21 +2,21 @@ import { WebApi, getPersonalAccessTokenHandler } from 'azure-devops-node-api';
 import {
   CommentThreadStatus,
   CommentType,
-  IdentityRefWithVote,
   ItemContentType,
   PullRequestAsyncStatus,
   PullRequestStatus,
+  type IdentityRefWithVote,
 } from 'azure-devops-node-api/interfaces/GitInterfaces';
 import { debug, error, warning } from 'azure-pipelines-task-lib/task';
-import { IHttpClientResponse } from 'typed-rest-client/Interfaces';
+import { type IHttpClientResponse } from 'typed-rest-client/Interfaces';
 import { normalizeBranchName, normalizeFilePath } from './formatting';
 import {
   HttpRequestError,
-  IAbandonPullRequest,
-  IApprovePullRequest,
-  ICreatePullRequest,
-  IPullRequestProperties,
-  IUpdatePullRequest,
+  type IAbandonPullRequest,
+  type IApprovePullRequest,
+  type ICreatePullRequest,
+  type IPullRequestProperties,
+  type IUpdatePullRequest,
 } from './models';
 
 /**
@@ -561,7 +561,7 @@ export class AzureDevOpsWebApiClient {
     url: string,
     params?: Record<string, string>,
     apiVersion: string = AzureDevOpsWebApiClient.API_VERSION,
-  ): Promise<any | undefined> {
+  ) {
     const queryString = Object.keys(params || {})
       .map((key) => `${key}=${params[key]}`)
       .join('&');
@@ -578,11 +578,7 @@ export class AzureDevOpsWebApiClient {
     );
   }
 
-  private async restApiPost(
-    url: string,
-    data?: any,
-    apiVersion: string = AzureDevOpsWebApiClient.API_VERSION,
-  ): Promise<any | undefined> {
+  private async restApiPost(url: string, data?: unknown, apiVersion: string = AzureDevOpsWebApiClient.API_VERSION) {
     const fullUrl = `${url}?api-version=${apiVersion}`;
     return await sendRestApiRequestWithRetry(
       'POST',
@@ -596,11 +592,7 @@ export class AzureDevOpsWebApiClient {
     );
   }
 
-  private async restApiPut(
-    url: string,
-    data?: any,
-    apiVersion: string = AzureDevOpsWebApiClient.API_VERSION,
-  ): Promise<any | undefined> {
+  private async restApiPut(url: string, data?: unknown, apiVersion: string = AzureDevOpsWebApiClient.API_VERSION) {
     const fullUrl = `${url}?api-version=${apiVersion}`;
     return await sendRestApiRequestWithRetry(
       'PUT',
@@ -616,10 +608,10 @@ export class AzureDevOpsWebApiClient {
 
   private async restApiPatch(
     url: string,
-    data?: any,
+    data?: unknown,
     contentType?: string,
     apiVersion: string = AzureDevOpsWebApiClient.API_VERSION,
-  ): Promise<any | undefined> {
+  ) {
     const fullUrl = `${url}?api-version=${apiVersion}`;
     return await sendRestApiRequestWithRetry(
       'PATCH',
@@ -676,13 +668,13 @@ function getIdentityApiUrl(organisationApiUrl: string): string {
 export async function sendRestApiRequestWithRetry(
   method: string,
   url: string,
-  payload: any,
+  payload: unknown,
   requestAsync: () => Promise<IHttpClientResponse>,
   isDebug: boolean = false,
   retryCount: number = 3,
   retryDelay: number = 3000,
-): Promise<any | undefined> {
-  let body: any;
+) {
+  let body: string;
   try {
     // Send the request, ready the response
     if (isDebug) debug(`🌎 🠊 [${method}] ${url}`);
@@ -724,6 +716,7 @@ export async function sendRestApiRequestWithRetry(
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isErrorTemporaryFailure(e: any): boolean {
   if (e instanceof HttpRequestError) {
     // Check for common HTTP status codes that indicate a temporary failure

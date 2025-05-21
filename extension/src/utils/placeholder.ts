@@ -1,12 +1,12 @@
 import { getVariable } from 'azure-pipelines-task-lib/task';
 
 function convertPlaceholder(input: string): string {
-  var matches: RegExpExecArray[] = extractPlaceholder(input);
-  var result = input;
+  const matches: RegExpExecArray[] = extractPlaceholder(input);
+  let result = input;
   for (const match of matches) {
-    var placeholder = match[0];
-    var name = match[1];
-    var value = getVariable(name) ?? placeholder;
+    const placeholder = match[0];
+    const name = match[1];
+    const value = getVariable(name) ?? placeholder;
     result = result.replace(placeholder, value);
   }
   return result;
@@ -20,7 +20,12 @@ function extractPlaceholder(input: string) {
 
 function matchAll(input: string, rExp: RegExp, matches: Array<RegExpExecArray> = []) {
   const matchIfAny = rExp.exec(input);
-  matchIfAny && matches.push(matchIfAny) && matchAll(input, rExp, matches);
+  if (matchIfAny) {
+    matches.push(matchIfAny);
+
+    // recurse until no more matches
+    matchAll(input, rExp, matches);
+  }
   return matches;
 }
 

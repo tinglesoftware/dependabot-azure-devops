@@ -6,12 +6,11 @@ import { AzureDevOpsWebApiClient } from '../../src/azure-devops/client';
 import {
   DEVOPS_PR_PROPERTY_DEPENDABOT_DEPENDENCIES,
   DEVOPS_PR_PROPERTY_DEPENDABOT_PACKAGE_MANAGER,
-  IPullRequestProperties,
+  type IPullRequestProperties,
 } from '../../src/azure-devops/models';
-import { IDependabotUpdate } from '../../src/dependabot/config';
-import { IDependabotUpdateOperation } from '../../src/dependabot/models';
+import { type IDependabotUpdateOperation } from '../../src/dependabot/models';
 import { DependabotDependenciesSchema, DependabotOutputProcessor } from '../../src/dependabot/output-processor';
-import { ISharedVariables } from '../../src/utils/shared-variables';
+import { type ISharedVariables } from '../../src/utils/shared-variables';
 
 vi.mock('../../src/azure-devops/client');
 vi.mock('../../src/utils/shared-variables');
@@ -43,14 +42,14 @@ describe('DependabotOutputProcessor', () => {
 
   describe('process', () => {
     let update: IDependabotUpdateOperation;
-    let data: any;
+    let data: Record<string, unknown>;
 
     beforeEach(() => {
       vi.clearAllMocks();
       update = {
-        job: {} as any,
-        credentials: {} as any,
-        config: {} as IDependabotUpdate,
+        job: {},
+        credentials: [],
+        config: {},
       } as IDependabotUpdateOperation;
       data = {};
     });
