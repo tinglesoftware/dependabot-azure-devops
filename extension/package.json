@@ -34,7 +34,7 @@
     "js-yaml": "4.1.0",
     "semver": "7.7.2",
     "typed-rest-client": "2.1.0",
-    "zod": "3.25.7"
+    "zod": "3.25.16"
   },
   "devDependencies": {
     "@types/js-yaml": "4.0.9",

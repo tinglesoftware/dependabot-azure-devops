@@ -69,8 +69,8 @@ importers:
         specifier: 2.1.0
         version: 2.1.0
       zod:
-        specifier: 3.25.7
-        version: 3.25.7
+        specifier: 3.25.16
+        version: 3.25.16
     devDependencies:
       '@types/js-yaml':
         specifier: 4.0.9
@@ -2395,8 +2395,8 @@ packages:
     peerDependencies:
       zod: ^3.24.1
 
-  zod@3.25.7:
-    resolution: {integrity: sha512-YGdT1cVRmKkOg6Sq7vY7IkxdphySKnXhaUmFI4r4FcuFVNgpCb9tZfNwXbT6BPjD5oz0nubFsoo9pIqKrDcCvg==}
+  zod@3.25.16:
+    resolution: {integrity: sha512-3lOav31WLa1MstEvkM0QlcsFjKmJ2TI9IFYlIVpLE3upguhaeiRfPOzqqtisS/Hetk4ri2fLLC3OtW15lS5jxQ==}
 
 snapshots:
 
@@ -2571,8 +2571,8 @@ snapshots:
       express-rate-limit: 7.5.0(express@5.1.0)
       pkce-challenge: 5.0.0
       raw-body: 3.0.0
-      zod: 3.25.7
-      zod-to-json-schema: 3.24.5(zod@3.25.7)
+      zod: 3.25.16
+      zod-to-json-schema: 3.24.5(zod@3.25.16)
     transitivePeerDependencies:
       - supports-color
 
@@ -3355,7 +3355,7 @@ snapshots:
       minimatch: 3.1.2
       natural-compare: 1.4.0
       optionator: 0.9.4
-      zod: 3.25.7
+      zod: 3.25.16
     transitivePeerDependencies:
       - supports-color
 
@@ -4884,8 +4884,8 @@ snapshots:
       lodash: 4.17.21
       readable-stream: 2.3.8
 
-  zod-to-json-schema@3.24.5(zod@3.25.7):
+  zod-to-json-schema@3.24.5(zod@3.25.16):
     dependencies:
-      zod: 3.25.7
+      zod: 3.25.16
 
-  zod@3.25.7: {}
+  zod@3.25.16: {}
