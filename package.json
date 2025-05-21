@@ -11,7 +11,7 @@
     "@types/node": "22.15.19",
     "@typescript-eslint/eslint-plugin": "8.31.1",
     "eslint": "9.26.0",
-    "eslint-config-prettier": "10.1.2",
+    "eslint-config-prettier": "10.1.5",
     "husky": "9.1.7",
     "prettier": "3.5.3",
     "prettier-plugin-organize-imports": "4.1.0",
