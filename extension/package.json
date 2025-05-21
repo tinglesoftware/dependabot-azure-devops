@@ -6,8 +6,8 @@
   "scripts": {
     "build": "tsup",
     "start": "pnpm start:V2",
-    "start:V1": "node dist/task-v1.js",
-    "start:V2": "node dist/task-v2.js",
+    "start:V1": "node tasks/dependabotV1/dist/task-v1.js",
+    "start:V2": "node tasks/dependabotV2/dist/task-v2.js",
     "test": "vitest",
     "package": "pnpm tfx extension create --json5"
   },
