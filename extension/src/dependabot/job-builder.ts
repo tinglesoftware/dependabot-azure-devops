@@ -37,7 +37,7 @@ export class DependabotJobBuilder {
         'experiments': taskInputs.experiments,
         'debug': taskInputs.debug,
       },
-      credentials: mapRegistryCredentialsFromDependabotConfigToJobConfig(taskInputs, registries),
+      credentials: mapCredentials(taskInputs, registries),
     };
   }
 
@@ -159,7 +159,7 @@ export function buildUpdateJobConfig(
       'debug': taskInputs.debug,
       'max-updater-run-time': 2700,
     },
-    credentials: mapRegistryCredentialsFromDependabotConfigToJobConfig(taskInputs, registries),
+    credentials: mapCredentials(taskInputs, registries),
   };
 }
 
@@ -310,14 +310,11 @@ export function mapVersionStrategyToRequirementsUpdateStrategy(versioningStrateg
   }
 }
 
-export function mapRegistryCredentialsFromDependabotConfigToJobConfig(
-  taskInputs: ISharedVariables,
-  registries: Record<string, IDependabotRegistry>,
-): any[] {
-  let registryCredentials = new Array();
+export function mapCredentials(taskInputs: ISharedVariables, registries: Record<string, IDependabotRegistry>): any[] {
+  let credentials = new Array();
   if (taskInputs.systemAccessToken) {
     // Required to authenticate with the Azure DevOps git repository when cloning the source code
-    registryCredentials.push({
+    credentials.push({
       type: 'git_source',
       host: taskInputs.hostname,
       username: taskInputs.systemAccessUser?.trim()?.length > 0 ? taskInputs.systemAccessUser : 'x-access-token',
@@ -326,7 +323,7 @@ export function mapRegistryCredentialsFromDependabotConfigToJobConfig(
   }
   if (taskInputs.githubAccessToken) {
     // Required to avoid rate-limiting errors when generating pull request descriptions (e.g. fetching release notes, commit messages, etc)
-    registryCredentials.push({
+    credentials.push({
       type: 'git_source',
       host: 'github.com',
       username: 'x-access-token',
@@ -334,23 +331,12 @@ export function mapRegistryCredentialsFromDependabotConfigToJobConfig(
     });
   }
   if (registries) {
-    // Required to authenticate with private package feeds when finding the latest version of dependencies
-    for (const key in registries) {
-      const registry = registries[key];
-      registryCredentials.push({
-        'type': registry.type,
-        'host': registry.host,
-        'url': registry.url,
-        'registry': registry.registry,
-        'username': registry.username,
-        'password': registry.password,
-        'token': registry.token,
-        'replaces-base': registry['replaces-base'],
-      });
-    }
+    // Required to authenticate with private package feeds when finding the latest version of dependencies.
+    // The registries have already been worked on (see parseRegistries) so there is no need to do anything else.
+    credentials.push(...Object.values(registries));
   }
 
-  return registryCredentials;
+  return credentials;
 }
 
 export function mapExperiments(experiments: Record<string, string | boolean>): Record<string, string | boolean> {
