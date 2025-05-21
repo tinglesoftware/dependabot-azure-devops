@@ -239,9 +239,7 @@ function writeJobConfigFile(path: string, config: IDependabotUpdateJobConfig): v
     job: config.job,
     credentials: config.credentials,
   });
-  if (this.debug) {
-    debug(`JobConfig:\r\n${contents}`);
-  }
+  debug(`JobConfig:\r\n${contents}`);
   fs.writeFileSync(path, contents);
 }
 
