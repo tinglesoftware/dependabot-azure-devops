@@ -154,44 +154,8 @@ Experiments vary depending on the package ecosystem used; They can be enabled us
 
 By default, the enabled experiments will mirror the GitHub-hosted version of Dependabot, which can be found [here](./extension/src/dependabot/experiments.ts). Specifying experiments in the task input parameters will override all defaults.
 
-<details open>
-<summary>List of known experiments:</summary>
-
-|Package Ecosystem|Experiment Name|Value Type|More Information|
-|--|--|--|--|
-| All | grouped_updates_experimental_rules | true/false | <https://github.com/dependabot/dependabot-core/pull/7581> |
-| All | grouped_security_updates_disabled | true/false | <https://github.com/dependabot/dependabot-core/pull/8529> |
-| All | lead_security_dependency | true/false | <https://github.com/dependabot/dependabot-core/pull/10727> |
-| All | record_ecosystem_versions | true/false | <https://github.com/dependabot/dependabot-core/pull/7517> |
-| All | enable_record_ecosystem_meta | true/false | <https://github.com/dependabot/dependabot-core/pull/10905> |
-| All | record_update_job_unknown_error | true/false | <https://github.com/dependabot/dependabot-core/pull/8144> |
-| All | dependency_change_validation | true/false | <https://github.com/dependabot/dependabot-core/pull/9888> |
-| All | add_deprecation_warn_to_pr_message | true/false | <https://github.com/dependabot/dependabot-core/pull/10421> |
-| All | threaded_metadata | true/false | <https://github.com/dependabot/dependabot-core/pull/9485> |
-| All | enable_shared_helpers_command_timeout | true/false | <https://github.com/dependabot/dependabot-core/pull/11125> |
-| All | allow_refresh_for_existing_pr_dependencies | true/false | <https://github.com/dependabot/dependabot-core/pull/11382> |
-| Bun | enable_bun_ecosystem | true/false | <https://github.com/dependabot/dependabot-core/pull/11446> |
-| Composer | exclude_local_composer_packages | true/false | <https://github.com/dependabot/dependabot-core/pull/11527> |
-| Docker | docker_tag_component_comparison | true/false | <https://github.com/dependabot/dependabot-core/pull/11679> |
-| Go | tidy | true/false | |
-| Go | vendor | true/false | |
-| Go | goprivate | string | |
-| NPM | enable_corepack_for_npm_and_yarn | true/false | <https://github.com/dependabot/dependabot-core/pull/10985> |
-| NPM | npm_fallback_version_above_v6 | true/false | <https://github.com/dependabot/dependabot-core/pull/10757> |
-| NPM | enable_engine_version_detection | true/false | <https://github.com/dependabot/dependabot-core/pull/11392> |
-| NPM | avoid_duplicate_updates_package_json | true/false | <https://github.com/dependabot/dependabot-core/pull/11423> |
-| NuGet | nuget_native_analysis | true/false | <https://github.com/dependabot/dependabot-core/pull/10025> |
-| NuGet | nuget_native_updater | true/false | <https://github.com/dependabot/dependabot-core/pull/10521> |
-| NuGet | nuget_legacy_dependency_solver | true/false | <https://github.com/dependabot/dependabot-core/pull/10671> |
-| NuGet | nuget_use_direct_discovery | true/false | <https://github.com/dependabot/dependabot-core/pull/10597> |
-| NuGet | nuget_install_dotnet_sdks | true/false | <https://github.com/dependabot/dependabot-core/pull/11090> |
-| Pip | enable_cooldown_for_python | true/false | <https://github.com/dependabot/dependabot-core/pull/11693> |
-|Pip & UV| enable_file_parser_python_local | true/false | <https://github.com/dependabot/dependabot-core/pull/11040> |
-
 > [!NOTE]
 > Dependabot experiment names are not [publicly] documented and these may be out-of-date at the time of reading. To find the latest list of experiments, search the `dependabot-core` GitHub repository using queries like ["enabled?(x)"](https://github.com/search?q=repo%3Adependabot%2Fdependabot-core+%2Fenabled%5CW%5C%28.*%5C%29%2F&type=code) and ["options.fetch(x)"](https://github.com/search?q=repo%3Adependabot%2Fdependabot-core+%2Foptions%5C.fetch%5C%28.*%2C%2F&type=code).
-
-</details>
 
 ## Configuring assignees
 
