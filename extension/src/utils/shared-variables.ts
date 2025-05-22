@@ -23,6 +23,8 @@ export interface ISharedVariables {
   repository: string;
   /** Whether the repository was overridden via input */
   repositoryOverridden: boolean;
+    /** List of milestone IDs to use and override if already defined in dependabot.yml */
+  targetMilestoneIds: string[];
 
   /** Organisation API endpoint URL */
   apiEndpointUrl: string;
@@ -131,6 +133,12 @@ export default function getSharedVariables(): ISharedVariables {
   const virtualDirectorySuffix = virtualDirectory?.length > 0 ? `${virtualDirectory}/` : '';
   const apiEndpointUrl = `${protocol}://${hostname}:${port}/${virtualDirectorySuffix}`;
 
+  // Milestones.
+  const targetMilestoneIds = tl.getDelimitedInput('targetMilestoneIds', ';', false).map(String);
+  if (targetMilestoneIds.length > 0) {
+    tl.debug(`Using milestone IDs from config. Ignoring dependabot.yml file.`);
+  }
+
   // Prepare the access credentials
   const githubAccessToken: string = getGithubAccessToken();
   const systemAccessUser: string = tl.getInput('azureDevOpsUser');
@@ -200,6 +208,7 @@ export default function getSharedVariables(): ISharedVariables {
     project,
     repository,
     repositoryOverridden,
+    targetMilestoneIds,
 
     apiEndpointUrl,
 
