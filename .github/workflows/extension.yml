@@ -55,6 +55,9 @@ jobs:
         with:
           useConfigFile: true
 
+      - name: Setup turborepo caching
+        uses: rharkor/caching-for-turbo@v1.8
+
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
 
@@ -71,15 +74,15 @@ jobs:
         run: pnpm format:check
 
       - name: Build
-        run: pnpm build
+        run: pnpm dlx turbo build
         working-directory: '${{ github.workspace }}/extension'
 
       - name: Lint
-        run: pnpm lint
+        run: pnpm dlx turbo lint
         working-directory: '${{ github.workspace }}/extension'
 
       - name: Test
-        run: pnpm test
+        run: pnpm dlx turbo test
         working-directory: '${{ github.workspace }}/extension'
 
       - name: Update version numbers in vss-extension.json overrides files

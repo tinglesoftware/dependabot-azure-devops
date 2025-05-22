@@ -349,3 +349,7 @@ healthchecksdb
 docker-compose.local.yml
 work
 dist
+out
+.turbo
+.vercel
+.next

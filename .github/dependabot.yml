@@ -88,3 +88,7 @@ updates:
           - '@types/js-yaml'
       prettier:
         patterns: ['prettier*']
+      turbo:
+        patterns:
+          - 'eslint-config-turbo'
+          - 'turbo'

@@ -4,7 +4,17 @@
   "private": true,
   "scripts": {
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+
+    "extension:start": "turbo run start --filter=extension...",
+    "extension:build": "turbo run build --filter=extension...",
+    "extension:lint": "turbo run lint --filter=extension...",
+
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "package": "turbo run package",
+    "clean": "turbo run clean && rimraf .turbo"
   },
   "devDependencies": {
     "@eslint/eslintrc": "3.3.1",
@@ -12,12 +22,15 @@
     "@typescript-eslint/eslint-plugin": "8.32.1",
     "eslint": "9.27.0",
     "eslint-config-prettier": "10.1.5",
+    "eslint-config-turbo": "2.5.3",
     "husky": "9.1.7",
     "prettier": "3.5.3",
     "prettier-plugin-organize-imports": "4.1.0",
     "pretty-quick": "4.1.1",
+    "rimraf": "6.0.1",
     "tfx-cli": "0.21.1",
     "tsup": "8.5.0",
+    "turbo": "2.5.3",
     "typescript": "5.8.3",
     "vitest": "3.1.4"
   },
