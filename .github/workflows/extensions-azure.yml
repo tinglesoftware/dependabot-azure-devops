@@ -97,28 +97,28 @@ jobs:
         run: >
           pnpm tfx extension create
           --manifest-globs vss-extension.json
-          --output-path ${{ github.workspace }}/drop
+          --output-path ${{ github.workspace }}/out
           --json5
           --overrides-file overrides.${{ (startsWith(github.ref, 'refs/tags/') && 'prod') || 'dev' }}.json
         working-directory: extensions/azure
 
-      - name: Upload Artifact (drop)
+      - name: Upload Artifact (out)
         uses: actions/upload-artifact@v4
         with:
-          path: ${{ github.workspace }}/drop/*
-          name: drop
+          path: ${{ github.workspace }}/out/*
+          name: extensions-azure
 
       - name: Provenance Attestation
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
         uses: actions/attest-build-provenance@v2
         with:
-          subject-path: ${{ github.workspace }}/drop/*.vsix
+          subject-path: ${{ github.workspace }}/out/*.vsix
 
       - name: Upload Release
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
         uses: ncipollo/release-action@v1
         with:
-          artifacts: '${{ github.workspace }}/drop/*.vsix'
+          artifacts: '${{ github.workspace }}/out/*.vsix'
           token: ${{ secrets.GITHUB_TOKEN }}
           draft: true
           allowUpdates: true
@@ -127,7 +127,7 @@ jobs:
         if: ${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/') }}
         run: >
           pnpm tfx extension publish
-          --vsix ${{ github.workspace }}/drop/*.vsix
+          --vsix ${{ github.workspace }}/out/*.vsix
           --auth-type pat
           --token ${{ secrets.AZURE_DEVOPS_EXTENSION_TOKEN }}
           ${{ (github.ref == 'refs/heads/main' && '--share-with tingle rhyskoedijk') || '' }}
