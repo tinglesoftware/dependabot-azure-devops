@@ -1,4 +1,4 @@
-name: Extension
+name: Extensions
 
 on:
   workflow_dispatch:

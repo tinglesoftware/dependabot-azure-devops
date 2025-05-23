@@ -1,5 +1,5 @@
 {
-  "name": "dependabot-azure-devops",
+  "name": "extension-azure-devops",
   "version": "2.0.0",
   "description": "Dependabot Azure DevOps task",
   "main": "''",

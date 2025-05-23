@@ -2,14 +2,14 @@
 
 This repository contains tools for updating dependencies in Azure DevOps repositories using [Dependabot](https://dependabot.com).
 
-![Extension](https://img.shields.io/github/actions/workflow/status/tinglesoftware/dependabot-azure-devops/extensions.yml?branch=main&label=Extension&style=flat-square)
+![Extensions](https://img.shields.io/github/actions/workflow/status/tinglesoftware/dependabot-azure-devops/extensions.yml?branch=main&label=Extensions&style=flat-square)
 ![Server](https://img.shields.io/github/actions/workflow/status/tinglesoftware/dependabot-azure-devops/server.yml?branch=main&label=Server&style=flat-square)
 [![Release](https://img.shields.io/github/release/tinglesoftware/dependabot-azure-devops.svg?style=flat-square)](https://github.com/tinglesoftware/dependabot-azure-devops/releases/latest)
 [![license](https://img.shields.io/github/license/tinglesoftware/dependabot-azure-devops.svg?style=flat-square)](LICENSE)
 
 In this repository you'll find:
 
-1. Azure DevOps [Extension](https://marketplace.visualstudio.com/items?itemName=tingle-software.dependabot), [source code](./extensions/azure) and [docs](./docs/extensions/azure.md).
+1. [Azure DevOps Extension](https://marketplace.visualstudio.com/items?itemName=tingle-software.dependabot), [source code](./extensions/azure) and [docs](./docs/extensions/azure.md).
 2. Dependabot Server, [source code](./server/) and [docs](./docs/server.md).
 
 ## Table of Contents
