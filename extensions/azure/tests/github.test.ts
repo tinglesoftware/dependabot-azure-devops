@@ -5,7 +5,7 @@ import { SecurityVulnerabilitySchema } from '../src/github';
 
 describe('SecurityVulnerabilitySchema', () => {
   it('works for sample', async () => {
-    const fileContents = await readFile('../advisories-example.json', 'utf-8');
+    const fileContents = await readFile('../../advisories-example.json', 'utf-8');
     const privateVulnerabilities = await SecurityVulnerabilitySchema.array().parseAsync(JSON.parse(fileContents));
     expect(privateVulnerabilities).toBeDefined();
     expect(privateVulnerabilities.length).toBe(1);

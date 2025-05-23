@@ -2,14 +2,14 @@
 
 This repository contains tools for updating dependencies in Azure DevOps repositories using [Dependabot](https://dependabot.com).
 
-![Extension](https://img.shields.io/github/actions/workflow/status/tinglesoftware/dependabot-azure-devops/extension.yml?branch=main&label=Extension&style=flat-square)
+![Extension](https://img.shields.io/github/actions/workflow/status/tinglesoftware/dependabot-azure-devops/extensions-azure.yml?branch=main&label=Extension&style=flat-square)
 ![Server](https://img.shields.io/github/actions/workflow/status/tinglesoftware/dependabot-azure-devops/server.yml?branch=main&label=Server&style=flat-square)
 [![Release](https://img.shields.io/github/release/tinglesoftware/dependabot-azure-devops.svg?style=flat-square)](https://github.com/tinglesoftware/dependabot-azure-devops/releases/latest)
 [![license](https://img.shields.io/github/license/tinglesoftware/dependabot-azure-devops.svg?style=flat-square)](LICENSE)
 
 In this repository you'll find:
 
-1. Azure DevOps [Extension](https://marketplace.visualstudio.com/items?itemName=tingle-software.dependabot), [source code](./extension) and [docs](./docs/extension.md).
+1. Azure DevOps [Extension](https://marketplace.visualstudio.com/items?itemName=tingle-software.dependabot), [source code](./extensions/azure) and [docs](./docs/extensions/azure.md).
 2. Dependabot Server, [source code](./server/) and [docs](./docs/server.md).
 
 ## Table of Contents
@@ -66,7 +66,7 @@ Dependabot for Azure DevOps must be explicitly configured to run in your organis
         mergeStrategy: 'squash'
   ```
 
-  See [task requirements](./extension/README.md#task-requirements) and [task parameters](./extension/README.md#task-parameters) for more information.
+  See [task requirements](./extensions/azure/README.md#task-requirements) and [task parameters](./extensions/azure/README.md#task-parameters) for more information.
 
 </details>
 
@@ -154,7 +154,7 @@ Dependabot uses an internal feature flag system called "experiments". Typically,
 
 Experiments vary depending on the package ecosystem used; They can be enabled using the `experiments` task input with a comma-separated list of key/value pairs representing the experiments e.g. `experiments: 'tidy=true,vendor=true,goprivate=*'`.
 
-By default, the enabled experiments will mirror the GitHub-hosted version of Dependabot, which can be found [here](./extension/src/dependabot/experiments.ts). Specifying experiments in the task input parameters will override all defaults.
+By default, the enabled experiments will mirror the GitHub-hosted version of Dependabot, which can be found [here](./extensions/azure/src/dependabot/experiments.ts). Specifying experiments in the task input parameters will override all defaults.
 
 > [!NOTE]
 > Dependabot experiment names are not [publicly] documented and these may be out-of-date at the time of reading. To find the latest list of experiments, search the `dependabot-core` GitHub repository using queries like ["enabled?(x)"](https://github.com/search?q=repo%3Adependabot%2Fdependabot-core+%2Fenabled%5CW%5C%28.*%5C%29%2F&type=code) and ["options.fetch(x)"](https://github.com/search?q=repo%3Adependabot%2Fdependabot-core+%2Foptions%5C.fetch%5C%28.*%2C%2F&type=code).

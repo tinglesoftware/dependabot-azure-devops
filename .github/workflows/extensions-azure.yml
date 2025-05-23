@@ -6,15 +6,15 @@ on:
     branches: [main]
     tags: ['*']
     paths:
-      - 'extension/**'
-      - '.github/workflows/extension.yml'
-      - '!extension/README.md'
+      - 'extensions/azure/**'
+      - '.github/workflows/extensions-azure.yml'
+      - '!extensions/azure/README.md'
   pull_request:
     branches: [main]
     paths:
-      - 'extension/**'
-      - '.github/workflows/extension.yml'
-      - '!extension/README.md'
+      - 'extensions/azure/**'
+      - '.github/workflows/extensions-azure.yml'
+      - '!extensions/azure/README.md'
 
 permissions:
   contents: write # write required for ncipollo/release-action to create a release
@@ -64,24 +64,24 @@ jobs:
 
       - name: Download deps
         run: pnpm install
-        working-directory: '${{ github.workspace }}/extension'
+        working-directory: '${{ github.workspace }}/extensions/azure'
 
       - name: Build
         run: pnpm dlx turbo build
-        working-directory: '${{ github.workspace }}/extension'
+        working-directory: '${{ github.workspace }}/extensions/azure'
 
       - name: Lint
         run: pnpm dlx turbo lint
-        working-directory: '${{ github.workspace }}/extension'
+        working-directory: '${{ github.workspace }}/extensions/azure'
 
       - name: Test
         run: pnpm dlx turbo test
-        working-directory: '${{ github.workspace }}/extension'
+        working-directory: '${{ github.workspace }}/extensions/azure'
 
       - name: Update version numbers in vss-extension.json overrides files
         uses: cschleiden/replace-tokens@v1
         with:
-          files: '["${{ github.workspace }}/extension/overrides*.json"]'
+          files: '["${{ github.workspace }}/extensions/azure/overrides*.json"]'
         env:
           MAJOR_MINOR_PATCH: ${{ steps.gitversion.outputs.majorMinorPatch }}
           BUILD_NUMBER: ${{ github.run_number }}
@@ -90,8 +90,8 @@ jobs:
         run: |
           # Major versions are left out here because they are fixed in the task.json files.
           # The minor and patch versions are updated to make sure we keep recent changes deployed.
-          echo "`jq '.version.Minor=${{ steps.gitversion.outputs.minor }}' extension/tasks/dependabotV2/task.json`" > extension/tasks/dependabotV2/task.json
-          echo "`jq '.version.Patch=${{ github.run_number }}' extension/tasks/dependabotV2/task.json`" > extension/tasks/dependabotV2/task.json
+          echo "`jq '.version.Minor=${{ steps.gitversion.outputs.minor }}' extensions/azure/tasks/dependabotV2/task.json`" > extensions/azure/tasks/dependabotV2/task.json
+          echo "`jq '.version.Patch=${{ github.run_number }}' extensions/azure/tasks/dependabotV2/task.json`" > extensions/azure/tasks/dependabotV2/task.json
 
       - name: Create Extension
         run: >
@@ -100,7 +100,7 @@ jobs:
           --output-path ${{ github.workspace }}/drop
           --json5
           --overrides-file overrides.${{ (startsWith(github.ref, 'refs/tags/') && 'prod') || 'dev' }}.json
-        working-directory: extension
+        working-directory: extensions/azure
 
       - name: Upload Artifact (drop)
         uses: actions/upload-artifact@v4
