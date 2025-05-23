@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "sharp": "0.34.1",
-    "zod": "3.24.4"
+    "zod": "3.25.23"
   },
   "devDependencies": {
     "@paklo/eslint": "workspace:*",
