@@ -2,7 +2,7 @@
 
 This repository contains tools for updating dependencies in Azure DevOps repositories using [Dependabot](https://dependabot.com).
 
-![Extension](https://img.shields.io/github/actions/workflow/status/tinglesoftware/dependabot-azure-devops/extensions-azure.yml?branch=main&label=Extension&style=flat-square)
+![Extension](https://img.shields.io/github/actions/workflow/status/tinglesoftware/dependabot-azure-devops/extensions.yml?branch=main&label=Extension&style=flat-square)
 ![Server](https://img.shields.io/github/actions/workflow/status/tinglesoftware/dependabot-azure-devops/server.yml?branch=main&label=Server&style=flat-square)
 [![Release](https://img.shields.io/github/release/tinglesoftware/dependabot-azure-devops.svg?style=flat-square)](https://github.com/tinglesoftware/dependabot-azure-devops/releases/latest)
 [![license](https://img.shields.io/github/license/tinglesoftware/dependabot-azure-devops.svg?style=flat-square)](LICENSE)
