@@ -9,7 +9,7 @@
     "clean": "rimraf .turbo dist"
   },
   "dependencies": {
-    "sharp": "0.34.1",
+    "sharp": "0.34.2",
     "zod": "3.25.23"
   },
   "devDependencies": {
