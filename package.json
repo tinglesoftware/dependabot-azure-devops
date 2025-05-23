@@ -23,7 +23,6 @@
     "prettier-plugin-organize-imports": "4.1.0",
     "pretty-quick": "4.1.1",
     "rimraf": "6.0.1",
-    "tfx-cli": "0.21.1",
     "tsup": "8.5.0",
     "turbo": "2.5.3",
     "typescript": "5.8.3",
