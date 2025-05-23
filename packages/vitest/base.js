@@ -1,6 +1,7 @@
 import { fileURLToPath } from 'url';
 import { configDefaults, defineConfig } from 'vitest/config';
 
+/** @type {import("vitest/config").ViteUserConfig} */
 export default defineConfig({
   test: {
     globals: true,
