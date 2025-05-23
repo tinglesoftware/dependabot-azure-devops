@@ -2,7 +2,7 @@ import { defineConfig, type Options } from 'tsup';
 
 const base: Options = {
   format: 'cjs',
-  target: 'node20',
+  target: 'node22',
   platform: 'node',
   splitting: false,
   clean: true,
