@@ -10,6 +10,7 @@
     "start:V2": "node tasks/dependabotV2/dist/task-v2.js",
     "lint": "eslint .",
     "test": "vitest",
+    "clean": "rimraf .turbo dist tasks/dependabotV1/dist tasks/dependabotV2/dist",
     "package": "pnpm tfx extension create --json5"
   },
   "repository": {
@@ -39,6 +40,7 @@
   "devDependencies": {
     "@paklo/eslint": "workspace:*",
     "@paklo/tsconfig": "workspace:*",
+    "@paklo/vitest": "workspace:*",
     "@types/js-yaml": "4.0.9",
     "@types/node": "22.15.21",
     "@types/q": "1.5.8",
