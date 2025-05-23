@@ -39,7 +39,7 @@ importers:
         specifier: 3.1.4
         version: 3.1.4(@types/node@22.15.21)
 
-  extension:
+  extensions/azure:
     dependencies:
       axios:
         specifier: 1.9.0
@@ -65,13 +65,13 @@ importers:
     devDependencies:
       '@paklo/eslint':
         specifier: workspace:*
-        version: link:../packages/eslint
+        version: link:../../packages/eslint
       '@paklo/tsconfig':
         specifier: workspace:*
-        version: link:../packages/tsconfig
+        version: link:../../packages/tsconfig
       '@paklo/vitest':
         specifier: workspace:*
-        version: link:../packages/vitest
+        version: link:../../packages/vitest
       '@types/js-yaml':
         specifier: 4.0.9
         version: 4.0.9

@@ -25,7 +25,9 @@
   },
   "links": {
     "home": { "uri": "https://github.com/tinglesoftware/dependabot-azure-devops" },
-    "getstarted": { "uri": "https://github.com/tinglesoftware/dependabot-azure-devops/blob/main/extension/README.md" },
+    "getstarted": {
+      "uri": "https://github.com/tinglesoftware/dependabot-azure-devops/blob/main/extensions/azure/README.md"
+    },
     "issues": { "uri": "https://github.com/tinglesoftware/dependabot-azure-devops/issues" },
     "support": { "uri": "https://github.com/tinglesoftware/dependabot-azure-devops/issues" },
     "license": { "uri": "https://github.com/tinglesoftware/dependabot-azure-devops/blob/main/LICENSE" }

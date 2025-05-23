@@ -14,7 +14,7 @@
 
 # Using the extension
 
-Refer to the extension [README.md](../extension/README.md).
+Refer to the extension [README.md](../extensions/azure/README.md).
 
 # Troubleshooting issues
 
