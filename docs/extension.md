@@ -32,7 +32,7 @@ When verbose logs are enable, Dependabot will also generate a [Flame Graph perfo
 
 ## Getting the development environment ready
 
-Install [Node.js](https://docs.docker.com/engine/install/) (18+), [Go](https://go.dev/doc/install) (1.22+), and [Docker](https://docs.docker.com/engine/install/) (with Linux containers); Install project dependencies using PNPM:
+Install [Node.js](https://docs.docker.com/engine/install/) (22+), [Go](https://go.dev/doc/install) (1.22+), and [Docker](https://docs.docker.com/engine/install/) (with Linux containers); Install project dependencies using PNPM:
 
 ```bash
 cd extension
