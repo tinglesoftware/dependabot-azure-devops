@@ -1,2 +1,5 @@
-// export default ['extension/tasks/*', 'apps/*', 'packages/*'];
-export default ['extension'];
+export default [
+  'packages/*',
+  // 'extensions/*',
+  'extension',
+];
