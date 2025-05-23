@@ -66,9 +66,7 @@ jobs:
 
       - name: Download deps
         run: pnpm install
-
-      - name: Format check
-        run: pnpm format:check
+        working-directory: '${{ github.workspace }}/extension'
 
       - name: Build
         run: pnpm dlx turbo build
