@@ -253,9 +253,7 @@ export async function performDependabotUpdatesAsync(
     // Parse the Dependabot metadata for the existing pull requests that are related to this update
     // Dependabot will use this to determine if we need to create new pull requests or update/close existing ones
     const existingPullRequestsForPackageManager = parsePullRequestProperties(existingPullRequests, packageManager);
-    const existingPullRequestDependenciesForPackageManager = Object.entries(existingPullRequestsForPackageManager).map(
-      ([id, deps]) => deps,
-    );
+    const existingPullRequestDependenciesForPackageManager = Object.values(existingPullRequestsForPackageManager);
 
     // If this is a security-only update (i.e. 'open-pull-requests-limit: 0'), then we first need to discover the dependencies
     // that need updating and check each one for vulnerabilities. This is because Dependabot requires the list of vulnerable dependencies

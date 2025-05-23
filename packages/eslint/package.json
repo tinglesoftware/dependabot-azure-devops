@@ -1,0 +1,15 @@
+{
+  "name": "@paklo/eslint",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "exports": {
+    "./base": "./base.js"
+  },
+  "devDependencies": {
+    "eslint": "9.27.0",
+    "eslint-config-prettier": "10.1.5",
+    "eslint-config-turbo": "2.5.3",
+    "typescript-eslint": "8.32.1"
+  }
+}

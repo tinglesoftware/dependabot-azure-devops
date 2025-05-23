@@ -52,13 +52,11 @@ describe('AzureDevOpsWebApiClient', () => {
     });
 
     it('should create a pull request without duplicate reviewer and assignee identities', async () => {
-      // Arange
-      const mockGetUserId = vi.spyOn(client, 'getUserId').mockResolvedValue('my-user-id');
-      const mockResolveIdentityId = vi
-        .spyOn(client, 'resolveIdentityId')
-        .mockImplementation(async (identity?: string) => {
-          return identity || '';
-        });
+      // Arrange
+      vi.spyOn(client, 'getUserId').mockResolvedValue('my-user-id');
+      vi.spyOn(client, 'resolveIdentityId').mockImplementation(async (identity?: string) => {
+        return identity || '';
+      });
       const mockRestApiPost = vi
         .spyOn(client as never, 'restApiPost')
         .mockResolvedValueOnce({
@@ -67,7 +65,7 @@ describe('AzureDevOpsWebApiClient', () => {
         .mockResolvedValueOnce({
           pullRequestId: 1,
         });
-      const mockRestApiPatch = vi.spyOn(client as never, 'restApiPatch').mockResolvedValueOnce({
+      vi.spyOn(client as never, 'restApiPatch').mockResolvedValueOnce({
         count: 1,
       });
 

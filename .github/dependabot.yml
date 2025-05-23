@@ -78,16 +78,18 @@ updates:
     groups:
       eslint:
         patterns:
-          - 'eslint'
-          - 'eslint-config-prettier'
           - '@eslint/*'
           - '@typescript-eslint/*'
+          - 'eslint'
+          - 'typescript-eslint'
       js-yaml:
         patterns:
-          - 'js-yaml'
           - '@types/js-yaml'
+          - 'js-yaml'
       prettier:
-        patterns: ['prettier*']
+        patterns:
+          - 'eslint-config-prettier'
+          - 'prettier*'
       turbo:
         patterns:
           - 'eslint-config-turbo'

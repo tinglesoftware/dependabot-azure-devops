@@ -89,9 +89,9 @@ export class DependabotOutputProcessor {
       // Documentation on the 'data' model for each output type can be found here:
       // See: https://github.com/dependabot/cli/blob/main/internal/model/update.go
 
-      case 'update_dependency_list':
+      case 'update_dependency_list': {
         // Store the dependency list snapshot, if configured
-        const _ = DependabotDependenciesSchema.parse(data);
+        DependabotDependenciesSchema.parse(data);
         if (this.taskInputs.storeDependencyList) {
           warning(
             `Storing dependency list snapshot in project properties is no longer supported
@@ -100,8 +100,8 @@ export class DependabotOutputProcessor {
         }
 
         return true;
-
-      case 'create_pull_request':
+      }
+      case 'create_pull_request': {
         const title = data['pr-title'];
         if (this.taskInputs.skipPullRequests) {
           warning(`Skipping pull request creation of '${title}' as 'skipPullRequests' is set to 'true'`);
@@ -207,8 +207,9 @@ export class DependabotOutputProcessor {
         } else {
           return false;
         }
+      }
 
-      case 'update_pull_request':
+      case 'update_pull_request': {
         if (this.taskInputs.skipPullRequests) {
           warning(`Skipping pull request update as 'skipPullRequests' is set to 'true'`);
           return true;
@@ -250,8 +251,9 @@ export class DependabotOutputProcessor {
         }
 
         return pullRequestWasUpdated;
+      }
 
-      case 'close_pull_request':
+      case 'close_pull_request': {
         if (!this.taskInputs.abandonUnwantedPullRequests) {
           warning(`Skipping pull request closure as 'abandonUnwantedPullRequests' is set to 'false'`);
           return true;
@@ -277,7 +279,7 @@ export class DependabotOutputProcessor {
           comment: this.taskInputs.commentPullRequests ? getPullRequestCloseReasonForOutputData(data) : undefined,
           deleteSourceBranch: true,
         });
-
+      }
       case 'mark_as_processed':
         // No action required
         return true;

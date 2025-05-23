@@ -16,7 +16,7 @@ function getGithubEndPointToken(githubEndpoint: string): string {
   const githubEndpointObject = getEndpointAuthorization(githubEndpoint, false);
   let githubEndpointToken: string = null;
 
-  if (!!githubEndpointObject) {
+  if (githubEndpointObject) {
     debug('Endpoint scheme: ' + githubEndpointObject.scheme);
 
     if (githubEndpointObject.scheme === 'PersonalAccessToken') {

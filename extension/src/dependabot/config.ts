@@ -220,12 +220,12 @@ export async function parseConfigFile(taskInputs: ISharedVariables): Promise<IDe
   let version = -1;
 
   // Ensure the version has been specified
-  if (!!!rawVersion) throw new Error('The version must be specified in dependabot.yml');
+  if (!rawVersion) throw new Error('The version must be specified in dependabot.yml');
 
   // Try convert the version to integer
   try {
     version = parseInt(rawVersion, 10);
-  } catch (e) {
+  } catch {
     throw new Error('Dependabot version specified must be a valid integer');
   }
 
