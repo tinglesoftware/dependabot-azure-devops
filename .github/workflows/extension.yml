@@ -2,19 +2,16 @@ name: Extension
 
 on:
   push:
-    branches:
-      - main
-    tags:
-      - '*'
+    branches: [main]
+    tags: ['*']
     paths:
       - 'extension/**'
       - '.github/workflows/extension.yml'
       - '!extension/README.md'
       - '!docs/**'
   pull_request:
-    branches:
-      # Only trigger for PRs against `main` branch.
-      - main
+    # Only trigger for PRs against `main` branch.
+    branches: [main]
     paths:
       - 'extension/**'
       - '.github/workflows/extension.yml'
