@@ -5,14 +5,14 @@ on:
   push:
     branches: [main]
     tags: ['*']
-    # No path filters ensures we always have a docker image matching the latest commit on main
+    paths:
+      - 'server/**'
+      - '.github/workflows/server.yml'
   pull_request:
-    # Only trigger for PRs against `main` branch.
     branches: [main]
     paths:
       - 'server/**'
       - '.github/workflows/server.yml'
-      - '!docs/**'
 
 permissions:
   contents: write # write required for ncipollo/release-action to create a release

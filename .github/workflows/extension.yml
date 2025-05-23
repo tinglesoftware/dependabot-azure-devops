@@ -8,15 +8,12 @@ on:
       - 'extension/**'
       - '.github/workflows/extension.yml'
       - '!extension/README.md'
-      - '!docs/**'
   pull_request:
-    # Only trigger for PRs against `main` branch.
     branches: [main]
     paths:
       - 'extension/**'
       - '.github/workflows/extension.yml'
       - '!extension/README.md'
-      - '!docs/**'
 
 permissions:
   contents: write # write required for ncipollo/release-action to create a release
