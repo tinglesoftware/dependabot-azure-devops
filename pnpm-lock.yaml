@@ -60,8 +60,8 @@ importers:
         specifier: 2.1.0
         version: 2.1.0
       zod:
-        specifier: 3.25.23
-        version: 3.25.23
+        specifier: 3.25.28
+        version: 3.25.28
     devDependencies:
       '@paklo/eslint':
         specifier: workspace:*
@@ -111,8 +111,8 @@ importers:
         specifier: 0.34.2
         version: 0.34.2
       zod:
-        specifier: 3.25.23
-        version: 3.25.23
+        specifier: 3.25.28
+        version: 3.25.28
     devDependencies:
       '@paklo/eslint':
         specifier: workspace:*
@@ -2444,8 +2444,8 @@ packages:
     resolution: {integrity: sha512-2olrDUuPM4NvRIgGPhvrp84f7/HmWR6RiQrgwFF2VctmnssFiogtYL3DcA8Vl2bsSmju79sVXe38TsII7JleUg==}
     engines: {node: '>= 0.10.0'}
 
-  zod@3.25.23:
-    resolution: {integrity: sha512-Od2bdMosahjSrSgJtakrwjMDb1zM1A3VIHCPGveZt/3/wlrTWBya2lmEh2OYe4OIu8mPTmmr0gnLHIWQXdtWBg==}
+  zod@3.25.28:
+    resolution: {integrity: sha512-/nt/67WYKnr5by3YS7LroZJbtcCBurDKKPBPWWzaxvVCGuG/NOsiKkrjoOhI8mJ+SQUXEbUzeB3S+6XDUEEj7Q==}
 
 snapshots:
 
@@ -4882,4 +4882,4 @@ snapshots:
       lodash: 4.17.21
       readable-stream: 2.3.8
 
-  zod@3.25.23: {}
+  zod@3.25.28: {}
