@@ -1,5 +1,5 @@
 {
   "name": "Node.js & TypeScript",
-  "image": "mcr.microsoft.com/devcontainers/typescript-node:0-18",
-  "postCreateCommand": "cd extension && yarn"
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:0-22",
+  "postCreateCommand": "pnpm install"
 }

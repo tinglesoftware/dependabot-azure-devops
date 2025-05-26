@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "@paklo/tsconfig/base.json",
+  "compilerOptions": {
+    // TODO: enable strict and fix errors
+    "strict": false
+  },
+  "include": ["src/**/*", "tests/**/*"],
+  "exclude": ["node_modules", "tasks/**/dist"]
+}

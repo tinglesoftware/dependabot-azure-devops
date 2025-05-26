@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json.schemastore.org/vss-extension.json",
+  "manifestVersion": 1,
+  "id": "dependabot",
+  "name": "Dependabot",
+  "description": "Automatically update dependencies and vulnerabilities in your code",
+  "version": "2.0.0",
+  "publisher": "tingle-software",
+  "public": false,
+  "targets": [{ "id": "Microsoft.VisualStudio.Services" }],
+  "demands": ["api-version/5.0"],
+  "categories": ["Azure Pipelines"],
+  "tags": [
+    "dependabot",
+    "dependency",
+    "dependencies",
+    "package",
+    "update",
+    "vulnerability",
+    "vulnerabilities",
+    "security"
+  ],
+  "icons": {
+    "default": "images/icon.png"
+  },
+  "links": {
+    "home": { "uri": "https://github.com/tinglesoftware/dependabot-azure-devops" },
+    "getstarted": {
+      "uri": "https://github.com/tinglesoftware/dependabot-azure-devops/blob/main/extensions/azure/README.md"
+    },
+    "issues": { "uri": "https://github.com/tinglesoftware/dependabot-azure-devops/issues" },
+    "support": { "uri": "https://github.com/tinglesoftware/dependabot-azure-devops/issues" },
+    "license": { "uri": "https://github.com/tinglesoftware/dependabot-azure-devops/blob/main/LICENSE" }
+  },
+  "customerQnASupport": {
+    "enablemarketplaceqna": true,
+    "url": "https://github.com/tinglesoftware/dependabot-azure-devops/discussions"
+  },
+  "repository": {
+    "type": "git",
+    "uri": "https://github.com/tinglesoftware/dependabot-azure-devops"
+  },
+  "content": {
+    "details": {
+      "path": "README.md"
+    }
+  },
+  "files": [{ "path": "tasks" }, { "path": "images", "addressable": true }],
+  "contributions": [
+    {
+      "id": "dependabot",
+      "type": "ms.vss-distributed-task.task",
+      "targets": ["ms.vss-distributed-task.tasks"],
+      "properties": { "name": "tasks" }
+    }
+  ]
+}

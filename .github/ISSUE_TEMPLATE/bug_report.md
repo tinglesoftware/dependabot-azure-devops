@@ -31,7 +31,7 @@ A clear and concise description of what you expected to happen.
 
 **Logs and screenshots**
 If applicable, include relevant logs or screenshots to help explain your problem.
-See [extension troubleshooting](https://github.com/tinglesoftware/dependabot-azure-devops/blob/main/docs/extension.md#troubleshooting-issues) for more on how to collect additional diagnostic logs.
+See [Azure extension troubleshooting](https://github.com/tinglesoftware/dependabot-azure-devops/blob/main/docs/extensions/azure.md#troubleshooting-issues) for more on how to collect additional diagnostic logs.
 
 **Extension (please complete the following information):**
  - Host: [e.g. Azure DevOps, Azure DevOps Server]

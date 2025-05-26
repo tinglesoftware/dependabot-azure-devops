@@ -1,0 +1,50 @@
+{
+  "name": "extension-azure-devops",
+  "version": "2.0.0",
+  "description": "Dependabot Azure DevOps task",
+  "main": "''",
+  "scripts": {
+    "build": "tsup",
+    "start": "pnpm start:V2",
+    "start:V1": "node tasks/dependabotV1/dist/task-v1.js",
+    "start:V2": "node tasks/dependabotV2/dist/task-v2.js",
+    "lint": "eslint .",
+    "test": "vitest",
+    "clean": "rimraf .turbo dist tasks/dependabotV1/dist tasks/dependabotV2/dist",
+    "package": "pnpm tfx extension create --json5"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tinglesoftware/dependabot-azure-devops.git"
+  },
+  "keywords": [
+    "dependabot",
+    "azure",
+    "devops"
+  ],
+  "author": "Tingle Software",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/tinglesoftware/dependabot-azure-devops/issues"
+  },
+  "homepage": "https://github.com/tinglesoftware/dependabot-azure-devops#readme",
+  "dependencies": {
+    "axios": "1.9.0",
+    "azure-devops-node-api": "14.1.0",
+    "azure-pipelines-task-lib": "5.2.0",
+    "js-yaml": "4.1.0",
+    "semver": "7.7.2",
+    "typed-rest-client": "2.1.0",
+    "zod": "3.25.23"
+  },
+  "devDependencies": {
+    "@paklo/eslint": "workspace:*",
+    "@paklo/tsconfig": "workspace:*",
+    "@paklo/vitest": "workspace:*",
+    "@types/js-yaml": "4.0.9",
+    "@types/node": "22.15.21",
+    "@types/q": "1.5.8",
+    "@types/semver": "7.7.0",
+    "tfx-cli": "0.21.1"
+  }
+}

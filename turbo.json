@@ -1,0 +1,24 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": ["**/.env", "**/.env.*", "**/eslint.config.*"],
+  "globalEnv": ["NODE_ENV"],
+  "globalPassThroughEnv": ["GOPATH"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", "tasks/**/dist/**"]
+    },
+    "lint": {},
+    "test": {},
+    "clean": {
+      "cache": false
+    },
+    "package": {
+      "cache": false
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    }
+  }
+}

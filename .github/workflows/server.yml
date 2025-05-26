@@ -3,19 +3,16 @@ name: Server
 on:
   workflow_dispatch:
   push:
-    branches:
-      - main
-    tags:
-      - '*'
-    # No path filters ensures we always have a docker image matching the latest commit on main
-  pull_request:
-    branches:
-      # Only trigger for PRs against `main` branch.
-      - main
+    branches: [main]
+    tags: ['*']
     paths:
       - 'server/**'
       - '.github/workflows/server.yml'
-      - '!docs/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'server/**'
+      - '.github/workflows/server.yml'
 
 permissions:
   contents: write # write required for ncipollo/release-action to create a release

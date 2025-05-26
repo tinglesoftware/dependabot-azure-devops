@@ -1,0 +1,21 @@
+{
+  "name": "@paklo/utils",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "lint": "eslint .",
+    "test": "vitest",
+    "clean": "rimraf .turbo dist"
+  },
+  "dependencies": {
+    "sharp": "0.34.2",
+    "zod": "3.25.23"
+  },
+  "devDependencies": {
+    "@paklo/eslint": "workspace:*",
+    "@paklo/tsconfig": "workspace:*",
+    "@paklo/vitest": "workspace:*",
+    "reading-time": "1.5.0"
+  }
+}
