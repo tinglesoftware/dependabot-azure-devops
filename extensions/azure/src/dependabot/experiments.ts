@@ -33,4 +33,6 @@ export const DEFAULT_EXPERIMENTS: Record<string, string | boolean> = {
   'enable-cooldown-for-maven': true,
   'enable-cooldown-for-gomodules': true,
   'enable-cooldown-metrics-collection': true,
+  'enable-cooldown-for-composer': true,
+  'enable-cooldown-for-gradle': true,
 };
