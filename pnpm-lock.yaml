@@ -45,8 +45,8 @@ importers:
         specifier: 1.9.0
         version: 1.9.0
       azure-devops-node-api:
-        specifier: 14.1.0
-        version: 14.1.0
+        specifier: 15.1.0
+        version: 15.1.0
       azure-pipelines-task-lib:
         specifier: 5.2.0
         version: 5.2.0
@@ -789,6 +789,10 @@ packages:
 
   azure-devops-node-api@14.1.0:
     resolution: {integrity: sha512-QhpgjH1LQ+vgDJ7oBwcmsZ3+o4ZpjLVilw0D3oJQpYpRzN+L39lk5jZDLJ464hLUgsDzWn/Ksv7zLLMKLfoBzA==}
+    engines: {node: '>= 16.0.0'}
+
+  azure-devops-node-api@15.1.0:
+    resolution: {integrity: sha512-zlZ387CISkSKK1vjBv53kzR5fnzA60SxYrejypZawefZWvrjC28zyM/iKSP5b+iYl+Z7OOlm+Rgl6YsMecK6fg==}
     engines: {node: '>= 16.0.0'}
 
   azure-pipelines-task-lib@5.2.0:
@@ -3012,6 +3016,11 @@ snapshots:
       - debug
 
   azure-devops-node-api@14.1.0:
+    dependencies:
+      tunnel: 0.0.6
+      typed-rest-client: 2.1.0
+
+  azure-devops-node-api@15.1.0:
     dependencies:
       tunnel: 0.0.6
       typed-rest-client: 2.1.0
