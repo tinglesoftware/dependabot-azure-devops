@@ -57,15 +57,6 @@
       "helpMarkDown": "When set to `true` the logic to update the dependencies is executed but the actual Pull Requests are not created/updated. Defaults to `false`."
     },
     {
-      "name": "abandonUnwantedPullRequests",
-      "type": "boolean",
-      "groupName": "pull_requests",
-      "label": "Abandon unwanted pull requests.",
-      "defaultValue": false,
-      "required": false,
-      "helpMarkDown": "When set to `true` pull requests that are no longer needed are closed at the tail end of the execution. Defaults to `false`."
-    },
-    {
       "name": "setAutoComplete",
       "type": "boolean",
       "groupName": "pull_requests",
