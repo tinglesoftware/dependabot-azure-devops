@@ -5,7 +5,7 @@ import { basename, extname, join, relative, resolve } from 'node:path';
 import sharp, { type FormatEnum } from 'sharp';
 import { z } from 'zod';
 
-import { ImageFormats, type ImageData, type ImageFormat } from './types.js';
+import { ImageFormats, type ImageData, type ImageFormat } from './types';
 
 export type ImageParams = {
   /**

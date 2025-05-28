@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isodate } from './isodate.js';
+import { isodate } from './isodate';
 
 describe('isodate', () => {
   it('should parse valid ISO date strings', () => {

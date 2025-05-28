@@ -1,8 +1,8 @@
 import { z } from 'zod';
-import { git } from './git.js';
-import { image } from './image.js';
-import { type IsoDateParams, isodate } from './isodate.js';
-import { readtime } from './read-time.js';
+import { git } from './git';
+import { image } from './image';
+import { type IsoDateParams, isodate } from './isodate';
+import { readtime } from './read-time';
 
 const mod = {
   ...z,
@@ -17,5 +17,5 @@ const mod = {
   },
 };
 
-export type * from './types.js';
+export type * from './types';
 export { mod as z };

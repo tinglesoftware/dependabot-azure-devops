@@ -2,7 +2,7 @@ import { execSync, type ExecException } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { basename, dirname } from 'node:path';
 import { custom } from 'zod';
-import type { GitFileInfo } from './types.js';
+import type { GitFileInfo } from './types';
 
 // inspired by Docusaurus at:
 // https://github.com/facebook/docusaurus/blob/4aef958a99bcd7e38886db0c3ba0517f5c1827e7/packages/docusaurus-utils/src/gitUtils.ts#L27

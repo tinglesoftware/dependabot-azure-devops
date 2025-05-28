@@ -203,7 +203,7 @@ describe('performDependabotUpdatesAsync', () => {
       ],
     });
 
-    const tsDependabotOutputProcessor = await import('../src/dependabot/output-processor.js');
+    const tsDependabotOutputProcessor = await import('../src/dependabot/output-processor');
     vi.spyOn(tsDependabotOutputProcessor, 'parsePullRequestProperties').mockReturnValue('npm_and_yarn' as never);
 
     const updateResult = await performDependabotUpdatesAsync(
@@ -253,7 +253,7 @@ describe('performDependabotUpdatesAsync', () => {
       ],
     });
 
-    const tsDependabotJobBuilder = await import('../src/dependabot/job-builder.js');
+    const tsDependabotJobBuilder = await import('../src/dependabot/job-builder');
     vi.spyOn(tsDependabotJobBuilder, 'mapPackageEcosystemToPackageManager').mockReturnValue('npm_and_yarn');
 
     const updateResult = await performDependabotUpdatesAsync(

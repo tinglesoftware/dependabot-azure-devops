@@ -1,8 +1,8 @@
 import { execSync, type ExecException } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
-import { git } from './git.js';
-import type { GitFileInfo } from './types.js';
+import { git } from './git';
+import type { GitFileInfo } from './types';
 
 vi.mock('node:child_process');
 vi.mock('node:fs');

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { readtime } from './read-time.js';
+import { readtime } from './read-time';
 
 describe('readtime', () => {
   it('should calculate read time correctly', () => {
