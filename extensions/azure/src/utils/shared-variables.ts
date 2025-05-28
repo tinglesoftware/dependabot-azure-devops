@@ -63,8 +63,8 @@ export interface ISharedVariables {
 
   securityAdvisoriesFile: string | undefined;
 
-  /** Determines whether to skip creating/updating pull requests */
-  skipPullRequests: boolean;
+  /** Whether to test logic without creating, updating or abandoning pull requests */
+  dryRun: boolean;
 
   /** The dependabot-cli go package to use for updates. e.g. github.com/dependabot/cli/cmd/dependabot@latest */
   dependabotCliPackage?: string;
@@ -175,7 +175,15 @@ export default function getSharedVariables(): ISharedVariables {
 
   // Prepare other variables
   const securityAdvisoriesFile: string | undefined = tl.getInput('securityAdvisoriesFile');
+  let dryRun: boolean = tl.getBoolInput('dryRun', false);
+  // TODO: remove skipPullRequests input after 2025-07-01
   const skipPullRequests: boolean = tl.getBoolInput('skipPullRequests', false);
+  if (skipPullRequests) {
+    tl.warning(
+      'The skipPullRequests input is deprecated. Use the dryRun input instead. It shall be removed on or after 2025-07-01.',
+    );
+    dryRun = true;
+  }
 
   const dependabotCliPackage: string | undefined = tl.getInput('dependabotCliPackage');
   const dependabotCliApiUrl: string | undefined = tl.getInput('dependabotCliApiUrl', false);
@@ -221,7 +229,7 @@ export default function getSharedVariables(): ISharedVariables {
     targetUpdateIds,
     securityAdvisoriesFile,
 
-    skipPullRequests,
+    dryRun,
 
     dependabotCliPackage,
     dependabotCliApiUrl,

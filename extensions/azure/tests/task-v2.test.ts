@@ -30,7 +30,7 @@ describe('abandonPullRequestsWhereSourceRefIsDeleted', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     taskInputs = {
-      skipPullRequests: false,
+      dryRun: false,
     } as ISharedVariables;
     devOpsPrAuthorClient = new AzureDevOpsWebApiClient('https://dev.azure.com/test-org', 'fake-token', true);
     devOpsPrAuthorClient.abandonPullRequest = vi.fn().mockResolvedValue(true);
@@ -65,8 +65,8 @@ describe('abandonPullRequestsWhereSourceRefIsDeleted', () => {
     });
   });
 
-  it('should not abandon pull requests when `skipPullRequests` is true', async () => {
-    taskInputs.skipPullRequests = true;
+  it('should not abandon pull requests when `dryRun` is true', async () => {
+    taskInputs.dryRun = true;
 
     await abandonPullRequestsWhereSourceRefIsDeleted(
       taskInputs,
