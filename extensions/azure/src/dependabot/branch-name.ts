@@ -34,7 +34,6 @@ export function getBranchNameForUpdate(
     branchName = `${dependencyNames}-${versionSuffix}`;
   }
 
-  // TODO: Add config for the branch prefix? Task V1 supported this via DEPENDABOT_BRANCH_NAME_PREFIX
   return sanitizeRef(
     [
       'dependabot',
