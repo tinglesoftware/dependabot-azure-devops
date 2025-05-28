@@ -210,12 +210,15 @@ export async function abandonPullRequestsWhereSourceRefIsDeleted(
           project: taskInputs.project,
           repository: taskInputs.repository,
           pullRequestId: pullRequest.id,
-          comment: taskInputs.commentPullRequests
-            ? "OK, I won't notify you again about this release, but will get in touch when a new version is available. " +
-              "If you'd rather skip all updates until the next major or minor version, add an " +
-              '[`ignore` condition](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#ignore--) ' +
-              'with the desired `update-types` to your config file.'
-            : undefined,
+          // comment:
+          //   "OK, I won't notify you again about this release, but will get in touch when a new version is available. " +
+          //   "If you'd rather skip all updates until the next major or minor version, add an " +
+          //   '[`ignore` condition](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#ignore--) ' +
+          //   'with the desired `update-types` to your config file.',
+          comment:
+            'It might be a good idea to add an ' +
+            '[`ignore` condition](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#ignore--) ' +
+            'with the desired `update-types` to your config file.',
         });
       }
 

@@ -276,7 +276,7 @@ export class DependabotOutputProcessor {
           project: project,
           repository: repository,
           pullRequestId: pullRequestToClose.id,
-          comment: this.taskInputs.commentPullRequests ? getPullRequestCloseReasonForOutputData(data) : undefined,
+          comment: getPullRequestCloseReasonForOutputData(data),
           deleteSourceBranch: true,
         });
       }

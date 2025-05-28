@@ -65,8 +65,6 @@ export interface ISharedVariables {
 
   /** Determines whether to skip creating/updating pull requests */
   skipPullRequests: boolean;
-  /** Determines whether to comment on pull requests which an explanation of the reason for closing */
-  commentPullRequests: boolean;
   /** Determines whether to abandon unwanted pull requests */
   abandonUnwantedPullRequests: boolean;
 
@@ -180,7 +178,6 @@ export default function getSharedVariables(): ISharedVariables {
   // Prepare other variables
   const securityAdvisoriesFile: string | undefined = tl.getInput('securityAdvisoriesFile');
   const skipPullRequests: boolean = tl.getBoolInput('skipPullRequests', false);
-  const commentPullRequests: boolean = tl.getBoolInput('commentPullRequests', false);
   const abandonUnwantedPullRequests: boolean = tl.getBoolInput('abandonUnwantedPullRequests', true);
 
   const dependabotCliPackage: string | undefined = tl.getInput('dependabotCliPackage');
@@ -228,7 +225,6 @@ export default function getSharedVariables(): ISharedVariables {
     securityAdvisoriesFile,
 
     skipPullRequests,
-    commentPullRequests,
     abandonUnwantedPullRequests,
 
     dependabotCliPackage,

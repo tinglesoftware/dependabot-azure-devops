@@ -58,6 +58,10 @@ describe('abandonPullRequestsWhereSourceRefIsDeleted', () => {
 
     expect(devOpsPrAuthorClient.abandonPullRequest).toHaveBeenCalledWith({
       pullRequestId: 1,
+      comment:
+        'It might be a good idea to add an ' +
+        '[`ignore` condition](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#ignore--) ' +
+        'with the desired `update-types` to your config file.',
     });
   });
 
