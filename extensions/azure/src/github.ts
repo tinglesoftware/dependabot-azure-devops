@@ -175,12 +175,10 @@ export class GitHubGraphClient {
    * Get the list of security vulnerabilities for a given package ecosystem and list of packages
    * @param packageEcosystem
    * @param packages
-   * @param privateVulnerabilities Private vulnerabilities
    */
   public async getSecurityVulnerabilitiesAsync(
     packageEcosystem: PackageEcosystem,
     packages: Package[],
-    privateVulnerabilities: SecurityVulnerability[],
   ): Promise<SecurityVulnerability[]> {
     // GitHub API doesn't support querying multiple package at once, so we need to make a request for each package individually.
     // To speed up the process, we can make the requests in parallel, 100 at a time. We batch the requests to avoid hitting the rate limit too quickly.
@@ -220,32 +218,7 @@ export class GitHubGraphClient {
       },
     );
 
-    const merged = privateVulnerabilities.concat(securityVulnerabilities);
-    return this.filter(merged);
-  }
-
-  public filter(securityVulnerabilities: SecurityVulnerability[]): SecurityVulnerability[] {
-    // Filter out vulnerabilities that have been withdrawn or that are not relevant the current version of the package
-    const affectedVulnerabilities = securityVulnerabilities
-      .filter((v) => !v.advisory.withdrawnAt)
-      .filter((v) => {
-        const pkg = v.package;
-        if (!pkg || !pkg.version || !v.vulnerableVersionRange) {
-          return false;
-        }
-
-        /**
-         * The vulnerable version range follows a basic syntax with a few forms:
-         *   `= 0.2.0` denotes a single vulnerable version
-         *   `<= 1.0.8` denotes a version range up to and including the specified version
-         *   `< 0.1.11` denotes a version range up to, but excluding, the specified version
-         *   `>= 4.3.0, < 4.3.5` denotes a version range with a known minimum and maximum version
-         *   `>= 0.0.1` denotes a version range with a known minimum, but no known maximum
-         */
-        const versionRangeRequirements = v.vulnerableVersionRange.split(',').map((v) => v.trim());
-        return versionRangeRequirements.every((r) => pkg.version && semver.satisfies(pkg.version, r));
-      });
-    return affectedVulnerabilities;
+    return securityVulnerabilities;
   }
 
   /**
@@ -272,4 +245,28 @@ export class GitHubGraphClient {
     }
     return results;
   }
+}
+
+export function filterVulnerabilities(securityVulnerabilities: SecurityVulnerability[]): SecurityVulnerability[] {
+  // Filter out vulnerabilities that have been withdrawn or that are not relevant the current version of the package
+  const affectedVulnerabilities = securityVulnerabilities
+    .filter((v) => !v.advisory.withdrawnAt)
+    .filter((v) => {
+      const pkg = v.package;
+      if (!pkg || !pkg.version || !v.vulnerableVersionRange) {
+        return false;
+      }
+
+      /**
+       * The vulnerable version range follows a basic syntax with a few forms:
+       *   `= 0.2.0` denotes a single vulnerable version
+       *   `<= 1.0.8` denotes a version range up to and including the specified version
+       *   `< 0.1.11` denotes a version range up to, but excluding, the specified version
+       *   `>= 4.3.0, < 4.3.5` denotes a version range with a known minimum and maximum version
+       *   `>= 0.0.1` denotes a version range with a known minimum, but no known maximum
+       */
+      const versionRangeRequirements = v.vulnerableVersionRange.split(',').map((v) => v.trim());
+      return versionRangeRequirements.every((r) => pkg.version && semver.satisfies(pkg.version, r));
+    });
+  return affectedVulnerabilities;
 }
