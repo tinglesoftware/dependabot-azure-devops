@@ -65,8 +65,6 @@ describe('DependabotOutputProcessor', () => {
     });
 
     it('should process "update_dependency_list"', async () => {
-      taskInputs.storeDependencyList = true;
-
       const result = await processor.process(update, 'update_dependency_list', {
         ...data,
         dependencies: [],

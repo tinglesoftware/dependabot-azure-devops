@@ -183,15 +183,6 @@
     },
 
     {
-      "name": "storeDependencyList",
-      "type": "boolean",
-      "groupName": "advanced",
-      "label": "Monitor the discovered dependencies",
-      "defaultValue": false,
-      "required": false,
-      "helpMarkDown": "Determines if the last know dependency list information should be stored in the parent DevOps project properties. If enabled, the authenticated user must have the `Project & Team (Write)` permission for the project. Enabling this option improves performance when doing security-only updates. Defaults to `false`."
-    },
-    {
       "name": "targetProjectName",
       "type": "string",
       "groupName": "advanced",
