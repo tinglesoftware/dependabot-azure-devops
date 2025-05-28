@@ -201,8 +201,8 @@ export async function abandonPullRequestsWhereSourceRefIsDeleted(
       pullRequest.properties.find((x) => x.name === DEVOPS_PR_PROPERTY_MICROSOFT_GIT_SOURCE_REF_NAME)?.value,
     );
     if (pullRequestSourceRefName && !existingBranchNames.includes(pullRequestSourceRefName)) {
-      // The source branch for the pull request has been deleted; abandon the pull request (if configured to do so)
-      if (taskInputs.abandonUnwantedPullRequests) {
+      // The source branch for the pull request has been deleted; abandon the pull request (if manipulation is allowed)
+      if (!taskInputs.skipPullRequests) {
         warning(
           `Detected source branch for PR #${pullRequest.id} has been deleted; The pull request will be abandoned`,
         );

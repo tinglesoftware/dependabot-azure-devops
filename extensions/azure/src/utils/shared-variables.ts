@@ -65,8 +65,6 @@ export interface ISharedVariables {
 
   /** Determines whether to skip creating/updating pull requests */
   skipPullRequests: boolean;
-  /** Determines whether to abandon unwanted pull requests */
-  abandonUnwantedPullRequests: boolean;
 
   /** The dependabot-cli go package to use for updates. e.g. github.com/dependabot/cli/cmd/dependabot@latest */
   dependabotCliPackage?: string;
@@ -178,7 +176,6 @@ export default function getSharedVariables(): ISharedVariables {
   // Prepare other variables
   const securityAdvisoriesFile: string | undefined = tl.getInput('securityAdvisoriesFile');
   const skipPullRequests: boolean = tl.getBoolInput('skipPullRequests', false);
-  const abandonUnwantedPullRequests: boolean = tl.getBoolInput('abandonUnwantedPullRequests', true);
 
   const dependabotCliPackage: string | undefined = tl.getInput('dependabotCliPackage');
   const dependabotCliApiUrl: string | undefined = tl.getInput('dependabotCliApiUrl', false);
@@ -225,7 +222,6 @@ export default function getSharedVariables(): ISharedVariables {
     securityAdvisoriesFile,
 
     skipPullRequests,
-    abandonUnwantedPullRequests,
 
     dependabotCliPackage,
     dependabotCliApiUrl,

@@ -254,8 +254,8 @@ export class DependabotOutputProcessor {
       }
 
       case 'close_pull_request': {
-        if (!this.taskInputs.abandonUnwantedPullRequests) {
-          warning(`Skipping pull request closure as 'abandonUnwantedPullRequests' is set to 'false'`);
+        if (this.taskInputs.skipPullRequests) {
+          warning(`Skipping pull request closure as 'skipPullRequests' is set to 'true'`);
           return true;
         }
 
