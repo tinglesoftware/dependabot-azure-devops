@@ -16,10 +16,7 @@ public static class JsonSerializerOptionsExtensions
         options.AllowTrailingCommas = true;
         options.ReadCommentHandling = JsonCommentHandling.Skip;
 
-        options.Converters.Add(
-            new Tingle.Extensions.Primitives.Converters.JsonStringEnumMemberConverter(
-                namingPolicy: options.PropertyNamingPolicy,
-                allowIntegerValues: true));
+        options.TypeInfoResolverChain.Insert(0, Tingle.Dependabot.DependabotSerializerContext.Default);
 
         return options;
     }

@@ -2,13 +2,10 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Tingle.Dependabot.Events;
 using Tingle.Dependabot.Models;
 using Tingle.Dependabot.Models.Dependabot;
 using Tingle.Dependabot.Models.Management;
 using Tingle.Dependabot.PeriodicTasks;
-using Tingle.EventBus;
-using Tingle.EventBus.Transports.InMemory;
 using Xunit;
 
 namespace Tingle.Dependabot.Tests.PeriodicTasks;
@@ -19,9 +16,9 @@ public class UpdateJobsCleanerTaskTests(ITestOutputHelper outputHelper)
     private const string RepositoryId = "repo_1234567890";
 
     [Fact]
-    public async Task CleanupAsync_ResolvesJobs()
+    public async Task DeleteHangingAsync_Works()
     {
-        await TestAsync(async (harness, context, pt) =>
+        await TestAsync(async (context, pt) =>
         {
             var targetId = Guid.NewGuid().ToString();
             await context.UpdateJobs.AddAsync(new UpdateJob
@@ -32,6 +29,7 @@ public class UpdateJobsCleanerTaskTests(ITestOutputHelper outputHelper)
                 RepositorySlug = "test-repo",
                 Created = DateTimeOffset.UtcNow.AddMinutes(-19),
                 PackageEcosystem = "npm",
+                PackageManager = "npm_and_yarn",
                 Directory = "/",
                 Directories = null,
                 Resources = new(0.25, 0.2),
@@ -46,11 +44,12 @@ public class UpdateJobsCleanerTaskTests(ITestOutputHelper outputHelper)
                 RepositorySlug = "test-repo",
                 Created = DateTimeOffset.UtcNow.AddHours(-100),
                 PackageEcosystem = "nuget",
+                PackageManager = "nuget",
                 Directory = "/",
                 Directories = null,
                 Resources = new(0.25, 0.2),
                 AuthKey = Guid.NewGuid().ToString("n"),
-                Status = UpdateJobStatus.Succeeded,
+                Status = UpdateJobStatus.Running,
             }, TestContext.Current.CancellationToken);
             await context.UpdateJobs.AddAsync(new UpdateJob
             {
@@ -60,29 +59,24 @@ public class UpdateJobsCleanerTaskTests(ITestOutputHelper outputHelper)
                 RepositorySlug = "test-repo",
                 Created = DateTimeOffset.UtcNow.AddMinutes(-30),
                 PackageEcosystem = "docker",
+                PackageManager = "docker",
                 Directory = null,
                 Directories = ["**/*"],
                 Resources = new(0.25, 0.2),
                 AuthKey = Guid.NewGuid().ToString("n"),
-                Status = UpdateJobStatus.Running,
+                Status = UpdateJobStatus.Succeeded,
             }, TestContext.Current.CancellationToken);
             await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-            await pt.CleanupAsync(TestContext.Current.CancellationToken);
-
-            // Ensure the message was published
-            var evt_context = Assert.IsType<EventContext<UpdateJobCheckStateEvent>>(
-                Assert.Single(await harness.PublishedAsync(cancellationToken: TestContext.Current.CancellationToken)));
-            var inner = evt_context.Event;
-            Assert.NotNull(inner);
-            Assert.Equal(targetId, inner.JobId);
+            await pt.DeleteHangingAsync(TestContext.Current.CancellationToken);
+            Assert.Equal(2, await context.UpdateJobs.CountAsync(TestContext.Current.CancellationToken));
         });
     }
 
     [Fact]
-    public async Task CleanupAsync_DeletesOldJobsAsync()
+    public async Task DeleteOldJobsAsync_Works()
     {
-        await TestAsync(async (harness, context, pt) =>
+        await TestAsync(async (context, pt) =>
         {
             await context.UpdateJobs.AddAsync(new UpdateJob
             {
@@ -92,6 +86,7 @@ public class UpdateJobsCleanerTaskTests(ITestOutputHelper outputHelper)
                 RepositorySlug = "test-repo",
                 Created = DateTimeOffset.UtcNow.AddDays(-80),
                 PackageEcosystem = "npm",
+                PackageManager = "npm_and_yarn",
                 Directory = "/",
                 Directories = null,
                 Resources = new(0.25, 0.2),
@@ -105,6 +100,7 @@ public class UpdateJobsCleanerTaskTests(ITestOutputHelper outputHelper)
                 RepositorySlug = "test-repo",
                 Created = DateTimeOffset.UtcNow.AddDays(-100),
                 PackageEcosystem = "nuget",
+                PackageManager = "nuget",
                 Directory = "/",
                 Directories = null,
                 Resources = new(0.25, 0.2),
@@ -118,6 +114,7 @@ public class UpdateJobsCleanerTaskTests(ITestOutputHelper outputHelper)
                 RepositorySlug = "test-repo",
                 Created = DateTimeOffset.UtcNow.AddDays(-120),
                 PackageEcosystem = "docker",
+                PackageManager = "docker",
                 Directory = null,
                 Directories = ["**/*"],
                 Resources = new(0.25, 0.2),
@@ -125,24 +122,24 @@ public class UpdateJobsCleanerTaskTests(ITestOutputHelper outputHelper)
             }, TestContext.Current.CancellationToken);
             await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-            await pt.CleanupAsync(TestContext.Current.CancellationToken);
+            await pt.DeleteOldJobsAsync(TestContext.Current.CancellationToken);
             Assert.Equal(1, await context.UpdateJobs.CountAsync(TestContext.Current.CancellationToken));
         });
     }
 
-    private async Task TestAsync(Func<InMemoryTestHarness, MainDbContext, UpdateJobsCleanerTask, Task> executeAndVerify)
+    private async Task TestAsync(Func<MainDbContext, UpdateJobsCleanerTask, Task> executeAndVerify)
     {
+        using var dbFixture = new DbFixture();
+
         var host = Host.CreateDefaultBuilder()
                        .ConfigureLogging(builder => builder.AddXUnit(outputHelper))
                        .ConfigureServices((context, services) =>
                        {
-                           var dbName = Guid.NewGuid().ToString();
                            services.AddDbContext<MainDbContext>(options =>
                            {
-                               options.UseInMemoryDatabase(dbName, o => o.EnableNullChecks());
+                               options.UseSqlite(dbFixture.ConnectionString);
                                options.EnableDetailedErrors();
                            });
-                           services.AddEventBus(builder => builder.AddInMemoryTransport().AddInMemoryTestHarness());
                        })
                        .Build();
 
@@ -150,16 +147,19 @@ public class UpdateJobsCleanerTaskTests(ITestOutputHelper outputHelper)
         var provider = scope.ServiceProvider;
 
         var context = provider.GetRequiredService<MainDbContext>();
-        await context.Database.EnsureCreatedAsync();
+        await context.Database.MigrateAsync();
 
         await context.Projects.AddAsync(new Project
         {
             Id = ProjectId,
             Url = "https://dev.azure.com/dependabot/dependabot",
             Token = "token",
+            UserId = "6ce954b1-ce1f-45d1-b94d-e6bf2464ba2c",
             Name = "dependabot",
             ProviderId = "6ce954b1-ce1f-45d1-b94d-e6bf2464ba2c",
             Password = "burp-bump",
+            AutoApprove = new(),
+            AutoComplete = new(),
         });
         await context.Repositories.AddAsync(new Repository
         {
@@ -196,21 +196,7 @@ public class UpdateJobsCleanerTaskTests(ITestOutputHelper outputHelper)
         });
         await context.SaveChangesAsync();
 
-        var harness = provider.GetRequiredService<InMemoryTestHarness>();
-        await harness.StartAsync();
-
-        try
-        {
-            var pt = ActivatorUtilities.GetServiceOrCreateInstance<UpdateJobsCleanerTask>(provider);
-
-            await executeAndVerify(harness, context, pt);
-
-            // Ensure there were no publish failures
-            Assert.Empty(await harness.FailedAsync());
-        }
-        finally
-        {
-            await harness.StopAsync();
-        }
+        var pt = ActivatorUtilities.GetServiceOrCreateInstance<UpdateJobsCleanerTask>(provider);
+        await executeAndVerify(context, pt);
     }
 }

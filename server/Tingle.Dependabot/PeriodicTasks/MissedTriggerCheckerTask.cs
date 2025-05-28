@@ -54,8 +54,8 @@ internal class MissedTriggerCheckerTask(MainDbContext dbContext, IEventPublisher
                     {
                         logger.ScheduleTriggerMissed(repositoryId: repository.Id, updateId: repository.Updates.IndexOf(update), projectId: project.Id);
 
-                        // publish event for the job to be run
-                        var evt = new TriggerUpdateJobsEvent
+                        // publish event to run the job
+                        var evt = new RunUpdateJobEvent
                         {
                             ProjectId = repository.ProjectId,
                             RepositoryId = repository.Id,

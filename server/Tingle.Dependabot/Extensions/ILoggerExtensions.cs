@@ -1,5 +1,4 @@
 ﻿using Tingle.Dependabot.Models.Azure;
-using Tingle.Dependabot.Models.Management;
 
 namespace Microsoft.Extensions.Logging;
 
@@ -79,17 +78,20 @@ internal static partial class ILoggerExtensions
     [LoggerMessage(500, LogLevel.Information, "Written job definition file for {UpdateJobId} at {JobDefinitionPath}")]
     public static partial void WrittenJobDefinitionFile(this ILogger logger, string? updateJobId, string? jobDefinitionPath);
 
-    [LoggerMessage(501, LogLevel.Information, "Created ContainerApp Job for {UpdateJobId}")]
-    public static partial void CreatedContainerAppJob(this ILogger logger, string? updateJobId);
+    [LoggerMessage(501, LogLevel.Information, "Written proxy config file for {UpdateJobId} at {ProxyConfigPath}")]
+    public static partial void WrittenProxyConfigFile(this ILogger logger, string? updateJobId, string? proxyConfigPath);
 
-    [LoggerMessage(502, LogLevel.Information, "Started ContainerApp Job for {UpdateJobId}")]
-    public static partial void StartedContainerAppJob(this ILogger logger, string? updateJobId);
+    [LoggerMessage(502, LogLevel.Information, "Created Proxy container for {UpdateJobId}. Container: {ContainerId}")]
+    public static partial void CreatedProxyContainer(this ILogger logger, string updateJobId, string containerId);
 
-    [LoggerMessage(503, LogLevel.Information, "Created Docker Container Job for {UpdateJobId}")]
-    public static partial void CreatedDockerContainerJob(this ILogger logger, string? updateJobId);
+    [LoggerMessage(503, LogLevel.Information, "Started Proxy container for {UpdateJobId}")]
+    public static partial void StartedProxyContainer(this ILogger logger, string updateJobId);
 
-    [LoggerMessage(504, LogLevel.Information, "Started Docker Container Job for {UpdateJobId}")]
-    public static partial void StartedDockerContainerJob(this ILogger logger, string? updateJobId);
+    [LoggerMessage(504, LogLevel.Information, "Created Updater container for {UpdateJobId}. Container: {ContainerId}")]
+    public static partial void CreatedUpdaterContainer(this ILogger logger, string updateJobId, string containerId);
+
+    [LoggerMessage(505, LogLevel.Information, "Started Updater container for {UpdateJobId}")]
+    public static partial void StartedUpdaterContainer(this ILogger logger, string updateJobId);
 
     #endregion
 
@@ -101,39 +103,42 @@ internal static partial class ILoggerExtensions
     [LoggerMessage(601, LogLevel.Warning, "Cannot update state for job '{UpdateJobId}' as it is already in a terminal state.")]
     public static partial void UpdateJobCannotUpdateStateTerminalState(this ILogger logger, string? updateJobId);
 
-    [LoggerMessage(602, LogLevel.Information, "The runner did not provide a state for job '{UpdateJobId}'.")]
-    public static partial void UpdateJobRunnerNoState(this ILogger logger, string? updateJobId);
+    [LoggerMessage(602, LogLevel.Information, "Removed {UpdateJobsCount} jobs stale since {Cutoff}")]
+    public static partial void UpdateJobRemovedStaleJobs(this ILogger logger, int updateJobsCount, DateTimeOffset cutoff);
 
-    [LoggerMessage(603, LogLevel.Warning, "Deleting job '{UpdateJobId}' as it has been pending for more than 90 minutes.")]
-    public static partial void UpdateJobPendingTooLong(this ILogger logger, string? updateJobId);
-
-    [LoggerMessage(604, LogLevel.Warning, "Cannot collect logs for job '{UpdateJobId}' as it does not exist.")]
-    public static partial void UpdateJobCannotCollectLogsNotFound(this ILogger logger, string? updateJobId);
-
-    [LoggerMessage(605, LogLevel.Warning, "Cannot collect logs for job '{UpdateJobId}' with status '{UpdateJobStatus}'.")]
-    public static partial void UpdateJobCannotCollectLogsInvalidStatus(this ILogger logger, string? updateJobId, UpdateJobStatus updateJobStatus);
-
-    [LoggerMessage(606, LogLevel.Information, "Found {UpdateJobsCount} jobs that are still pending for more than 10 min. Requesting manual resolution ...")]
-    public static partial void UpdateJobRequestingManualResolution(this ILogger logger, int updateJobsCount);
-
-    [LoggerMessage(607, LogLevel.Information, "Removed {UpdateJobsCount} jobs that older than {Cutoff}")]
+    [LoggerMessage(603, LogLevel.Information, "Removed {UpdateJobsCount} jobs older than {Cutoff}")]
     public static partial void UpdateJobRemovedOldJobs(this ILogger logger, int updateJobsCount, DateTimeOffset cutoff);
+
+    [LoggerMessage(604, LogLevel.Warning, "Skipping trigger for update because project '{ProjectId}' does not exist.")]
+    public static partial void SkippingTriggerProjectNotFound(this ILogger logger, string projectId);
+
+    [LoggerMessage(605, LogLevel.Warning, "Skipping trigger for update because repository '{RepositoryId}' in project '{ProjectId}' does not exist.")]
+    public static partial void SkippingTriggerRepositoryNotFound(this ILogger logger, string repositoryId, string? projectId);
+
+    [LoggerMessage(606, LogLevel.Warning, "Skipping trigger for update because repository update '{RepositoryId}({RepositoryUpdateId})' in project '{ProjectId}' does not exist.")]
+    public static partial void SkippingTriggerRepositoryUpdateNotFound(this ILogger logger, string repositoryId, int repositoryUpdateId, string? projectId);
+
+    [LoggerMessage(607, LogLevel.Warning, "A job for update '{RepositoryId}({RepositoryUpdateId})' in project '{ProjectId}' requested by event '{EventBusId}' already exists. Skipping it ...")]
+    public static partial void SkippingTriggerJobAlreadyExists(this ILogger logger, string? repositoryId, int repositoryUpdateId, string? projectId, string? eventBusId);
+
+    [LoggerMessage(608, LogLevel.Information, "Pulling image: {Image}")]
+    public static partial void PullImage(this ILogger logger, string image);
+
+    [LoggerMessage(609, LogLevel.Information, "Using image {Image} at {Digest}")]
+    public static partial void UsingImage(this ILogger logger, string image, string digest);
 
     #endregion
 
-    #region Update Jobs (7xx)
+    #region Certificates (7xx)
 
-    [LoggerMessage(700, LogLevel.Warning, "Skipping trigger for update because project '{ProjectId}' does not exist.")]
-    public static partial void SkippingTriggerProjectNotFound(this ILogger logger, string projectId);
+    [LoggerMessage(701, LogLevel.Information, "Cert file (or its key file) is missing. A new one shall be generated.")]
+    public static partial void ProxyCertificatesMissing(this ILogger logger);
 
-    [LoggerMessage(701, LogLevel.Warning, "Skipping trigger for update because repository '{RepositoryId}' in project '{ProjectId}' does not exist.")]
-    public static partial void SkippingTriggerRepositoryNotFound(this ILogger logger, string repositoryId, string? projectId);
+    [LoggerMessage(702, LogLevel.Information, "Existing certificate is expired ({NotAfter}). A new one shall be generated.")]
+    public static partial void ProxyCertificatesExpired(this ILogger logger, DateTime notAfter);
 
-    [LoggerMessage(702, LogLevel.Warning, "Skipping trigger for update because repository update '{RepositoryId}({RepositoryUpdateId})' in project '{ProjectId}' does not exist.")]
-    public static partial void SkippingTriggerRepositoryUpdateNotFound(this ILogger logger, string repositoryId, int repositoryUpdateId, string? projectId);
-
-    [LoggerMessage(703, LogLevel.Warning, "A job for update '{RepositoryId}({RepositoryUpdateId})' in project '{ProjectId}' requested by event '{EventBusId}' already exists. Skipping it ...")]
-    public static partial void SkippingTriggerJobAlreadyExists(this ILogger logger, string? repositoryId, int repositoryUpdateId, string? projectId, string? eventBusId);
+    [LoggerMessage(703, LogLevel.Warning, "Loading existing certificate failed. A new one shall be generated.")]
+    public static partial void ProxyCertificatesLoadingFailed(this ILogger logger, Exception ex);
 
     #endregion
 }

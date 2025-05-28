@@ -1,7 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 using Tingle.Dependabot.Events;
 using Tingle.Dependabot.Models;
+using Tingle.Dependabot.Models.Azure;
 using Tingle.Dependabot.Models.Dependabot;
 using Tingle.Dependabot.Models.Management;
 using Tingle.EventBus;
@@ -11,7 +13,17 @@ using YamlDotNet.Serialization.NamingConventions;
 
 namespace Tingle.Dependabot.Workflow;
 
-internal class Synchronizer(MainDbContext dbContext, AzureDevOpsProvider adoProvider, IEventPublisher publisher, ILogger<Synchronizer> logger)
+public interface ISynchronizer
+{
+    Task SynchronizeAsync(Project project, bool trigger, CancellationToken cancellationToken = default);
+    Task SynchronizeAsync(Project project, Repository repository, bool trigger, CancellationToken cancellationToken = default);
+    Task SynchronizeAsync(Project project, string? repositoryProviderId, bool trigger, CancellationToken cancellationToken = default);
+}
+
+internal class Synchronizer(MainDbContext dbContext,
+                            IAzureDevOpsProvider adoProvider,
+                            IEventPublisher publisher,
+                            ILogger<Synchronizer> logger) : ISynchronizer
 {
     private readonly IDeserializer yamlDeserializer = new DeserializerBuilder().WithNamingConvention(HyphenatedNamingConvention.Instance)
                                                                                .IgnoreUnmatchedProperties()
@@ -28,7 +40,7 @@ internal class Synchronizer(MainDbContext dbContext, AzureDevOpsProvider adoProv
 
         // update the project (it may have changed name or visibility)
         var tp = await adoProvider.GetProjectAsync(project, cancellationToken);
-        var @private = tp.Visibility is not Models.Azure.AzdoProjectVisibility.Public;
+        var @private = tp.Visibility is not AzdoProjectVisibility.Public;
         if (!string.Equals(project.Name, tp.Name, StringComparison.Ordinal)
             || !string.Equals(project.Description, tp.Description, StringComparison.Ordinal)
             || @private != project.Private)
@@ -77,19 +89,10 @@ internal class Synchronizer(MainDbContext dbContext, AzureDevOpsProvider adoProv
         // remove repositories that are no longer tracked (i.e. the repository was removed)
         var providerIdsToKeep = syncPairs.Where(p => p.Item1.HasConfiguration).Select(p => p.Item1.Id).ToList();
         var toDeleteQuery = dbContext.Repositories.Where(r => !providerIdsToKeep.Contains(r.ProviderId!));
-        int deleted = -1;
-        if (dbContext.SupportsBulk)
-        {
-            deleted = await toDeleteQuery.ExecuteDeleteAsync(cancellationToken);
-        }
-        else
-        {
-            var deletable = await toDeleteQuery.ToListAsync(cancellationToken);
-            dbContext.RemoveRange(deletable);
-            await dbContext.SaveChangesAsync(cancellationToken);
-            deleted = deletable.Count;
-        }
-        if (deleted > 0) logger.SyncDeletedRepositories(deleted, project.Id);
+        var deletable = await toDeleteQuery.ToListAsync(cancellationToken);
+        dbContext.RemoveRange(deletable);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        if (deletable.Count > 0) logger.SyncDeletedRepositories(deletable.Count, project.Id);
 
         // synchronize each repository
         foreach (var (pi, repository) in syncPairs)
@@ -260,16 +263,32 @@ internal class Synchronizer(MainDbContext dbContext, AzureDevOpsProvider adoProv
 
             if (trigger)
             {
-                // trigger update jobs for the whole repository
-                var evt = new TriggerUpdateJobsEvent
+                // publish events to run update jobs for the whole repository
+                var evts = repository.Updates.Select((update, index) => new RunUpdateJobEvent
                 {
                     ProjectId = project.Id,
                     RepositoryId = repository.Id,
-                    RepositoryUpdateId = null, // run all
+                    RepositoryUpdateId = index,
                     Trigger = UpdateJobTrigger.Synchronization,
-                };
-                await publisher.PublishAsync(evt, cancellationToken: cancellationToken);
+                }).ToList();
+
+                await publisher.PublishAsync<RunUpdateJobEvent>(evts, cancellationToken: cancellationToken);
             }
         }
     }
+}
+
+public readonly record struct SynchronizerConfigurationItem(string Id, string Name, string Slug, string? CommitId, string? Content)
+{
+    public SynchronizerConfigurationItem(string slug, AzdoRepository repo, AzdoRepositoryItem? item)
+        : this(Id: repo.Id,
+               Name: repo.Name,
+               Slug: slug,
+               CommitId: item?.LatestProcessedChange.CommitId,
+               Content: item?.Content)
+    { }
+
+    [MemberNotNullWhen(true, nameof(CommitId))]
+    [MemberNotNullWhen(true, nameof(Content))]
+    public bool HasConfiguration => !string.IsNullOrEmpty(CommitId) && !string.IsNullOrEmpty(Content);
 }

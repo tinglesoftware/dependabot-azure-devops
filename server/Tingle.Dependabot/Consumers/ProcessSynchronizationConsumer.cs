@@ -6,7 +6,7 @@ using Tingle.EventBus;
 
 namespace Tingle.Dependabot.Consumers;
 
-internal class ProcessSynchronizationConsumer(MainDbContext dbContext, Synchronizer synchronizer, ILogger<ProcessSynchronizationConsumer> logger) : IEventConsumer<ProcessSynchronization>
+internal class ProcessSynchronizationConsumer(MainDbContext dbContext, ISynchronizer synchronizer, ILogger<ProcessSynchronizationConsumer> logger) : IEventConsumer<ProcessSynchronization>
 {
     public async Task ConsumeAsync(EventContext<ProcessSynchronization> context, CancellationToken cancellationToken = default)
     {

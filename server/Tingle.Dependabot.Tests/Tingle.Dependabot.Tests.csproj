@@ -13,7 +13,6 @@
     <PackageReference Include="coverlet.collector" Version="6.0.4" PrivateAssets="All" />
     <PackageReference Include="MartinCostello.Logging.XUnit.v3" Version="0.5.1" />
     <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="9.0.4" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.4" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.0.2" PrivateAssets="All" />
     <PackageReference Include="xunit.v3" Version="2.0.1" />

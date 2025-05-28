@@ -1,50 +1,51 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Tingle.Dependabot.Events;
 using Tingle.Dependabot.Models;
 using Tingle.Dependabot.Models.Management;
-using Tingle.EventBus;
 using Tingle.PeriodicTasks;
 
 namespace Tingle.Dependabot.PeriodicTasks;
 
-internal class UpdateJobsCleanerTask(MainDbContext dbContext, IEventPublisher publisher, ILogger<MissedTriggerCheckerTask> logger) : IPeriodicTask
+internal class UpdateJobsCleanerTask(MainDbContext dbContext, ILogger<MissedTriggerCheckerTask> logger) : IPeriodicTask
 {
     public async Task ExecuteAsync(PeriodicTaskExecutionContext context, CancellationToken cancellationToken)
     {
-        await CleanupAsync(cancellationToken);
+        await DeleteHangingAsync(cancellationToken);
+        await DeleteOldJobsAsync(cancellationToken);
     }
 
-    internal virtual async Task CleanupAsync(CancellationToken cancellationToken = default)
+    internal virtual async Task DeleteHangingAsync(CancellationToken cancellationToken = default)
     {
-        // resolve pending jobs
-
-        // Change this to 3 hours once we have figured out how to get events from Azure
-        var oldest = DateTimeOffset.UtcNow.AddMinutes(-10); // older than 10 minutes
+        // delete jobs that have been running for over 180 minutes
+        var cutoff = DateTimeOffset.UtcNow.AddMinutes(-180);
         var jobs = await (from j in dbContext.UpdateJobs
-                          where j.Created <= oldest
-                          where j.Status == UpdateJobStatus.Scheduled || j.Status == UpdateJobStatus.Running
+                          where j.Created <= cutoff
+                          where j.Status == UpdateJobStatus.Running
                           orderby j.Created ascending
                           select j).Take(100).ToListAsync(cancellationToken);
 
-        if (jobs.Count > 0)
-        {
-            logger.UpdateJobRequestingManualResolution(jobs.Count);
+        foreach (var job in jobs) dbContext.Remove(job);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        logger.UpdateJobRemovedStaleJobs(jobs.Count, cutoff);
+    }
 
-            var events = jobs.Select(j => new UpdateJobCheckStateEvent { JobId = j.Id, }).ToList();
-            await publisher.PublishAsync<UpdateJobCheckStateEvent>(events, cancellationToken: cancellationToken);
-        }
-
+    internal virtual async Task DeleteOldJobsAsync(CancellationToken cancellationToken = default)
+    {
         // delete old jobs
         var cutoff = DateTimeOffset.UtcNow.AddDays(-90);
-        jobs = await (from j in dbContext.UpdateJobs
-                      where j.Created <= cutoff
-                      orderby j.Created ascending
-                      select j).Take(100).ToListAsync(cancellationToken);
-        if (jobs.Count > 0)
+        var jobs = await (from j in dbContext.UpdateJobs
+                          where j.Created <= cutoff
+                          orderby j.Created ascending
+                          select j).Take(100).ToListAsync(cancellationToken);
+
+        foreach (var job in jobs)
         {
-            dbContext.UpdateJobs.RemoveRange(jobs);
-            await dbContext.SaveChangesAsync(cancellationToken);
-            logger.UpdateJobRemovedOldJobs(jobs.Count, cutoff);
+            // remove associated files
+            job.DeleteFiles();
+
+            // remove the record
+            dbContext.UpdateJobs.Remove(job);
         }
+        await dbContext.SaveChangesAsync(cancellationToken);
+        logger.UpdateJobRemovedOldJobs(jobs.Count, cutoff);
     }
 }
