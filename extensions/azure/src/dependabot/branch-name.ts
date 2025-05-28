@@ -4,9 +4,9 @@ export function getBranchNameForUpdate(
   packageEcosystem: string,
   targetBranchName: string,
   directory: string,
-  dependencyGroupName: string,
+  dependencyGroupName: string | undefined,
   dependencies: Record<string, unknown>[],
-  separator?: string,
+  separator: string = '/',
 ): string {
   // Based on dependabot-core implementation:
   // https://github.com/dependabot/dependabot-core/blob/main/common/lib/dependabot/pull_request_creator/branch_namer/solo_strategy.rb
@@ -28,17 +28,27 @@ export function getBranchNameForUpdate(
     const dependencyNames = dependencies
       .map((d) => d['dependency-name'])
       .join('-and-')
-      .replace(/[:\[\]]/g, '-') // Replace `:` and `[]` with `-`
+      .replace(/[:[]]/g, '-') // Replace `:` and `[]` with `-`
       .replace(/@/g, ''); // Remove `@`
     const versionSuffix = dependencies[0]?.['removed'] ? 'removed' : dependencies[0]?.['dependency-version'];
     branchName = `${dependencyNames}-${versionSuffix}`;
   }
 
   // TODO: Add config for the branch prefix? Task V1 supported this via DEPENDABOT_BRANCH_NAME_PREFIX
-  return sanitizeRef(['dependabot', packageEcosystem, targetBranchName, directory, branchName], separator || '/');
+  return sanitizeRef(
+    [
+      'dependabot',
+      packageEcosystem,
+      targetBranchName,
+      // normalize directory to remove leading/trailing slashes and replace remaining ones with the separator
+      `${directory}`.replace(/^\/+|\/+$/g, '').replace(/\//g, separator),
+      branchName,
+    ],
+    separator,
+  );
 }
 
-function sanitizeRef(refParts: string[], separator): string {
+export function sanitizeRef(refParts: string[], separator: string): string {
   // Based on dependabot-core implementation:
   // https://github.com/dependabot/dependabot-core/blob/fc31ae64f492dc977cfe6773ab13fb6373aabec4/common/lib/dependabot/pull_request_creator/branch_namer/base.rb#L99
 
@@ -51,7 +61,7 @@ function sanitizeRef(refParts: string[], separator): string {
       .filter((p) => p?.trim()?.length > 0)
       .join(separator)
       // Remove forbidden characters (those not already replaced elsewhere)
-      .replace(/[^A-Za-z0-9\/\-_.(){}]/g, '')
+      .replace(/[^A-Za-z0-9/\-_.(){}]/g, '')
       // Slashes can't be followed by periods
       .replace(/\/\./g, '/dot-')
       // Squeeze out consecutive periods and slashes
