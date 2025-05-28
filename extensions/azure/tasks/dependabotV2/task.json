@@ -66,16 +66,6 @@
       "helpMarkDown": "When set to `true` pull requests that are no longer needed are closed at the tail end of the execution. Defaults to `false`."
     },
     {
-      "name": "commentPullRequests",
-      "type": "boolean",
-      "groupName": "pull_requests",
-      "label": "Comment on abandoned pull requests with close reason.",
-      "defaultValue": false,
-      "required": false,
-      "helpMarkDown": "When set to `true` a comment will be added to abandoned pull requests explanating why it was closed. Defaults to `false`.",
-      "visibleRule": "abandonUnwantedPullRequests=true"
-    },
-    {
       "name": "setAutoComplete",
       "type": "boolean",
       "groupName": "pull_requests",
