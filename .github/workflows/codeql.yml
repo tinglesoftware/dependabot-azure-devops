@@ -40,6 +40,10 @@ jobs:
       actions: read
       contents: read
 
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.language}}
+      cancel-in-progress: true
+
     strategy:
       fail-fast: false
       matrix:
