@@ -80,6 +80,7 @@ export class DependabotOutputProcessor {
     const project = this.taskInputs.project;
     const repository = this.taskInputs.repository;
     const packageManager = update?.job?.['package-manager'];
+    const targetMilestoneIds = this.taskInputs.targetMilestoneIds;
 
     section(`Processing '${type}'`);
     if (this.debug) {
@@ -186,7 +187,7 @@ export class DependabotOutputProcessor {
             : undefined,
           assignees: update.config.assignees,
           labels: update.config.labels?.map((label) => label?.trim()) || [],
-          workItems: update.config.milestone ? [update.config.milestone] : [],
+          workItems: targetMilestoneIds ? targetMilestoneIds : update.config.milestone ? [update.config.milestone] : [],
           changes: changedFiles,
           properties: buildPullRequestProperties(packageManager, dependencies),
         });

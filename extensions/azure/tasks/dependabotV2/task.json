@@ -184,6 +184,15 @@
       "helpMarkDown": "Determines if the last know dependency list information should be stored in the parent DevOps project properties. If enabled, the authenticated user must have the `Project & Team (Write)` permission for the project. Enabling this option improves performance when doing security-only updates. Defaults to `false`."
     },
     {
+      "name": "targetMilestoneIds",
+      "type": "string",
+      "groupName": "advanced",
+      "label": "Semicolon delimited list of milestone IDs.",
+      "defaultValue": "",
+      "required": false,
+      "helpMarkDown": "A semicolon (`;`) delimited list of milestone IDs which will override, if defined, the `milestone` value from `dependabot.yml` file. Useful when dynamic milestone IDs should be used instead of hardcoded values from `dependabot.yml` file."
+    },
+    {
       "name": "targetProjectName",
       "type": "string",
       "groupName": "advanced",
