@@ -256,7 +256,6 @@ export class AzureDevOpsWebApiClient {
           labels: pr.labels?.map((label) => {
             return { name: label };
           }),
-          isDraft: false, // TODO: Add config for this?
         },
       );
       if (!pullRequest?.pullRequestId) {
