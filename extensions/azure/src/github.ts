@@ -79,14 +79,12 @@ export const SecurityAdvisorySeveritySchema = z.enum(['LOW', 'MODERATE', 'HIGH',
 export type SecurityAdvisorySeverity = z.infer<typeof SecurityAdvisorySeveritySchema>;
 
 export const SecurityAdvisorySchema = z.object({
-  identifiers: z
-    .array(
-      z.object({
-        type: z.union([SecurityAdvisoryIdentifierSchema, z.string()]),
-        value: z.string(),
-      }),
-    )
-    .optional(),
+  identifiers: z.array(
+    z.object({
+      type: z.union([SecurityAdvisoryIdentifierSchema, z.string()]),
+      value: z.string(),
+    }),
+  ),
   severity: SecurityAdvisorySeveritySchema.optional(),
   summary: z.string(),
   description: z.string().optional(),

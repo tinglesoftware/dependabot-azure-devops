@@ -4,7 +4,13 @@
       "name": "Contoso.Utils"
     },
     "advisory": {
-      "summary": "Contoso.Utils versions before 3.0.1 are vulnerable to input validation issues"
+      "summary": "Contoso.Utils versions before 3.0.1 are vulnerable to input validation issues",
+      "identifiers": [
+        {
+          "type": "CVE",
+          "value": "CVE-2023-12345"
+        }
+      ]
     },
     "vulnerableVersionRange": "< 3.0.1",
     "firstPatchedVersion": {
