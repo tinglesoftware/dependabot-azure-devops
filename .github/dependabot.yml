@@ -79,9 +79,7 @@ updates:
       eslint:
         patterns:
           - '@eslint/*'
-          - '@typescript-eslint/*'
           - 'eslint'
-          - 'typescript-eslint'
       js-yaml:
         patterns:
           - '@types/js-yaml'
