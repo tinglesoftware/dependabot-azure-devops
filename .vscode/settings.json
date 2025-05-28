@@ -4,8 +4,11 @@
         "cooldown",
         "devcontainers",
         "fabrikam",
+        "fumadocs",
         "Kubernetes",
-        "tinglesoftware"
+        "paklo",
+        "tinglesoftware",
+        "vercel"
     ],
     "yaml.schemas": {
         "https://json.schemastore.org/github-issue-config.json": "file:///Users/maxwell/Documents/dependabot-azure-devops/.github/ISSUE_TEMPLATE/config.yml"
