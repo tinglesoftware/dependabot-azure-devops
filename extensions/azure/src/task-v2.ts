@@ -11,6 +11,7 @@ import { DependabotJobBuilder, mapPackageEcosystemToPackageManager } from './dep
 import { type IDependabotUpdateOperationResult } from './dependabot/models';
 import { DependabotOutputProcessor, parsePullRequestProperties } from './dependabot/output-processor';
 import {
+  filterVulnerabilities,
   getGhsaPackageEcosystemFromDependabotPackageManager,
   GitHubGraphClient,
   SecurityVulnerabilitySchema,
@@ -212,8 +213,8 @@ export async function abandonPullRequestsWhereSourceRefIsDeleted(
           repository: taskInputs.repository,
           pullRequestId: pullRequest.id,
           // comment:
-          //   "OK, I won't notify you again about this release, but will get in touch when a new version is available. " +
-          //   "If you'd rather skip all updates until the next major or minor version, add an " +
+          //   'OK, I won't notify you again about this release, but will get in touch when a new version is available. ' +
+          //   'If you'd rather skip all updates until the next major or minor version, add an ' +
           //   '[`ignore` condition](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#ignore--) ' +
           //   'with the desired `update-types` to your config file.',
           comment:
@@ -274,7 +275,7 @@ export async function performDependabotUpdatesAsync(
       );
 
       // Get the list of vulnerabilities that apply to the discovered dependencies
-      section(`GHSA dependency vulnerability check`);
+      section(`Dependency vulnerability check`);
       const packagesToCheckForVulnerabilities: Package[] = discoveredDependencyListOutputs
         ?.find((x) => x.output.type == 'update_dependency_list')
         ?.output?.data?.dependencies?.map((d) => ({ name: d.name, version: d.version }));
@@ -284,23 +285,31 @@ export async function performDependabotUpdatesAsync(
         );
 
         // parse security advisories from file (private)
-        let privateVulnerabilities: SecurityVulnerability[] | undefined;
         if (taskInputs.securityAdvisoriesFile) {
           const filePath = taskInputs.securityAdvisoriesFile;
           if (existsSync(filePath)) {
             const fileContents = await readFile(filePath, 'utf-8');
-            privateVulnerabilities = await SecurityVulnerabilitySchema.array().parseAsync(JSON.parse(fileContents));
+            securityVulnerabilities = await SecurityVulnerabilitySchema.array().parseAsync(JSON.parse(fileContents));
           } else {
             console.info(`Private security advisories file '${filePath}' does not exist`);
           }
         }
 
-        const ghsaClient = new GitHubGraphClient(taskInputs.githubAccessToken);
-        securityVulnerabilities = await ghsaClient.getSecurityVulnerabilitiesAsync(
-          getGhsaPackageEcosystemFromDependabotPackageManager(packageManager),
-          packagesToCheckForVulnerabilities || [],
-          privateVulnerabilities || [],
-        );
+        if (taskInputs.githubAccessToken) {
+          const ghsaClient = new GitHubGraphClient(taskInputs.githubAccessToken);
+          const githubVulnerabilities = await ghsaClient.getSecurityVulnerabilitiesAsync(
+            getGhsaPackageEcosystemFromDependabotPackageManager(packageManager),
+            packagesToCheckForVulnerabilities || [],
+          );
+          securityVulnerabilities.push(...githubVulnerabilities);
+        } else {
+          console.info(
+            'GitHub access token is not provided; Checking for vulnerabilities from GitHub is skipped. ' +
+              'This is not an issue if you are using private security advisories file.',
+          );
+        }
+
+        securityVulnerabilities = filterVulnerabilities(securityVulnerabilities);
 
         // Only update dependencies that have vulnerabilities
         dependencyNamesToUpdate = Array.from(new Set(securityVulnerabilities.map((v) => v.package.name)));
