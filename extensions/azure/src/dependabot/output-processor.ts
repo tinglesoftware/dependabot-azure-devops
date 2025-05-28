@@ -103,8 +103,8 @@ export class DependabotOutputProcessor {
       }
       case 'create_pull_request': {
         const title = data['pr-title'];
-        if (this.taskInputs.skipPullRequests) {
-          warning(`Skipping pull request creation of '${title}' as 'skipPullRequests' is set to 'true'`);
+        if (this.taskInputs.dryRun) {
+          warning(`Skipping pull request creation of '${title}' as 'dryRun' is set to 'true'`);
           return true;
         }
 
@@ -210,8 +210,8 @@ export class DependabotOutputProcessor {
       }
 
       case 'update_pull_request': {
-        if (this.taskInputs.skipPullRequests) {
-          warning(`Skipping pull request update as 'skipPullRequests' is set to 'true'`);
+        if (this.taskInputs.dryRun) {
+          warning(`Skipping pull request update as 'dryRun' is set to 'true'`);
           return true;
         }
 
@@ -254,8 +254,8 @@ export class DependabotOutputProcessor {
       }
 
       case 'close_pull_request': {
-        if (this.taskInputs.skipPullRequests) {
-          warning(`Skipping pull request closure as 'skipPullRequests' is set to 'true'`);
+        if (this.taskInputs.dryRun) {
+          warning(`Skipping pull request closure as 'dryRun' is set to 'true'`);
           return true;
         }
 

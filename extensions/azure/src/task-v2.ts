@@ -203,8 +203,8 @@ export async function abandonPullRequestsWhereSourceRefIsDeleted(
       pullRequest.properties?.find((x) => x.name === DEVOPS_PR_PROPERTY_MICROSOFT_GIT_SOURCE_REF_NAME)?.value,
     );
     if (pullRequestSourceRefName && !existingBranchNames.includes(pullRequestSourceRefName)) {
-      // The source branch for the pull request has been deleted; abandon the pull request (if manipulation is allowed)
-      if (!taskInputs.skipPullRequests) {
+      // The source branch for the pull request has been deleted; abandon the pull request (if not dry run)
+      if (!taskInputs.dryRun) {
         warning(
           `Detected source branch for PR #${pullRequest.id} has been deleted; The pull request will be abandoned`,
         );
@@ -357,7 +357,7 @@ export async function performDependabotUpdatesAsync(
     // If there are existing pull requests, run an update job for each one; this will resolve merge conflicts and close pull requests that are no longer needed
     const numberOfPullRequestsToUpdate = Object.keys(existingPullRequestsForPackageManager).length;
     if (numberOfPullRequestsToUpdate > 0) {
-      if (!taskInputs.skipPullRequests) {
+      if (!taskInputs.dryRun) {
         for (const pullRequestId in existingPullRequestsForPackageManager) {
           const outputs = await dependabotCli.update(
             DependabotJobBuilder.updatePullRequestJob(
@@ -376,7 +376,7 @@ export async function performDependabotUpdatesAsync(
         }
       } else {
         warning(
-          `Skipping update of ${numberOfPullRequestsToUpdate} existing ${packageEcosystem} package pull request(s) as 'skipPullRequests' is set to 'true'`,
+          `Skipping update of ${numberOfPullRequestsToUpdate} existing ${packageEcosystem} package pull request(s) as 'dryRun' is set to 'true'`,
         );
       }
     }

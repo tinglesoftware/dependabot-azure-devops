@@ -57,6 +57,14 @@
       "helpMarkDown": "When set to `true` the logic to update the dependencies is executed but the actual Pull Requests are not created/updated. Defaults to `false`."
     },
     {
+      "name": "dryRun",
+      "type": "boolean",
+      "label": "Test logic without actually creating, updating or abandoning pull requests.",
+      "defaultValue": false,
+      "required": false,
+      "helpMarkDown": "When set to `true` the logic to update the dependencies is executed but the actual Pull Requests are not created/updated/abandoned. This is useful for debugging. Defaults to `false`."
+    },
+    {
       "name": "setAutoComplete",
       "type": "boolean",
       "groupName": "pull_requests",

@@ -76,8 +76,8 @@ describe('DependabotOutputProcessor', () => {
       expect(result).toBe(true);
     });
 
-    it('should skip processing "create_pull_request" if "skipPullRequests" is true', async () => {
-      taskInputs.skipPullRequests = true;
+    it('should skip processing "create_pull_request" if "dryRun" is true', async () => {
+      taskInputs.dryRun = true;
 
       const result = await processor.process(update, 'create_pull_request', data);
 
@@ -116,8 +116,8 @@ describe('DependabotOutputProcessor', () => {
       expect(prApproverClient.approvePullRequest).toHaveBeenCalled();
     });
 
-    it('should skip processing "update_pull_request" if "skipPullRequests" is false', async () => {
-      taskInputs.skipPullRequests = true;
+    it('should skip processing "update_pull_request" if "dryRun" is false', async () => {
+      taskInputs.dryRun = true;
 
       const result = await processor.process(update, 'update_pull_request', data);
 
@@ -167,8 +167,8 @@ describe('DependabotOutputProcessor', () => {
       expect(prApproverClient.approvePullRequest).toHaveBeenCalled();
     });
 
-    it('should skip processing "close_pull_request" if "skipPullRequests" is true', async () => {
-      taskInputs.skipPullRequests = true;
+    it('should skip processing "close_pull_request" if "dryRun" is true', async () => {
+      taskInputs.dryRun = true;
 
       const result = await processor.process(update, 'close_pull_request', data);
 
@@ -177,7 +177,7 @@ describe('DependabotOutputProcessor', () => {
     });
 
     it('should fail processing "close_pull_request" if pull request does not exist', async () => {
-      taskInputs.skipPullRequests = false;
+      taskInputs.dryRun = false;
       data = {
         'dependency-names': ['dependency1'],
       };
@@ -189,7 +189,7 @@ describe('DependabotOutputProcessor', () => {
     });
 
     it('should process "close_pull_request"', async () => {
-      taskInputs.skipPullRequests = false;
+      taskInputs.dryRun = false;
       update.job['package-manager'] = 'npm';
       data = {
         'dependency-names': ['dependency1'],
