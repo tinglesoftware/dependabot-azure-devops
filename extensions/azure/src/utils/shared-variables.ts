@@ -28,9 +28,9 @@ export interface ISharedVariables {
   apiEndpointUrl: string;
 
   /** The github token */
-  githubAccessToken: string;
+  githubAccessToken?: string;
   /** The access User for Azure DevOps Repos */
-  systemAccessUser: string;
+  systemAccessUser?: string;
   /** The access token for Azure DevOps Repos */
   systemAccessToken: string;
 
@@ -42,7 +42,7 @@ export interface ISharedVariables {
   /** Determines if the pull requests that dependabot creates should have auto complete set */
   setAutoComplete: boolean;
   /** Merge strategies which can be used to complete a pull request */
-  mergeStrategy: string;
+  mergeStrategy?: string;
   /** List of any policy configuration Id's which auto-complete should not wait for */
   autoCompleteIgnoreConfigIds: number[];
 
@@ -85,7 +85,7 @@ export interface ISharedVariables {
  * @returns shared variables
  */
 export default function getSharedVariables(): ISharedVariables {
-  const organizationUrl = tl.getVariable('System.TeamFoundationCollectionUri');
+  const organizationUrl = tl.getVariable('System.TeamFoundationCollectionUri')!;
 
   //convert url string into a valid JS URL object
   const formattedOrganizationUrl = new URL(organizationUrl);
@@ -99,7 +99,7 @@ export default function getSharedVariables(): ISharedVariables {
     tl.debug(`Virtual directory detected; Running for an on-premises Azure DevOps Server.`);
   }
   const organization: string = extractOrganization(organizationUrl);
-  let project: string = tl.getInput('targetProjectName');
+  let project = tl.getInput('targetProjectName');
   const projectOverridden = typeof project === 'string';
   if (!projectOverridden) {
     // We use the project name because it is very readable.
@@ -109,9 +109,9 @@ export default function getSharedVariables(): ISharedVariables {
   } else {
     tl.debug(`Custom project provided; Running update for specified project.`);
   }
-  project = encodeURI(project); // encode special characters like spaces
+  project = encodeURI(project!); // encode special characters like spaces
 
-  let repository: string = tl.getInput('targetRepositoryName');
+  let repository = tl.getInput('targetRepositoryName');
   const repositoryOverridden = typeof repository === 'string';
   if (projectOverridden && !repositoryOverridden) {
     throw new Error(`Target repository must be provided when target project is overridden`);
@@ -122,15 +122,15 @@ export default function getSharedVariables(): ISharedVariables {
   } else {
     tl.debug(`Custom repository provided; Running update for remote repository.`);
   }
-  repository = encodeURI(repository); // encode special characters like spaces
+  repository = encodeURI(repository!); // encode special characters like spaces
 
   const virtualDirectorySuffix = virtualDirectory?.length > 0 ? `${virtualDirectory}/` : '';
   const apiEndpointUrl = `${protocol}://${hostname}:${port}/${virtualDirectorySuffix}`;
 
   // Prepare the access credentials
-  const githubAccessToken: string = getGithubAccessToken();
-  const systemAccessUser: string = tl.getInput('azureDevOpsUser');
-  const systemAccessToken: string = getAzureDevOpsAccessToken();
+  const githubAccessToken = getGithubAccessToken();
+  const systemAccessUser = tl.getInput('azureDevOpsUser');
+  const systemAccessToken = getAzureDevOpsAccessToken();
 
   const authorEmail: string | undefined = tl.getInput('authorEmail');
   const authorName: string | undefined = tl.getInput('authorName');
@@ -144,7 +144,7 @@ export default function getSharedVariables(): ISharedVariables {
 
   // Prepare variables for auto approve
   const autoApprove: boolean = tl.getBoolInput('autoApprove', false);
-  const autoApproveUserToken: string = tl.getInput('autoApproveUserToken');
+  const autoApproveUserToken = tl.getInput('autoApproveUserToken')!;
 
   // Convert experiments from comma separated key value pairs to a record
   let experiments = tl
@@ -153,7 +153,7 @@ export default function getSharedVariables(): ISharedVariables {
     ?.reduce(
       (acc, cur) => {
         const [key, value] = cur.split('=', 2);
-        acc[key] = value || true;
+        acc[key!] = value || true;
         return acc;
       },
       {} as Record<string, string | boolean>,

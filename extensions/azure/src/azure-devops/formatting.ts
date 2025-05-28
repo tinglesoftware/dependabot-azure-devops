@@ -21,8 +21,10 @@ export function section(name: string) {
  */
 
 import { setSecret } from 'azure-pipelines-task-lib';
-export function setSecrets(...args: string[]) {
+export function setSecrets(...args: (string | undefined)[]) {
   for (const arg of args.filter((a) => a && a?.toLowerCase() !== 'dependabot')) {
+    if (!arg) continue;
+
     // Mask the value and the uri encoded value. This is required to ensure that API and package feed url don't expose the value.
     // e.g. "Contoso Ltd" would appear as "Contoso%20Ltd" unless the uri encoded value was set as a secret.
     setSecret(arg);
@@ -38,7 +40,7 @@ export function normalizeFilePath(path: string): string {
     ?.replace(/^([^/])/, '/$1');
 }
 
-export function normalizeBranchName(branch: string): string {
+export function normalizeBranchName(branch?: string): string | undefined {
   // Strip the 'refs/heads/' prefix from the branch name, if present
   return branch?.replace(/^refs\/heads\//i, '');
 }

@@ -14,7 +14,7 @@ import {
  */
 function getGithubEndPointToken(githubEndpoint: string): string {
   const githubEndpointObject = getEndpointAuthorization(githubEndpoint, false);
-  let githubEndpointToken: string = null;
+  let githubEndpointToken: string | undefined;
 
   if (githubEndpointObject) {
     debug('Endpoint scheme: ' + githubEndpointObject.scheme);
@@ -43,7 +43,7 @@ function getGithubEndPointToken(githubEndpoint: string): string {
  * @returns the Github access token
  */
 export function getGithubAccessToken() {
-  let gitHubAccessToken: string = getInput('gitHubAccessToken');
+  let gitHubAccessToken = getInput('gitHubAccessToken');
   if (gitHubAccessToken) {
     debug('gitHubAccessToken provided, using for authenticating');
     return gitHubAccessToken;
@@ -67,18 +67,18 @@ export function getGithubAccessToken() {
  * @returns Azure DevOps Access Token
  */
 export function getAzureDevOpsAccessToken() {
-  const systemAccessToken: string = getInput('azureDevOpsAccessToken');
+  const systemAccessToken = getInput('azureDevOpsAccessToken');
   if (systemAccessToken) {
     debug('azureDevOpsAccessToken provided, using for authenticating');
     return systemAccessToken;
   }
 
-  const serviceConnectionName: string = getInput('azureDevOpsServiceConnection');
+  const serviceConnectionName = getInput('azureDevOpsServiceConnection');
   if (serviceConnectionName) {
     debug('TFS connection supplied. A token shall be extracted from it.');
-    return getEndpointAuthorizationParameter(serviceConnectionName, 'apitoken', false);
+    return getEndpointAuthorizationParameter(serviceConnectionName, 'apitoken', false)!;
   }
 
   debug("No custom token provided. The SystemVssConnection's AccessToken shall be used.");
-  return getEndpointAuthorizationParameter('SystemVssConnection', 'AccessToken', false);
+  return getEndpointAuthorizationParameter('SystemVssConnection', 'AccessToken', false)!;
 }

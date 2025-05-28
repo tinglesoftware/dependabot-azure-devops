@@ -38,7 +38,7 @@ export class DependabotCli {
   private readonly outputProcessor: DependabotOutputProcessor;
   private readonly debug: boolean;
   private readonly outputLogStream: Writable;
-  private toolPath: string;
+  private toolPath?: string;
 
   public static readonly CLI_PACKAGE_LATEST = 'github.com/dependabot/cli/cmd/dependabot@latest';
 
@@ -168,9 +168,8 @@ export class DependabotCli {
             // https://github.com/dependabot/cli/blob/main/internal/model/scenario.go
             const type = output['type'];
             const data = output['expect']?.['data'];
-            const operationResult = {
+            const operationResult: IDependabotUpdateOperationResult = {
               success: true,
-              error: null,
               output: {
                 type: type,
                 data: data,
@@ -178,7 +177,8 @@ export class DependabotCli {
             };
             try {
               operationResult.success = await this.outputProcessor.process(operation, type, data);
-            } catch (e) {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            } catch (e: any) {
               operationResult.success = false;
               operationResult.error = e;
               error(`An unhandled exception occurred while processing '${type}': ${e}`);
@@ -268,7 +268,7 @@ function readJobScenarioOutputFile(path: string) {
 // Log output from Dependabot based on the sub-component it originates from
 function logComponentOutput(
   verbose: boolean,
-  chunk: unknown,
+  chunk: any, // eslint-disable-line @typescript-eslint/no-explicit-any
   encoding: BufferEncoding,
   callback: (error?: Error | null) => void,
 ): void {

@@ -82,7 +82,7 @@ describe('mapGroupsFromDependabotConfigToJobConfig', () => {
   });
 
   it('should filter out undefined groups', () => {
-    const dependencyGroups: Record<string, IDependabotGroup> = {
+    const dependencyGroups: Record<string, IDependabotGroup | undefined | null> = {
       group1: undefined,
       group2: {
         patterns: ['pattern2'],
@@ -94,7 +94,7 @@ describe('mapGroupsFromDependabotConfigToJobConfig', () => {
   });
 
   it('should filter out null groups', () => {
-    const dependencyGroups: Record<string, IDependabotGroup> = {
+    const dependencyGroups: Record<string, IDependabotGroup | undefined | null> = {
       group1: null,
       group2: {
         patterns: ['pattern2'],

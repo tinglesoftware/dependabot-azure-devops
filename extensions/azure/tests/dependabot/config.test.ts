@@ -17,7 +17,7 @@ describe('Parse configuration file', () => {
     expect(updates.length).toBe(3);
 
     // first
-    const first = updates[0];
+    const first = updates[0]!;
     expect(first.directory).toBe('/');
     expect(first.directories).toBeUndefined();
     expect(first['package-ecosystem']).toBe('docker');
@@ -25,7 +25,7 @@ describe('Parse configuration file', () => {
     expect(first.registries).toBeUndefined();
 
     // second
-    const second = updates[1];
+    const second = updates[1]!;
     expect(second.directory).toBe('/client');
     expect(second.directories).toBeUndefined();
     expect(second['package-ecosystem']).toBe('npm');
@@ -33,7 +33,7 @@ describe('Parse configuration file', () => {
     expect(second.registries).toEqual(['reg1', 'reg2']);
 
     // third
-    const third = updates[2];
+    const third = updates[2]!;
     expect(third.directory).toBeUndefined();
     expect(third.directories).toEqual(['/src/client', '/src/server']);
     expect(third['package-ecosystem']).toBe('nuget');
@@ -50,7 +50,7 @@ describe('Parse registries', () => {
     expect(Object.keys(registries).length).toBe(11);
 
     // composer-repository
-    let registry = registries['composer'];
+    let registry = registries['composer']!;
     expect(registry.type).toBe('composer_repository');
     expect(registry.url).toBe('https://repo.packagist.com/example-company/');
     expect(registry['index-url']).toBeUndefined();
@@ -67,7 +67,7 @@ describe('Parse registries', () => {
     expect(registry['replaces-base']).toBeUndefined();
 
     // docker-registry
-    registry = registries['dockerhub'];
+    registry = registries['dockerhub']!;
     expect(registry.type).toBe('docker_registry');
     expect(registry.url).toBeUndefined();
     expect(registry['index-url']).toBeUndefined();
@@ -84,7 +84,7 @@ describe('Parse registries', () => {
     expect(registry['replaces-base']).toBe(true);
 
     // git
-    registry = registries['github-octocat'];
+    registry = registries['github-octocat']!;
     expect(registry.type).toBe('git');
     expect(registry.url).toBe('https://github.com');
     expect(registry['index-url']).toBeUndefined();
@@ -101,7 +101,7 @@ describe('Parse registries', () => {
     expect(registry['replaces-base']).toBeUndefined();
 
     // hex-organization
-    registry = registries['github-hex-org'];
+    registry = registries['github-hex-org']!;
     expect(registry.type).toBe('hex_organization');
     expect(registry.url).toBeUndefined();
     expect(registry['index-url']).toBeUndefined();
@@ -118,7 +118,7 @@ describe('Parse registries', () => {
     expect(registry['replaces-base']).toBeUndefined();
 
     // hex-repository
-    registry = registries['github-hex-repository'];
+    registry = registries['github-hex-repository']!;
     expect(registry.type).toBe('hex_repository');
     expect(registry.url).toBe('https://private-repo.example.com');
     expect(registry.registry).toBeUndefined();
@@ -134,7 +134,7 @@ describe('Parse registries', () => {
     expect(registry['replaces-base']).toBeUndefined();
 
     // maven-repository
-    registry = registries['maven-artifactory'];
+    registry = registries['maven-artifactory']!;
     expect(registry.type).toBe('maven_repository');
     expect(registry.url).toBe('https://artifactory.example.com');
     expect(registry['index-url']).toBeUndefined();
@@ -151,7 +151,7 @@ describe('Parse registries', () => {
     expect(registry['replaces-base']).toBe(true);
 
     // npm-registry
-    registry = registries['npm-github'];
+    registry = registries['npm-github']!;
     expect(registry.type).toBe('npm_registry');
     expect(registry.url).toBeUndefined();
     expect(registry['index-url']).toBeUndefined();
@@ -168,7 +168,7 @@ describe('Parse registries', () => {
     expect(registry['replaces-base']).toBe(true);
 
     // nuget-feed
-    registry = registries['nuget-azure-devops'];
+    registry = registries['nuget-azure-devops']!;
     expect(registry.type).toBe('nuget_feed');
     expect(registry.url).toBe('https://pkgs.dev.azure.com/contoso/_packaging/My_Feed/nuget/v3/index.json');
     expect(registry['index-url']).toBeUndefined();
@@ -185,7 +185,7 @@ describe('Parse registries', () => {
     expect(registry['replaces-base']).toBeUndefined();
 
     // python-index
-    registry = registries['python-azure'];
+    registry = registries['python-azure']!;
     expect(registry.type).toBe('python_index');
     expect(registry.url).toBeUndefined();
     expect(registry['index-url']).toBe('https://pkgs.dev.azure.com/octocat/_packaging/my-feed/pypi/example');
@@ -202,7 +202,7 @@ describe('Parse registries', () => {
     expect(registry['replaces-base']).toBe(true);
 
     // rubygems-server
-    registry = registries['ruby-github'];
+    registry = registries['ruby-github']!;
     expect(registry.type).toBe('rubygems_server');
     expect(registry.url).toBe('https://rubygems.pkg.github.com/octocat/github_api');
     expect(registry['index-url']).toBeUndefined();
@@ -219,7 +219,7 @@ describe('Parse registries', () => {
     expect(registry['replaces-base']).toBe(false);
 
     // terraform-registry
-    registry = registries['terraform-example'];
+    registry = registries['terraform-example']!;
     expect(registry.type).toBe('terraform_registry');
     expect(registry.url).toBeUndefined();
     expect(registry['index-url']).toBeUndefined();
@@ -271,13 +271,13 @@ describe('Validate registries', () => {
     validateConfiguration(updates, registries);
 
     // fails: registry not referenced
-    updates[0].registries = [];
+    updates[0]!.registries = [];
     expect(() => validateConfiguration(updates, registries)).toThrow(
       `Registries: 'dummy1,dummy2' have not been referenced by any update`,
     );
 
     // fails: registry not configured
-    updates[0].registries = ['dummy1', 'dummy2', 'dummy3'];
+    updates[0]!.registries = ['dummy1', 'dummy2', 'dummy3'];
     expect(() => validateConfiguration(updates, registries)).toThrow(
       `Referenced registries: 'dummy3' have not been configured in the root of dependabot.yml`,
     );

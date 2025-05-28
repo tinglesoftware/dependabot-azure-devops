@@ -115,7 +115,7 @@ export interface IDependabotUpdateOperation extends IDependabotUpdateJobConfig {
  */
 export interface IDependabotUpdateOperationResult {
   success: boolean;
-  error: Error;
+  error?: Error;
   output: {
     type: string;
     data: any; // eslint-disable-line @typescript-eslint/no-explicit-any

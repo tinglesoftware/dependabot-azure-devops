@@ -10,7 +10,7 @@ describe('SecurityVulnerabilitySchema', () => {
     expect(privateVulnerabilities).toBeDefined();
     expect(privateVulnerabilities.length).toBe(1);
 
-    const value = privateVulnerabilities[0];
+    const value = privateVulnerabilities[0]!;
     expect(value.package).toStrictEqual({ name: 'Contoso.Utils' });
     expect(value.advisory).toBeDefined();
     expect(value.vulnerableVersionRange).toBe('< 3.0.1');

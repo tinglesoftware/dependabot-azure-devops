@@ -28,7 +28,7 @@ export class AzureDevOpsWebApiClient {
   private readonly connection: WebApi;
   private readonly debug: boolean;
 
-  private authenticatedUserId: string;
+  private authenticatedUserId?: string;
   private resolvedUserIds: Record<string, string>;
 
   public static API_VERSION = '5.0'; // this is the same version used by dependabot-core
@@ -46,7 +46,7 @@ export class AzureDevOpsWebApiClient {
    * @returns
    */
   public async getUserId(): Promise<string> {
-    this.authenticatedUserId ||= (await this.connection.connect()).authenticatedUser.id;
+    this.authenticatedUserId ||= (await this.connection.connect()).authenticatedUser!.id!;
     return this.authenticatedUserId;
   }
 
@@ -56,7 +56,7 @@ export class AzureDevOpsWebApiClient {
    * @param userNameEmailOrGroupName
    * @returns
    */
-  public async resolveIdentityId(userNameEmailOrGroupName?: string): Promise<string | undefined> {
+  public async resolveIdentityId(userNameEmailOrGroupName: string): Promise<string | undefined> {
     if (this.resolvedUserIds[userNameEmailOrGroupName]) {
       return this.resolvedUserIds[userNameEmailOrGroupName];
     }
@@ -107,7 +107,7 @@ export class AzureDevOpsWebApiClient {
    * @param repository
    * @returns
    */
-  public async getBranchNames(project: string, repository: string): Promise<string[]> {
+  public async getBranchNames(project: string, repository: string): Promise<string[] | undefined> {
     try {
       const refs = await this.restApiGet(
         `${this.organisationApiUrl}/${project}/_apis/git/repositories/${repository}/refs`,
@@ -189,7 +189,7 @@ export class AzureDevOpsWebApiClient {
       // NOTE: Azure DevOps does not have a concept of assignees.
       //       We treat assignees as required reviewers and all other reviewers as optional.
       const allReviewers: IdentityRefWithVote[] = [];
-      if (pr.assignees?.length > 0) {
+      if (pr.assignees && pr.assignees.length > 0) {
         for (const assignee of pr.assignees) {
           const identityId = isGuid(assignee) ? assignee : await this.resolveIdentityId(assignee);
           if (identityId && !allReviewers.some((r) => r.id === identityId)) {
@@ -264,7 +264,7 @@ export class AzureDevOpsWebApiClient {
       console.info(` - Created pull request: #${pullRequest.pullRequestId}.`);
 
       // Add the pull request properties
-      if (pr.properties?.length > 0) {
+      if (pr.properties && pr.properties.length > 0) {
         console.info(` - Adding dependency metadata to pull request properties...`);
         const newProperties = await this.restApiPatch(
           `${this.organisationApiUrl}/${pr.project}/_apis/git/repositories/${pr.repository}/pullrequests/${pullRequest.pullRequestId}/properties`,
@@ -472,6 +472,7 @@ export class AzureDevOpsWebApiClient {
       }
 
       console.info(` - Pull request was approved successfully.`);
+      return true;
     } catch (e) {
       error(`Failed to approve pull request: ${e}`);
       console.debug(e); // Dump the error stack trace to help with debugging
@@ -561,7 +562,8 @@ export class AzureDevOpsWebApiClient {
     params?: Record<string, string>,
     apiVersion: string = AzureDevOpsWebApiClient.API_VERSION,
   ) {
-    const queryString = Object.keys(params || {})
+    params ||= {};
+    const queryString = Object.keys(params)
       .map((key) => `${key}=${params[key]}`)
       .join('&');
     const fullUrl = `${url}?api-version=${apiVersion}${queryString ? `&${queryString}` : ''}`;
@@ -673,20 +675,18 @@ export async function sendRestApiRequestWithRetry(
   retryCount: number = 3,
   retryDelay: number = 3000,
 ) {
-  let body: string;
+  let body: string | undefined;
   try {
     // Send the request, ready the response
     if (isDebug) debug(`🌎 🠊 [${method}] ${url}`);
     const response = await requestAsync();
     body = await response.readBody();
-    if (isDebug) debug(`🌎 🠈 [${response.message.statusCode}] ${response.message.statusMessage}`);
+    const { statusCode, statusMessage } = response.message;
+    if (isDebug) debug(`🌎 🠈 [${statusCode}] ${statusMessage}`);
 
     // Check that the request was successful
-    if (response.message.statusCode < 200 || response.message.statusCode > 299) {
-      throw new HttpRequestError(
-        `HTTP ${method} '${url}' failed: ${response.message.statusCode} ${response.message.statusMessage}`,
-        response.message.statusCode,
-      );
+    if (statusCode && (statusCode < 200 || statusCode > 299)) {
+      throw new HttpRequestError(`HTTP ${method} '${url}' failed: ${statusCode} ${statusMessage}`, statusCode);
     }
 
     // Parse the response

@@ -43,8 +43,8 @@ export type DependabotDependencies = z.infer<typeof DependabotDependenciesSchema
  */
 export class DependabotOutputProcessor {
   private readonly prAuthorClient: AzureDevOpsWebApiClient;
-  private readonly prApproverClient: AzureDevOpsWebApiClient;
-  private readonly existingBranchNames: string[];
+  private readonly prApproverClient: AzureDevOpsWebApiClient | undefined;
+  private readonly existingBranchNames: string[] | undefined;
   private readonly existingPullRequests: IPullRequestProperties[];
   private readonly createdPullRequestIds: number[];
   private readonly taskInputs: ISharedVariables;
@@ -56,8 +56,8 @@ export class DependabotOutputProcessor {
   constructor(
     taskInputs: ISharedVariables,
     prAuthorClient: AzureDevOpsWebApiClient,
-    prApproverClient: AzureDevOpsWebApiClient,
-    existingBranchNames: string[],
+    prApproverClient: AzureDevOpsWebApiClient | undefined,
+    existingBranchNames: string[] | undefined,
     existingPullRequests: IPullRequestProperties[],
     debug: boolean = false,
   ) {
@@ -109,7 +109,7 @@ export class DependabotOutputProcessor {
         }
 
         // Skip if active pull request limit reached.
-        const openPullRequestsLimit = update.config['open-pull-requests-limit'];
+        const openPullRequestsLimit = update.config['open-pull-requests-limit']!;
         const openPullRequestsCount = this.createdPullRequestIds.length + this.existingPullRequests.length;
         if (openPullRequestsLimit > 0 && openPullRequestsCount >= openPullRequestsLimit) {
           warning(

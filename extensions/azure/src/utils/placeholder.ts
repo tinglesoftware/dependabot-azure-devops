@@ -5,7 +5,7 @@ function convertPlaceholder(input: string): string {
   let result = input;
   for (const match of matches) {
     const placeholder = match[0];
-    const name = match[1];
+    const name = match[1]!;
     const value = getVariable(name) ?? placeholder;
     result = result.replace(placeholder, value);
   }

@@ -39,8 +39,8 @@ export interface IDependabotConfig {
 
 export interface IDependabotUpdate {
   'package-ecosystem': string;
-  'directory': string;
-  'directories': string[];
+  'directory'?: string;
+  'directories'?: string[];
   'allow'?: IDependabotAllowCondition[];
   'assignees'?: string[];
   'commit-message'?: IDependabotCommitMessage;
@@ -73,6 +73,8 @@ export interface IDependabotRegistry {
   'organization'?: string; // for hex-organisation only
   'repo'?: string; // for hex-repository only
   'public-key-fingerprint'?: string; // for hex-repository only
+  'index-url'?: string; // for python-index only
+  'auth-key'?: string; // used by composer-repository, docker-registry, etc
 }
 
 export interface IDependabotGroup {
@@ -138,8 +140,8 @@ export async function parseConfigFile(taskInputs: ISharedVariables): Promise<IDe
     '/.github/dependabot.yml',
   ];
 
-  let configPath: null | string;
-  let configContents: null | string;
+  let configPath: undefined | string;
+  let configContents: undefined | string;
 
   /*
    * The configuration file can be available locally if the repository is cloned.
@@ -186,7 +188,7 @@ export async function parseConfigFile(taskInputs: ISharedVariables): Promise<IDe
       }
     }
   } else {
-    const rootDir = getVariable('Build.SourcesDirectory');
+    const rootDir = getVariable('Build.SourcesDirectory')!;
     for (const fp of possibleFilePaths) {
       const filePath = path.join(rootDir, fp);
       if (fs.existsSync(filePath)) {

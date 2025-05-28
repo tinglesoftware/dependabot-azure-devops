@@ -25,7 +25,7 @@ export class DependabotJobBuilder {
     taskInputs: ISharedVariables,
     id: string,
     update: IDependabotUpdate,
-    registries: Record<string, IDependabotRegistry>,
+    registries?: Record<string, IDependabotRegistry>,
   ): IDependabotUpdateOperation {
     return {
       config: update,
@@ -55,7 +55,7 @@ export class DependabotJobBuilder {
     taskInputs: ISharedVariables,
     id: string,
     update: IDependabotUpdate,
-    registries: Record<string, IDependabotRegistry>,
+    registries?: Record<string, IDependabotRegistry>,
     dependencyNamesToUpdate?: string[],
     existingPullRequests?: any[], // eslint-disable-line @typescript-eslint/no-explicit-any
     securityVulnerabilities?: SecurityVulnerability[],
@@ -90,7 +90,7 @@ export class DependabotJobBuilder {
     taskInputs: ISharedVariables,
     id: string,
     update: IDependabotUpdate,
-    registries: Record<string, IDependabotRegistry>,
+    registries: Record<string, IDependabotRegistry> | undefined,
     existingPullRequests: any[], // eslint-disable-line @typescript-eslint/no-explicit-any
     pullRequestToUpdate: any, // eslint-disable-line @typescript-eslint/no-explicit-any
     securityVulnerabilities?: SecurityVulnerability[],
@@ -117,7 +117,7 @@ export function buildUpdateJobConfig(
   id: string,
   taskInputs: ISharedVariables,
   update: IDependabotUpdate,
-  registries: Record<string, IDependabotRegistry>,
+  registries?: Record<string, IDependabotRegistry>,
   updatingPullRequest?: boolean | undefined,
   updateDependencyGroupName?: string | undefined,
   updateDependencyNames?: string[] | undefined,
@@ -179,7 +179,9 @@ export function mapSourceFromDependabotConfigToJobConfig(taskInputs: ISharedVari
   };
 }
 
-export function mapGroupsFromDependabotConfigToJobConfig(dependencyGroups: Record<string, IDependabotGroup>) {
+export function mapGroupsFromDependabotConfigToJobConfig(
+  dependencyGroups?: Record<string, IDependabotGroup | undefined | null>,
+) {
   if (!dependencyGroups || !Object.keys(dependencyGroups).length) {
     return undefined;
   }
@@ -204,7 +206,7 @@ export function mapGroupsFromDependabotConfigToJobConfig(dependencyGroups: Recor
 }
 
 export function mapAllowedUpdatesFromDependabotConfigToJobConfig(
-  allowedUpdates: IDependabotAllowCondition[],
+  allowedUpdates?: IDependabotAllowCondition[],
   securityOnlyUpdate?: boolean,
 ) {
   // If no allow conditions are specified, update direct dependencies by default; This is what GitHub does.
@@ -227,7 +229,7 @@ export function mapAllowedUpdatesFromDependabotConfigToJobConfig(
   });
 }
 
-export function mapIgnoreConditionsFromDependabotConfigToJobConfig(ignoreConditions: IDependabotIgnoreCondition[]) {
+export function mapIgnoreConditionsFromDependabotConfigToJobConfig(ignoreConditions?: IDependabotIgnoreCondition[]) {
   if (!ignoreConditions) {
     return undefined;
   }
@@ -247,7 +249,7 @@ export function mapIgnoreConditionsFromDependabotConfigToJobConfig(ignoreConditi
   });
 }
 
-export function mapCooldownFromDependabotConfigToJobConfig(cooldown: IDependabotCooldown) {
+export function mapCooldownFromDependabotConfigToJobConfig(cooldown?: IDependabotCooldown) {
   if (!cooldown) {
     return undefined;
   }
@@ -261,7 +263,7 @@ export function mapCooldownFromDependabotConfigToJobConfig(cooldown: IDependabot
   };
 }
 
-export function mapSecurityAdvisories(securityVulnerabilities: SecurityVulnerability[]) {
+export function mapSecurityAdvisories(securityVulnerabilities?: SecurityVulnerability[]) {
   if (!securityVulnerabilities) {
     return undefined;
   }
@@ -274,11 +276,11 @@ export function mapSecurityAdvisories(securityVulnerabilities: SecurityVulnerabi
     if (!vulnerabilitiesGroupedByPackageNameAndAdvisoryId.has(key)) {
       vulnerabilitiesGroupedByPackageNameAndAdvisoryId.set(key, []);
     }
-    vulnerabilitiesGroupedByPackageNameAndAdvisoryId.get(key).push(vuln);
+    vulnerabilitiesGroupedByPackageNameAndAdvisoryId.get(key)!.push(vuln);
   }
   return Array.from(vulnerabilitiesGroupedByPackageNameAndAdvisoryId.values()).map((vulns) => {
     return {
-      'dependency-name': vulns[0].package.name,
+      'dependency-name': vulns[0]!.package.name,
       'affected-versions': vulns.map((v) => v.vulnerableVersionRange).filter((v) => v && v.length > 0),
       'patched-versions': vulns.map((v) => v.firstPatchedVersion?.identifier).filter((v) => v && v.length > 0),
       'unaffected-versions': [],
@@ -286,7 +288,7 @@ export function mapSecurityAdvisories(securityVulnerabilities: SecurityVulnerabi
   });
 }
 
-export function mapVersionStrategyToRequirementsUpdateStrategy(versioningStrategy: string): string | undefined {
+export function mapVersionStrategyToRequirementsUpdateStrategy(versioningStrategy?: string): string | undefined {
   if (!versioningStrategy) {
     return undefined;
   }
@@ -306,14 +308,14 @@ export function mapVersionStrategyToRequirementsUpdateStrategy(versioningStrateg
   }
 }
 
-export function mapCredentials(taskInputs: ISharedVariables, registries: Record<string, IDependabotRegistry>) {
+export function mapCredentials(taskInputs: ISharedVariables, registries?: Record<string, IDependabotRegistry>) {
   const credentials = [];
   if (taskInputs.systemAccessToken) {
     // Required to authenticate with the Azure DevOps git repository when cloning the source code
     credentials.push({
       type: 'git_source',
       host: taskInputs.hostname,
-      username: taskInputs.systemAccessUser?.trim()?.length > 0 ? taskInputs.systemAccessUser : 'x-access-token',
+      username: (taskInputs.systemAccessUser ?? '').trim()?.length > 0 ? taskInputs.systemAccessUser : 'x-access-token',
       password: taskInputs.systemAccessToken,
     });
   }
@@ -335,8 +337,9 @@ export function mapCredentials(taskInputs: ISharedVariables, registries: Record<
   return credentials;
 }
 
-export function mapExperiments(experiments: Record<string, string | boolean>): Record<string, string | boolean> {
-  return Object.keys(experiments || {}).reduce(
+export function mapExperiments(experiments?: Record<string, string | boolean>): Record<string, string | boolean> {
+  experiments ||= {};
+  return Object.keys(experiments).reduce(
     (acc, key) => {
       // Experiment values are known to be either 'true', 'false', or a string value.
       // If the value is 'true' or 'false', convert it to a boolean type so that dependabot-core handles it correctly.
@@ -346,7 +349,7 @@ export function mapExperiments(experiments: Record<string, string | boolean>): R
       } else if (typeof value === 'string' && value?.toLocaleLowerCase() === 'false') {
         acc[key] = false;
       } else {
-        acc[key] = value;
+        if (typeof value === 'string' || typeof value === 'boolean') acc[key] = value;
       }
       return acc;
     },

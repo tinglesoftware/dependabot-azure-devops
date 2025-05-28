@@ -23,23 +23,14 @@ export function extractOrganization(organizationUrl: string): string {
   const parts = organizationUrl.split('/');
 
   // Check for on-premise style: https://server.domain.com/tfs/x/
-  if (parts.length === 6) {
-    return parts[4];
-  }
+  if (parts.length === 6) return parts[4]!;
 
   // Check for new style: https://dev.azure.com/x/
-  if (parts.length === 5) {
-    return parts[3];
-  }
+  if (parts.length === 5) return parts[3]!;
 
   // Check for old style: https://x.visualstudio.com/
-  if (parts.length === 4) {
-    // Get x.visualstudio.com part.
-    const part = parts[2];
-
-    // Return organization part (x).
-    return part.split('.')[0];
-  }
+  // Get x.visualstudio.com part; Return organization part (x).
+  if (parts.length === 4) return parts[2]!.split('.')[0]!;
 
   throw new Error(`Error parsing organization from organization url: '${organizationUrl}'.`);
 }
@@ -63,7 +54,7 @@ export function extractVirtualDirectory(organizationUrl: URL): string {
   // URLs typically are like this: https://server.domain.com/tfs/x/
   // The pathname extracted looks like this: '/tfs/x/'
   if (path.length == 4) {
-    return path[1];
+    return path[1]!;
   }
   return '';
 }

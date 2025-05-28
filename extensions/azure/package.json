@@ -4,6 +4,7 @@
   "description": "Dependabot Azure DevOps task",
   "main": "''",
   "scripts": {
+    "prebuild": "tsc --noEmit",
     "build": "tsup",
     "start": "pnpm start:V2",
     "start:V1": "node tasks/dependabotV1/dist/task-v1.js",

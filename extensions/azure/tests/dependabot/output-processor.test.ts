@@ -26,8 +26,8 @@ describe('DependabotOutputProcessor', () => {
 
   beforeEach(() => {
     taskInputs = {} as ISharedVariables;
-    prAuthorClient = new AzureDevOpsWebApiClient(undefined, undefined, true);
-    prApproverClient = new AzureDevOpsWebApiClient(undefined, undefined, true);
+    prAuthorClient = new AzureDevOpsWebApiClient('http://localhost:8081', 'token1', true);
+    prApproverClient = new AzureDevOpsWebApiClient('http://localhost:8081', 'token1', true);
     existingBranchNames = [];
     existingPullRequests = [];
     processor = new DependabotOutputProcessor(
@@ -47,10 +47,20 @@ describe('DependabotOutputProcessor', () => {
     beforeEach(() => {
       vi.clearAllMocks();
       update = {
-        job: {},
+        job: {
+          'id': 'job1',
+          'package-manager': 'npm',
+          'source': {
+            hostname: 'localhost:8081',
+            provider: 'azure',
+            repo: 'testproject/_git/test-repo',
+          },
+        },
         credentials: [],
-        config: {},
-      } as IDependabotUpdateOperation;
+        config: {
+          'package-ecosystem': 'npm',
+        },
+      };
       data = {};
     });
 
@@ -255,14 +265,14 @@ describe('DependabotOutputProcessor', () => {
       const data = DependabotDependenciesSchema.parse(raw['data']);
 
       expect(data['dependency_files']).toEqual(['/requirements.txt']);
-      expect(data['dependencies'].length).toEqual(22);
+      expect(data['dependencies']!.length).toEqual(22);
 
-      expect(data['dependencies'][0].name).toEqual('asgiref');
-      expect(data['dependencies'][0].version).toEqual('3.7.2');
-      expect(data['dependencies'][0].requirements.length).toEqual(1);
-      expect(data['dependencies'][0].requirements[0].file).toEqual('requirements.txt');
-      expect(data['dependencies'][0].requirements[0].requirement).toEqual('==3.7.2');
-      expect(data['dependencies'][0].requirements[0].groups).toEqual(['dependencies']);
+      expect(data['dependencies']![0]!.name).toEqual('asgiref');
+      expect(data['dependencies']![0]!.version).toEqual('3.7.2');
+      expect(data['dependencies']![0]!.requirements!.length).toEqual(1);
+      expect(data['dependencies']![0]!.requirements![0]!.file).toEqual('requirements.txt');
+      expect(data['dependencies']![0]!.requirements![0]!.requirement).toEqual('==3.7.2');
+      expect(data['dependencies']![0]!.requirements![0]!.groups).toEqual(['dependencies']);
     });
 
     it('works for a result from python poetry', () => {
@@ -270,14 +280,14 @@ describe('DependabotOutputProcessor', () => {
       const data = DependabotDependenciesSchema.parse(raw['data']);
 
       expect(data['dependency_files']).toEqual(['/pyproject.toml']);
-      expect(data['dependencies'].length).toEqual(1);
+      expect(data['dependencies']!.length).toEqual(1);
 
-      expect(data['dependencies'][0].name).toEqual('requests');
-      expect(data['dependencies'][0].version).toBeNull();
-      expect(data['dependencies'][0].requirements.length).toEqual(1);
-      expect(data['dependencies'][0].requirements[0].file).toEqual('pyproject.toml');
-      expect(data['dependencies'][0].requirements[0].requirement).toEqual('^2.31.0');
-      expect(data['dependencies'][0].requirements[0].groups).toEqual(['dependencies']);
+      expect(data['dependencies']![0]!.name).toEqual('requests');
+      expect(data['dependencies']![0]!.version).toBeNull();
+      expect(data['dependencies']![0]!.requirements!.length).toEqual(1);
+      expect(data['dependencies']![0]!.requirements![0]!.file).toEqual('pyproject.toml');
+      expect(data['dependencies']![0]!.requirements![0]!.requirement).toEqual('^2.31.0');
+      expect(data['dependencies']![0]!.requirements![0]!.groups).toEqual(['dependencies']);
     });
 
     it('works for a result from nuget', () => {
@@ -285,18 +295,18 @@ describe('DependabotOutputProcessor', () => {
       const data = DependabotDependenciesSchema.parse(raw['data']);
 
       expect(data['dependency_files']).toEqual(['/Root.csproj']);
-      expect(data['dependencies'].length).toEqual(76);
+      expect(data['dependencies']!.length).toEqual(76);
 
-      expect(data['dependencies'][0].name).toEqual('Azure.Core');
-      expect(data['dependencies'][0].version).toEqual('1.35.0');
-      expect(data['dependencies'][0].requirements.length).toEqual(0);
+      expect(data['dependencies']![0]!.name).toEqual('Azure.Core');
+      expect(data['dependencies']![0]!.version).toEqual('1.35.0');
+      expect(data['dependencies']![0]!.requirements!.length).toEqual(0);
 
-      expect(data['dependencies'][3].name).toEqual('GraphQL.Server.Ui.Voyager');
-      expect(data['dependencies'][3].version).toEqual('8.1.0');
-      expect(data['dependencies'][3].requirements.length).toEqual(1);
-      expect(data['dependencies'][3].requirements[0].file).toEqual('/Root.csproj');
-      expect(data['dependencies'][3].requirements[0].requirement).toEqual('8.1.0');
-      expect(data['dependencies'][3].requirements[0].groups).toEqual(['dependencies']);
+      expect(data['dependencies']![3]!.name).toEqual('GraphQL.Server.Ui.Voyager');
+      expect(data['dependencies']![3]!.version).toEqual('8.1.0');
+      expect(data['dependencies']![3]!.requirements!.length).toEqual(1);
+      expect(data['dependencies']![3]!.requirements![0]!.file).toEqual('/Root.csproj');
+      expect(data['dependencies']![3]!.requirements![0]!.requirement).toEqual('8.1.0');
+      expect(data['dependencies']![3]!.requirements![0]!.groups).toEqual(['dependencies']);
     });
   });
 });

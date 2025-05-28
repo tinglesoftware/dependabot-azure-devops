@@ -130,14 +130,14 @@ describe('abandonPullRequestsWhereSourceRefIsDeleted', () => {
 
   it('should not abandon any pull requests if existingBranchNames is undefined or null', async () => {
     await abandonPullRequestsWhereSourceRefIsDeleted(taskInputs, devOpsPrAuthorClient, undefined, existingPullRequests);
-    await abandonPullRequestsWhereSourceRefIsDeleted(taskInputs, devOpsPrAuthorClient, null, existingPullRequests);
+    await abandonPullRequestsWhereSourceRefIsDeleted(taskInputs, devOpsPrAuthorClient, undefined, existingPullRequests);
 
     expect(devOpsPrAuthorClient.abandonPullRequest).not.toHaveBeenCalled();
   });
 
   it('should not abandon any pull requests if existingPullRequests is undefined or null', async () => {
     await abandonPullRequestsWhereSourceRefIsDeleted(taskInputs, devOpsPrAuthorClient, existingBranchNames, undefined);
-    await abandonPullRequestsWhereSourceRefIsDeleted(taskInputs, devOpsPrAuthorClient, existingBranchNames, null);
+    await abandonPullRequestsWhereSourceRefIsDeleted(taskInputs, devOpsPrAuthorClient, existingBranchNames, undefined);
 
     expect(devOpsPrAuthorClient.abandonPullRequest).not.toHaveBeenCalled();
   });
@@ -162,7 +162,7 @@ describe('performDependabotUpdatesAsync', () => {
       ],
       registries: {},
     } as IDependabotConfig;
-    dependabotCli = new DependabotCli(DependabotCli.CLI_PACKAGE_LATEST, null, true);
+    dependabotCli = new DependabotCli(DependabotCli.CLI_PACKAGE_LATEST, null!, true);
     dependabotCli.update = vi
       .fn()
       .mockResolvedValue([
@@ -188,7 +188,7 @@ describe('performDependabotUpdatesAsync', () => {
   });
 
   it('should skip "update all" job if open pull requests limit is reached', async () => {
-    dependabotConfig.updates[0]['open-pull-requests-limit'] = 1;
+    dependabotConfig.updates[0]!['open-pull-requests-limit'] = 1;
     existingPullRequests.push({
       id: 1,
       properties: [
@@ -220,7 +220,7 @@ describe('performDependabotUpdatesAsync', () => {
   });
 
   it('should perform "update security-only" job if open pull request limit is zero', async () => {
-    dependabotConfig.updates[0]['open-pull-requests-limit'] = 0;
+    dependabotConfig.updates[0]!['open-pull-requests-limit'] = 0;
     const ghsaClient = new GitHubGraphClient('fake-token');
     ghsaClient.getSecurityVulnerabilitiesAsync = vi.fn().mockResolvedValue([]);
 
@@ -238,7 +238,7 @@ describe('performDependabotUpdatesAsync', () => {
   });
 
   it('should perform "update pull request" job successfully if there are existing pull requests', async () => {
-    dependabotConfig.updates[0]['open-pull-requests-limit'] = 1;
+    dependabotConfig.updates[0]!['open-pull-requests-limit'] = 1;
     existingPullRequests.push({
       id: 1,
       properties: [

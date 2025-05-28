@@ -20,7 +20,7 @@ import {
 import parseTaskInputConfiguration, { type ISharedVariables } from './utils/shared-variables';
 
 async function run() {
-  let dependabotCli: DependabotCli = undefined;
+  let dependabotCli: DependabotCli | undefined;
   try {
     // Check if required tools are installed
     debug('Checking for `docker` install...');
@@ -79,7 +79,7 @@ async function run() {
           taskInputs.autoApproveUserToken || taskInputs.systemAccessToken,
           taskInputs.debug,
         )
-      : null;
+      : undefined;
 
     // Fetch the active pull requests created by the author user
     const existingBranchNames = await devOpsPrAuthorClient.getBranchNames(taskInputs.project, taskInputs.repository);
@@ -189,16 +189,17 @@ async function run() {
 export async function abandonPullRequestsWhereSourceRefIsDeleted(
   taskInputs: ISharedVariables,
   devOpsPrAuthorClient: AzureDevOpsWebApiClient,
-  existingBranchNames: string[],
-  existingPullRequests: IPullRequestProperties[],
+  existingBranchNames?: string[],
+  existingPullRequests?: IPullRequestProperties[],
 ): Promise<void> {
   if (!existingBranchNames || !existingPullRequests) {
     return;
   }
+
   for (const pullRequestIndex in existingPullRequests) {
-    const pullRequest = existingPullRequests[pullRequestIndex];
+    const pullRequest = existingPullRequests[pullRequestIndex]!;
     const pullRequestSourceRefName = normalizeBranchName(
-      pullRequest.properties.find((x) => x.name === DEVOPS_PR_PROPERTY_MICROSOFT_GIT_SOURCE_REF_NAME)?.value,
+      pullRequest.properties?.find((x) => x.name === DEVOPS_PR_PROPERTY_MICROSOFT_GIT_SOURCE_REF_NAME)?.value,
     );
     if (pullRequestSourceRefName && !existingBranchNames.includes(pullRequestSourceRefName)) {
       // The source branch for the pull request has been deleted; abandon the pull request (if manipulation is allowed)
@@ -274,7 +275,6 @@ export async function performDependabotUpdatesAsync(
 
       // Get the list of vulnerabilities that apply to the discovered dependencies
       section(`GHSA dependency vulnerability check`);
-      const ghsaClient = new GitHubGraphClient(taskInputs.githubAccessToken);
       const packagesToCheckForVulnerabilities: Package[] = discoveredDependencyListOutputs
         ?.find((x) => x.output.type == 'update_dependency_list')
         ?.output?.data?.dependencies?.map((d) => ({ name: d.name, version: d.version }));
@@ -284,7 +284,7 @@ export async function performDependabotUpdatesAsync(
         );
 
         // parse security advisories from file (private)
-        let privateVulnerabilities: SecurityVulnerability[];
+        let privateVulnerabilities: SecurityVulnerability[] | undefined;
         if (taskInputs.securityAdvisoriesFile) {
           const filePath = taskInputs.securityAdvisoriesFile;
           if (existsSync(filePath)) {
@@ -295,6 +295,7 @@ export async function performDependabotUpdatesAsync(
           }
         }
 
+        const ghsaClient = new GitHubGraphClient(taskInputs.githubAccessToken);
         securityVulnerabilities = await ghsaClient.getSecurityVulnerabilitiesAsync(
           getGhsaPackageEcosystemFromDependabotPackageManager(packageManager),
           packagesToCheckForVulnerabilities || [],
@@ -315,7 +316,7 @@ export async function performDependabotUpdatesAsync(
     }
 
     // Run an update job for "all dependencies"; this will create new pull requests for dependencies that need updating
-    const openPullRequestsLimit = update['open-pull-requests-limit'];
+    const openPullRequestsLimit = update['open-pull-requests-limit']!;
     const openPullRequestsCount = Object.entries(existingPullRequestsForPackageManager).length;
     const hasReachedOpenPullRequestLimit = openPullRequestsLimit > 0 && openPullRequestsCount >= openPullRequestsLimit;
     if (!hasReachedOpenPullRequestLimit) {
