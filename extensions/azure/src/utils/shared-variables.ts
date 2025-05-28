@@ -37,8 +37,6 @@ export interface ISharedVariables {
   authorEmail?: string;
   authorName?: string;
 
-  storeDependencyList: boolean;
-
   /** Determines if the pull requests that dependabot creates should have auto complete set */
   setAutoComplete: boolean;
   /** Merge strategies which can be used to complete a pull request */
@@ -140,8 +138,6 @@ export default function getSharedVariables(): ISharedVariables {
   const mergeStrategy = tl.getInput('mergeStrategy', true);
   const autoCompleteIgnoreConfigIds = tl.getDelimitedInput('autoCompleteIgnoreConfigIds', ';', false).map(Number);
 
-  const storeDependencyList = tl.getBoolInput('storeDependencyList', false);
-
   // Prepare variables for auto approve
   const autoApprove: boolean = tl.getBoolInput('autoApprove', false);
   const autoApproveUserToken = tl.getInput('autoApproveUserToken')!;
@@ -211,8 +207,6 @@ export default function getSharedVariables(): ISharedVariables {
 
     authorEmail,
     authorName,
-
-    storeDependencyList,
 
     setAutoComplete,
     mergeStrategy,

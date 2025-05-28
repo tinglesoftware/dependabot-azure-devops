@@ -90,14 +90,10 @@ export class DependabotOutputProcessor {
       // See: https://github.com/dependabot/cli/blob/main/internal/model/update.go
 
       case 'update_dependency_list': {
-        // Store the dependency list snapshot, if configured
         DependabotDependenciesSchema.parse(data);
-        if (this.taskInputs.storeDependencyList) {
-          warning(
-            `Storing dependency list snapshot in project properties is no longer supported
-            due to size limitations. We are looking for alternative solutions.`,
-          );
-        }
+
+        // Storing dependency list snapshot in project properties is no longer supported due to size limitations.
+        // We are looking for alternative solutions.
 
         return true;
       }
