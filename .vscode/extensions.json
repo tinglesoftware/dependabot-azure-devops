@@ -9,6 +9,7 @@
     "github.vscode-github-actions",
     "DavidAnson.vscode-markdownlint",
     "ms-azuretools.vscode-containers",
+    "redhat.vscode-yaml",
     "humao.rest-client"
   ],
   // List of extensions recommended by VS Code that should not be recommended for users of this workspace.
