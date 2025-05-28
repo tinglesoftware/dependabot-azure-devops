@@ -8,7 +8,7 @@
     "streetsidesoftware.code-spell-checker",
     "github.vscode-github-actions",
     "DavidAnson.vscode-markdownlint",
-    "ms-azuretools.vscode-docker",
+    "ms-azuretools.vscode-containers",
     "humao.rest-client"
   ],
   // List of extensions recommended by VS Code that should not be recommended for users of this workspace.
