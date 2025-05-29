@@ -2,7 +2,9 @@
   "name": "@paklo/utils",
   "version": "0.0.0",
   "private": true,
+  "sideEffects": false,
   "license": "MIT",
+  "type": "module",
   "scripts": {
     "lint": "eslint .",
     "test": "vitest",
