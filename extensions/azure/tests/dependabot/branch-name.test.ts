@@ -32,6 +32,14 @@ describe('getBranchNameForUpdate', () => {
     expect(result).toMatch(/^dependabot\/pip\/main\/src\/multi-[a-f0-9]{10}$/);
   });
 
+  it('generates correct branch name when version has square brackets', () => {
+    const result = getBranchNameForUpdate('npm', 'main', '/', undefined, [
+      { 'dependency-name': 'something', 'dependency-version': '[14435324]-1.0' },
+    ]);
+
+    expect(result).toBe(`dependabot/npm/main/something-14435324-1.0`);
+  });
+
   it('respects custom separator', () => {
     const result = getBranchNameForUpdate(
       'npm',
@@ -49,7 +57,7 @@ describe('getBranchNameForUpdate', () => {
       'npm',
       'main',
       '/some/deep/path/',
-      '',
+      undefined,
       [{ 'dependency-name': 'express', 'dependency-version': '4.18.2' }],
       '-',
     );
