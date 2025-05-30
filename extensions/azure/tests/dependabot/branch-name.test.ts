@@ -40,6 +40,14 @@ describe('getBranchNameForUpdate', () => {
     expect(result).toBe(`dependabot/npm/main/something-14435324-1.0`);
   });
 
+  it('generates correct branch name without branch', () => {
+    const result = getBranchNameForUpdate('pip', undefined, '/', undefined, [
+      { 'dependency-name': 'numpy', 'dependency-version': '1.24.0' },
+    ]);
+
+    expect(result).toBe(`dependabot/pip/numpy-1.24.0`);
+  });
+
   it('respects custom separator', () => {
     const result = getBranchNameForUpdate(
       'npm',
@@ -50,6 +58,18 @@ describe('getBranchNameForUpdate', () => {
       '__',
     );
     expect(result).toBe('dependabot__npm__main__lodash-4.17.21');
+  });
+
+  it('uses default separator when undefined', () => {
+    const result = getBranchNameForUpdate(
+      'npm',
+      'main',
+      '/',
+      undefined,
+      [{ 'dependency-name': 'lodash', 'dependency-version': '4.17.21' }],
+      undefined,
+    );
+    expect(result).toBe('dependabot/npm/main/lodash-4.17.21');
   });
 
   it('normalizes directory with leading/trailing slashes', () => {
