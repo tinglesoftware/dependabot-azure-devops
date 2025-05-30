@@ -2,8 +2,8 @@ import * as crypto from 'crypto';
 
 export function getBranchNameForUpdate(
   packageEcosystem: string,
-  targetBranchName: string,
-  directory: string,
+  targetBranchName: string | undefined,
+  directory: string | undefined,
   dependencyGroupName: string | undefined,
   dependencies: Record<string, unknown>[],
   separator: string = '/',
@@ -40,14 +40,14 @@ export function getBranchNameForUpdate(
       packageEcosystem,
       targetBranchName,
       // normalize directory to remove leading/trailing slashes and replace remaining ones with the separator
-      `${directory}`.replace(/^\/+|\/+$/g, '').replace(/\//g, separator),
+      directory?.replace(/^\/+|\/+$/g, '').replace(/\//g, separator),
       branchName,
     ],
     separator,
   );
 }
 
-export function sanitizeRef(refParts: string[], separator: string): string {
+export function sanitizeRef(refParts: (string | undefined)[], separator: string): string {
   // Based on dependabot-core implementation:
   // https://github.com/dependabot/dependabot-core/blob/fc31ae64f492dc977cfe6773ab13fb6373aabec4/common/lib/dependabot/pull_request_creator/branch_namer/base.rb#L99
 
@@ -57,7 +57,7 @@ export function sanitizeRef(refParts: string[], separator: string): string {
   return (
     refParts
       // Join the parts with the separator, ignore empty parts
-      .filter((p) => p?.trim()?.length > 0)
+      .filter((p) => p && p.trim().length > 0)
       .join(separator)
       // Remove forbidden characters (those not already replaced elsewhere)
       .replace(/[^A-Za-z0-9/\-_.(){}]/g, '')
