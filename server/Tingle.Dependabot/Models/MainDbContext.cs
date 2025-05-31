@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Tingle.Dependabot.Models.Management;
-using Tingle.Dependabot.Workflow;
+using SC = Tingle.Dependabot.DependabotSerializerContext;
 
 namespace Tingle.Dependabot.Models;
 
@@ -13,19 +13,20 @@ public class MainDbContext(DbContextOptions<MainDbContext> options) : DbContext(
     public DbSet<Repository> Repositories => Set<Repository>();
     public DbSet<UpdateJob> UpdateJobs => Set<UpdateJob>();
 
-    public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
+    DbSet<DataProtectionKey> IDataProtectionKeyContext.DataProtectionKeys => Set<DataProtectionKey>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
         base.ConfigureConventions(configurationBuilder);
 
-        if (Database.IsSqlServer() || Database.IsInMemory())
-        {
-            configurationBuilder.AddEtagToBytesConventions();
-        }
-
         configurationBuilder.Properties<AzureDevOpsProjectUrl>()
                             .HaveConversion<AzureDevOpsProjectUrlConverter, AzureDevOpsProjectUrlComparer>();
+
+        configurationBuilder.Properties<DockerImage>()
+                            .HaveConversion<DockerImageConverter, DockerImageComparer>();
+
+        configurationBuilder.Properties<DateTimeOffset>()
+                            .HaveConversion<DateTimeOffsetToBinaryConverter>();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -35,21 +36,21 @@ public class MainDbContext(DbContextOptions<MainDbContext> options) : DbContext(
         modelBuilder.Entity<Project>(builder =>
         {
             builder.OwnsOne(p => p.AutoApprove);
-            builder.OwnsOne(p => p.AutoComplete, ownedBuilder =>
-            {
-                ownedBuilder.Property(ac => ac.IgnoreConfigs).HasJsonConversion();
-            });
-            builder.Property(p => p.Secrets).HasJsonConversion();
+            builder.OwnsOne(p => p.AutoComplete);
+            builder.Property(p => p.Secrets).HasJsonConversion(SC.Default.DictionaryStringString);
+            builder.Property(p => p.Experiments).HasJsonConversion(SC.Default.DictionaryStringString);
 
             builder.HasIndex(p => p.Created).IsDescending(); // faster filtering
             builder.HasIndex(p => p.ProviderId).IsUnique();
             builder.HasIndex(p => p.Password).IsUnique(); // password should be unique per project
+
+            builder.HasMany<Repository>().WithOne().HasForeignKey(uc => uc.ProjectId).IsRequired();
         });
 
         modelBuilder.Entity<Repository>(builder =>
         {
-            builder.Property(r => r.Updates).HasJsonConversion();
-            builder.Property(r => r.Registries).HasJsonConversion();
+            builder.Property(r => r.Updates).HasJsonConversion(SC.Default.ListRepositoryUpdate);
+            builder.Property(r => r.Registries).HasJsonConversion(SC.Default.DictionaryStringDependabotRegistry);
 
             builder.HasIndex(r => r.Created).IsDescending(); // faster filtering
             builder.HasIndex(r => r.ProviderId).IsUnique();
@@ -58,11 +59,8 @@ public class MainDbContext(DbContextOptions<MainDbContext> options) : DbContext(
         modelBuilder.Entity<UpdateJob>(builder =>
         {
             builder.Property(j => j.PackageEcosystem).IsRequired();
-            builder.OwnsOne(j => j.Error, ownedBuilder =>
-            {
-                ownedBuilder.Property(e => e.Detail).HasJsonConversion();
-                ownedBuilder.HasIndex(e => e.Type); // faster filtering
-            });
+            builder.Property(e => e.Errors).HasJsonConversion(SC.Default.ListUpdateJobError);
+            builder.Property(e => e.UnknownErrors).HasJsonConversion(SC.Default.ListUpdateJobError);
 
             builder.HasIndex(j => j.Created).IsDescending(); // faster filtering
             builder.HasIndex(j => j.ProjectId);
@@ -75,8 +73,6 @@ public class MainDbContext(DbContextOptions<MainDbContext> options) : DbContext(
         });
     }
 
-    public bool SupportsBulk => Database.IsSqlServer();
-
     private class AzureDevOpsProjectUrlConverter : ValueConverter<AzureDevOpsProjectUrl, string>
     {
         public AzureDevOpsProjectUrlConverter() : base(convertToProviderExpression: v => v.ToString(),
@@ -88,6 +84,20 @@ public class MainDbContext(DbContextOptions<MainDbContext> options) : DbContext(
         public AzureDevOpsProjectUrlComparer() : base(equalsExpression: (l, r) => l == r,
                                                       hashCodeExpression: v => v.GetHashCode(),
                                                       snapshotExpression: v => new AzureDevOpsProjectUrl(v.ToString()))
+        { }
+    }
+
+    private class DockerImageConverter : ValueConverter<DockerImage, string>
+    {
+        public DockerImageConverter() : base(convertToProviderExpression: v => v.ToString(),
+                                             convertFromProviderExpression: v => v == null ? default : DockerImage.Parse(v))
+        { }
+    }
+    private class DockerImageComparer : ValueComparer<DockerImage>
+    {
+        public DockerImageComparer() : base(equalsExpression: (l, r) => l == r,
+                                            hashCodeExpression: v => v.GetHashCode(),
+                                            snapshotExpression: v => DockerImage.Parse(v.ToString()))
         { }
     }
 }

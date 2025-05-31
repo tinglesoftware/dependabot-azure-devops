@@ -14,7 +14,7 @@ public class DependabotUpdateTests
             PackageEcosystem = "npm",
             Directory = "/",
             Directories = null,
-            Schedule = new()
+            Schedule = new DependabotUpdateSchedule
             {
                 Interval = DependabotScheduleInterval.Monthly,
                 Time = new(2, 0),

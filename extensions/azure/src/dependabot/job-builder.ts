@@ -157,6 +157,7 @@ export function buildUpdateJobConfig(
       'lockfile-only': update['versioning-strategy'] === 'lockfile-only',
       'vendor-dependencies': update.vendor,
       'debug': taskInputs.debug,
+      'update-subdependencies': false, // usually added by dependabot-cli (but for consistency with server it is added here)
       'max-updater-run-time': 2700,
     },
     credentials: mapCredentials(taskInputs, registries),

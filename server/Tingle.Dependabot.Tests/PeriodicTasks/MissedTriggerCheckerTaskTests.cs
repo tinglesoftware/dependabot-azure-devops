@@ -30,7 +30,7 @@ public class MissedTriggerCheckerTaskTests(ITestOutputHelper outputHelper)
             await pt.CheckAsync(referencePoint, TestContext.Current.CancellationToken);
 
             // Ensure the message was published
-            var evt_context = Assert.IsType<EventContext<TriggerUpdateJobsEvent>>(
+            var evt_context = Assert.IsType<EventContext<RunUpdateJobEvent>>(
                 Assert.Single(await harness.PublishedAsync(cancellationToken: TestContext.Current.CancellationToken)));
             var inner = evt_context.Event;
             Assert.NotNull(inner);
@@ -51,7 +51,7 @@ public class MissedTriggerCheckerTaskTests(ITestOutputHelper outputHelper)
             await pt.CheckAsync(referencePoint, TestContext.Current.CancellationToken);
 
             // Ensure the message was published
-            var evt_context = Assert.IsType<EventContext<TriggerUpdateJobsEvent>>(
+            var evt_context = Assert.IsType<EventContext<RunUpdateJobEvent>>(
                 Assert.Single(await harness.PublishedAsync(cancellationToken: TestContext.Current.CancellationToken)));
             var inner = evt_context.Event;
             Assert.NotNull(inner);
@@ -78,14 +78,15 @@ public class MissedTriggerCheckerTaskTests(ITestOutputHelper outputHelper)
 
     private async Task TestAsync(DateTimeOffset? lastUpdate0, DateTimeOffset? lastUpdate1, Func<InMemoryTestHarness, MainDbContext, MissedTriggerCheckerTask, Task> executeAndVerify)
     {
+        using var dbFixture = new DbFixture();
+
         var host = Host.CreateDefaultBuilder()
                        .ConfigureLogging(builder => builder.AddXUnit(outputHelper))
                        .ConfigureServices((context, services) =>
                        {
-                           var dbName = Guid.NewGuid().ToString();
                            services.AddDbContext<MainDbContext>(options =>
                            {
-                               options.UseInMemoryDatabase(dbName, o => o.EnableNullChecks());
+                               options.UseSqlite(dbFixture.ConnectionString);
                                options.EnableDetailedErrors();
                            });
                            services.AddEventBus(builder => builder.AddInMemoryTransport().AddInMemoryTestHarness());
@@ -96,16 +97,19 @@ public class MissedTriggerCheckerTaskTests(ITestOutputHelper outputHelper)
         var provider = scope.ServiceProvider;
 
         var context = provider.GetRequiredService<MainDbContext>();
-        await context.Database.EnsureCreatedAsync();
+        await context.Database.MigrateAsync();
 
         await context.Projects.AddAsync(new Project
         {
             Id = ProjectId,
             Url = "https://dev.azure.com/dependabot/dependabot",
             Token = "token",
+            UserId = "6ce954b1-ce1f-45d1-b94d-e6bf2464ba2c",
             Name = "dependabot",
             ProviderId = "6ce954b1-ce1f-45d1-b94d-e6bf2464ba2c",
             Password = "burp-bump",
+            AutoApprove = new(),
+            AutoComplete = new(),
         });
         await context.Repositories.AddAsync(new Repository
         {

@@ -1,6 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.Serialization;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+using Tingle.Extensions.Primitives.Converters;
 using Tingle.PeriodicTasks;
 
 namespace Tingle.Dependabot.Models.Dependabot;
@@ -43,9 +46,8 @@ public class DependabotConfiguration : IValidatableObject
 public record DependabotUpdate : IValidatableObject
 {
     /// <summary>Ecosystem for the update.</summary>
-    [Required]
     [JsonPropertyName("package-ecosystem")]
-    public string? PackageEcosystem { get; set; }
+    public required string PackageEcosystem { get; set; }
 
     [JsonPropertyName("directory")]
     public string? Directory { get; set; }
@@ -53,9 +55,8 @@ public record DependabotUpdate : IValidatableObject
     [JsonPropertyName("directories")]
     public List<string>? Directories { get; set; }
 
-    [Required]
     [JsonPropertyName("schedule")]
-    public DependabotUpdateSchedule? Schedule { get; set; }
+    public required DependabotUpdateSchedule Schedule { get; set; }
 
     [JsonPropertyName("open-pull-requests-limit")]
     public int OpenPullRequestsLimit { get; set; } = 5;
@@ -67,7 +68,7 @@ public record DependabotUpdate : IValidatableObject
     public List<DependabotAllowDependency>? Allow { get; set; }
 
     [JsonPropertyName("groups")]
-    public List<DependabotGroupDependency>? Groups { get; set; }
+    public Dictionary<string, DependabotGroupDependency>? Groups { get; set; }
 
     [JsonPropertyName("ignore")]
     public List<DependabotIgnoreDependency>? Ignore { get; set; }
@@ -99,6 +100,9 @@ public record DependabotUpdate : IValidatableObject
                 memberNames: [nameof(Directory), nameof(Directories)]);
         }
     }
+
+    [JsonIgnore]
+    internal bool SecurityOnly => OpenPullRequestsLimit == 0;
 }
 
 public class DependabotUpdateSchedule : IValidatableObject
@@ -142,7 +146,7 @@ public class DependabotUpdateSchedule : IValidatableObject
             DependabotScheduleInterval.Quarterly => "1 1,4,7,10 *", // first day of each quarter (January, April, July, and October)
             DependabotScheduleInterval.Semiannually => "1 1,7 *",  // every six months, on the first day of January and July
             DependabotScheduleInterval.Yearly => "1 1 *",           // first day of January
-            _ => throw new NotImplementedException(),
+            _ => throw new InvalidOperationException($"{nameof(DependabotScheduleInterval)}.{Interval} is not supported"),
         };
         return new CronSchedule(cron);
     }
@@ -193,6 +197,8 @@ public class DependabotAllowDependency : IValidatableObject
     public string? DependencyName { get; set; }
     [JsonPropertyName("dependency-type")]
     public string? DependencyType { get; set; }
+    [JsonPropertyName("update-type")]
+    public string? UpdateType { get; set; }
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
@@ -209,10 +215,10 @@ public class DependabotIgnoreDependency : IValidatableObject
     public string? DependencyName { get; set; }
 
     [JsonPropertyName("versions")]
-    public IList<string>? Versions { get; set; }
+    public JsonNode? Versions { get; set; }
 
     [JsonPropertyName("update-types")]
-    public IList<string>? UpdateTypes { get; set; }
+    public List<string>? UpdateTypes { get; set; }
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
@@ -281,5 +287,26 @@ public class DependabotRegistry
     public string? PublicKeyFingerprint { get; set; }
 }
 
-public enum DependabotScheduleInterval { Daily, Weekly, Monthly, Quarterly, Semiannually, Yearly, Cron }
-public enum DependabotScheduleDay { Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, }
+[JsonConverter(typeof(JsonStringEnumMemberConverter<DependabotScheduleInterval>))]
+public enum DependabotScheduleInterval
+{
+    [EnumMember(Value = "cron")] Cron,
+    [EnumMember(Value = "daily")] Daily,
+    [EnumMember(Value = "weekly")] Weekly,
+    [EnumMember(Value = "monthly")] Monthly,
+    [EnumMember(Value = "quarterly")] Quarterly,
+    [EnumMember(Value = "semiannually")] Semiannually,
+    [EnumMember(Value = "yearly")] Yearly,
+}
+
+[JsonConverter(typeof(JsonStringEnumMemberConverter<DependabotScheduleDay>))]
+public enum DependabotScheduleDay
+{
+    [EnumMember(Value = "sunday")] Sunday,
+    [EnumMember(Value = "monday")] Monday,
+    [EnumMember(Value = "tuesday")] Tuesday,
+    [EnumMember(Value = "wednesday")] Wednesday,
+    [EnumMember(Value = "thursday")] Thursday,
+    [EnumMember(Value = "friday")] Friday,
+    [EnumMember(Value = "saturday")] Saturday,
+}

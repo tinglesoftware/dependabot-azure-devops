@@ -66,22 +66,6 @@ jobs:
           -c Release \
           -o ${{ github.workspace }}/drop/Tingle.Dependabot
 
-      - name: Replace tokens
-        uses: cschleiden/replace-tokens@v1
-        with:
-          files: '["${{ github.workspace }}/server/main.bicep"]'
-        env:
-          IMAGE_TAG: ${{ steps.gitversion.outputs.fullSemVer }}
-
-      - name: Build bicep file
-        uses: azure/cli@v2
-        with:
-          inlineScript: |
-            tdnf install -y icu
-            tdnf install -y jq
-            cp ${{ github.workspace }}/server/main.bicep ${{ github.workspace }}/drop/main.bicep && \
-            az bicep build --file server/main.bicep --outfile ${{ github.workspace }}/drop/main.json
-
       - name: Upload Artifact (drop)
         uses: actions/upload-artifact@v4
         with:

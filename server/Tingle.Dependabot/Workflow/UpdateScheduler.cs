@@ -1,12 +1,19 @@
 ﻿using System.Collections.Concurrent;
 using Tingle.Dependabot.Events;
+using Tingle.Dependabot.Models.Dependabot;
 using Tingle.Dependabot.Models.Management;
 using Tingle.EventBus;
 using Tingle.PeriodicTasks;
 
 namespace Tingle.Dependabot.Workflow;
 
-internal class UpdateScheduler
+public interface IUpdateScheduler
+{
+    Task CreateOrUpdateAsync(Repository repository, CancellationToken cancellationToken = default);
+    Task RemoveAsync(string repositoryId, CancellationToken cancellationToken = default);
+}
+
+internal class UpdateScheduler : IUpdateScheduler
 {
     private readonly IEventPublisher publisher;
     private readonly ILogger logger;
@@ -77,8 +84,8 @@ internal class UpdateScheduler
             return;
         }
 
-        // publish event for the job to be run
-        var evt = new TriggerUpdateJobsEvent
+        // publish event to run the job
+        var evt = new RunUpdateJobEvent
         {
             ProjectId = payload.ProjectId,
             RepositoryId = payload.RepositoryId,
@@ -90,4 +97,13 @@ internal class UpdateScheduler
     }
 
     private readonly record struct TimerPayload(string ProjectId, string RepositoryId, int RepositoryUpdateId);
+}
+
+public readonly record struct SchedulableUpdate(int Index, DependabotUpdateSchedule Supplied)
+{
+    public void Deconstruct(out int index, out DependabotUpdateSchedule supplied)
+    {
+        index = Index;
+        supplied = Supplied;
+    }
 }
