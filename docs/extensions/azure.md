@@ -49,7 +49,7 @@ pnpm build
 To then generate the a Azure DevOps `.vsix` extension package for testing, you'll first need to [create a publisher account](https://learn.microsoft.com/en-us/azure/devops/extend/publish/overview?view=azure-devops#create-a-publisher) for the [Visual Studio Marketplace Publishing Portal](https://marketplace.visualstudio.com/manage/createpublisher?managePageRedirect=true). After this, use `pnpm package` to build the package, with an override for your publisher ID:
 
 ```bash
-pnpm package -- --overrides-file overrides.local.json --rev-version --publisher your-publisher-id-here
+pnpm package -- --rev-version --publisher your-publisher-id-here
 ```
 
 ## Installing the extension

@@ -16,6 +16,8 @@ out
 .idea
 
 # special files
+extensions/azure/tasks/*/task.json
+extensions/azure/vss-extension.json
 .config/dotnet-tools.json
 .github/ISSUE_TEMPLATE/**
 .vscode/settings.json

@@ -1,4 +1,0 @@
-{
-  "version": "#{MAJOR_MINOR_PATCH}#.#{BUILD_NUMBER}#",
-  "public": true
-}

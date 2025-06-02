@@ -1,8 +1,7 @@
 {
   "name": "extension-azure-devops",
-  "version": "2.0.0",
+  "version": "2.50.0",
   "description": "Dependabot Azure DevOps task",
-  "main": "''",
   "scripts": {
     "prebuild": "tsc --noEmit",
     "build": "tsup",
@@ -12,6 +11,7 @@
     "lint": "eslint .",
     "test": "vitest",
     "clean": "rimraf .turbo dist tasks/dependabotV1/dist tasks/dependabotV2/dist",
+    "packages:version": "node scripts/update-versions.mjs",
     "package": "pnpm tfx extension create --json5"
   },
   "repository": {
