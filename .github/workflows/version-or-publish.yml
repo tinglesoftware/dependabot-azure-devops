@@ -53,5 +53,6 @@ jobs:
           title: 'Version packages'
           version: pnpm packages:version
           commit: 'Version packages'
+          commitMode: 'github-api'
         env:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
