@@ -2,6 +2,7 @@
   "name": "extension-azure-devops",
   "version": "2.50.0",
   "description": "Dependabot Azure DevOps task",
+  "private": true,
   "scripts": {
     "prebuild": "tsc --noEmit",
     "build": "tsup",

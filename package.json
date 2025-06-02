@@ -8,6 +8,7 @@
 
     "changeset": "changeset",
     "packages:version": "changeset version && turbo run packages:version",
+    "packages:publish": "changeset version && turbo run packages:publish",
 
     "extensions-azure:start": "turbo run start --filter=extension-azure-devops...",
     "extensions-azure:build": "turbo run build --filter=extension-azure-devops...",

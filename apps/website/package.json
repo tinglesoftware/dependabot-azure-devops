@@ -2,6 +2,7 @@
   "name": "website",
   "version": "0.0.0",
   "license": "AGPL-3.0-later",
+  "private": true,
   "type": "module",
   "scripts": {
     "postinstall": "fumadocs-mdx",

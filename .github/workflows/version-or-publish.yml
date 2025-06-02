@@ -52,6 +52,7 @@ jobs:
         with:
           title: 'Version packages'
           version: pnpm packages:version
+          publish: pnpm packages:publish
           commit: 'Version packages'
           commitMode: 'github-api'
         env:
