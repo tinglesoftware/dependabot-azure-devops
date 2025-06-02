@@ -81,14 +81,16 @@ jobs:
         with:
           subject-path: ${{ github.workspace }}/out/*.vsix
 
-      - name: Upload Release
+      - name: Upload Release Artifact
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
         uses: ncipollo/release-action@v1
         with:
           artifacts: '${{ github.workspace }}/out/*.vsix'
           token: ${{ secrets.GITHUB_TOKEN }}
-          draft: true
           allowUpdates: true
+          omitBodyDuringUpdate: true
+          omitNameDuringUpdate: true
+          tag: ${{ github.ref_name }}
 
       - name: Publish to marketplace
         if: ${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/') }}
