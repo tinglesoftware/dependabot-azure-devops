@@ -38,7 +38,6 @@ jobs:
         run: pnpm install
 
       - name: Generate token
-        if: ${{ github.event_name != 'pull_request' }}
         id: generate-token
         uses: actions/create-github-app-token@v2
         with:
@@ -48,6 +47,7 @@ jobs:
           permission-pull-requests: write
 
       - name: Create release pull request
+        if: ${{ github.event_name != 'pull_request' }}
         uses: changesets/action@v1
         with:
           title: 'Version packages'
