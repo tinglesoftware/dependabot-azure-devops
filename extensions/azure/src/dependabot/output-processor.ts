@@ -1,7 +1,8 @@
+import { getBranchNameForUpdate } from '@paklo/core/dependabot';
 import { GitPullRequestMergeStrategy, VersionControlChangeType } from 'azure-devops-node-api/interfaces/GitInterfaces';
 import { debug, error, warning } from 'azure-pipelines-task-lib/task';
 import * as path from 'path';
-import { z } from 'zod';
+import { z } from 'zod/v4';
 import { type AzureDevOpsWebApiClient } from '../azure-devops/client';
 import { section } from '../azure-devops/formatting';
 import {
@@ -11,7 +12,6 @@ import {
   type IPullRequestProperties,
 } from '../azure-devops/models';
 import { type ISharedVariables } from '../utils/shared-variables';
-import { getBranchNameForUpdate } from './branch-name';
 import { type IDependabotUpdateOperation } from './models';
 
 export const DependabotDependenciesSchema = z.object({
@@ -34,7 +34,7 @@ export const DependabotDependenciesSchema = z.object({
     )
     .nullish(),
   dependency_files: z.array(z.string()), // e.g. ['/requirements.txt'] or ['/Root.csproj']
-  last_updated: z.date({ coerce: true }).nullish(), // e.g. '2021-09-01T00:00:00Z'
+  last_updated: z.coerce.date().nullish(), // e.g. '2021-09-01T00:00:00Z'
 });
 export type DependabotDependencies = z.infer<typeof DependabotDependenciesSchema>;
 

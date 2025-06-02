@@ -1,6 +1,7 @@
 import { command, debug, error, tool, which } from 'azure-pipelines-task-lib/task';
 import { type ToolRunner } from 'azure-pipelines-task-lib/toolrunner';
-import * as fs from 'fs';
+import { existsSync } from 'fs';
+import { mkdir, readFile, rename, rm, stat, writeFile } from 'fs/promises';
 import * as yaml from 'js-yaml';
 import * as os from 'os';
 import * as path from 'path';
@@ -74,8 +75,8 @@ export class DependabotCli {
       const jobInputPath = path.join(jobPath, 'job.yaml');
       const jobOutputPath = path.join(jobPath, 'scenario.yaml');
       this.ensureJobsPathExists();
-      if (!fs.existsSync(jobPath)) {
-        fs.mkdirSync(jobPath);
+      if (!existsSync(jobPath)) {
+        await mkdir(jobPath);
       }
 
       // Compile dependabot cmd arguments
@@ -85,16 +86,16 @@ export class DependabotCli {
       if (options?.sourceProvider) {
         dependabotArguments.push('--provider', options.sourceProvider);
       }
-      if (options?.sourceLocalPath && fs.existsSync(options.sourceLocalPath)) {
+      if (options?.sourceLocalPath && existsSync(options.sourceLocalPath)) {
         dependabotArguments.push('--local', options.sourceLocalPath);
       }
       if (options?.collectorImage) {
         dependabotArguments.push('--collector-image', options.collectorImage);
       }
-      if (options?.collectorConfigPath && fs.existsSync(options.collectorConfigPath)) {
+      if (options?.collectorConfigPath && existsSync(options.collectorConfigPath)) {
         dependabotArguments.push('--collector-config', options.collectorConfigPath);
       }
-      if (options?.proxyCertPath && fs.existsSync(options.proxyCertPath)) {
+      if (options?.proxyCertPath && existsSync(options.proxyCertPath)) {
         dependabotArguments.push('--proxy-cert', options.proxyCertPath);
       }
       if (options?.proxyImage) {
@@ -125,10 +126,10 @@ export class DependabotCli {
       // do not add debug here because the CLI hangs when --debug is passed (i.e. it becomes interactive)
 
       // Generate the job input file
-      writeJobConfigFile(jobInputPath, operation);
+      await writeJobConfigFile(jobInputPath, operation);
 
       // Run dependabot update
-      if (!fs.existsSync(jobOutputPath) || fs.statSync(jobOutputPath)?.size == 0) {
+      if (!existsSync(jobOutputPath) || (await stat(jobOutputPath))?.size == 0) {
         section(`Processing job from '${jobInputPath}'`);
         const dependabotTool = tool(dependabotPath).arg(dependabotArguments);
         const dependabotResultCode = await dependabotTool.execAsync({
@@ -150,17 +151,17 @@ export class DependabotCli {
 
       // If flamegraph is enabled, upload the report to the pipeline timeline so the use can download it
       const flamegraphPath = path.join(process.cwd(), 'flamegraph.html');
-      if (options?.flamegraph && fs.existsSync(flamegraphPath)) {
+      if (options?.flamegraph && existsSync(flamegraphPath)) {
         section(`Processing Dependabot flame graph report`);
         const jobFlamegraphPath = path.join(process.cwd(), `dependabot-${operation.job.id}-flamegraph.html`);
-        fs.renameSync(flamegraphPath, jobFlamegraphPath);
+        rename(flamegraphPath, jobFlamegraphPath);
         command('task.uploadfile', {}, jobFlamegraphPath);
       }
 
       // Process the job output
       const operationResults = Array<IDependabotUpdateOperationResult>();
-      if (fs.existsSync(jobOutputPath)) {
-        const jobOutputs = readJobScenarioOutputFile(jobOutputPath);
+      if (existsSync(jobOutputPath)) {
+        const jobOutputs = await readJobScenarioOutputFile(jobOutputPath);
         if (jobOutputs?.length > 0) {
           section(`Processing job outputs from '${jobOutputPath}'`);
           for (const output of jobOutputs) {
@@ -222,15 +223,15 @@ export class DependabotCli {
 
   // Create the jobs directory if it does not exist
   private ensureJobsPathExists(): void {
-    if (!fs.existsSync(this.jobsPath)) {
-      fs.mkdirSync(this.jobsPath);
+    if (!existsSync(this.jobsPath)) {
+      mkdir(this.jobsPath);
     }
   }
 
   // Clean up the jobs directory and its contents
   public cleanup(): void {
-    if (fs.existsSync(this.jobsPath)) {
-      fs.rmSync(this.jobsPath, {
+    if (existsSync(this.jobsPath)) {
+      rm(this.jobsPath, {
         recursive: true,
         force: true,
       });
@@ -240,19 +241,19 @@ export class DependabotCli {
 
 // Documentation on the job model can be found here:
 // https://github.com/dependabot/cli/blob/main/internal/model/job.go
-function writeJobConfigFile(path: string, config: IDependabotUpdateJobConfig): void {
+async function writeJobConfigFile(path: string, config: IDependabotUpdateJobConfig): Promise<void> {
   const contents = yaml.dump({
     job: config.job,
     credentials: config.credentials,
   });
   debug(`JobConfig:\r\n${contents}`);
-  fs.writeFileSync(path, contents);
+  await writeFile(path, contents);
 }
 
 // Documentation on the scenario model can be found here:
 // https://github.com/dependabot/cli/blob/main/internal/model/scenario.go
-function readJobScenarioOutputFile(path: string) {
-  const scenarioContent = fs.readFileSync(path, 'utf-8');
+async function readJobScenarioOutputFile(path: string) {
+  const scenarioContent = await readFile(path, 'utf-8');
   if (!scenarioContent || typeof scenarioContent !== 'string') {
     return []; // No outputs or failed scenario
   }

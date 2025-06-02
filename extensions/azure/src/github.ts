@@ -1,6 +1,6 @@
 import axios from 'axios';
 import * as semver from 'semver';
-import { z } from 'zod';
+import { z } from 'zod/v4';
 
 import { warning } from 'azure-pipelines-task-lib/task';
 

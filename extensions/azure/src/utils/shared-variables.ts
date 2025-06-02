@@ -1,5 +1,5 @@
+import { DEFAULT_EXPERIMENTS } from '@paklo/core/dependabot';
 import * as tl from 'azure-pipelines-task-lib/task';
-import { DEFAULT_EXPERIMENTS } from '../dependabot/experiments';
 import { getAzureDevOpsAccessToken, getGithubAccessToken } from './tokens';
 import { extractHostname, extractOrganization, extractVirtualDirectory } from './url-parts';
 

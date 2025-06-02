@@ -1,12 +1,20 @@
-import { getVariable } from 'azure-pipelines-task-lib/task';
+export type VariableFinderFn = (name: string) => string | undefined;
 
-function convertPlaceholder(input: string): string {
+function convertPlaceholder({
+  input,
+  variableFinder,
+}: {
+  input?: string;
+  variableFinder: VariableFinderFn;
+}): string | undefined {
+  if (!input) return undefined;
+
   const matches: RegExpExecArray[] = extractPlaceholder(input);
   let result = input;
   for (const match of matches) {
     const placeholder = match[0];
     const name = match[1]!;
-    const value = getVariable(name) ?? placeholder;
+    const value = variableFinder(name) ?? placeholder;
     result = result.replace(placeholder, value);
   }
   return result;
@@ -18,13 +26,13 @@ function extractPlaceholder(input: string) {
   return matchAll(input, regexp);
 }
 
-function matchAll(input: string, rExp: RegExp, matches: Array<RegExpExecArray> = []) {
-  const matchIfAny = rExp.exec(input);
+function matchAll(input: string, regexp: RegExp, matches: Array<RegExpExecArray> = []) {
+  const matchIfAny = regexp.exec(input);
   if (matchIfAny) {
     matches.push(matchIfAny);
 
     // recurse until no more matches
-    matchAll(input, rExp, matches);
+    matchAll(input, regexp, matches);
   }
   return matches;
 }

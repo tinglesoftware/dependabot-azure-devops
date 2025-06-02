@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { extractPlaceholder } from '../../src/utils/placeholder';
+import { extractPlaceholder } from './placeholder';
 
 describe('Parse property placeholder', () => {
   it('Should return key with underscores', () => {

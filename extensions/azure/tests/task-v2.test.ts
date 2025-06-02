@@ -1,6 +1,7 @@
 import { TaskResult } from 'azure-pipelines-task-lib';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { type DependabotConfig } from '@paklo/core/dependabot';
 import { AzureDevOpsWebApiClient } from '../src/azure-devops/client';
 import {
   DEVOPS_PR_PROPERTY_DEPENDABOT_DEPENDENCIES,
@@ -9,7 +10,6 @@ import {
   type IPullRequestProperties,
 } from '../src/azure-devops/models';
 import { DependabotCli, type DependabotCliOptions } from '../src/dependabot/cli';
-import { type IDependabotConfig } from '../src/dependabot/config';
 import { DependabotJobBuilder } from '../src/dependabot/job-builder';
 import { type IDependabotUpdateOperationResult } from '../src/dependabot/models';
 import { GitHubGraphClient } from '../src/github';
@@ -145,7 +145,7 @@ describe('abandonPullRequestsWhereSourceRefIsDeleted', () => {
 
 describe('performDependabotUpdatesAsync', () => {
   let taskInputs: ISharedVariables;
-  let dependabotConfig: IDependabotConfig;
+  let dependabotConfig: DependabotConfig;
   let dependabotCli: DependabotCli;
   let dependabotCliUpdateOptions: DependabotCliOptions;
   let existingPullRequests: IPullRequestProperties[];
@@ -161,7 +161,7 @@ describe('performDependabotUpdatesAsync', () => {
         },
       ],
       registries: {},
-    } as IDependabotConfig;
+    } as DependabotConfig;
     dependabotCli = new DependabotCli(DependabotCli.CLI_PACKAGE_LATEST, null!, true);
     dependabotCli.update = vi
       .fn()

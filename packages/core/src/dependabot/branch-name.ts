@@ -1,5 +1,9 @@
 import * as crypto from 'crypto';
 
+// TODO: figure out how to handle IDENTIFIER field (in a group) in branch naming
+// Docs: https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#groups--
+// -> An identifier for a group is used in branch names and pull request titles.
+
 export function getBranchNameForUpdate(
   packageEcosystem: string,
   targetBranchName: string | undefined,
