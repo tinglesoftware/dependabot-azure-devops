@@ -9,13 +9,19 @@
   "releaseNotes": "https://github.com/tinglesoftware/dependabot-azure-devops/releases",
   "author": "Tingle Software",
   "category": "Azure Pipelines",
-  "visibility": ["Build", "Release"],
-  "runsOn": ["Agent", "DeploymentGroup"],
+  "visibility": [
+    "Build",
+    "Release"
+  ],
+  "runsOn": [
+    "Agent",
+    "DeploymentGroup"
+  ],
   "minimumAgentVersion": "3.232.1",
   "demands": [],
   "version": {
     "Major": 2,
-    "Minor": 0,
+    "Minor": 50,
     "Patch": 0
   },
   "instanceNameFormat": "Dependabot update",
@@ -136,7 +142,6 @@
       "required": false,
       "helpMarkDown": "The name to use as the git commit author of the pull requests. Defaults to `dependabot[bot]`."
     },
-
     {
       "name": "securityAdvisoriesFile",
       "type": "string",
@@ -145,7 +150,6 @@
       "helpMarkDown": "The file containing security advisories.",
       "required": false
     },
-
     {
       "name": "azureDevOpsServiceConnection",
       "type": "connectedService:Externaltfs",
@@ -162,7 +166,6 @@
       "required": false,
       "helpMarkDown": "The Personal Access Token for accessing Azure DevOps repositories. Supply a value here to avoid using permissions for the Build Service either because you cannot change its permissions or because you prefer that the Pull Requests be done by a different user. Use this in place of `azureDevOpsServiceConnection` such as when it is not possible to create a service connection."
     },
-
     {
       "name": "gitHubConnection",
       "type": "connectedService:github:OAuth,PersonalAccessToken,InstallationToken,Token",
@@ -181,7 +184,6 @@
       "required": false,
       "helpMarkDown": "The raw Personal Access Token for accessing GitHub repositories. Use this in place of `gitHubConnection` such as when it is not possible to create a service connection."
     },
-
     {
       "name": "targetProjectName",
       "type": "string",

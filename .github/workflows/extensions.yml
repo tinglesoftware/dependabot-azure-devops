@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    tags: ['*']
+    tags: ['extensions-*']
     paths:
       - 'extensions/**'
       - '.github/workflows/extensions.yml'
@@ -76,28 +76,13 @@ jobs:
         run: pnpm dlx turbo test
         working-directory: '${{ github.workspace }}/extensions/azure'
 
-      - name: Update version numbers in vss-extension.json overrides files
-        uses: cschleiden/replace-tokens@v1
-        with:
-          files: '["${{ github.workspace }}/extensions/azure/overrides*.json"]'
-        env:
-          MAJOR_MINOR_PATCH: ${{ steps.gitversion.outputs.majorMinorPatch }}
-          BUILD_NUMBER: ${{ github.run_number }}
-
-      - name: Update minor and path versions in task.json
-        run: |
-          # Major versions are left out here because they are fixed in the task.json files.
-          # The minor and patch versions are updated to make sure we keep recent changes deployed.
-          echo "`jq '.version.Minor=${{ steps.gitversion.outputs.minor }}' extensions/azure/tasks/dependabotV2/task.json`" > extensions/azure/tasks/dependabotV2/task.json
-          echo "`jq '.version.Patch=${{ github.run_number }}' extensions/azure/tasks/dependabotV2/task.json`" > extensions/azure/tasks/dependabotV2/task.json
-
       - name: Create Extension
         run: >
           pnpm tfx extension create
           --manifest-globs vss-extension.json
           --output-path ${{ github.workspace }}/out
           --json5
-          --overrides-file overrides.${{ (startsWith(github.ref, 'refs/tags/') && 'prod') || 'dev' }}.json
+          ${{ (!startsWith(github.ref, 'refs/tags/') && '--overrides-file overrides.dev.json') || '' }}
         working-directory: extensions/azure
 
       - name: Upload Artifact (extensions-azure)
