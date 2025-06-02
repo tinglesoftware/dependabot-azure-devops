@@ -1,0 +1,137 @@
+name: Website
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    tags: ['extensions-*']
+    paths:
+      - 'apps/website/**'
+      - '.github/workflows/website.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'apps/website/**'
+      - '.github/workflows/website.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # wait for previous runs to complete on main and tags
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' && !startsWith(github.ref, 'refs/tags/') }}
+
+env:
+  NEXT_TELEMETRY_DISABLED: 1 # Disable Next.js telemetry
+  TURBO_TELEMETRY_DISABLED: 1 # Disable Turbo telemetry
+
+  # SWA_ENVIRONMENT_FOR_PR: ${{ (github.event_name == 'pull_request' && format('ra{0}', github.event.pull_request.number)) || '' }}
+  SWA_ENVIRONMENT_FOR_PR: ${{ (github.event_name == 'pull_request' && format('{0}', github.event.pull_request.number)) || '' }}
+
+  GITHUB_SHA: ${{ github.sha }} # not discovered by default
+  GITHUB_REF_NAME: ${{ github.ref_name }} # not discovered by default
+
+jobs:
+  Website:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Setup turborepo caching
+        uses: rharkor/caching-for-turbo@v1.8
+
+      - name: Download deps
+        run: pnpm install
+        working-directory: '${{ github.workspace }}/apps/website'
+
+      - name: Restore .next/cache
+        id: cache-next-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ github.workspace }}/apps/website/.next/cache
+          key: ${{ runner.os }}-next-website-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-next-website
+
+      - name: Build
+        run: pnpm dlx turbo build
+        working-directory: '${{ github.workspace }}/apps/website'
+
+      - name: Lint
+        run: pnpm dlx turbo lint
+        working-directory: '${{ github.workspace }}/apps/website'
+
+      - name: Test
+        run: pnpm dlx turbo test
+        working-directory: '${{ github.workspace }}/apps/website'
+
+      # https://github.com/Azure/static-web-apps/issues/1059#issuecomment-1638817705
+      # https://learn.microsoft.com/en-us/azure/static-web-apps/deploy-nextjs-hybrid#enable-standalone-feature
+      # https://medium.com/@wdedweliwaththa/the-ultimate-guide-to-deploying-next-js-a1501de3e4d0
+      - name: Copy standalone output files
+        run: |
+          cp -r .next/standalone/apps/website/. .next/standalone && \
+          cp -r .next/static .next/standalone/.next/ && \
+          cp -r public .next/standalone/ && \
+          echo 'Done'
+        working-directory: apps/website
+
+      # - name: Azure Login
+      #   uses: azure/login@v2
+      #   if: ${{ github.ref == 'refs/heads/main' }}
+      #   with:
+      #     creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # - name: Deploy to Azure Web App
+      #   uses: azure/webapps-deploy@v3
+      #   if: ${{ github.ref == 'refs/heads/main' }}
+      #   timeout-minutes: 2
+      #   with:
+      #     app-name: paklo-website
+      #     slot-name: Production
+      #     package: ./apps/website/.next/standalone
+      #     clean: true
+      #     restart: true
+
+      # - name: Deploy to SWA
+      #   if: ${{ github.actor != 'dependabot[bot]' }}
+      #   id: swa
+      #   uses: azure/static-web-apps-deploy@v1
+      #   with:
+      #     azure_static_web_apps_api_token: ${{ secrets.AZURE_SWA_TOKEN_WEBSITE }}
+      #     # repo_token: ${{ secrets.GITHUB_TOKEN }} # Used for GitHub integrations (i.e. PR comments)
+      #     action: 'upload'
+      #     app_location: 'apps/website'
+      #     deployment_environment: ${{ env.SWA_ENVIRONMENT_FOR_PR }}
+      #     skip_app_build: true
+      #     skip_api_build: true
+      #   env:
+      #     NODE_VERSION: 22
+
+      # - name: Publish review app URLs
+      #   uses: thollander/actions-comment-pull-request@v3
+      #   if: ${{ github.actor != 'dependabot[bot]' && github.event_name == 'pull_request' }}
+      #   with:
+      #     message: |
+      #       Review App for `website` succeeded.
+      #       [Preview](${{ steps.swa.outputs.static_web_app_url }})
+      #     comment-tag: website
+
+      - name: Save .next/cache
+        if: always() && steps.cache-next-restore.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ github.workspace }}/.next/cache
+          key: ${{ steps.cache-next-restore.outputs.cache-primary-key }}
