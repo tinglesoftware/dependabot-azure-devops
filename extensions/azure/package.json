@@ -43,7 +43,7 @@
     "@paklo/tsconfig": "workspace:*",
     "@paklo/vitest": "workspace:*",
     "@types/js-yaml": "4.0.9",
-    "@types/node": "22.15.23",
+    "@types/node": "22.15.29",
     "@types/q": "1.5.8",
     "@types/semver": "7.7.0",
     "tfx-cli": "0.21.1"
