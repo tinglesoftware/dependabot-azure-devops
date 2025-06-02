@@ -7,7 +7,7 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - '.changeset/**'
+      - '.changeset/config.json'
       - '.github/workflows/version-or-publish.yml'
 
 permissions:
