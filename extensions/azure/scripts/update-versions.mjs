@@ -1,5 +1,6 @@
+/* eslint-disable no-undef */
+
 import { readFile, writeFile } from 'fs/promises';
-import { console, process } from 'node';
 import { join, relative } from 'path';
 import * as semver from 'semver';
 
