@@ -133,5 +133,5 @@ jobs:
         if: always() && steps.cache-next-restore.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
         with:
-          path: ${{ github.workspace }}/.next/cache
+          path: ${{ github.workspace }}/apps/website/.next/cache
           key: ${{ steps.cache-next-restore.outputs.cache-primary-key }}
