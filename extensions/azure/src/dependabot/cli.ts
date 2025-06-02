@@ -128,18 +128,20 @@ export class DependabotCli {
       // Run dependabot update
       if (!existsSync(jobOutputPath) || (await stat(jobOutputPath))?.size == 0) {
         section(`Processing job from '${jobInputPath}'`);
+        const additionalEnv = {
+          DEPENDABOT_JOB_ID: jobId.replace(/-/g, "_"), // replace hyphens with underscores
+          LOCAL_GITHUB_ACCESS_TOKEN: options?.gitHubAccessToken, // avoid rate-limiting when pulling images from GitHub container registries
+          LOCAL_AZURE_ACCESS_TOKEN: options?.azureDevOpsAccessToken, // technically not needed since we already supply this in our 'git_source' registry, but included for consistency
+          FAKE_API_PORT: options?.apiListeningPort, // used to pin PORT of the Dependabot CLI api back-channel
+        };
+        const env = Object.assign({}, process.env, additionalEnv);
         const dependabotTool = tool(dependabotPath).arg(dependabotArguments);
         const dependabotResultCode = await dependabotTool.execAsync({
           outStream: this.outputLogStream,
           errStream: this.outputLogStream,
           ignoreReturnCode: true,
           failOnStdErr: false,
-          env: {
-            DEPENDABOT_JOB_ID: jobId.replace(/-/g, '_'), // replace hyphens with underscores
-            LOCAL_GITHUB_ACCESS_TOKEN: options?.gitHubAccessToken, // avoid rate-limiting when pulling images from GitHub container registries
-            LOCAL_AZURE_ACCESS_TOKEN: options?.azureDevOpsAccessToken, // technically not needed since we already supply this in our 'git_source' registry, but included for consistency
-            FAKE_API_PORT: options?.apiListeningPort, // used to pin PORT of the Dependabot CLI api back-channel
-          },
+          env: env,
         });
         if (dependabotResultCode != 0) {
           error(`Dependabot failed with exit code ${dependabotResultCode}`);
