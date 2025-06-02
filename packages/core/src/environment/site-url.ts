@@ -49,7 +49,7 @@ export function getSiteUrlForAca(): string | undefined {
    * Having looked at the available ENV variables when deployed, we can form the URL from
    * combinations of the following variables:
    * CONTAINER_APP_ENV_DNS_SUFFIX (e.g. "jollyplant-9349db20.westeurope.azurecontainerapps.io")
-   * CONTAINER_APP_NAME (e.g. "frontend-website")
+   * CONTAINER_APP_NAME (e.g. "paklo-website")
    */
 
   const suffix = process.env.CONTAINER_APP_ENV_DNS_SUFFIX;
@@ -63,7 +63,7 @@ export function getSiteUrlForAppService(): string | undefined {
    * Environment variables for Azure App Service are documented at
    * https://learn.microsoft.com/en-us/azure/app-service/reference-app-settings?tabs=kudu%2Cdotnet#app-environment
    *
-   * WEBSITE_HOSTNAME (e.g. "frontend-website.azurewebsites.net")
+   * WEBSITE_HOSTNAME (e.g. "paklo-website.azurewebsites.net")
    */
 
   const value = process.env.WEBSITE_HOSTNAME;
