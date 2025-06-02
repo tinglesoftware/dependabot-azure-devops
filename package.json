@@ -13,6 +13,11 @@
     "extensions-azure:build": "turbo run build --filter=extension-azure-devops...",
     "extensions-azure:lint": "turbo run lint --filter=extension-azure-devops...",
 
+    "website:start": "turbo run start --filter=website...",
+    "website:dev": "turbo run dev --filter=website...",
+    "website:build": "turbo run build --filter=website...",
+    "website:clean": "turbo run clean --filter=website...",
+
     "build": "turbo run build",
     "lint": "turbo run lint",
     "test": "turbo run test",
@@ -35,5 +40,5 @@
   "engines": {
     "node": ">=22"
   },
-  "packageManager": "pnpm@10.11.0"
+  "packageManager": "pnpm@10.11.1"
 }

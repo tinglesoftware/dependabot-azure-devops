@@ -80,14 +80,45 @@ updates:
         patterns:
           - '@eslint/*'
           - 'eslint'
+      fumadocs:
+        patterns:
+          - 'fumadocs-*'
+          - '@fumadocs/*'
+      next:
+        patterns:
+          - '@next/*'
+          - 'next'
+          - 'eslint-config-next'
       js-yaml:
         patterns:
           - '@types/js-yaml'
           - 'js-yaml'
       prettier:
         patterns:
+          - 'prettier'
+          - 'prettier-*'
           - 'eslint-config-prettier'
-          - 'prettier*'
+        exclude-patterns:
+          - 'prettier-plugin-tailwindcss'
+      react:
+        patterns:
+          - '@types/react'
+          - '@types/react-dom'
+          - 'react'
+          - 'react-dom'
+          - 'react-router-dom'
+          - 'eslint-plugin-react'
+          - 'eslint-plugin-react-hooks'
+      vercel:
+        patterns:
+          - '@vercel/*'
+          - 'vercel'
+      tailwind:
+        patterns:
+          - 'tailwindcss'
+          - 'tailwind-merge'
+          - '@tailwindcss/*'
+          - 'prettier-plugin-tailwindcss'
       turbo:
         patterns:
           - 'eslint-plugin-turbo'
