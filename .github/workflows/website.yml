@@ -105,29 +105,29 @@ jobs:
       #     clean: true
       #     restart: true
 
-      # - name: Deploy to SWA
-      #   if: ${{ github.actor != 'dependabot[bot]' }}
-      #   id: swa
-      #   uses: azure/static-web-apps-deploy@v1
-      #   with:
-      #     azure_static_web_apps_api_token: ${{ secrets.AZURE_SWA_TOKEN_WEBSITE }}
-      #     # repo_token: ${{ secrets.GITHUB_TOKEN }} # Used for GitHub integrations (i.e. PR comments)
-      #     action: 'upload'
-      #     app_location: 'apps/website'
-      #     deployment_environment: ${{ env.SWA_ENVIRONMENT_FOR_PR }}
-      #     skip_app_build: true
-      #     skip_api_build: true
-      #   env:
-      #     NODE_VERSION: 22
+      - name: Deploy to SWA
+        if: ${{ github.actor != 'dependabot[bot]' }}
+        id: swa
+        uses: azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_SWA_TOKEN_WEBSITE }}
+          # repo_token: ${{ secrets.GITHUB_TOKEN }} # Used for GitHub integrations (i.e. PR comments)
+          action: 'upload'
+          app_location: 'apps/website'
+          deployment_environment: ${{ env.SWA_ENVIRONMENT_FOR_PR }}
+          skip_app_build: true
+          skip_api_build: true
+        env:
+          NODE_VERSION: 22
 
-      # - name: Publish review app URLs
-      #   uses: thollander/actions-comment-pull-request@v3
-      #   if: ${{ github.actor != 'dependabot[bot]' && github.event_name == 'pull_request' }}
-      #   with:
-      #     message: |
-      #       Review App for `website` succeeded.
-      #       [Preview](${{ steps.swa.outputs.static_web_app_url }})
-      #     comment-tag: website
+      - name: Publish review app URLs
+        uses: thollander/actions-comment-pull-request@v3
+        if: ${{ github.actor != 'dependabot[bot]' && github.event_name == 'pull_request' }}
+        with:
+          message: |
+            Review App for `website` succeeded.
+            [Preview](${{ steps.swa.outputs.static_web_app_url }})
+          comment-tag: website
 
       - name: Save .next/cache
         if: always() && steps.cache-next-restore.outputs.cache-hit != 'true'
