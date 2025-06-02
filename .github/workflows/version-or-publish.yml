@@ -4,10 +4,14 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
+    paths:
+      - '.changeset/**'
+      - '.github/workflows/version-or-publish.yml'
 
 permissions:
-  contents: write # required for changesets/action to commit changes
-  pull-requests: write # required for changesets/action to create a PR
+  contents: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -33,6 +37,16 @@ jobs:
       - name: Download deps
         run: pnpm install
 
+      - name: Generate token
+        if: ${{ github.event_name != 'pull_request' }}
+        id: generate-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.GH_APP_ID_RELEASER }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY_RELEASER }}
+          permission-contents: write
+          permission-pull-requests: write
+
       - name: Create release pull request
         uses: changesets/action@v1
         with:
@@ -40,4 +54,4 @@ jobs:
           version: pnpm packages:version
           commit: 'Version packages'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
