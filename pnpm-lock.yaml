@@ -21,8 +21,8 @@ importers:
         specifier: 4.1.0
         version: 4.1.0(prettier@3.5.3)(typescript@5.8.3)
       pretty-quick:
-        specifier: 4.2.0
-        version: 4.2.0(prettier@3.5.3)
+        specifier: 4.2.2
+        version: 4.2.2(prettier@3.5.3)
       rimraf:
         specifier: 6.0.1
         version: 6.0.1
@@ -1818,8 +1818,8 @@ packages:
     engines: {node: '>=14'}
     hasBin: true
 
-  pretty-quick@4.2.0:
-    resolution: {integrity: sha512-YHNtLadWFvdvqKhSqhgb9W1XC2pNAKHhXiy6NW1FVY7ogivjdWiZgTjIRLkQtRCBaDnT2eyTTOMkcYB6mkx1Ug==}
+  pretty-quick@4.2.2:
+    resolution: {integrity: sha512-uAh96tBW1SsD34VhhDmWuEmqbpfYc/B3j++5MC/6b3Cb8Ow7NJsvKFhg0eoGu2xXX+o9RkahkTK6sUdd8E7g5w==}
     engines: {node: '>=14'}
     hasBin: true
     peerDependencies:
@@ -2112,9 +2112,6 @@ packages:
 
   tinyexec@0.3.2:
     resolution: {integrity: sha512-KQQR9yN7R5+OSwaK0XQoj22pwHoTlgYqmUscPYoknOoWCWfj/5/ABTMRi69FrKU5ffPVh5QcFikpWJI/P1ocHA==}
-
-  tinyexec@1.0.1:
-    resolution: {integrity: sha512-5uC6DDlmeqiOwCPmK9jMSdOuZTh8bU39Ys6yidB+UTt5hfZUPGAypSgFRiEp+jbi9qH40BLDvy85jIU88wKSqw==}
 
   tinyglobby@0.2.13:
     resolution: {integrity: sha512-mEwzpUgrLySlveBwEVDMKk5B57bhLPYovRfPAXD5gA/98Opn0rCDj3GtLwFvCvH5RK9uPCExUROW5NjDwvqkxw==}
@@ -4132,7 +4129,7 @@ snapshots:
 
   prettier@3.5.3: {}
 
-  pretty-quick@4.2.0(prettier@3.5.3):
+  pretty-quick@4.2.2(prettier@3.5.3):
     dependencies:
       '@pkgr/core': 0.2.7
       ignore: 7.0.5
@@ -4140,7 +4137,7 @@ snapshots:
       picocolors: 1.1.1
       picomatch: 4.0.2
       prettier: 3.5.3
-      tinyexec: 1.0.1
+      tinyexec: 0.3.2
       tslib: 2.8.1
 
   process-nextick-args@2.0.1: {}
@@ -4528,8 +4525,6 @@ snapshots:
   tinybench@2.9.0: {}
 
   tinyexec@0.3.2: {}
-
-  tinyexec@1.0.1: {}
 
   tinyglobby@0.2.13:
     dependencies:
