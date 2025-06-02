@@ -96,7 +96,7 @@ importers:
       eslint-config-prettier:
         specifier: 10.1.5
         version: 10.1.5(eslint@9.27.0)
-      eslint-config-turbo:
+      eslint-plugin-turbo:
         specifier: 2.5.3
         version: 2.5.3(eslint@9.27.0)(turbo@2.5.3)
       typescript-eslint:
@@ -1072,12 +1072,6 @@ packages:
     hasBin: true
     peerDependencies:
       eslint: '>=7.0.0'
-
-  eslint-config-turbo@2.5.3:
-    resolution: {integrity: sha512-KuW20TUDfLooS38gSquL6Gi+ZjaMlno0N3hBe8c+F8+nRYUhbF2fNhuyzl9ScNHx6aJT2eVhLBfGELg7N5+sog==}
-    peerDependencies:
-      eslint: '>6.6.0'
-      turbo: '>2.0.0'
 
   eslint-plugin-turbo@2.5.3:
     resolution: {integrity: sha512-DlXZd+LgpDlxH/6IsiAXLhy82x0jeJDm0XBEqP6Le08uy0HBQkjCUt7SmXNp8esAtX9RYe6oDClbNbmI1jtK5g==}
@@ -3406,12 +3400,6 @@ snapshots:
   eslint-config-prettier@10.1.5(eslint@9.27.0):
     dependencies:
       eslint: 9.27.0
-
-  eslint-config-turbo@2.5.3(eslint@9.27.0)(turbo@2.5.3):
-    dependencies:
-      eslint: 9.27.0
-      eslint-plugin-turbo: 2.5.3(eslint@9.27.0)(turbo@2.5.3)
-      turbo: 2.5.3
 
   eslint-plugin-turbo@2.5.3(eslint@9.27.0)(turbo@2.5.3):
     dependencies:
