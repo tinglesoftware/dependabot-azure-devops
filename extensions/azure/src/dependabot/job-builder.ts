@@ -1,13 +1,13 @@
+import {
+  type DependabotAllowCondition,
+  type DependabotCooldown,
+  type DependabotGroup,
+  type DependabotIgnoreCondition,
+  type DependabotRegistry,
+  type DependabotUpdate,
+} from '@paklo/core/dependabot';
 import { type SecurityVulnerability } from '../github';
 import { type ISharedVariables } from '../utils/shared-variables';
-import {
-  type IDependabotAllowCondition,
-  type IDependabotCooldown,
-  type IDependabotGroup,
-  type IDependabotIgnoreCondition,
-  type IDependabotRegistry,
-  type IDependabotUpdate,
-} from './config';
 import { type IDependabotUpdateOperation } from './models';
 
 /**
@@ -24,8 +24,8 @@ export class DependabotJobBuilder {
   public static listAllDependenciesJob(
     taskInputs: ISharedVariables,
     id: string,
-    update: IDependabotUpdate,
-    registries?: Record<string, IDependabotRegistry>,
+    update: DependabotUpdate,
+    registries?: Record<string, DependabotRegistry>,
   ): IDependabotUpdateOperation {
     return {
       config: update,
@@ -54,8 +54,8 @@ export class DependabotJobBuilder {
   public static updateAllDependenciesJob(
     taskInputs: ISharedVariables,
     id: string,
-    update: IDependabotUpdate,
-    registries?: Record<string, IDependabotRegistry>,
+    update: DependabotUpdate,
+    registries?: Record<string, DependabotRegistry>,
     dependencyNamesToUpdate?: string[],
     existingPullRequests?: any[], // eslint-disable-line @typescript-eslint/no-explicit-any
     securityVulnerabilities?: SecurityVulnerability[],
@@ -89,8 +89,8 @@ export class DependabotJobBuilder {
   public static updatePullRequestJob(
     taskInputs: ISharedVariables,
     id: string,
-    update: IDependabotUpdate,
-    registries: Record<string, IDependabotRegistry> | undefined,
+    update: DependabotUpdate,
+    registries: Record<string, DependabotRegistry> | undefined,
     existingPullRequests: any[], // eslint-disable-line @typescript-eslint/no-explicit-any
     pullRequestToUpdate: any, // eslint-disable-line @typescript-eslint/no-explicit-any
     securityVulnerabilities?: SecurityVulnerability[],
@@ -116,8 +116,8 @@ export class DependabotJobBuilder {
 export function buildUpdateJobConfig(
   id: string,
   taskInputs: ISharedVariables,
-  update: IDependabotUpdate,
-  registries?: Record<string, IDependabotRegistry>,
+  update: DependabotUpdate,
+  registries?: Record<string, DependabotRegistry>,
   updatingPullRequest?: boolean | undefined,
   updateDependencyGroupName?: string | undefined,
   updateDependencyNames?: string[] | undefined,
@@ -163,7 +163,7 @@ export function buildUpdateJobConfig(
   };
 }
 
-export function mapSourceFromDependabotConfigToJobConfig(taskInputs: ISharedVariables, update: IDependabotUpdate) {
+export function mapSourceFromDependabotConfigToJobConfig(taskInputs: ISharedVariables, update: DependabotUpdate) {
   const isDevOpsServices = !taskInputs.virtualDirectory?.length; // Azure DevOps Services does not use a virtual directory
   return {
     'provider': 'azure',
@@ -180,7 +180,7 @@ export function mapSourceFromDependabotConfigToJobConfig(taskInputs: ISharedVari
 }
 
 export function mapGroupsFromDependabotConfigToJobConfig(
-  dependencyGroups?: Record<string, IDependabotGroup | undefined | null>,
+  dependencyGroups?: Record<string, DependabotGroup | undefined | null>,
 ) {
   if (!dependencyGroups || !Object.keys(dependencyGroups).length) {
     return undefined;
@@ -206,7 +206,7 @@ export function mapGroupsFromDependabotConfigToJobConfig(
 }
 
 export function mapAllowedUpdatesFromDependabotConfigToJobConfig(
-  allowedUpdates?: IDependabotAllowCondition[],
+  allowedUpdates?: DependabotAllowCondition[],
   securityOnlyUpdate?: boolean,
 ) {
   // If no allow conditions are specified, update direct dependencies by default; This is what GitHub does.
@@ -229,7 +229,7 @@ export function mapAllowedUpdatesFromDependabotConfigToJobConfig(
   });
 }
 
-export function mapIgnoreConditionsFromDependabotConfigToJobConfig(ignoreConditions?: IDependabotIgnoreCondition[]) {
+export function mapIgnoreConditionsFromDependabotConfigToJobConfig(ignoreConditions?: DependabotIgnoreCondition[]) {
   if (!ignoreConditions) {
     return undefined;
   }
@@ -249,7 +249,7 @@ export function mapIgnoreConditionsFromDependabotConfigToJobConfig(ignoreConditi
   });
 }
 
-export function mapCooldownFromDependabotConfigToJobConfig(cooldown?: IDependabotCooldown) {
+export function mapCooldownFromDependabotConfigToJobConfig(cooldown?: DependabotCooldown) {
   if (!cooldown) {
     return undefined;
   }
@@ -308,7 +308,7 @@ export function mapVersionStrategyToRequirementsUpdateStrategy(versioningStrateg
   }
 }
 
-export function mapCredentials(taskInputs: ISharedVariables, registries?: Record<string, IDependabotRegistry>) {
+export function mapCredentials(taskInputs: ISharedVariables, registries?: Record<string, DependabotRegistry>) {
   const credentials = [];
   if (taskInputs.systemAccessToken) {
     // Required to authenticate with the Azure DevOps git repository when cloning the source code

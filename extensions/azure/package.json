@@ -3,6 +3,7 @@
   "version": "2.50.0",
   "description": "Dependabot Azure DevOps task",
   "private": true,
+  "type": "module",
   "scripts": {
     "prebuild": "tsc --noEmit",
     "build": "tsup",
@@ -31,6 +32,7 @@
   },
   "homepage": "https://github.com/tinglesoftware/dependabot-azure-devops#readme",
   "dependencies": {
+    "@paklo/core": "workspace:*",
     "axios": "1.9.0",
     "azure-devops-node-api": "15.1.0",
     "azure-pipelines-task-lib": "5.2.0",

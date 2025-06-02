@@ -1,5 +1,5 @@
 import { error, warning } from 'azure-pipelines-task-lib/task';
-import * as fs from 'fs';
+import { readFile } from 'fs/promises';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AzureDevOpsWebApiClient } from '../../src/azure-devops/client';
@@ -258,8 +258,8 @@ describe('DependabotOutputProcessor', () => {
   });
 
   describe('schema', () => {
-    it('works for a result from python pip', () => {
-      const raw = JSON.parse(fs.readFileSync('tests/update_dependency_list/python-pip.json', 'utf-8'));
+    it('works for a result from python pip', async () => {
+      const raw = JSON.parse(await readFile('tests/update_dependency_list/python-pip.json', 'utf-8'));
       const data = DependabotDependenciesSchema.parse(raw['data']);
 
       expect(data['dependency_files']).toEqual(['/requirements.txt']);
@@ -273,8 +273,8 @@ describe('DependabotOutputProcessor', () => {
       expect(data['dependencies']![0]!.requirements![0]!.groups).toEqual(['dependencies']);
     });
 
-    it('works for a result from python poetry', () => {
-      const raw = JSON.parse(fs.readFileSync('tests/update_dependency_list/python-poetry.json', 'utf-8'));
+    it('works for a result from python poetry', async () => {
+      const raw = JSON.parse(await readFile('tests/update_dependency_list/python-poetry.json', 'utf-8'));
       const data = DependabotDependenciesSchema.parse(raw['data']);
 
       expect(data['dependency_files']).toEqual(['/pyproject.toml']);
@@ -288,8 +288,8 @@ describe('DependabotOutputProcessor', () => {
       expect(data['dependencies']![0]!.requirements![0]!.groups).toEqual(['dependencies']);
     });
 
-    it('works for a result from nuget', () => {
-      const raw = JSON.parse(fs.readFileSync('tests/update_dependency_list/nuget.json', 'utf-8'));
+    it('works for a result from nuget', async () => {
+      const raw = JSON.parse(await readFile('tests/update_dependency_list/nuget.json', 'utf-8'));
       const data = DependabotDependenciesSchema.parse(raw['data']);
 
       expect(data['dependency_files']).toEqual(['/Root.csproj']);

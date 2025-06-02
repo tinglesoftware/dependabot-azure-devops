@@ -1,4 +1,8 @@
 version: 2
+updates:
+  - package-ecosystem: 'docker' # See documentation for possible values
+    directory: '/' # Location of package manifests
+    open-pull-requests-limit: 10
 registries:
   composer:
     type: composer-repository

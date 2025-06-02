@@ -1,0 +1,39 @@
+{
+  "name": "@paklo/core",
+  "version": "0.0.0",
+  "sideEffects": false,
+  "type": "module",
+  "private": true,
+  "license": "MIT",
+  "exports": {
+    "./dependabot": {
+      "import": "./dist/dependabot.js",
+      "types": "./dist/dependabot.d.ts"
+    },
+    "./environment": {
+      "import": "./dist/environment.js",
+      "types": "./dist/environment.d.ts"
+    },
+    "./logger": {
+      "import": "./dist/logger.js",
+      "types": "./dist/logger.d.ts"
+    }
+  },
+  "scripts": {
+    "dev": "tsup --watch",
+    "build": "tsup",
+    "lint": "eslint .",
+    "test": "vitest",
+    "clean": "rimraf .turbo dist"
+  },
+  "dependencies": {
+    "pino": "9.7.0",
+    "pino-pretty": "13.0.0",
+    "zod": "3.25.30"
+  },
+  "devDependencies": {
+    "@paklo/eslint": "workspace:*",
+    "@paklo/tsconfig": "workspace:*",
+    "@paklo/vitest": "workspace:*"
+  }
+}

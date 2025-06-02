@@ -93,6 +93,10 @@ updates:
         patterns:
           - '@types/js-yaml'
           - 'js-yaml'
+      pino:
+        patterns:
+          - 'pino'
+          - 'pino-*'
       prettier:
         patterns:
           - 'prettier'

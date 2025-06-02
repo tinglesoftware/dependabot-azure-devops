@@ -2,11 +2,12 @@ import { debug, error, setResult, TaskResult, warning, which } from 'azure-pipel
 import { existsSync } from 'fs';
 import { readFile } from 'fs/promises';
 
+import { type DependabotConfig, type DependabotUpdate } from '@paklo/core/dependabot';
 import { AzureDevOpsWebApiClient } from './azure-devops/client';
 import { normalizeBranchName, section, setSecrets } from './azure-devops/formatting';
 import { DEVOPS_PR_PROPERTY_MICROSOFT_GIT_SOURCE_REF_NAME, type IPullRequestProperties } from './azure-devops/models';
 import { DependabotCli, type DependabotCliOptions } from './dependabot/cli';
-import { parseConfigFile, type IDependabotConfig, type IDependabotUpdate } from './dependabot/config';
+import { getDependabotConfig } from './dependabot/get-config';
 import { DependabotJobBuilder, mapPackageEcosystemToPackageManager } from './dependabot/job-builder';
 import { type IDependabotUpdateOperationResult } from './dependabot/models';
 import { DependabotOutputProcessor, parsePullRequestProperties } from './dependabot/output-processor';
@@ -54,7 +55,7 @@ async function run() {
     }
 
     // Parse dependabot.yaml configuration file
-    const dependabotConfig = await parseConfigFile(taskInputs);
+    const dependabotConfig = await getDependabotConfig(taskInputs);
     if (!dependabotConfig) {
       throw new Error('Failed to parse dependabot.yaml configuration file from the target repository');
     }
@@ -120,7 +121,7 @@ async function run() {
     };
 
     // If update identifiers are specified, select them; otherwise handle all
-    let dependabotUpdatesToPerform: IDependabotUpdate[] = [];
+    let dependabotUpdatesToPerform: DependabotUpdate[] = [];
     const targetIds = taskInputs.targetUpdateIds;
     if (targetIds && targetIds.length > 0) {
       for (const id of targetIds) {
@@ -242,8 +243,8 @@ export async function abandonPullRequestsWhereSourceRefIsDeleted(
  */
 export async function performDependabotUpdatesAsync(
   taskInputs: ISharedVariables,
-  dependabotConfig: IDependabotConfig,
-  dependabotUpdates: IDependabotUpdate[],
+  dependabotConfig: DependabotConfig,
+  dependabotUpdates: DependabotUpdate[],
   dependabotCli: DependabotCli,
   dependabotCliUpdateOptions: DependabotCliOptions,
   existingPullRequests: IPullRequestProperties[],

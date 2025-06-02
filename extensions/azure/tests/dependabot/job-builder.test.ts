@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  type IDependabotCooldown,
-  type IDependabotGroup,
-  type IDependabotIgnoreCondition,
-  type IDependabotUpdate,
-} from '../../src/dependabot/config';
+  type DependabotCooldown,
+  type DependabotGroup,
+  type DependabotIgnoreCondition,
+  type DependabotUpdate,
+} from '@paklo/core/dependabot';
 import {
   mapAllowedUpdatesFromDependabotConfigToJobConfig,
   mapCooldownFromDependabotConfigToJobConfig,
@@ -32,7 +32,7 @@ describe('mapSourceFromDependabotConfigToJobConfig', () => {
       'package-ecosystem': 'nuget',
       'directory': '/',
       'directories': [],
-    } as IDependabotUpdate;
+    } as DependabotUpdate;
 
     const result = mapSourceFromDependabotConfigToJobConfig(taskInputs, update);
     expect(result).toMatchObject({
@@ -58,7 +58,7 @@ describe('mapSourceFromDependabotConfigToJobConfig', () => {
       'package-ecosystem': 'nuget',
       'directory': '/',
       'directories': [],
-    } as IDependabotUpdate;
+    } as DependabotUpdate;
 
     const result = mapSourceFromDependabotConfigToJobConfig(taskInputs, update);
     expect(result).toMatchObject({
@@ -82,7 +82,7 @@ describe('mapGroupsFromDependabotConfigToJobConfig', () => {
   });
 
   it('should filter out undefined groups', () => {
-    const dependencyGroups: Record<string, IDependabotGroup | undefined | null> = {
+    const dependencyGroups: Record<string, DependabotGroup | undefined | null> = {
       group1: undefined,
       group2: {
         patterns: ['pattern2'],
@@ -94,7 +94,7 @@ describe('mapGroupsFromDependabotConfigToJobConfig', () => {
   });
 
   it('should filter out null groups', () => {
-    const dependencyGroups: Record<string, IDependabotGroup | undefined | null> = {
+    const dependencyGroups: Record<string, DependabotGroup | undefined | null> = {
       group1: null,
       group2: {
         patterns: ['pattern2'],
@@ -106,13 +106,13 @@ describe('mapGroupsFromDependabotConfigToJobConfig', () => {
   });
 
   it('should map dependency group properties correctly', () => {
-    const dependencyGroups: Record<string, IDependabotGroup> = {
+    const dependencyGroups: Record<string, DependabotGroup> = {
       group: {
-        'applies-to': 'all',
+        'applies-to': 'version-updates',
         'patterns': ['pattern1', 'pattern2'],
         'exclude-patterns': ['exclude1'],
-        'dependency-type': 'direct',
-        'update-types': ['security'],
+        'dependency-type': 'production',
+        'update-types': ['major'],
       },
     };
 
@@ -121,19 +121,19 @@ describe('mapGroupsFromDependabotConfigToJobConfig', () => {
     expect(result).toEqual([
       {
         'name': 'group',
-        'applies-to': 'all',
+        'applies-to': 'version-updates',
         'rules': {
           'patterns': ['pattern1', 'pattern2'],
           'exclude-patterns': ['exclude1'],
-          'dependency-type': 'direct',
-          'update-types': ['security'],
+          'dependency-type': 'production',
+          'update-types': ['major'],
         },
       },
     ]);
   });
 
   it('should use pattern "*" if no patterns are provided', () => {
-    const dependencyGroups: Record<string, IDependabotGroup> = {
+    const dependencyGroups: Record<string, DependabotGroup> = {
       group: {},
     };
 
@@ -179,7 +179,7 @@ describe('mapIgnoreConditionsFromDependabotConfigToJobConfig', () => {
   });
 
   it('should handle single version string correctly', () => {
-    const ignoreConditions: IDependabotIgnoreCondition[] = [
+    const ignoreConditions: DependabotIgnoreCondition[] = [
       {
         'dependency-name': 'dep1',
         'versions': ['>1.0.0'],
@@ -196,7 +196,7 @@ describe('mapIgnoreConditionsFromDependabotConfigToJobConfig', () => {
   });
 
   it('should handle multiple version strings correctly', () => {
-    const ignoreConditions: IDependabotIgnoreCondition[] = [
+    const ignoreConditions: DependabotIgnoreCondition[] = [
       {
         'dependency-name': 'dep1',
         'versions': ['>1.0.0', '<2.0.0'],
@@ -213,7 +213,7 @@ describe('mapIgnoreConditionsFromDependabotConfigToJobConfig', () => {
   });
 
   it('should handle empty versions array correctly', () => {
-    const ignoreConditions: IDependabotIgnoreCondition[] = [
+    const ignoreConditions: DependabotIgnoreCondition[] = [
       {
         'dependency-name': 'dep1',
         'versions': [],
@@ -244,7 +244,7 @@ describe('mapCooldownFromDependabotConfigToJobConfig', () => {
       'semver-patch-days': 2,
       'include': ['dependency-name-1', 'dependency-name-2'],
       'exclude': ['dependency-name-3', 'dependency-name-4'],
-    } as IDependabotCooldown;
+    } as DependabotCooldown;
 
     const result = mapCooldownFromDependabotConfigToJobConfig(cooldown);
     expect(result).toEqual({

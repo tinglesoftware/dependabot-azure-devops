@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getBranchNameForUpdate, sanitizeRef } from '../../src/dependabot/branch-name';
+import { getBranchNameForUpdate, sanitizeRef } from './branch-name';
 
 describe('getBranchNameForUpdate', () => {
   it('generates correct branch name for a single dependency update', () => {

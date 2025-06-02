@@ -1,4 +1,4 @@
-import { type IDependabotUpdate } from './config';
+import { type DependabotUpdate } from '@paklo/core/dependabot';
 
 /**
  * Represents the Dependabot CLI update job.yaml configuration file options.
@@ -107,7 +107,7 @@ export interface IDependabotUpdateJobConfig {
  * Represents a single Dependabot CLI update operation
  */
 export interface IDependabotUpdateOperation extends IDependabotUpdateJobConfig {
-  config: IDependabotUpdate;
+  config: DependabotUpdate;
 }
 
 /**

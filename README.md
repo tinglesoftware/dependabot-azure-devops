@@ -154,7 +154,7 @@ Dependabot uses an internal feature flag system called "experiments". Typically,
 
 Experiments vary depending on the package ecosystem used; They can be enabled using the `experiments` task input with a comma-separated list of key/value pairs representing the experiments e.g. `experiments: 'tidy=true,vendor=true,goprivate=*'`.
 
-By default, the enabled experiments will mirror the GitHub-hosted version of Dependabot, which can be found [here](./extensions/azure/src/dependabot/experiments.ts). Specifying experiments in the task input parameters will override all defaults.
+By default, the enabled experiments will mirror the GitHub-hosted version of Dependabot, which can be found [here](./packages/core/src/dependabot/experiments.ts). Specifying experiments in the task input parameters will override all defaults.
 
 > [!NOTE]
 > Dependabot experiment names are not [publicly] documented and these may be out-of-date at the time of reading. To find the latest list of experiments, search the `dependabot-core` GitHub repository using queries like ["enabled?(x)"](https://github.com/search?q=repo%3Adependabot%2Fdependabot-core+%2Fenabled%5CW%5C%28.*%5C%29%2F&type=code) and ["options.fetch(x)"](https://github.com/search?q=repo%3Adependabot%2Fdependabot-core+%2Foptions%5C.fetch%5C%28.*%2C%2F&type=code).

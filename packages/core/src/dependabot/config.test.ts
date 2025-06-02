@@ -1,18 +1,21 @@
-import * as fs from 'fs';
-import { load } from 'js-yaml';
+import { readFile } from 'fs/promises';
+import * as yaml from 'js-yaml';
 import { describe, expect, it } from 'vitest';
 
 import {
-  type IDependabotRegistry,
-  type IDependabotUpdate,
+  DependabotConfigSchema,
   parseRegistries,
   parseUpdates,
   validateConfiguration,
-} from '../../src/dependabot/config';
+  type DependabotRegistry,
+  type DependabotUpdate,
+} from './config';
 
 describe('Parse configuration file', () => {
-  it('Parsing works as expected', () => {
-    const config = load(fs.readFileSync('tests/config/dependabot.yml', 'utf-8'));
+  it('Parsing works as expected', async () => {
+    const config = await DependabotConfigSchema.parseAsync(
+      yaml.load(await readFile('fixtures/config/dependabot.yml', 'utf-8')),
+    );
     const updates = parseUpdates(config, '');
     expect(updates.length).toBe(3);
 
@@ -44,9 +47,11 @@ describe('Parse configuration file', () => {
 });
 
 describe('Parse registries', () => {
-  it('Parsing works as expected', () => {
-    const config = load(fs.readFileSync('tests/config/sample-registries.yml', 'utf-8'));
-    const registries = parseRegistries(config);
+  it('Parsing works as expected', async () => {
+    const config = await DependabotConfigSchema.parseAsync(
+      yaml.load(await readFile('fixtures/config/sample-registries.yml', 'utf-8')),
+    );
+    const registries = parseRegistries(config, () => undefined);
     expect(Object.keys(registries).length).toBe(11);
 
     // composer-repository
@@ -239,11 +244,11 @@ describe('Parse registries', () => {
 
 describe('Validate registries', () => {
   it('Validation works as expected', () => {
-    // let config: any = load(fs.readFileSync('tests/utils/dependabot.yml', "utf-8"));
+    // let config: any = yaml.load(fs.readFileSync('tests/utils/dependabot.yml', "utf-8"));
     // let updates = parseUpdates(config);
     // expect(updates.length).toBe(2);
 
-    const updates: IDependabotUpdate[] = [
+    const updates: DependabotUpdate[] = [
       {
         'package-ecosystem': 'npm',
         'directory': '/',
@@ -252,7 +257,7 @@ describe('Validate registries', () => {
       },
     ];
 
-    const registries: Record<string, IDependabotRegistry> = {
+    const registries: Record<string, DependabotRegistry> = {
       dummy1: {
         type: 'nuget',
         url: 'https://pkgs.dev.azure.com/contoso/_packaging/My_Feed/nuget/v3/index.json',
