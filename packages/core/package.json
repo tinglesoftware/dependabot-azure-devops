@@ -4,7 +4,7 @@
   "sideEffects": false,
   "type": "module",
   "private": true,
-  "license": "MIT",
+  "license": "AGPL-3.0-later",
   "exports": {
     "./dependabot": {
       "import": "./dist/dependabot.js",
@@ -19,6 +19,10 @@
       "types": "./dist/logger.d.ts"
     }
   },
+  "files": [
+    "dist",
+    "package.json"
+  ],
   "scripts": {
     "dev": "tsup --watch",
     "build": "tsup",
