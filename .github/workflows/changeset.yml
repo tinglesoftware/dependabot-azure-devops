@@ -6,7 +6,8 @@ on:
     branches: [main]
 
 permissions:
-  contents: write # write required to create a PR
+  contents: write # required for changesets/action to commit changes
+  pull-requests: write # required for changesets/action to create a PR
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
