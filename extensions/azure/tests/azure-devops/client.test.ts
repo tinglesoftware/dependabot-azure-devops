@@ -80,14 +80,10 @@ describe('AzureDevOpsWebApiClient', () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect((mockRestApiPost.mock.calls[1] as any)[1].reviewers).toContainEqual({
         id: 'user1',
-        isRequired: true,
-        isFlagged: true,
       });
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect((mockRestApiPost.mock.calls[1] as any)[1].reviewers).toContainEqual({
         id: 'user2',
-        isRequired: true,
-        isFlagged: true,
       });
       expect(pullRequestId).toBe(1);
     });
