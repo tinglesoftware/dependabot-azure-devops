@@ -71,6 +71,7 @@ public class DependabotConfigurationTests
                     PackageEcosystem = "npm",
                     Directory = "/",
                     Registries = ["dummy1", "dummy2"],
+                    Schedule = new(),
                 },
             ],
             Registries = new Dictionary<string, DependabotRegistry>

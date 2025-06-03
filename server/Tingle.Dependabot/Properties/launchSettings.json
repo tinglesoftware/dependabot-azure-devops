@@ -5,10 +5,9 @@
       "commandName": "Project",
       "launchBrowser": true,
       "launchUrl": "health",
-      "applicationUrl": "https://localhost:44390;http://localhost:59269",
+      "applicationUrl": "https://localhost:44391;http://localhost:44390",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development",
-        "EFCORE_PERFORM_MIGRATIONS": "true"
+        "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
     "Docker": {

@@ -1,664 +1,370 @@
-﻿using Azure.Identity;
-using Azure.Monitor.Query;
-using Azure.ResourceManager;
-using Azure.ResourceManager.AppContainers;
-using Azure.ResourceManager.AppContainers.Models;
-using Azure.ResourceManager.Resources;
+﻿using System.Formats.Tar;
 using Docker.DotNet;
-using Microsoft.AspNetCore.Http.Json;
 using Microsoft.Extensions.Options;
-using Microsoft.FeatureManagement;
-using Microsoft.FeatureManagement.FeatureFilters;
-using System.Diagnostics.CodeAnalysis;
-using System.Text.Json;
-using System.Text.Json.Nodes;
-using System.Text.RegularExpressions;
-using Tingle.Dependabot.Models.Dependabot;
+using Tingle.Dependabot.Models;
 using Tingle.Dependabot.Models.Management;
 using Tingle.Extensions.Primitives;
 
 namespace Tingle.Dependabot.Workflow;
 
-internal partial class UpdateRunner(IFeatureManagerSnapshot featureManager,
-                                    IOptions<WorkflowOptions> optionsAccessor,
-                                    IOptions<JsonOptions> jsonOptionsAccessor,
-                                    ILogger<UpdateRunner> logger)
+public interface IUpdateRunner
 {
-    [GeneratedRegex("\\${{\\s*([a-zA-Z_]+[a-zA-Z0-9_-]*)\\s*}}", RegexOptions.Compiled)]
-    private static partial Regex PlaceholderPattern();
+    Task RunAsync(UpdaterContext context, CancellationToken cancellationToken = default);
+}
 
-    private const string UpdaterContainerName = "updater";
-    private const string JobDefinitionFileName = "job.json";
+internal partial class UpdateRunner(IConfigFilesWriter configFilesWriter,
+                                    IOptions<WorkflowOptions> optionsAccessor,
+                                    ILogger<UpdateRunner> logger) : IUpdateRunner
+{
+    private const string VolumeNameCerts = "certs";
+    private const string VolumeNameJobs = "jobs";
+    private const string VolumeNameProxy = "proxy";
+    private const string MountPathJobs = "/mnt/dependabot/jobs";
+    private const string MountPathCert = "/usr/local/share/ca-certificates/dbot-ca.crt";
+    private const int ProxyPort = 1080;
 
-    private readonly IFeatureManagerSnapshot featureManager = featureManager ?? throw new ArgumentNullException(nameof(featureManager));
     private readonly WorkflowOptions options = optionsAccessor?.Value ?? throw new ArgumentNullException(nameof(optionsAccessor));
-    private readonly JsonOptions jsonOptions = jsonOptionsAccessor?.Value ?? throw new ArgumentNullException(nameof(jsonOptionsAccessor));
     private readonly ILogger logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
-    private readonly ArmClient armClient = new(new DefaultAzureCredential());
-    private readonly LogsQueryClient logsQueryClient = new(new DefaultAzureCredential());
     private readonly DockerClient dockerClient = new DockerClientConfiguration().CreateClient();
 
-    public async Task CreateAsync(Project project, Repository repository, RepositoryUpdate update, UpdateJob job, CancellationToken cancellationToken = default)
+    public async Task RunAsync(UpdaterContext context, CancellationToken cancellationToken = default)
     {
-        // check if debug is enabled for the project via Feature Management
-        var fmc = MakeTargetingContext(project, job);
-        var debug = await featureManager.IsEnabledAsync(FeatureNames.DependabotDebug, fmc);
-        var useV2 = await featureManager.IsEnabledAsync(FeatureNames.UpdaterV2, fmc);
-
-        // prepare credentials with replaced secrets
-        var secrets = new Dictionary<string, string>(project.Secrets) { ["DEFAULT_TOKEN"] = project.Token!, };
-        var registries = update.Registries?.Select(r => repository.Registries[r]).ToList();
-        var credentials = MakeExtraCredentials(registries, secrets); // add source credentials when running the in v2
-        var directory = Path.Join(options.WorkingDirectory, job.Id);
-        if (!Directory.Exists(directory)) Directory.CreateDirectory(directory);
-
-        var volumeName = "working-dir";
-        var ecosystem = job.PackageEcosystem!;
-        var updaterImageTag = options.GetUpdaterImageTag(ecosystem, project);
-        var updaterImage = job.UpdaterImage = $"ghcr.io/tinglesoftware/dependabot-updater-{ecosystem}:{updaterImageTag}";
-
-        var platform = job.Platform = options.JobsPlatform!.Value;
-        var resourceName = job.Id;
+        var project = context.Project;
+        var update = context.Update;
+        var job = context.Job;
 
         // if we have an existing one, there is nothing more to do
-        if (platform is UpdateJobPlatform.ContainerApps)
-        {
-            var containerAppJobs = GetResourceGroup().GetContainerAppJobs();
-            try
-            {
-                var response = await containerAppJobs.GetAsync(resourceName, cancellationToken);
-                if (response.Value is not null) return;
-            }
-            catch (Azure.RequestFailedException rfe) when (rfe.Status is 404) { }
-        }
-        else if (platform is UpdateJobPlatform.DockerCompose)
-        {
-            var containers = await dockerClient.Containers.ListContainersAsync(new() { All = true, }, cancellationToken);
-            var container = containers.FirstOrDefault(c => c.Names.Contains($"/{resourceName}"));
-            if (container is not null) return;
-        }
-        else
-        {
-            throw new NotSupportedException($"Platform {platform} is not supported");
-        }
+        var ecosystem = job.PackageEcosystem;
+        var resourceName = job.ResourceName;
+        var containers = await dockerClient.Containers.ListContainersAsync(new() { All = true, }, cancellationToken);
+        var container = containers.FirstOrDefault(c => c.Names.Contains($"/{resourceName}"));
+        if (container is not null) return;
+
+        // prepare credentials and job directory
+        var credentials = configFilesWriter.MakeCredentials(context);
+
+        // prepare directories and path for artifacts
+        var artifactsDirectory = Path.Join(options.ArtifactsDirectory, job.Id);
+        if (!Directory.Exists(artifactsDirectory)) Directory.CreateDirectory(artifactsDirectory);
+        var logsPath = job.LogsPath = Path.Join(artifactsDirectory, "logs.txt");
+        var flameGraphPath = job.FlameGraphPath = Path.Join(artifactsDirectory, "flamegraph.html");
+        if (File.Exists(logsPath)) File.Delete(logsPath);
+        if (File.Exists(flameGraphPath)) File.Delete(flameGraphPath);
+        var logsStream = File.Open(logsPath, FileMode.OpenOrCreate);
+        using var flameGraphStream = File.Open(flameGraphPath, FileMode.OpenOrCreate);
+
+        // write proxy config file
+        var proxyDirectory = Path.Join(options.ProxyDirectory, job.Id);
+        if (!Directory.Exists(proxyDirectory)) Directory.CreateDirectory(proxyDirectory);
+        var proxyConfigPath = Path.Join(proxyDirectory, "config.json");
+        if (File.Exists(proxyConfigPath)) File.Delete(proxyConfigPath);
+        var proxyConfigContext = new ProxyConfigContext(context, credentials);
+        await configFilesWriter.WriteProxyAsync(proxyConfigPath, proxyConfigContext, cancellationToken);
+
+        // the proxy config must be mounted in the root
+        // example: change /Users/maxwell/Documents/dependabot-azure-devops/server/Tingle.Dependabot/work/proxy/1359497145993567115/config.json
+        //              to 1359497145993567115/config.json
+        var mountedProxyConfigSubPath = Path.GetRelativePath(options.ProxyDirectory, proxyConfigPath);
 
         // write job definition file
-        var experiments = new Dictionary<string, bool>
+        var jobDirectory = Path.Join(options.JobsDirectory, job.Id);
+        if (!Directory.Exists(jobDirectory)) Directory.CreateDirectory(jobDirectory);
+        var jobDefinitionPath = Path.Join(jobDirectory, "job.json");
+        if (File.Exists(jobDefinitionPath)) File.Delete(jobDefinitionPath);
+        var outputPath = Path.Join(jobDirectory, "output.json");
+        if (File.Exists(outputPath)) File.Delete(outputPath);
+
+        var jobConfigContext = new JobConfigContext(context, credentials);
+        await configFilesWriter.WriteJobAsync(jobDefinitionPath, jobConfigContext, cancellationToken);
+        var caCertPath = Path.Join(options.CertsDirectory, "cert.crt");
+
+        // the job path we have might local to the machine but we need to be based on the mount we have in the container
+        // example: change /Users/maxwell/Documents/dependabot-azure-devops/server/Tingle.Dependabot/work/jobs/1359497145993567115/job.json
+        //              to /mnt/dependabot/jobs/1359497145993567115/job.json
+        // example: change /Users/maxwell/Documents/dependabot-azure-devops/server/Tingle.Dependabot/work/jobs/1359497145993567115/output.json
+        //              to /mnt/dependabot/jobs/1359497145993567115/output.json
+        var mountedJobDefinitionPath = Path.Combine(MountPathJobs, Path.GetRelativePath(options.JobsDirectory, jobDefinitionPath));
+        var mountedOutputPath = Path.Combine(MountPathJobs, Path.GetRelativePath(options.JobsDirectory, outputPath));
+
+        // https://github.com/dependabot/cli/blob/main/internal/infra/proxy.go
+        var proxyImage = $"ghcr.io/github/dependabot-update-job-proxy/dependabot-update-job-proxy:{options.ProxyImageTag}";
+        var proxyEntrypoint = new List<string> { "sh", "-c", "update-ca-certificates && /update-job-proxy" };
+        var proxyEnv = new Dictionary<string, string>
         {
-            // ["record-ecosystem-versions"] = await featureManager.IsEnabledAsync(FeatureNames.RecordEcosystemVersions, fmc),
-            // ["record-update-job-unknown-error"] = await featureManager.IsEnabledAsync(FeatureNames.RecordUpdateJobUnknownError, fmc),
+            ["JOB_ID"] = job.Id!,
+            ["PROXY_CACHE"] = "true",
+            ["LOG_RESPONSE_BODY_ON_AUTH_FAILURE"] = "true",
         };
-        var jobDefinitionPath = await WriteJobDefinitionAsync(project, update, job, experiments, directory, credentials, debug, cancellationToken);
-        logger.WrittenJobDefinitionFile(job.Id, jobDefinitionPath);
 
-        var env = await CreateEnvironmentVariables(project, repository, update, job, directory, credentials, debug, cancellationToken);
-
-        if (platform is UpdateJobPlatform.ContainerApps)
+        // we use command and not args to override the default one in ghcr.io./dependabot/dependabot-updater-{ecosystem} images
+        // https://github.com/dependabot/cli/blob/main/internal/infra/run.go
+        // https://github.com/dependabot/cli/blob/main/internal/infra/updater.go
+        var updaterImage = $"ghcr.io/dependabot/dependabot-updater-{ecosystem}:{options.UpdaterImageTag}";
+        var updaterCommand = new List<string> { "/bin/sh", "-c", "update-ca-certificates && bin/run fetch_files && bin/run update_files" };
+        var updaterEnv = new Dictionary<string, string>
         {
-            // prepare the container
-            var container = new ContainerAppContainer
-            {
-                Name = UpdaterContainerName,
-                Image = updaterImage,
-                Resources = job.Resources!,
-                Args = { useV2 ? "update_files" : "update_script_vnext", },
-                VolumeMounts = { new ContainerAppVolumeMount { VolumeName = volumeName, MountPath = "/mnt/dependabot", }, },
-            };
-            foreach (var (key, value) in env) container.Env.Add(new ContainerAppEnvironmentVariable { Name = key, Value = value, });
-
-            // prepare the ContainerApp job
-            var timeoutSec = Convert.ToInt32(TimeSpan.FromHours(1).TotalSeconds);
-            var data = new ContainerAppJobData((project.Location ?? options.Location)!)
-            {
-                EnvironmentId = options.AppEnvironmentId,
-                Configuration = new ContainerAppJobConfiguration(ContainerAppJobTriggerType.Manual, replicaTimeout: timeoutSec)
-                {
-                    ManualTriggerConfig = new JobConfigurationManualTriggerConfig
-                    {
-                        Parallelism = 1,
-                        ReplicaCompletionCount = 1,
-                    },
-                    ReplicaRetryLimit = 1,
-                },
-                Template = new ContainerAppJobTemplate
-                {
-                    Containers = { container, },
-                    Volumes =
-                    {
-                        new ContainerAppVolume
-                        {
-                            Name = volumeName,
-                            StorageType = ContainerAppStorageType.AzureFile,
-                            StorageName = volumeName,
-                        },
-                    },
-                },
-
-                // add tags to the data for tracing purposes
-                Tags =
-                {
-                    ["purpose"] = "dependabot",
-                    ["ecosystem"] = ecosystem,
-                    ["repository"] = job.RepositorySlug,
-                    ["machine-name"] = Environment.MachineName,
-                },
-            };
-            data.Tags.AddIfNotDefault("directory", job.Directory);
-            data.Tags.AddIfNotDefault("directories", ToJson(job.Directories));
-
-            // create the ContainerApp Job
-            var containerAppJobs = GetResourceGroup().GetContainerAppJobs();
-            var operation = await containerAppJobs.CreateOrUpdateAsync(Azure.WaitUntil.Completed, resourceName, data, cancellationToken);
-            logger.CreatedContainerAppJob(job.Id);
-
-            // start the ContainerApp Job
-            _ = await operation.Value.StartAsync(Azure.WaitUntil.Completed, cancellationToken: cancellationToken);
-            logger.StartedContainerAppJob(job.Id);
-        }
-        else if (platform is UpdateJobPlatform.DockerCompose)
-        {
-            // pull the image if it does not exist
-            var images = await dockerClient.Images.ListImagesAsync(new() { All = true, }, cancellationToken);
-            var image = images.FirstOrDefault(i => i.RepoTags?.Contains(updaterImage) ?? false);
-            if (image is null)
-            {
-                logger.LogInformation("Pulling image {Image}", updaterImage);
-                var pullParams = new Docker.DotNet.Models.ImagesCreateParameters
-                {
-                    FromImage = updaterImage,
-                    Tag = updaterImage.Split(':').Last(),
-                };
-                await dockerClient.Images.CreateImageAsync(pullParams, new(), new Progress<Docker.DotNet.Models.JSONMessage>(), cancellationToken);
-            }
-
-            // prepare the container
-            var resources = job.Resources!;
-            var containerParams = new Docker.DotNet.Models.CreateContainerParameters
-            {
-                Name = resourceName,
-                Image = updaterImage,
-                Tty = true,
-                HostConfig = new Docker.DotNet.Models.HostConfig
-                {
-                    AutoRemove = false,
-                    Binds = ["dependabot_working_directory:/mnt/dependabot"],
-                    RestartPolicy = new Docker.DotNet.Models.RestartPolicy
-                    {
-                        Name = Docker.DotNet.Models.RestartPolicyKind.No,
-                        MaximumRetryCount = 0,
-                    },
-                    NetworkMode = options.DockerNetwork,
-                    Memory = ByteSize.FromGigaBytes(resources.Memory).Bytes,
-                    NanoCPUs = Convert.ToInt64(resources.Cpu * 1_000_000_000),
-                },
-                Cmd = useV2 ? ["update_files"] : ["update_script_vnext"],
-                Labels = new Dictionary<string, string?>
-                {
-                    ["purpose"] = "dependabot",
-                    ["ecosystem"] = ecosystem,
-                    ["repository"] = job.RepositorySlug,
-                },
-                Env = [.. env.Select(kvp => $"{kvp.Key}={kvp.Value}")],
-            };
-            containerParams.Labels.AddIfNotDefault("directory", job.Directory);
-            containerParams.Labels.AddIfNotDefault("directories", ToJson(job.Directories));
-
-            // create the container
-            var container = await dockerClient.Containers.CreateContainerAsync(containerParams, cancellationToken);
-            logger.CreatedDockerContainerJob(job.Id);
-
-            // start the container
-            var started = await dockerClient.Containers.StartContainerAsync(container.ID, new(), cancellationToken);
-            if (!started) throw new InvalidOperationException($"Failed to start container {container.ID}");
-            logger.StartedDockerContainerJob(job.Id);
-        }
-        else
-        {
-            throw new NotSupportedException($"Platform {platform} is not supported");
-        }
-
-        job.Status = UpdateJobStatus.Running;
-    }
-
-    public async Task DeleteAsync(UpdateJob job, CancellationToken cancellationToken = default)
-    {
-        var resourceName = job.Id;
-        var platform = job.Platform;
-
-        if (platform is UpdateJobPlatform.ContainerApps)
-        {
-            try
-            {
-                // if it does not exist, there is nothing more to do
-                var containerAppJobs = GetResourceGroup().GetContainerAppJobs();
-                var response = await containerAppJobs.GetAsync(resourceName, cancellationToken);
-                if (response.Value is null) return;
-
-                // delete the container group
-                await response.Value.DeleteAsync(Azure.WaitUntil.Completed, cancellationToken);
-            }
-            catch (Azure.RequestFailedException rfe) when (rfe.Status is 404) { }
-        }
-        else if (platform is UpdateJobPlatform.DockerCompose)
-        {
-            // delete the container
-            var containers = await dockerClient.Containers.ListContainersAsync(new() { All = true, }, cancellationToken);
-            var container = containers.FirstOrDefault(c => c.Names.Contains($"/{resourceName}"));
-            if (container is not null)
-            {
-                await dockerClient.Containers.RemoveContainerAsync(container.ID, new() { Force = true, }, cancellationToken);
-            }
-        }
-        else
-        {
-            throw new NotSupportedException($"Platform {platform} is not supported");
-        }
-    }
-
-    public async Task<UpdateRunnerState?> GetStateAsync(UpdateJob job, CancellationToken cancellationToken = default)
-    {
-        var resourceName = job.Id;
-        var platform = job.Platform;
-
-        if (platform is UpdateJobPlatform.ContainerApps)
-        {
-            try
-            {
-                // if it does not exist, there is nothing more to do
-                var response = await GetResourceGroup().GetContainerAppJobAsync(resourceName, cancellationToken);
-                var resource = response.Value;
-
-                // if there is no execution, there is nothing more to do
-                var executions = await resource.GetContainerAppJobExecutions().GetAllAsync(cancellationToken: cancellationToken).ToListAsync(cancellationToken: cancellationToken);
-                var execution = executions.SingleOrDefault();
-                if (execution is null) return null;
-
-                var status = execution.Data.Status.ToString() switch
-                {
-                    "Succeeded" => UpdateJobStatus.Succeeded,
-                    "Running" => UpdateJobStatus.Running,
-                    "Processing" => UpdateJobStatus.Running,
-                    _ => UpdateJobStatus.Failed,
-                };
-
-                // there is no state for jobs that are running
-                if (status is UpdateJobStatus.Running) return null;
-
-                // get the period
-                DateTimeOffset? start = execution.Data.StartOn, end = execution.Data.EndOn;
-
-                // delete the job directory
-                DeleteJobDirectory(job);
-
-                // create and return state
-                return new UpdateRunnerState(status, start, end);
-            }
-            catch (Azure.RequestFailedException rfe) when (rfe.Status is 404) { }
-        }
-        else if (platform is UpdateJobPlatform.DockerCompose)
-        {
-            var containers = await dockerClient.Containers.ListContainersAsync(new() { All = true, }, cancellationToken);
-            var container = containers.FirstOrDefault(c => c.Names.Contains($"/{resourceName}"));
-            if (container is null) return null;
-
-            var inspection = await dockerClient.Containers.InspectContainerAsync(container.ID, cancellationToken);
-            var status = inspection.State switch
-            {
-                { Running: true } => UpdateJobStatus.Running,
-                { Status: "created" } => UpdateJobStatus.Running,
-                { Status: "exited", ExitCode: 0 } => UpdateJobStatus.Succeeded,
-                { Status: "exited", ExitCode: not 0 } => UpdateJobStatus.Failed,
-                _ => UpdateJobStatus.Failed,
-            };
-
-            // there is no state for jobs that are running
-            if (status is UpdateJobStatus.Running) return null;
-
-            // get the period
-            var start = DateTimeOffset.Parse(inspection.State.StartedAt);
-            var end = DateTimeOffset.Parse(inspection.State.FinishedAt);
-
-            // delete the job directory
-            DeleteJobDirectory(job);
-
-            // create and return state
-            return new UpdateRunnerState(status, start, end);
-        }
-        else
-        {
-            throw new NotSupportedException($"Platform {platform} is not supported");
-        }
-        return null;
-    }
-
-    public async Task<string?> GetLogsAsync(UpdateJob job, CancellationToken cancellationToken = default)
-    {
-        var logs = (string?)null;
-        var resourceName = job.Id;
-        var platform = job.Platform;
-
-        if (platform is UpdateJobPlatform.ContainerApps)
-        {
-            // pull logs from Log Analytics
-            var query = $"ContainerAppConsoleLogs_CL | where ContainerJobName_s == '{resourceName}' | order by _timestamp_d asc | project Log_s";
-            var response = await logsQueryClient.QueryWorkspaceAsync<string>(workspaceId: options.LogAnalyticsWorkspaceId,
-                                                                             query: query,
-                                                                             timeRange: QueryTimeRange.All,
-                                                                             cancellationToken: cancellationToken);
-
-            logs = string.Join(Environment.NewLine, response.Value);
-        }
-        else if (platform is UpdateJobPlatform.DockerCompose)
-        {
-            // pull docker container logs
-            var containerId = resourceName;
-            var logParams = new Docker.DotNet.Models.ContainerLogsParameters
-            {
-                ShowStdout = true,
-                ShowStderr = true,
-                Follow = false,
-                Timestamps = false,
-            };
-            using var stream = await dockerClient.Containers.GetContainerLogsAsync(containerId, tty: true, logParams, cancellationToken);
-            using var stdin = new MemoryStream();
-            using var stdout = new MemoryStream();
-            using var stderr = new MemoryStream();
-
-            await stream.CopyOutputToAsync(stdin, stdout, stderr, cancellationToken);
-            stdout.Seek(0, SeekOrigin.Begin);
-            using var reader = new StreamReader(stdout);
-            logs = await reader.ReadToEndAsync(cancellationToken);
-            if (string.IsNullOrWhiteSpace(logs))
-            {
-                stderr.Seek(0, SeekOrigin.Begin);
-                using var errorReader = new StreamReader(stderr);
-                logs = await errorReader.ReadToEndAsync(cancellationToken);
-            }
-        }
-        else
-        {
-            throw new NotSupportedException($"Platform {platform} is not supported");
-        }
-
-        return logs;
-    }
-
-    internal async Task<IDictionary<string, string>> CreateEnvironmentVariables(Project project,
-                                                                                Repository repository,
-                                                                                RepositoryUpdate update,
-                                                                                UpdateJob job,
-                                                                                string directory,
-                                                                                IList<Dictionary<string, string>> credentials,
-                                                                                bool debug,
-                                                                                CancellationToken cancellationToken = default) // TODO: unit test this
-    {
-        // Add compulsory values
-        var values = new Dictionary<string, string>
-        {
-            // env for v2
+            ["GITHUB_ACTIONS"] = "true", // sets exit code when fetch fails
             ["DEPENDABOT_JOB_ID"] = job.Id!,
-            ["DEPENDABOT_JOB_TOKEN"] = job.AuthKey!,
-            ["DEPENDABOT_DEBUG"] = debug.ToString().ToLower(),
-            ["DEPENDABOT_API_URL"] = options.JobsApiUrl!.ToString(),
-            ["DEPENDABOT_JOB_PATH"] = Path.Join(directory, JobDefinitionFileName),
-            ["DEPENDABOT_OUTPUT_PATH"] = Path.Join(directory, "output"),
-            // Setting DEPENDABOT_REPO_CONTENTS_PATH causes some issues, ignore till we can resolve
-            //["DEPENDABOT_REPO_CONTENTS_PATH"] = Path.Join(jobDirectory, "repo"),
-            ["GITHUB_ACTIONS"] = "false",
+            ["DEPENDABOT_JOB_TOKEN"] = $"Updater {job.AuthKey}",
+            ["DEPENDABOT_JOB_PATH"] = mountedJobDefinitionPath,
+            ["DEPENDABOT_OUTPUT_PATH"] = mountedOutputPath,
+            ["DEPENDABOT_REPO_CONTENTS_PATH"] = "/home/dependabot/dependabot-updater/repo",
+            ["DEPENDABOT_API_URL"] = $"{options.JobsApiUrl}".TrimEnd('/'), // make sure to remove trailing slash so we match incoming requests
+            ["UPDATER_ONE_CONTAINER"] = "true",
             ["UPDATER_DETERMINISTIC"] = "true",
-
-            // env for v1
-            ["DEPENDABOT_PACKAGE_MANAGER"] = job.PackageEcosystem!,
-            ["DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT"] = update.OpenPullRequestsLimit.ToString(),
-            ["DEPENDABOT_EXTRA_CREDENTIALS"] = ToJson(credentials),
-            ["DEPENDABOT_FAIL_ON_EXCEPTION"] = "false", // we the script to run to completion so that we get notified of job completion
+            ["DEPENDABOT_DEBUG"] = project.Debug.ToString().ToLower(),
+            ["FLAMEGRAPH"] = "1",
         };
+        var updateEnvNamesForProxyUrl = new List<string> { "http_proxy", "HTTP_PROXY", "https_proxy", "HTTPS_PROXY" };
 
-        // Add optional values
-        values.AddIfNotDefault("GITHUB_ACCESS_TOKEN", project.GithubToken ?? options.GithubToken)
-              .AddIfNotDefault("DEPENDABOT_REBASE_STRATEGY", update.RebaseStrategy)
-              .AddIfNotDefault("DEPENDABOT_DIRECTORY", update.Directory)
-              .AddIfNotDefault("DEPENDABOT_DIRECTORIES", ToJson(update.Directories))
-              .AddIfNotDefault("DEPENDABOT_TARGET_BRANCH", update.TargetBranch)
-              .AddIfNotDefault("DEPENDABOT_VENDOR", update.Vendor ? "true" : null)
-              .AddIfNotDefault("DEPENDABOT_REJECT_EXTERNAL_CODE", string.Equals(update.InsecureExternalCodeExecution, "deny").ToString().ToLowerInvariant())
-              .AddIfNotDefault("DEPENDABOT_VERSIONING_STRATEGY", update.VersioningStrategy)
-              .AddIfNotDefault("DEPENDABOT_DEPENDENCY_GROUPS", ToJson(update.Groups))
-              .AddIfNotDefault("DEPENDABOT_ALLOW_CONDITIONS", ToJson(update.Allow))
-              .AddIfNotDefault("DEPENDABOT_IGNORE_CONDITIONS", ToJson(update.Ignore))
-              .AddIfNotDefault("DEPENDABOT_COMMIT_MESSAGE_OPTIONS", ToJson(update.CommitMessage))
-              .AddIfNotDefault("DEPENDABOT_LABELS", ToJson(update.Labels))
-              .AddIfNotDefault("DEPENDABOT_BRANCH_NAME_SEPARATOR", update.PullRequestBranchName?.Separator)
-              .AddIfNotDefault("DEPENDABOT_MILESTONE", update.Milestone?.ToString());
+        // create temporary networks which we can delete later
+        var internetNetwork = await CreateDockerNetworkAsync(@internal: false, cancellationToken);
+        var noInternetNetwork = await CreateDockerNetworkAsync(@internal: true, cancellationToken);
 
-        // Add values for Azure DevOps
-        var url = project.Url;
-        values.AddIfNotDefault("AZURE_HOSTNAME", url.Hostname)
-              .AddIfNotDefault("AZURE_ORGANIZATION", url.OrganizationName)
-              .AddIfNotDefault("AZURE_PROJECT", url.ProjectName)
-              .AddIfNotDefault("AZURE_REPOSITORY", Uri.EscapeDataString(repository.Name!))
-              .AddIfNotDefault("AZURE_ACCESS_TOKEN", project.Token)
-              .AddIfNotDefault("AZURE_SET_AUTO_COMPLETE", project.AutoComplete.Enabled.ToString().ToLowerInvariant())
-              .AddIfNotDefault("AZURE_AUTO_COMPLETE_IGNORE_CONFIG_IDS", ToJson(project.AutoComplete.IgnoreConfigs ?? []))
-              .AddIfNotDefault("AZURE_MERGE_STRATEGY", project.AutoComplete.MergeStrategy?.ToString())
-              .AddIfNotDefault("AZURE_AUTO_APPROVE_PR", project.AutoApprove.Enabled.ToString().ToLowerInvariant());
+        // find and pull images we need
+        job.ProxyImage = await GetImageWithDigestAsync(proxyImage, true, cancellationToken);
+        job.UpdaterImage = await GetImageWithDigestAsync(updaterImage, true, cancellationToken);
 
-        return values;
-    }
-
-    internal async Task<string> WriteJobDefinitionAsync(Project project,
-                                                        RepositoryUpdate update,
-                                                        UpdateJob job,
-                                                        IDictionary<string, bool> experiments,
-                                                        string directory,
-                                                        IList<Dictionary<string, string>> credentials,
-                                                        bool debug,
-                                                        CancellationToken cancellationToken = default) // TODO: unit test this
-    {
-        var url = project.Url;
-        var credentialsMetadata = MakeCredentialsMetadata(credentials);
-
-        var definition = new JsonObject
+        // prepare the proxy container
+        var proxyContainerParams = new Docker.DotNet.Models.CreateContainerParameters
         {
-            ["job"] = new JsonObject
+            Name = job.ResourceNameProxy,
+            Image = job.ProxyImage,
+            Tty = true,
+            HostConfig = new Docker.DotNet.Models.HostConfig
             {
-                ["dependency-groups"] = ToJsonNode(update.Groups ?? []),
-                ["allowed-updates"] = ToJsonNode(update.Allow ?? []),
-                ["credentials-metadata"] = ToJsonNode(credentialsMetadata).AsArray(),
-                // ["dependencies"] = null, // object array
-                ["directory"] = job.Directory,
-                ["directories"] = ToJsonNode(job.Directories),
-                // ["existing-pull-requests"] = null, // object array
-                ["experiments"] = ToJsonNode(experiments),
-                ["ignore-conditions"] = ToJsonNode(update.Ignore ?? []),
-                // ["security-advisories"] = null, // object array
-                ["package_manager"] = ConvertEcosystemToPackageManager(job.PackageEcosystem!),
-                ["repo-name"] = job.RepositorySlug,
-                ["source"] = new JsonObject
-                {
-                    ["provider"] = "azure",
-                    ["repo"] = job.RepositorySlug,
-                    ["directory"] = job.Directory,
-                    ["directories"] = ToJsonNode(job.Directories),
-                    ["branch"] = update.TargetBranch,
-                    ["hostname"] = url.Hostname,
-                    ["api-endpoint"] = new UriBuilder
-                    {
-                        Scheme = Uri.UriSchemeHttps,
-                        Host = url.Hostname,
-                        Port = url.Port ?? -1,
-                    }.ToString(),
-                },
-                ["lockfile-only"] = update.VersioningStrategy == "lockfile-only",
-                ["requirements-update-strategy"] = update.VersioningStrategy?.Replace("-", "_"),
-                // ["update-subdependencies"] = false,
-                // ["updating-a-pull-request"] = false,
-                ["vendor-dependencies"] = update.Vendor,
-                ["security-updates-only"] = update.OpenPullRequestsLimit == 0,
-                ["debug"] = debug,
+                AutoRemove = false,
+                // TODO: make sure this bind works from within a container not just the local machine
+                Binds = [$"{proxyConfigPath}:/config.json"],
+                RestartPolicy = new Docker.DotNet.Models.RestartPolicy { Name = Docker.DotNet.Models.RestartPolicyKind.No },
+                Memory = ByteSize.FromMegaBytes(100).Bytes, // 100M
+                NanoCPUs = Convert.ToInt64(0.1 * 1_000_000_000), // 100m
+                ExtraHosts = ["host.docker.internal:host-gateway"], // manual mapping needed for Docker on Linux
             },
-            ["credentials"] = ToJsonNode(credentials).AsArray(),
-        };
-
-        // write the job definition file
-        var path = Path.Join(directory, JobDefinitionFileName);
-        if (File.Exists(path)) File.Delete(path);
-        using var stream = File.OpenWrite(path);
-        await JsonSerializer.SerializeAsync(stream, definition, jsonOptions.SerializerOptions, cancellationToken);
-
-        return path;
-    }
-
-    internal static TargetingContext MakeTargetingContext(Project project, UpdateJob job)
-    {
-        return new TargetingContext
-        {
-            Groups =
-            [
-                $"provider:{project.Type.ToString().ToLower()}",
-                $"project:{project.Id}",
-                $"ecosystem:{job.PackageEcosystem}",
-            ],
-        };
-    }
-    internal static IList<Dictionary<string, string>> MakeCredentialsMetadata(IList<Dictionary<string, string>> credentials)
-    {
-        return credentials.Select(cred =>
-        {
-            var values = new Dictionary<string, string> { ["type"] = cred["type"], };
-
-            // if no host, pull host from url, index-url, or registry if available
-            if (!cred.TryGetValue("host", out var host) || string.IsNullOrWhiteSpace(host))
+            NetworkingConfig = new Docker.DotNet.Models.NetworkingConfig
             {
-                if (cred.TryGetValue("url", out var url) || cred.TryGetValue("index-url", out url)) { }
-                else if (cred.TryGetValue("registry", out var registry)) url = $"https://{registry}";
-
-                if (url is not null && Uri.TryCreate(url, UriKind.Absolute, out var u))
+                EndpointsConfig = new Dictionary<string, Docker.DotNet.Models.EndpointSettings>
                 {
-                    host = u.Host;
+                    [internetNetwork.Name] = new() { NetworkID = internetNetwork.Id, },
+                    [noInternetNetwork.Name] = new() { NetworkID = noInternetNetwork.Id, },
+                }
+            },
+            Entrypoint = proxyEntrypoint,
+            Env = [.. proxyEnv.Select(kvp => $"{kvp.Key}={kvp.Value}")],
+        };
+
+        // create the proxy container
+        var proxyContainer = await dockerClient.Containers.CreateContainerAsync(proxyContainerParams, cancellationToken);
+        logger.CreatedProxyContainer(job.Id, proxyContainer.ID);
+
+        // // mounting the config.json file is so much gymnastics so we instead just write it into the container
+        // using var tarStream = new MemoryStream();
+        // using (var tarWriter = new TarWriter(tarStream, leaveOpen: true))
+        // {
+        //     var entry = new PaxTarEntry(TarEntryType.RegularFile, Path.GetFileName(proxyConfigPath))
+        //     {
+        //         DataStream = new MemoryStream(await File.ReadAllBytesAsync(proxyConfigPath, cancellationToken)),
+        //     };
+        //     await tarWriter.WriteEntryAsync(entry, cancellationToken: cancellationToken);
+        // }
+        // tarStream.Seek(0, SeekOrigin.Begin);
+        // await dockerClient.Containers.ExtractArchiveToContainerAsync(proxyContainer.ID, new() { Path = "/" }, tarStream, cancellationToken);
+
+        // start the proxy container with streaming logs
+        await dockerClient.Containers.StartContainerAsync(proxyContainer.ID, new(), cancellationToken);
+        var proxyLogsTask = StreamLogsAsync(proxyContainer.ID, "  proxy | ", logsStream, cancellationToken);
+        logger.StartedProxyContainer(job.Id);
+
+        // find the proxy URL
+        var inspection = await dockerClient.Containers.InspectContainerAsync(proxyContainer.ID, cancellationToken);
+        var proxyUrl = $"http://{inspection.NetworkSettings.Networks[noInternetNetwork.Name].IPAddress}:{ProxyPort}";
+
+        // prepare the updater container
+        var updaterResources = job.Resources!;
+        var updaterContainerParams = new Docker.DotNet.Models.CreateContainerParameters
+        {
+            Name = resourceName,
+            Image = job.UpdaterImage,
+            Tty = true,
+            HostConfig = new Docker.DotNet.Models.HostConfig
+            {
+                AutoRemove = false,
+                Binds = [
+                    $"{(options.IsInContainer ? "dependabot_jobs" : options.JobsDirectory)}:{MountPathJobs}",
+                    // TODO: make sure this bind works from within a container not just the local machine
+                    $"{caCertPath}:{MountPathCert}",
+                ],
+                RestartPolicy = new Docker.DotNet.Models.RestartPolicy { Name = Docker.DotNet.Models.RestartPolicyKind.No },
+                Memory = ByteSize.FromGigaBytes(updaterResources.Memory).Bytes,
+                NanoCPUs = Convert.ToInt64(updaterResources.Cpu * 1_000_000_000),
+            },
+            NetworkingConfig = new Docker.DotNet.Models.NetworkingConfig
+            {
+                EndpointsConfig = new Dictionary<string, Docker.DotNet.Models.EndpointSettings>
+                {
+                    [noInternetNetwork.Name] = new() { NetworkID = noInternetNetwork.Id, }
+                }
+            },
+            Cmd = updaterCommand,
+            Env = [.. updaterEnv.Select(kvp => $"{kvp.Key}={kvp.Value}")],
+        };
+        foreach (var name in updateEnvNamesForProxyUrl) updaterContainerParams.Env.Add($"{name}={proxyUrl}");
+
+        // create the updater container
+        var updaterContainer = await dockerClient.Containers.CreateContainerAsync(updaterContainerParams, cancellationToken);
+        logger.CreatedUpdaterContainer(job.Id, updaterContainer.ID);
+
+        // start the updater container with streaming logs
+        await dockerClient.Containers.StartContainerAsync(updaterContainer.ID, new(), cancellationToken);
+        var updaterLogsTask = StreamLogsAsync(updaterContainer.ID, "updater | ", logsStream, cancellationToken);
+        logger.StartedUpdaterContainer(job.Id);
+
+        // wait for the updater container to exit, then stop the proxy (if not stopped, logs will not complete collection)
+        await dockerClient.Containers.WaitContainerAsync(updaterContainer.ID, cancellationToken);
+        await dockerClient.Containers.StopContainerAsync(proxyContainer.ID, new() { WaitBeforeKillSeconds = 0 }, cancellationToken);
+
+        // collect the flamegraph
+        await ReadFlameGraphAsync(updaterContainer.ID, flameGraphStream, cancellationToken);
+        await flameGraphStream.FlushAsync(cancellationToken);
+
+        // complete the collection of logs
+        await Task.WhenAll(proxyLogsTask, updaterLogsTask);
+        await logsStream.FlushAsync(cancellationToken);
+
+        // update the job
+        inspection = await dockerClient.Containers.InspectContainerAsync(updaterContainer.ID, cancellationToken);
+        job.Status = inspection.State.ExitCode is 0 ? UpdateJobStatus.Succeeded : UpdateJobStatus.Failed;
+        job.Start = DateTimeOffset.Parse(inspection.State.StartedAt);
+        job.End = DateTimeOffset.Parse(inspection.State.FinishedAt);
+        job.Duration = Convert.ToInt64(Math.Ceiling((job.End - job.Start).Value.TotalMilliseconds));
+        if (update.LatestJobId == job.Id) update.LatestJobStatus = job.Status;
+
+        // delete the containers
+        await dockerClient.Containers.RemoveContainerAsync(updaterContainer.ID, new() { Force = true, }, cancellationToken);
+        await dockerClient.Containers.RemoveContainerAsync(proxyContainer.ID, new() { Force = true, }, cancellationToken);
+
+        // delete created directories
+        if (Directory.Exists(jobDirectory)) Directory.Delete(jobDirectory, recursive: true);
+        if (Directory.Exists(proxyDirectory)) Directory.Delete(proxyDirectory, recursive: true);
+
+        // delete the networks created
+        await dockerClient.Networks.DeleteNetworkAsync(noInternetNetwork.Id, cancellationToken);
+        await dockerClient.Networks.DeleteNetworkAsync(internetNetwork.Id, cancellationToken);
+    }
+
+    internal async Task StreamLogsAsync(string containerId, string prefix, Stream destination, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+#pragma warning disable CS0618 // Type or member is obsolete
+            using var logStream = await dockerClient.Containers.GetContainerLogsAsync(
+                containerId,
+                new Docker.DotNet.Models.ContainerLogsParameters
+                {
+                    ShowStdout = true,
+                    ShowStderr = true,
+                    Follow = true,
+                    Timestamps = false,
+                },
+                cancellationToken
+            );
+#pragma warning restore CS0618 // Type or member is obsolete
+
+            using var reader = new StreamReader(logStream);
+            using var writer = new StreamWriter(destination, leaveOpen: true) { AutoFlush = true };
+            string? line;
+            while ((line = await reader.ReadLineAsync(cancellationToken)) != null)
+            {
+                await writer.WriteLineAsync($"{prefix}{line}");
+            }
+
+        }
+        catch (OperationCanceledException)
+        {
+            // do nothing, we stopped everything
+        }
+    }
+    internal async Task ReadFlameGraphAsync(string containerId, Stream destination, CancellationToken cancellationToken = default)
+    {
+        const string fileName = "dependabot-flamegraph.html";
+        var @params = new Docker.DotNet.Models.GetArchiveFromContainerParameters { Path = $"/tmp/{fileName}" };
+        try
+        {
+            var response = await dockerClient.Containers.GetArchiveFromContainerAsync(containerId, @params, false, cancellationToken);
+            using var reader = new TarReader(response.Stream, leaveOpen: true);
+            TarEntry? entry;
+            while ((entry = reader.GetNextEntry()) is not null)
+            {
+                if (entry.EntryType == TarEntryType.RegularFile &&
+                    entry.Name.EndsWith(fileName, StringComparison.OrdinalIgnoreCase))
+                {
+                    // Copy file contents directly to the target stream
+                    await entry.DataStream!.CopyToAsync(destination, cancellationToken);
+                    return;
                 }
             }
-
-            values.AddIfNotDefault("host", host);
-
-            return values;
-        }).ToList();
-    }
-    internal static IList<Dictionary<string, string>> MakeExtraCredentials(ICollection<DependabotRegistry>? registries, IDictionary<string, string> secrets)
-    {
-        if (registries is null) return Array.Empty<Dictionary<string, string>>();
-
-        return [.. registries.Select(v =>
+            throw new FileNotFoundException($"'/tmp/{fileName}' not found in container archive.");
+        }
+        catch (DockerContainerNotFoundException) // happens when the container did not succeed
         {
-            var type = v.Type?.Replace("-", "_") ?? throw new InvalidOperationException("Type should not be null");
-
-            var values = new Dictionary<string, string> { ["type"] = type, };
-
-            // values for hex-organization
-            values.AddIfNotDefault("organization", v.Organization);
-
-            // values for hex-repository
-            values.AddIfNotDefault("repo", v.Repo);
-            values.AddIfNotDefault("auth-key", v.AuthKey);
-            values.AddIfNotDefault("public-key-fingerprint", v.PublicKeyFingerprint);
-
-            values.AddIfNotDefault("username", v.Username);
-            values.AddIfNotDefault("password", ConvertPlaceholder(v.Password, secrets));
-            values.AddIfNotDefault("key", ConvertPlaceholder(v.Key, secrets));
-            values.AddIfNotDefault("token", ConvertPlaceholder(v.Token, secrets));
-            values.AddIfNotDefault("replaces-base", v.ReplacesBase is true ? "true" : null);
-
-            /*
-             * Some credentials do not use the 'url' property in the Ruby updater.
-             * The 'host' and 'registry' properties are derived from the given URL.
-             * The 'registry' property is derived from the 'url' by stripping off the scheme.
-             * The 'host' property is derived from the hostname of the 'url'.
-             *
-             * 'npm_registry' and 'docker_registry' use 'registry' only.
-             * 'terraform_registry' uses 'host' only.
-             * 'composer_repository' uses both 'url' and 'host'.
-             * 'python_index' uses 'index-url' instead of 'url'.
-            */
-
-            if (Uri.TryCreate(v.Url, UriKind.Absolute, out var url))
-            {
-                var addRegistry = type is "docker_registry" or "npm_registry";
-                if (addRegistry) values.Add("registry", $"{url.Host}{url.PathAndQuery}".TrimEnd('/'));
-
-                var addHost = type is "terraform_registry" or "composer_repository";
-                if (addHost) values.Add("host", url.Host);
-            }
-
-            if (type is "python_index") values.AddIfNotDefault("index-url", v.Url);
-
-            var skipUrl = type is "docker_registry" or "npm_registry" or "terraform_registry" or "python_index";
-            if (!skipUrl) values.AddIfNotDefault("url", v.Url);
-
-            return values;
-        })];
-    }
-    internal static string? ConvertPlaceholder(string? input, IDictionary<string, string> secrets)
-    {
-        if (string.IsNullOrWhiteSpace(input)) return input;
-
-        var result = input;
-        var matches = PlaceholderPattern().Matches(input);
-        foreach (var m in matches)
+            return;
+        }
+        catch (EndOfStreamException) // for some reason it is thrown after the file is already copied
         {
-            if (m is not Match match || !match.Success) continue;
+            // Safely ignore if the file was already found and copied
+            if (destination.Length > 0)
+                return;
 
-            var placeholder = match.Value;
-            var name = match.Groups[1].Value;
-            if (secrets.TryGetValue(name, out var replacement))
-            {
-                result = result.Replace(placeholder, replacement);
-            }
+            throw new IOException("Unexpected end of stream while reading archive.");
+        }
+    }
+    internal async Task<DockerImage> GetImageWithDigestAsync(string imageName, bool pull, CancellationToken cancellationToken = default)
+    {
+        var original = (DockerImage)imageName;
+        if (!pull)
+        {
+            // TODO: we should only handle getting the latest image so that we can use a digest
+            return original;
         }
 
-        return result;
-    }
-    internal static string? ConvertEcosystemToPackageManager(string ecosystem)
-    {
-        ArgumentException.ThrowIfNullOrEmpty(ecosystem);
-
-        return ecosystem switch
+        // pull the image if it does not exist
+        var images = await dockerClient.Images.ListImagesAsync(new() { All = true, }, cancellationToken);
+        var image = images.FirstOrDefault(i => i.RepoTags?.Contains(imageName) ?? false);
+        if (image is null)
         {
-            "dotnet-sdk" => "dotnet_sdk",
-            "github-actions" => "github_actions",
-            "gitsubmodule" => "submodules",
-            "gomod" => "go_modules",
-            "mix" => "hex",
-            "npm" => "npm_and_yarn",
-            // Additional ones
-            "yarn" => "npm_and_yarn",
-            "pnpm" => "npm_and_yarn",
-            "pipenv" => "pip",
-            "pip-compile" => "pip",
-            "poetry" => "pip",
-            _ => ecosystem,
+            logger.PullImage(imageName);
+            var pullParams = new Docker.DotNet.Models.ImagesCreateParameters
+            {
+                FromImage = imageName,
+                Tag = imageName.Split(':').Last(),
+            };
+            await dockerClient.Images.CreateImageAsync(pullParams, new(), new Progress<Docker.DotNet.Models.JSONMessage>(), cancellationToken);
+        }
+        else
+        {
+            // TODO: find a way to check if there is a newer image (by at least a week?) hence pull that one
+        }
+
+        // find the image digest and set it in the job
+        images = await dockerClient.Images.ListImagesAsync(new() { All = true, }, cancellationToken);
+        image = images.Single(i => i.RepoTags?.Contains(imageName) ?? false);
+        logger.UsingImage(imageName, image.ID);
+        return DockerImage.Parse(image.RepoDigests[0]);
+    }
+
+    internal record DockerNetworkRepresentation(string Name, string Id);
+    internal async Task<DockerNetworkRepresentation> CreateDockerNetworkAsync(bool @internal, CancellationToken cancellationToken = default)
+    {
+        var parameters = new Docker.DotNet.Models.NetworksCreateParameters
+        {
+            Name = Keygen.Create(10).ToLowerInvariant(),
+            Driver = "bridge",
+            Internal = @internal,
         };
+        var network = await dockerClient.Networks.CreateNetworkAsync(parameters, cancellationToken);
+        var inspection = await dockerClient.Networks.InspectNetworkAsync(network.ID, cancellationToken);
+        return new DockerNetworkRepresentation(inspection.Name, network.ID);
     }
-
-    internal void DeleteJobDirectory(UpdateJob job)
-    {
-        ArgumentNullException.ThrowIfNull(job);
-
-        // delete the job directory if it exists
-        var jobDirectory = Path.Join(options.WorkingDirectory, job.Id);
-        if (Directory.Exists(jobDirectory))
-        {
-            Directory.Delete(jobDirectory, recursive: true);
-        }
-    }
-
-    private ResourceGroupResource GetResourceGroup() => armClient.GetResourceGroupResource(new(options.ResourceGroupId!));
-
-    [return: NotNullIfNotNull(nameof(value))]
-    private string? ToJson<T>(T? value) => value is null ? null : JsonSerializer.Serialize(value, jsonOptions.SerializerOptions); // null ensures we do not add to the values
-
-    [return: NotNullIfNotNull(nameof(value))]
-    private JsonNode? ToJsonNode<T>(T? value) => value is null ? null : JsonSerializer.SerializeToNode(value, jsonOptions.SerializerOptions); // null ensures we do not add to the values
 }
 
 public readonly record struct UpdateRunnerState(UpdateJobStatus Status, DateTimeOffset? Start, DateTimeOffset? End)
@@ -669,4 +375,19 @@ public readonly record struct UpdateRunnerState(UpdateJobStatus Status, DateTime
         start = Start;
         end = End;
     }
+}
+
+public readonly struct UpdaterContext
+{
+    public required Project Project { get; init; }
+    public required Repository Repository { get; init; }
+    public required RepositoryUpdate Update { get; init; }
+    public required UpdateJob Job { get; init; }
+
+    public required IReadOnlyDictionary<string, Models.Azure.PullRequestProperties> ExistingPullRequests { get; init; }
+    public required IReadOnlyList<Models.Dependabot.DependabotSecurityAdvisory> SecurityAdvisories { get; init; }
+
+    public required bool UpdatingPullRequest { get; init; }
+    public required string? DependencyGroupToRefresh { get; init; }
+    public required List<string> DependencyNamesToUpdate { get; init; }
 }

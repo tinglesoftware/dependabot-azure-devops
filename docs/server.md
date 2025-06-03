@@ -3,9 +3,6 @@
 - [Why should I use the server?](#why-should-i-use-the-server)
 - [Composition](#composition)
 - [Deployment](#deployment)
-  - [Single click deployment](#single-click-deployment)
-  - [Deployment Parameters](#deployment-parameters)
-  - [Deployment with CLI](#deployment-with-cli)
   - [Service Hooks and Subscriptions](#service-hooks-and-subscriptions)
   - [Docker Compose](#docker-compose)
 - [Keeping updated](#keeping-updated)
@@ -40,81 +37,9 @@ The current cost we have internally for this in the `westeurope` region:
 
 ## Deployment
 
-### Single click deployment
+## Service Hooks and Subscriptions
 
-The easiest means of deployment is to use the relevant button below.
-
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Ftinglesoftware%2Fdependabot-azure-devops%2Fmain%2Fserver%2Fmain.json)
-[![Deploy to Azure US Gov](https://aka.ms/deploytoazuregovbutton)](https://portal.azure.us/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Ftinglesoftware%2Fdependabot-azure-devops%2Fmain%2Fserver%2Fmain.json)
-[![Visualize](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/visualizebutton.svg?sanitize=true)](http://armviz.io/#/?load=https%3A%2F%2Fraw.githubusercontent.com%2Ftinglesoftware%2Fdependabot-azure-devops%2Fmain%2Fserver%2Fmain.json)
-
-You can also use the [server/main.json](../server/main.json) file, [server/main.bicep](../server/main.bicep) file, or pull either file from the [latest release](https://github.com/tinglesoftware/dependabot-azure-devops/releases/latest). You will need an Azure subscription and a resource group to deploy to.
-
-### Deployment Parameters
-
-The deployment exposes the following parameters that can be tuned to suit the setup.
-
-|Parameter Name|Remarks|Required|Default|
-|--|--|--|--|
-|location|Location to deploy the resources.|No|&lt;resource-group-location&gt;|
-|name|The name of all resources.|No|`dependabot`|
-|projectSetups|A JSON array string representing the projects to be setup on startup. This is useful when running your own setup. Example: `[{\"url\":\"https://dev.azure.com/tingle/dependabot\",\"token\":\"dummy\",\"AutoComplete\":true}]`|Yes|&lt;empty&gt;|
-|githubToken|Access token for authenticating requests to GitHub. Required for vulnerability checks and to avoid rate limiting on free requests|No|&lt;empty&gt;|
-|imageTag|The image tag to use when pulling the docker containers. A tag also defines the version. You should avoid using `latest`. Example: `1.1.0`|No|&lt;version-downloaded&gt;|
-
-> [!NOTE]
-> The template includes a User Assigned Managed Identity, which is used when performing Azure Resource Manager operations such as deletions. In the deployment it creates the role assignments that it needs. These role assignments are on the resource group that you deploy to.
-
-### Deployment with CLI
-
-> [!IMPORTANT]
-> Ensure the Azure CLI tools are installed and that you are logged in.
-
-For a one time deployment, it is similar to how you deploy other resources on Azure.
-
-```bash
-az deployment group create --resource-group DEPENDABOT \
-                           --template-file main.bicep \
-                           --parameters githubToken=<your-github-classic-pat> \
-                           --confirm-with-what-if
-```
-
-Add more `--parameters name=value` to the script to tune the [available parameters](#deployment-parameters).
-
-You can choose to use a parameters file because it is more convenient in a CI/CD setup, especially for token replacement.
-
-The script becomes:
-
-```bash
-az deployment group create --resource-group DEPENDABOT \
-                           --template-file main.bicep \
-                           --parameters main.parameters.json \
-                           --confirm-with-what-if
-```
-
-The parameters file (`main.parameters.json`):
-
-```json
-{
-  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
-  "contentVersion": "1.0.0.0",
-  "parameters": {
-    "name": {
-      "value": "dependabot-fabrikam"
-    },
-    "githubToken": {
-      "value": "#{DependabotGithubToken}#"
-    },
-    "imageTag": {
-      "value": "#{DependabotImageTag}#"
-    }
-  }
-}
-```
-
-### Service Hooks and Subscriptions
-
-To enable automatic pickup of configuration files, merge conflict resolution and commands via comments, subscriptions need to be setup on Azure DevOps. You should let the application create them on startup to because it is easier. See [code](https://github.com/tinglesoftware/dependabot-azure-devops/blob/b4e87bfeea133b8e9fa278c98157b7a0123bfdd3/server/Tingle.Dependabot/Workflow/AzureDevOpsProvider.cs#L18-L21) for the list of events subscribed to.
+To enable automatic pickup of configuration files, merge conflict resolution and commands via comments, subscriptions need to be setup on Azure DevOps. You should let the application create them on startup to because it is easier. See [code](https://github.com/tinglesoftware/dependabot-azure-devops/blob/b4e87bfeea133b8e9fa278c98157b7a0123bfdd3/server/Tingle.Dependabot/Workflow/AzureDevOpsProvider.cs) for the list of events subscribed to.
 
 ### Docker Compose
 
@@ -124,8 +49,7 @@ Create a new `docker-compose.local.yml` file to setup the project and token. For
 services:
   server:
     environment:
-      InitialSetup__Projects: '[{"url":"https://dev.azure.com/tingle/dependabot","token":"dummy","AutoComplete":true}]'
-      Workflow__GithubToken: 'dummy'
+      InitialSetup__Projects: '[{"url":"https://dev.azure.com/tingle/dependabot","token":"dummy","AutoComplete":true,"GithubToken":"dummy"}]'
 ```
 
 Next, run the setup:
