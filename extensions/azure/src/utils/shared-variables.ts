@@ -146,7 +146,8 @@ export default function getSharedVariables(): ISharedVariables {
   let experiments = tl
     .getInput('experiments', false)
     ?.split(',')
-    ?.reduce(
+    .filter((entry) => entry.trim() !== '') // <-- filter out empty entries
+    .reduce(
       (acc, cur) => {
         const [key, value] = cur.split('=', 2);
         acc[key!] = value || true;
