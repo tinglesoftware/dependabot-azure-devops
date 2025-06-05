@@ -4,7 +4,9 @@
         "cooldown",
         "devcontainers",
         "fabrikam",
+        "flamegraph",
         "fumadocs",
+        "GHSA",
         "Kubernetes",
         "paklo",
         "tinglesoftware",
@@ -12,5 +14,6 @@
     ],
     "yaml.schemas": {
         "https://json.schemastore.org/github-issue-config.json": "file:///Users/maxwell/Documents/dependabot-azure-devops/.github/ISSUE_TEMPLATE/config.yml"
-    }
+    },
+    "cSpell.language": "en-GB"
 }
