@@ -16,6 +16,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write # required to write PR comment
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
