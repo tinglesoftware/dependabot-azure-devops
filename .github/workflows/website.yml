@@ -107,7 +107,7 @@ jobs:
       #     restart: true
 
       - name: Deploy to SWA
-        if: ${{ github.actor != 'dependabot[bot]' }}
+        if: ${{ github.actor != 'dependabot[bot]' && !contains(github.ref, 'changeset-release') }}
         id: swa
         uses: azure/static-web-apps-deploy@v1
         with:
@@ -123,7 +123,7 @@ jobs:
 
       - name: Publish review app URLs
         uses: thollander/actions-comment-pull-request@v3
-        if: ${{ github.actor != 'dependabot[bot]' && github.event_name == 'pull_request' }}
+        if: ${{ github.actor != 'dependabot[bot]' && !contains(github.ref, 'changeset-release') && github.event_name == 'pull_request' }}
         with:
           message: |
             Review App for `website` succeeded.
