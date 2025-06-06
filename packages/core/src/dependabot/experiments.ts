@@ -1,7 +1,9 @@
+import { type DependabotExperiments } from './job';
+
 // The default experiments known to be used by the GitHub Dependabot service.
 // This changes often, update as needed by extracting them from a Dependabot GitHub Action run.
 //  e.g. https://github.com/tinglesoftware/dependabot-azure-devops/actions/workflows/dependabot/dependabot-updates
-export const DEFAULT_EXPERIMENTS: Record<string, string | boolean> = {
+export const DEFAULT_EXPERIMENTS: DependabotExperiments = {
   'record-ecosystem-versions': true,
   'record-update-job-unknown-error': true,
   'proxy-cached': true,

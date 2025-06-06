@@ -1,15 +1,16 @@
 import * as crypto from 'crypto';
+import { type PackageEcosystem } from './config';
 
 // TODO: figure out how to handle IDENTIFIER field (in a group) in branch naming
 // Docs: https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#groups--
 // -> An identifier for a group is used in branch names and pull request titles.
 
 export function getBranchNameForUpdate(
-  packageEcosystem: string,
+  packageEcosystem: PackageEcosystem,
   targetBranchName: string | undefined,
   directory: string | undefined,
   dependencyGroupName: string | undefined,
-  dependencies: Record<string, unknown>[],
+  dependencies: Record<string, unknown>[], // TODO: find appropriate type
   separator: string = '/',
 ): string {
   // Based on dependabot-core implementation:

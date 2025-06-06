@@ -6,7 +6,7 @@ const base: Options = {
   platform: 'node',
   splitting: false,
   clean: true,
-  dts: false,
+  dts: true, // required to make watch work
   sourcemap: true,
   noExternal: [/./], // ⬅️ bundle everything
 };

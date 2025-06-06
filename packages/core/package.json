@@ -25,6 +25,7 @@
   ],
   "scripts": {
     "dev": "tsup --watch",
+    "prebuild": "tsc",
     "build": "tsup",
     "lint": "eslint .",
     "test": "vitest",

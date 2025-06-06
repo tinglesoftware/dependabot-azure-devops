@@ -166,7 +166,7 @@ describe('performDependabotUpdatesAsync', () => {
     dependabotCli.update = vi
       .fn()
       .mockResolvedValue([
-        { success: true, output: { type: 'mark_as_processed', data: {} } },
+        { success: true, output: { type: 'mark_as_processed', expect: { data: {} } } },
       ] as IDependabotUpdateOperationResult[]);
     dependabotCliUpdateOptions = {};
     existingPullRequests = [];

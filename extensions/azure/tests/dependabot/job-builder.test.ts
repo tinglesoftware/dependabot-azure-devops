@@ -1,14 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  type DependabotCooldown,
-  type DependabotGroup,
-  type DependabotIgnoreCondition,
-  type DependabotUpdate,
-} from '@paklo/core/dependabot';
+import { type DependabotGroup, type DependabotIgnoreCondition, type DependabotUpdate } from '@paklo/core/dependabot';
 import {
   mapAllowedUpdatesFromDependabotConfigToJobConfig,
-  mapCooldownFromDependabotConfigToJobConfig,
   mapExperiments,
   mapGroupsFromDependabotConfigToJobConfig,
   mapIgnoreConditionsFromDependabotConfigToJobConfig,
@@ -227,34 +221,6 @@ describe('mapIgnoreConditionsFromDependabotConfigToJobConfig', () => {
         'version-requirement': '',
       },
     ]);
-  });
-});
-
-describe('mapCooldownFromDependabotConfigToJobConfig', () => {
-  it('should return undefined if cooldown is undefined', () => {
-    const result = mapCooldownFromDependabotConfigToJobConfig(undefined);
-    expect(result).toBeUndefined();
-  });
-
-  it('should map cooldown properties correctly', () => {
-    const cooldown = {
-      'default-days': 3,
-      'semver-major-days': 7,
-      'semver-minor-days': 5,
-      'semver-patch-days': 2,
-      'include': ['dependency-name-1', 'dependency-name-2'],
-      'exclude': ['dependency-name-3', 'dependency-name-4'],
-    } as DependabotCooldown;
-
-    const result = mapCooldownFromDependabotConfigToJobConfig(cooldown);
-    expect(result).toEqual({
-      'default-days': 3,
-      'semver-major-days': 7,
-      'semver-minor-days': 5,
-      'semver-patch-days': 2,
-      'include': ['dependency-name-1', 'dependency-name-2'],
-      'exclude': ['dependency-name-3', 'dependency-name-4'],
-    });
   });
 });
 
