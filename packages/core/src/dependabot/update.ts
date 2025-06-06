@@ -28,7 +28,7 @@ export const DependabotCreatePullRequestSchema = z.object({
   'dependencies': DependabotDependencySchema.array(),
   'updated-dependency-files': DependabotDependencyFileSchema.array(),
   'pr-title': z.string(),
-  'pr-body': z.string(),
+  'pr-body': z.string().nullish(),
   'commit-message': z.string(),
   'dependency-group': z.record(z.string(), z.any()).nullish(),
 });
@@ -39,7 +39,7 @@ export const DependabotUpdatePullRequestSchema = z.object({
   'dependency-names': z.string().array(),
   'updated-dependency-files': DependabotDependencyFileSchema.array(),
   'pr-title': z.string(),
-  'pr-body': z.string(),
+  'pr-body': z.string().nullish(),
   'commit-message': z.string(),
   'dependency-group': z.record(z.string(), z.any()).nullish(),
 });

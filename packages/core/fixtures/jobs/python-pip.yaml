@@ -1,0 +1,67 @@
+job:
+  id: update-0-pip-all
+  package-manager: pip
+  updating-a-pull-request: false
+  allowed-updates:
+    - dependency-type: direct
+      update-type: all
+  security-updates-only: false
+  security-advisories: []
+  source:
+    provider: azure
+    api-endpoint: https://dev.azure.com:/
+    hostname: dev.azure.com
+    repo: tingle/dependabot/_git/repro-1634
+    directory: /
+  existing-pull-requests: []
+  existing-group-pull-requests: []
+  commit-message-options:
+    prefix: build
+  experiments:
+    record-ecosystem-versions: true
+    record-update-job-unknown-error: true
+    proxy-cached: true
+    move-job-token: true
+    dependency-change-validation: true
+    nuget-install-dotnet-sdks: true
+    nuget-native-analysis: true
+    nuget-native-updater: true
+    nuget-use-direct-discovery: true
+    nuget-use-legacy-updater-when-updating-pr: true
+    enable-file-parser-python-local: true
+    npm-fallback-version-above-v6: true
+    lead-security-dependency: true
+    enable-record-ecosystem-meta: true
+    enable-shared-helpers-command-timeout: true
+    enable-dependabot-setting-up-cronjob: true
+    enable-engine-version-detection: true
+    avoid-duplicate-updates-package-json: true
+    allow-refresh-for-existing-pr-dependencies: true
+    allow-refresh-group-with-all-dependencies: true
+    exclude-local-composer-packages: true
+    enable-enhanced-error-details-for-updater: true
+    enable-cooldown-for-python: true
+    enable-cooldown-for-uv: true
+    enable-cooldown-for-npm-and-yarn: true
+    enable-cooldown-for-bun: true
+    enable-cooldown-for-bundler: true
+    enable-cooldown-for-cargo: true
+    enable-cooldown-for-maven: true
+    enable-cooldown-for-gomodules: true
+    enable-cooldown-metrics-collection: true
+    enable-cooldown-for-composer: true
+    enable-cooldown-for-gradle: true
+  reject-external-code: false
+  requirements-update-strategy: bump_versions
+  lockfile-only: false
+  debug: true
+  credentials-metadata:
+    - type: git_source
+      host: dev.azure.com
+  max-updater-run-time: 2700
+credentials:
+  - type: git_source
+    host: dev.azure.com
+    username: x-access-token
+    password: >-
+      01

@@ -434,7 +434,11 @@ function areEqual(a: string[], b: string[]): boolean {
   return a.every((name) => b.includes(name));
 }
 
-function getPullRequestDescription(packageManager: string, body: string, dependencies: DependabotDependency[]): string {
+function getPullRequestDescription(
+  packageManager: string,
+  body: string | null | undefined,
+  dependencies: DependabotDependency[],
+): string {
   let header = '';
   const footer = '';
 

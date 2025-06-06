@@ -46,7 +46,7 @@ describe('create_pull_request', () => {
     expect(data['updated-dependency-files'][0]!.mode).toEqual('');
 
     expect(data['pr-title']).toEqual('build: bump openai from 1.63.0 to 1.84.0');
-    expect(data['pr-body'].length).toBeGreaterThan(20);
+    expect(data['pr-body']?.length).toBeGreaterThan(20);
     expect(data['commit-message'].length).toBeGreaterThan(20);
     expect(data['dependency-group']).toBeNull();
   });

@@ -14,13 +14,13 @@ import {
   DependabotUpdatePullRequestSchema,
 } from './update';
 
-const DependabotInputSchema = z.object({
+export const DependabotInputSchema = z.object({
   job: DependabotJobConfigSchema,
   credentials: DependabotCredentialSchema.array(),
 });
 export type DependabotInput = z.infer<typeof DependabotInputSchema>;
 
-const DependabotOutputTypeSchema = z.enum([
+export const DependabotOutputTypeSchema = z.enum([
   'create_pull_request',
   'update_pull_request',
   'close_pull_request',
@@ -34,7 +34,7 @@ const DependabotOutputTypeSchema = z.enum([
 ]);
 export type DependabotOutputType = z.infer<typeof DependabotOutputTypeSchema>;
 
-const DependabotOutputSchema = z.discriminatedUnion('type', [
+export const DependabotOutputSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('create_pull_request'), expect: z.object({ data: DependabotCreatePullRequestSchema }) }),
   z.object({ type: z.literal('update_pull_request'), expect: z.object({ data: DependabotUpdatePullRequestSchema }) }),
   z.object({ type: z.literal('close_pull_request'), expect: z.object({ data: DependabotClosePullRequestSchema }) }),
