@@ -24,10 +24,9 @@ permissions:
   contents: read
 
 jobs:
-  StaticWebApps:
+  Remove:
     if: ${{ !contains(github.actor, '[bot]') && !contains(github.head_ref, 'dependabot/') }}
     runs-on: ubuntu-latest
-    name: Remove SWA environments
     timeout-minutes: 5
 
     steps:
@@ -49,21 +48,14 @@ jobs:
           action: 'close'
           app_location: ''
 
-  ResourcesCleaner:
-    if: ${{ !contains(github.actor, '[bot]') && !contains(github.head_ref, 'dependabot/') }}
-    runs-on: ubuntu-latest
-    name: Resources Cleaner
-    timeout-minutes: 5
+      # - name: Azure Login
+      #   uses: azure/login@v2
+      #   with:
+      #     creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-    steps:
-      - name: Azure Login
-        uses: azure/login@v2
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: Remove review resources
-        run: |
-          dotnet tool install --global azure-resources-cleaner && \
-          azrc \
-          --pr ${{ inputs.pr || github.event.pull_request.number }} \
-          --subscription ${{ env.AZURE_SUBSCRIPTION_ID }}
+      # - name: Remove review resources
+      #   run: |
+      #     dotnet tool install --global azure-resources-cleaner && \
+      #     azrc \
+      #     --pr ${{ inputs.pr || github.event.pull_request.number }} \
+      #     --subscription ${{ env.AZURE_SUBSCRIPTION_ID }}
