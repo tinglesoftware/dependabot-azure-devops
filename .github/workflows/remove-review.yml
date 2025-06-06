@@ -25,7 +25,7 @@ permissions:
 
 jobs:
   StaticWebApps:
-    if: ${{ github.actor != 'dependabot[bot]' && !contains(github.head_ref, 'dependabot/') }}
+    if: ${{ !contains(github.actor, '[bot]') && !contains(github.head_ref, 'dependabot/') }}
     runs-on: ubuntu-latest
     name: Remove SWA environments
     timeout-minutes: 5
@@ -50,7 +50,7 @@ jobs:
           app_location: ''
 
   ResourcesCleaner:
-    if: ${{ github.actor != 'dependabot[bot]' && !contains(github.head_ref, 'dependabot/') }}
+    if: ${{ !contains(github.actor, '[bot]') && !contains(github.head_ref, 'dependabot/') }}
     runs-on: ubuntu-latest
     name: Resources Cleaner
     timeout-minutes: 5
