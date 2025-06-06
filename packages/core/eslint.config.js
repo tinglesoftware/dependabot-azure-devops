@@ -1,4 +1,4 @@
-import { config } from '@paklo/eslint/base';
+import { config } from '../../eslint.config.mjs';
 
 /** @type {import("eslint").Linter.Config} */
 export default config;
