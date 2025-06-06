@@ -1,0 +1,9 @@
+{
+  "data": {
+    "metric": "updater.started",
+    "tags": {
+      "operation": "group_update_all_versions"
+    }
+  },
+  "type": "increment_metric"
+}

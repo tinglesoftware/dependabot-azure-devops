@@ -57,7 +57,7 @@ const DependabotOutputSchema = z.discriminatedUnion('type', [
   }),
   z.object({
     type: z.literal('record_ecosystem_meta'),
-    expect: z.object({ data: DependabotRecordEcosystemMetaSchema }),
+    expect: z.object({ data: DependabotRecordEcosystemMetaSchema.array() }),
   }),
   z.object({ type: z.literal('increment_metric'), expect: z.object({ data: DependabotIncrementMetricSchema }) }),
 ]);

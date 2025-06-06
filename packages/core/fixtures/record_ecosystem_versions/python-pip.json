@@ -1,0 +1,13 @@
+{
+  "data": {
+    "ecosystem_versions": {
+      "languages": {
+        "python": {
+          "max": "3.13",
+          "raw": "unknown"
+        }
+      }
+    }
+  },
+  "type": "record_ecosystem_versions"
+}

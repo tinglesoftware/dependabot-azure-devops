@@ -11,7 +11,6 @@ import {
 import { GitPullRequestMergeStrategy, VersionControlChangeType } from 'azure-devops-node-api/interfaces/GitInterfaces';
 import { debug, error, warning } from 'azure-pipelines-task-lib/task';
 import * as path from 'path';
-import { z } from 'zod/v4';
 import { type AzureDevOpsWebApiClient } from '../azure-devops/client';
 import { section } from '../azure-devops/formatting';
 import {
@@ -22,30 +21,6 @@ import {
 } from '../azure-devops/models';
 import { type ISharedVariables } from '../utils/shared-variables';
 import { type IDependabotUpdateOperation } from './models';
-
-export const DependabotDependenciesSchema = z.object({
-  dependencies: z
-    .array(
-      z.object({
-        name: z.string(), // e.g. 'django' or 'GraphQL.Server.Ui.Voyager'
-        requirements: z
-          .array(
-            z.object({
-              file: z.string(), // e.g. 'requirements.txt' or '/Root.csproj'
-              groups: z.array(z.string()).nullish(), // e.g. ['dependencies']
-              requirement: z.string().nullish(), // e.g. '==3.2.0' or '8.1.0'
-              // others keys like 'source' are not clear on format/type
-            }),
-          )
-          .nullish(),
-        version: z.string().nullish(), // e.g. '5.0.1' or '8.1.0'
-      }),
-    )
-    .nullish(),
-  dependency_files: z.array(z.string()), // e.g. ['/requirements.txt'] or ['/Root.csproj']
-  last_updated: z.coerce.date().nullish(), // e.g. '2021-09-01T00:00:00Z'
-});
-export type DependabotDependencies = z.infer<typeof DependabotDependenciesSchema>;
 
 /**
  * Processes dependabot update outputs using the DevOps API

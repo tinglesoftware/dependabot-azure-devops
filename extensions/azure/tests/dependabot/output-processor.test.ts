@@ -1,5 +1,4 @@
 import { error, warning } from 'azure-pipelines-task-lib/task';
-import { readFile } from 'fs/promises';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AzureDevOpsWebApiClient } from '../../src/azure-devops/client';
@@ -9,7 +8,7 @@ import {
   type IPullRequestProperties,
 } from '../../src/azure-devops/models';
 import { type IDependabotUpdateOperation } from '../../src/dependabot/models';
-import { DependabotDependenciesSchema, DependabotOutputProcessor } from '../../src/dependabot/output-processor';
+import { DependabotOutputProcessor } from '../../src/dependabot/output-processor';
 import { type ISharedVariables } from '../../src/utils/shared-variables';
 
 vi.mock('../../src/azure-devops/client');
@@ -285,7 +284,7 @@ describe('DependabotOutputProcessor', () => {
     it('should process "record_ecosystem_meta"', async () => {
       const result = await processor.process(update, {
         type: 'record_ecosystem_meta',
-        expect: { data: { ecosystem: { name: 'npm_any_yarn' } } },
+        expect: { data: [{ ecosystem: { name: 'npm_any_yarn' } }] },
       });
       expect(result).toBe(true);
     });
@@ -324,57 +323,6 @@ describe('DependabotOutputProcessor', () => {
 
       expect(result).toBe(true);
       expect(warning).toHaveBeenCalled();
-    });
-  });
-
-  describe('schema', () => {
-    it('works for a result from python pip', async () => {
-      const raw = JSON.parse(await readFile('tests/update_dependency_list/python-pip.json', 'utf-8'));
-      const data = DependabotDependenciesSchema.parse(raw['data']);
-
-      expect(data['dependency_files']).toEqual(['/requirements.txt']);
-      expect(data['dependencies']!.length).toEqual(22);
-
-      expect(data['dependencies']![0]!.name).toEqual('asgiref');
-      expect(data['dependencies']![0]!.version).toEqual('3.7.2');
-      expect(data['dependencies']![0]!.requirements!.length).toEqual(1);
-      expect(data['dependencies']![0]!.requirements![0]!.file).toEqual('requirements.txt');
-      expect(data['dependencies']![0]!.requirements![0]!.requirement).toEqual('==3.7.2');
-      expect(data['dependencies']![0]!.requirements![0]!.groups).toEqual(['dependencies']);
-    });
-
-    it('works for a result from python poetry', async () => {
-      const raw = JSON.parse(await readFile('tests/update_dependency_list/python-poetry.json', 'utf-8'));
-      const data = DependabotDependenciesSchema.parse(raw['data']);
-
-      expect(data['dependency_files']).toEqual(['/pyproject.toml']);
-      expect(data['dependencies']!.length).toEqual(1);
-
-      expect(data['dependencies']![0]!.name).toEqual('requests');
-      expect(data['dependencies']![0]!.version).toBeNull();
-      expect(data['dependencies']![0]!.requirements!.length).toEqual(1);
-      expect(data['dependencies']![0]!.requirements![0]!.file).toEqual('pyproject.toml');
-      expect(data['dependencies']![0]!.requirements![0]!.requirement).toEqual('^2.31.0');
-      expect(data['dependencies']![0]!.requirements![0]!.groups).toEqual(['dependencies']);
-    });
-
-    it('works for a result from nuget', async () => {
-      const raw = JSON.parse(await readFile('tests/update_dependency_list/nuget.json', 'utf-8'));
-      const data = DependabotDependenciesSchema.parse(raw['data']);
-
-      expect(data['dependency_files']).toEqual(['/Root.csproj']);
-      expect(data['dependencies']!.length).toEqual(76);
-
-      expect(data['dependencies']![0]!.name).toEqual('Azure.Core');
-      expect(data['dependencies']![0]!.version).toEqual('1.35.0');
-      expect(data['dependencies']![0]!.requirements!.length).toEqual(0);
-
-      expect(data['dependencies']![3]!.name).toEqual('GraphQL.Server.Ui.Voyager');
-      expect(data['dependencies']![3]!.version).toEqual('8.1.0');
-      expect(data['dependencies']![3]!.requirements!.length).toEqual(1);
-      expect(data['dependencies']![3]!.requirements![0]!.file).toEqual('/Root.csproj');
-      expect(data['dependencies']![3]!.requirements![0]!.requirement).toEqual('8.1.0');
-      expect(data['dependencies']![3]!.requirements![0]!.groups).toEqual(['dependencies']);
     });
   });
 });

@@ -1,0 +1,20 @@
+{
+  "data": [
+    {
+      "ecosystem": {
+        "name": "Python",
+        "package_manager": {
+          "name": "pip",
+          "version": "24.0",
+          "raw_version": "24.0"
+        },
+        "language": {
+          "name": "python",
+          "version": "3.13.2",
+          "raw_version": "3.13.2"
+        }
+      }
+    }
+  ],
+  "type": "record_ecosystem_meta"
+}
