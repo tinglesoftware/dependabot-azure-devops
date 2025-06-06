@@ -5,6 +5,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "dev": "tsup --watch",
     "prebuild": "tsc",
     "build": "tsup",
     "start": "pnpm start:V2",

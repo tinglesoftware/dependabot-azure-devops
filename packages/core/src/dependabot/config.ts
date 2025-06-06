@@ -156,6 +156,13 @@ export const PackageEcosystemSchema = z.enum([
   'swift',
   'terraform',
   'uv',
+
+  // Additional aliases, sometimes used for convenience
+  'pipenv',
+  'pip-compile',
+  'poetry',
+  'pnpm',
+  'yarn',
 ]);
 export type PackageEcosystem = z.infer<typeof PackageEcosystemSchema>;
 

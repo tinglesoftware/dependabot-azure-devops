@@ -1,10 +1,14 @@
 import {
+  makeCredentialsMetadata,
   type DependabotAllowCondition,
-  type DependabotCooldown,
+  type DependabotCredential,
+  type DependabotExperiments,
   type DependabotGroup,
   type DependabotIgnoreCondition,
+  type DependabotPackageManager,
   type DependabotRegistry,
   type DependabotUpdate,
+  type PackageEcosystem,
 } from '@paklo/core/dependabot';
 import { type SecurityVulnerability } from '../github';
 import { type ISharedVariables } from '../utils/shared-variables';
@@ -27,6 +31,8 @@ export class DependabotJobBuilder {
     update: DependabotUpdate,
     registries?: Record<string, DependabotRegistry>,
   ): IDependabotUpdateOperation {
+    const credentials = mapCredentials(taskInputs, registries);
+
     return {
       config: update,
       job: {
@@ -36,8 +42,9 @@ export class DependabotJobBuilder {
         'source': mapSourceFromDependabotConfigToJobConfig(taskInputs, update),
         'experiments': taskInputs.experiments,
         'debug': taskInputs.debug,
+        'credentials-metadata': makeCredentialsMetadata(credentials),
       },
-      credentials: mapCredentials(taskInputs, registries),
+      credentials,
     };
   }
 
@@ -125,6 +132,8 @@ export function buildUpdateJobConfig(
   securityVulnerabilities?: SecurityVulnerability[],
 ): IDependabotUpdateOperation {
   const securityOnlyUpdate = update['open-pull-requests-limit'] == 0;
+  const credentials = mapCredentials(taskInputs, registries);
+
   return {
     config: update,
     job: {
@@ -150,16 +159,17 @@ export function buildUpdateJobConfig(
               'include-scope':
                 update['commit-message']?.['include']?.toLocaleLowerCase()?.trim() == 'scope' ? true : undefined,
             },
-      'cooldown': mapCooldownFromDependabotConfigToJobConfig(update.cooldown),
+      'cooldown': update.cooldown,
       'experiments': mapExperiments(taskInputs.experiments),
       'reject-external-code': update['insecure-external-code-execution']?.toLocaleLowerCase()?.trim() == 'allow',
       'requirements-update-strategy': mapVersionStrategyToRequirementsUpdateStrategy(update['versioning-strategy']),
       'lockfile-only': update['versioning-strategy'] === 'lockfile-only',
       'vendor-dependencies': update.vendor,
       'debug': taskInputs.debug,
+      'credentials-metadata': makeCredentialsMetadata(credentials),
       'max-updater-run-time': 2700,
     },
-    credentials: mapCredentials(taskInputs, registries),
+    credentials,
   };
 }
 
@@ -249,20 +259,6 @@ export function mapIgnoreConditionsFromDependabotConfigToJobConfig(ignoreConditi
   });
 }
 
-export function mapCooldownFromDependabotConfigToJobConfig(cooldown?: DependabotCooldown) {
-  if (!cooldown) {
-    return undefined;
-  }
-  return {
-    'default-days': cooldown['default-days'],
-    'semver-major-days': cooldown['semver-major-days'],
-    'semver-minor-days': cooldown['semver-minor-days'],
-    'semver-patch-days': cooldown['semver-patch-days'],
-    'include': cooldown.include,
-    'exclude': cooldown.exclude,
-  };
-}
-
 export function mapSecurityAdvisories(securityVulnerabilities?: SecurityVulnerability[]) {
   if (!securityVulnerabilities) {
     return undefined;
@@ -308,7 +304,10 @@ export function mapVersionStrategyToRequirementsUpdateStrategy(versioningStrateg
   }
 }
 
-export function mapCredentials(taskInputs: ISharedVariables, registries?: Record<string, DependabotRegistry>) {
+export function mapCredentials(
+  taskInputs: ISharedVariables,
+  registries?: Record<string, DependabotRegistry>,
+): DependabotCredential[] {
   const credentials = [];
   if (taskInputs.systemAccessToken) {
     // Required to authenticate with the Azure DevOps git repository when cloning the source code
@@ -337,33 +336,30 @@ export function mapCredentials(taskInputs: ISharedVariables, registries?: Record
   return credentials;
 }
 
-export function mapExperiments(experiments?: Record<string, string | boolean>): Record<string, string | boolean> {
+export function mapExperiments(experiments?: DependabotExperiments): DependabotExperiments {
   experiments ||= {};
-  return Object.keys(experiments).reduce(
-    (acc, key) => {
-      // Experiment values are known to be either 'true', 'false', or a string value.
-      // If the value is 'true' or 'false', convert it to a boolean type so that dependabot-core handles it correctly.
-      const value = experiments[key];
-      if (typeof value === 'string' && value?.toLocaleLowerCase() === 'true') {
-        acc[key] = true;
-      } else if (typeof value === 'string' && value?.toLocaleLowerCase() === 'false') {
-        acc[key] = false;
-      } else {
-        if (typeof value === 'string' || typeof value === 'boolean') acc[key] = value;
-      }
-      return acc;
-    },
-    {} as Record<string, string | boolean>,
-  );
+  return Object.keys(experiments).reduce((acc, key) => {
+    // Experiment values are known to be either 'true', 'false', or a string value.
+    // If the value is 'true' or 'false', convert it to a boolean type so that dependabot-core handles it correctly.
+    const value = experiments[key];
+    if (typeof value === 'string' && value?.toLocaleLowerCase() === 'true') {
+      acc[key] = true;
+    } else if (typeof value === 'string' && value?.toLocaleLowerCase() === 'false') {
+      acc[key] = false;
+    } else {
+      if (typeof value === 'string' || typeof value === 'boolean') acc[key] = value;
+    }
+    return acc;
+  }, {} as DependabotExperiments);
 }
 
-export function mapPackageEcosystemToPackageManager(ecosystem: string) {
+export function mapPackageEcosystemToPackageManager(ecosystem: PackageEcosystem): DependabotPackageManager {
   // Map the dependabot config "package ecosystem" to the equivalent dependabot-core/cli "package manager".
   // Config values: https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#package-ecosystem-
   // Core/CLI values: https://github.com/dependabot/dependabot-core/blob/main/common/lib/dependabot/config/file.rb#L60-L81
-  switch (ecosystem?.toLocaleLowerCase()) {
-    case 'devcontainer':
-      return 'devcontainers';
+  switch (ecosystem) {
+    case 'docker-compose':
+      return 'docker_compose';
     case 'dotnet-sdk':
       return 'dotnet_sdk';
     case 'github-actions':
@@ -376,7 +372,7 @@ export function mapPackageEcosystemToPackageManager(ecosystem: string) {
       return 'hex';
     case 'npm':
       return 'npm_and_yarn';
-    // Additional aliases, for convenience
+    // Additional aliases, sometimes used for convenience
     case 'pipenv':
       return 'pip';
     case 'pip-compile':

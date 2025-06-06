@@ -244,7 +244,9 @@ describe('Parse registries', () => {
 
 describe('Validate registries', () => {
   it('Validation works as expected', () => {
-    // let config: any = yaml.load(fs.readFileSync('tests/utils/dependabot.yml', "utf-8"));
+    // const config = await DependabotConfigSchema.parseAsync(
+    //   yaml.load(await readFile('fixtures/config/dependabot.yml', 'utf-8')),
+    // );
     // let updates = parseUpdates(config);
     // expect(updates.length).toBe(2);
 

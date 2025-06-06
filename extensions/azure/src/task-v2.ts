@@ -278,8 +278,9 @@ export async function performDependabotUpdatesAsync(
       // Get the list of vulnerabilities that apply to the discovered dependencies
       section(`Dependency vulnerability check`);
       const packagesToCheckForVulnerabilities: Package[] = discoveredDependencyListOutputs
-        ?.find((x) => x.output.type == 'update_dependency_list')
-        ?.output?.data?.dependencies?.map((d) => ({ name: d.name, version: d.version }));
+        ?.map((o) => o.output)
+        .find((x) => x.type == 'update_dependency_list')
+        ?.expect.data.dependencies?.map((d) => ({ name: d.name, version: d.version }));
       if (packagesToCheckForVulnerabilities?.length) {
         console.info(
           `Detected ${packagesToCheckForVulnerabilities.length} dependencies; Checking for vulnerabilities...`,

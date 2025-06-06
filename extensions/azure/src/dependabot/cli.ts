@@ -1,3 +1,4 @@
+import { type DependabotInput, type DependabotOutput, DependabotScenarioSchema } from '@paklo/core/dependabot';
 import { command, debug, error, tool, which } from 'azure-pipelines-task-lib/task';
 import { type ToolRunner } from 'azure-pipelines-task-lib/toolrunner';
 import { existsSync } from 'fs';
@@ -7,11 +8,7 @@ import * as os from 'os';
 import * as path from 'path';
 import { Writable } from 'stream';
 import { endgroup, group, section } from '../azure-devops/formatting';
-import {
-  type IDependabotUpdateJobConfig,
-  type IDependabotUpdateOperation,
-  type IDependabotUpdateOperationResult,
-} from './models';
+import { type IDependabotUpdateOperation, type IDependabotUpdateOperationResult } from './models';
 import { type DependabotOutputProcessor } from './output-processor';
 
 export type DependabotCliOptions = {
@@ -167,22 +164,14 @@ export class DependabotCli {
           for (const output of jobOutputs) {
             // Documentation on the scenario model can be found here:
             // https://github.com/dependabot/cli/blob/main/internal/model/scenario.go
-            const type = output['type'];
-            const data = output['expect']?.['data'];
-            const operationResult: IDependabotUpdateOperationResult = {
-              success: true,
-              output: {
-                type: type,
-                data: data,
-              },
-            };
+            const operationResult: IDependabotUpdateOperationResult = { success: true, output };
             try {
-              operationResult.success = await this.outputProcessor.process(operation, type, data);
+              operationResult.success = await this.outputProcessor.process(operation, output);
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
             } catch (e: any) {
               operationResult.success = false;
               operationResult.error = e;
-              error(`An unhandled exception occurred while processing '${type}': ${e}`);
+              error(`An unhandled exception occurred while processing '${output.type}': ${e}`);
               console.debug(e); // Dump the stack trace to help with debugging
             } finally {
               operationResults.push(operationResult);
@@ -241,29 +230,28 @@ export class DependabotCli {
 
 // Documentation on the job model can be found here:
 // https://github.com/dependabot/cli/blob/main/internal/model/job.go
-async function writeJobConfigFile(path: string, config: IDependabotUpdateJobConfig): Promise<void> {
-  const contents = yaml.dump({
-    job: config.job,
-    credentials: config.credentials,
-  });
+async function writeJobConfigFile(path: string, input: DependabotInput): Promise<void> {
+  const contents = yaml.dump(input);
   debug(`JobConfig:\r\n${contents}`);
   await writeFile(path, contents);
 }
 
 // Documentation on the scenario model can be found here:
 // https://github.com/dependabot/cli/blob/main/internal/model/scenario.go
-async function readJobScenarioOutputFile(path: string) {
-  const scenarioContent = await readFile(path, 'utf-8');
-  if (!scenarioContent || typeof scenarioContent !== 'string') {
+async function readJobScenarioOutputFile(path: string): Promise<DependabotOutput[]> {
+  const scenarioContents = await readFile(path, 'utf-8');
+  if (!scenarioContents || typeof scenarioContents !== 'string') {
     return []; // No outputs or failed scenario
   }
 
-  const scenario = yaml.load(scenarioContent);
-  if (scenario === null || typeof scenario !== 'object') {
+  const loadedScenario = yaml.load(scenarioContents);
+  if (loadedScenario === null || typeof loadedScenario !== 'object') {
     throw new Error('Invalid scenario object');
   }
 
-  return scenario['output'] || [];
+  // Parse the scenario
+  const scenario = await DependabotScenarioSchema.parseAsync(loadedScenario);
+  return scenario['output'];
 }
 
 // Log output from Dependabot based on the sub-component it originates from

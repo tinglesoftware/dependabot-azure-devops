@@ -1,4 +1,13 @@
-import { getBranchNameForUpdate } from '@paklo/core/dependabot';
+import {
+  type DependabotClosePullRequest,
+  type DependabotCreatePullRequest,
+  type DependabotDependency,
+  type DependabotExistingGroupPR,
+  type DependabotExistingPR,
+  type DependabotOutput,
+  type DependabotUpdatePullRequest,
+  getBranchNameForUpdate,
+} from '@paklo/core/dependabot';
 import { GitPullRequestMergeStrategy, VersionControlChangeType } from 'azure-devops-node-api/interfaces/GitInterfaces';
 import { debug, error, warning } from 'azure-pipelines-task-lib/task';
 import * as path from 'path';
@@ -72,40 +81,31 @@ export class DependabotOutputProcessor {
 
   /**
    * Process the appropriate DevOps API actions for the supplied dependabot update output
-   * @param update The update operation
-   * @param type The output type (e.g. "create-pull-request", "update-pull-request", etc.)
-   * @param data The output data object related to the type
+   * @param output A scenario output
    */
-  public async process(update: IDependabotUpdateOperation, type: string, data: unknown): Promise<boolean> {
+  public async process(operation: IDependabotUpdateOperation, output: DependabotOutput): Promise<boolean> {
     const project = this.taskInputs.project;
     const repository = this.taskInputs.repository;
-    const packageManager = update?.job?.['package-manager'];
+    const packageManager = operation.job?.['package-manager'];
 
+    const type = output.type;
     section(`Processing '${type}'`);
     if (this.debug) {
-      debug(JSON.stringify(data));
+      debug(JSON.stringify(output.expect.data));
     }
     switch (type) {
       // Documentation on the 'data' model for each output type can be found here:
       // See: https://github.com/dependabot/cli/blob/main/internal/model/update.go
 
-      case 'update_dependency_list': {
-        DependabotDependenciesSchema.parse(data);
-
-        // Storing dependency list snapshot in project properties is no longer supported due to size limitations.
-        // We are looking for alternative solutions.
-
-        return true;
-      }
       case 'create_pull_request': {
-        const title = data['pr-title'];
+        const title = output.expect.data['pr-title'];
         if (this.taskInputs.dryRun) {
           warning(`Skipping pull request creation of '${title}' as 'dryRun' is set to 'true'`);
           return true;
         }
 
         // Skip if active pull request limit reached.
-        const openPullRequestsLimit = update.config['open-pull-requests-limit']!;
+        const openPullRequestsLimit = operation.config['open-pull-requests-limit']!;
         const openPullRequestsCount = this.createdPullRequestIds.length + this.existingPullRequests.length;
         if (openPullRequestsLimit > 0 && openPullRequestsCount >= openPullRequestsLimit) {
           warning(
@@ -114,17 +114,18 @@ export class DependabotOutputProcessor {
           return true;
         }
 
-        const changedFiles = getPullRequestChangedFilesForOutputData(data);
-        const dependencies = getPullRequestDependenciesPropertyValueForOutputData(data);
+        const changedFiles = getPullRequestChangedFilesForOutputData(output.expect.data);
+        const dependencies = getPullRequestDependenciesPropertyValueForOutputData(output.expect.data);
         const targetBranch =
-          update.config['target-branch'] || (await this.prAuthorClient.getDefaultBranch(project, repository));
+          operation.config['target-branch'] || (await this.prAuthorClient.getDefaultBranch(project, repository));
         const sourceBranch = getBranchNameForUpdate(
-          update.config['package-ecosystem'],
+          operation.config['package-ecosystem'],
           targetBranch,
-          update.config.directory || update.config.directories?.find((dir) => changedFiles[0]?.path?.startsWith(dir)),
+          operation.config.directory ||
+            operation.config.directories?.find((dir) => changedFiles[0]?.path?.startsWith(dir)),
           dependencies['dependency-group-name'],
           dependencies['dependencies'] || dependencies,
-          update.config['pull-request-branch-name']?.separator,
+          operation.config['pull-request-branch-name']?.separator,
         );
 
         // Check if the source branch already exists or conflicts with an existing branch
@@ -148,7 +149,7 @@ export class DependabotOutputProcessor {
           project: project,
           repository: repository,
           source: {
-            commit: data['base-commit-sha'] || update.job.source.commit,
+            commit: output.expect.data['base-commit-sha'] || operation.job.source.commit,
             branch: sourceBranch,
           },
           target: {
@@ -158,9 +159,13 @@ export class DependabotOutputProcessor {
             email: this.taskInputs.authorEmail || DependabotOutputProcessor.PR_DEFAULT_AUTHOR_EMAIL,
             name: this.taskInputs.authorName || DependabotOutputProcessor.PR_DEFAULT_AUTHOR_NAME,
           },
-          title: data['pr-title'],
-          description: getPullRequestDescription(packageManager, data['pr-body'], data['dependencies']),
-          commitMessage: data['commit-message'],
+          title: output.expect.data['pr-title'],
+          description: getPullRequestDescription(
+            packageManager,
+            output.expect.data['pr-body'],
+            output.expect.data['dependencies'],
+          ),
+          commitMessage: output.expect.data['commit-message'],
           autoComplete: this.taskInputs.setAutoComplete
             ? {
                 ignorePolicyConfigIds: this.taskInputs.autoCompleteIgnoreConfigIds,
@@ -180,9 +185,9 @@ export class DependabotOutputProcessor {
                 })(),
               }
             : undefined,
-          assignees: update.config.assignees,
-          labels: update.config.labels?.map((label) => label?.trim()) || [],
-          workItems: update.config.milestone ? [update.config.milestone] : [],
+          assignees: operation.config.assignees,
+          labels: operation.config.labels?.map((label) => label?.trim()) || [],
+          workItems: operation.config.milestone ? [operation.config.milestone] : [],
           changes: changedFiles,
           properties: buildPullRequestProperties(packageManager, dependencies),
         });
@@ -212,10 +217,13 @@ export class DependabotOutputProcessor {
         }
 
         // Find the pull request to update
-        const pullRequestToUpdate = this.getPullRequestForDependencyNames(packageManager, data['dependency-names']);
+        const pullRequestToUpdate = this.getPullRequestForDependencyNames(
+          packageManager,
+          output.expect.data['dependency-names'],
+        );
         if (!pullRequestToUpdate) {
           error(
-            `Could not find pull request to update for package manager '${packageManager}' with dependencies '${data['dependency-names'].join(', ')}'`,
+            `Could not find pull request to update for package manager '${packageManager}' with dependencies '${output.expect.data['dependency-names'].join(', ')}'`,
           );
           return false;
         }
@@ -225,12 +233,12 @@ export class DependabotOutputProcessor {
           project: project,
           repository: repository,
           pullRequestId: pullRequestToUpdate.id,
-          commit: data['base-commit-sha'] || update.job.source.commit,
+          commit: output.expect.data['base-commit-sha'] || operation.job.source.commit,
           author: {
             email: this.taskInputs.authorEmail || DependabotOutputProcessor.PR_DEFAULT_AUTHOR_EMAIL,
             name: this.taskInputs.authorName || DependabotOutputProcessor.PR_DEFAULT_AUTHOR_NAME,
           },
-          changes: getPullRequestChangedFilesForOutputData(data),
+          changes: getPullRequestChangedFilesForOutputData(output.expect.data),
           skipIfDraft: true,
           skipIfCommitsFromAuthorsOtherThan:
             this.taskInputs.authorEmail || DependabotOutputProcessor.PR_DEFAULT_AUTHOR_EMAIL,
@@ -256,10 +264,13 @@ export class DependabotOutputProcessor {
         }
 
         // Find the pull request to close
-        const pullRequestToClose = this.getPullRequestForDependencyNames(packageManager, data['dependency-names']);
+        const pullRequestToClose = this.getPullRequestForDependencyNames(
+          packageManager,
+          output.expect.data['dependency-names'],
+        );
         if (!pullRequestToClose) {
           error(
-            `Could not find pull request to close for package manager '${packageManager}' with dependencies '${data['dependency-names'].join(', ')}'`,
+            `Could not find pull request to close for package manager '${packageManager}' with dependencies '${output.expect.data['dependency-names'].join(', ')}'`,
           );
           return false;
         }
@@ -272,10 +283,15 @@ export class DependabotOutputProcessor {
           project: project,
           repository: repository,
           pullRequestId: pullRequestToClose.id,
-          comment: getPullRequestCloseReasonForOutputData(data),
+          comment: getPullRequestCloseReasonForOutputData(output.expect.data),
           deleteSourceBranch: true,
         });
       }
+
+      case 'update_dependency_list':
+        // No action required
+        return true;
+
       case 'mark_as_processed':
         // No action required
         return true;
@@ -289,11 +305,15 @@ export class DependabotOutputProcessor {
         return true;
 
       case 'record_update_job_error':
-        error(`Update job error: ${data['error-type']} ${JSON.stringify(data['error-details'])}`);
+        error(
+          `Update job error: ${output.expect.data['error-type']} ${JSON.stringify(output.expect.data['error-details'])}`,
+        );
         return false;
 
       case 'record_update_job_unknown_error':
-        error(`Update job unknown error: ${data['error-type']}, ${JSON.stringify(data['error-details'])}`);
+        error(
+          `Update job unknown error: ${output.expect.data['error-type']}, ${JSON.stringify(output.expect.data['error-details'])}`,
+        );
         return false;
 
       case 'increment_metric':
@@ -360,7 +380,9 @@ export function parsePullRequestProperties(
   );
 }
 
-function getPullRequestChangedFilesForOutputData(data: unknown): IFileChange[] {
+function getPullRequestChangedFilesForOutputData(
+  data: DependabotCreatePullRequest | DependabotUpdatePullRequest,
+): IFileChange[] {
   return data['updated-dependency-files']
     .filter((file) => file['type'] === 'file')
     .map((file) => {
@@ -381,11 +403,11 @@ function getPullRequestChangedFilesForOutputData(data: unknown): IFileChange[] {
     });
 }
 
-function getPullRequestCloseReasonForOutputData(data: unknown): string {
+function getPullRequestCloseReasonForOutputData(data: DependabotClosePullRequest): string {
   // The first dependency is the "lead" dependency in a multi-dependency update
   const leadDependencyName = data['dependency-names'][0];
   let reason: string = null;
-  switch (data['reason']) {
+  switch (data.reason) {
     case 'dependencies_changed':
       reason = `Looks like the dependencies have changed`;
       break;
@@ -408,22 +430,22 @@ function getPullRequestCloseReasonForOutputData(data: unknown): string {
   return reason;
 }
 
-function getPullRequestDependenciesPropertyValueForOutputData(data: unknown): unknown {
-  let dependencies = data['dependencies']?.map((dep) => {
+function getPullRequestDependenciesPropertyValueForOutputData(
+  data: DependabotCreatePullRequest,
+): DependabotExistingPR[] | DependabotExistingGroupPR {
+  const dependencies = data['dependencies']?.map((dep) => {
     return {
-      'dependency-name': dep['name'],
-      'dependency-version': dep['version'],
-      'directory': dep['directory'],
+      'dependency-name': dep.name,
+      'dependency-version': dep.version,
+      'directory': dep.directory,
     };
   });
   const dependencyGroupName = data['dependency-group']?.['name'];
-  if (dependencyGroupName) {
-    dependencies = {
-      'dependency-group-name': dependencyGroupName,
-      'dependencies': dependencies,
-    };
-  }
-  return dependencies;
+  if (!dependencyGroupName) return dependencies;
+  return {
+    'dependency-group-name': dependencyGroupName,
+    'dependencies': dependencies,
+  } as DependabotExistingGroupPR;
 }
 
 function getDependencyNames(dependencies: unknown): string[] {
@@ -437,7 +459,7 @@ function areEqual(a: string[], b: string[]): boolean {
   return a.every((name) => b.includes(name));
 }
 
-function getPullRequestDescription(packageManager: string, body: string, dependencies: unknown[]): string {
+function getPullRequestDescription(packageManager: string, body: string, dependencies: DependabotDependency[]): string {
   let header = '';
   const footer = '';
 
@@ -451,7 +473,7 @@ function getPullRequestDescription(packageManager: string, body: string, depende
   // https://docs.github.com/en/github/managing-security-vulnerabilities/about-dependabot-security-updates#about-compatibility-scores
   if (dependencies.length === 1) {
     const compatibilityScoreBadges = dependencies.map((dep) => {
-      return `![Dependabot compatibility score](https://dependabot-badges.githubapp.com/badges/compatibility_score?dependency-name=${dep['name']}&package-manager=${packageManager}&previous-version=${dep['previous-version']}&new-version=${dep['version']})`;
+      return `![Dependabot compatibility score](https://dependabot-badges.githubapp.com/badges/compatibility_score?dependency-name=${dep.name}&package-manager=${packageManager}&previous-version=${dep['previous-version']}&new-version=${dep.version})`;
     });
     header += compatibilityScoreBadges.join(' ') + '\n\n';
   }

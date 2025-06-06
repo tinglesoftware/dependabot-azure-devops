@@ -1,4 +1,4 @@
-import { DEFAULT_EXPERIMENTS } from '@paklo/core/dependabot';
+import { DEFAULT_EXPERIMENTS, type DependabotExperiments } from '@paklo/core/dependabot';
 import * as tl from 'azure-pipelines-task-lib/task';
 import { getAzureDevOpsAccessToken, getGithubAccessToken } from './tokens';
 import { extractHostname, extractOrganization, extractVirtualDirectory } from './url-parts';
@@ -49,7 +49,7 @@ export interface ISharedVariables {
   /** A personal access token of the user that should approve the PR */
   autoApproveUserToken: string;
 
-  experiments: Record<string, string | boolean>;
+  experiments: DependabotExperiments;
 
   /** Determines if verbose log messages are logged */
   debug: boolean;
@@ -147,14 +147,11 @@ export default function getSharedVariables(): ISharedVariables {
     .getInput('experiments', false)
     ?.split(',')
     .filter((entry) => entry.trim() !== '') // <-- filter out empty entries
-    .reduce(
-      (acc, cur) => {
-        const [key, value] = cur.split('=', 2);
-        acc[key!] = value || true;
-        return acc;
-      },
-      {} as Record<string, string | boolean>,
-    );
+    .reduce((acc, cur) => {
+      const [key, value] = cur.split('=', 2);
+      acc[key!] = value || true;
+      return acc;
+    }, {} as DependabotExperiments);
 
   // If no experiments are defined, use the default experiments
   if (!experiments) {
