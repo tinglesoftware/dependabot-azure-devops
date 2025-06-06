@@ -1,0 +1,62 @@
+name: Remove Review Resources
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+    paths-ignore:
+      - .devcontainer/**
+      - .vscode/**
+      - docs/**
+      - README.md
+      - LICENSE
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: 'Pull request number'
+        required: true
+        type: number
+
+env:
+  AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+jobs:
+  StaticWebApps:
+    if: ${{ github.actor != 'dependabot[bot]' && !contains(github.head_ref, 'dependabot/') }}
+    runs-on: ubuntu-latest
+    name: Remove SWA environment (${{ matrix.app }})
+    timeout-minutes: 5
+    strategy:
+      matrix:
+        include:
+          # - { app: dashboard, token: AZURE_SWA_TOKEN_DASHBOARD }
+          - { app: website, token: AZURE_SWA_TOKEN_WEBSITE }
+
+    steps:
+      - name: Remove SWA environment
+        uses: azure/static-web-apps-deploy@v1
+        if: ${{ github.event_name == 'pull_request' }}
+        continue-on-error: true # Ignore errors when the SWA does not exist
+        with:
+          azure_static_web_apps_api_token: ${{ secrets[matrix.token] }}
+          action: 'close'
+          app_location: ''
+
+  ResourcesCleaner:
+    if: ${{ github.actor != 'dependabot[bot]' && !contains(github.head_ref, 'dependabot/') }}
+    runs-on: ubuntu-latest
+    name: Resources Cleaner
+    timeout-minutes: 5
+
+    steps:
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Remove review resources
+        run: |
+          dotnet tool install --global azure-resources-cleaner && \
+          azrc \
+          --pr ${{ inputs.pr || github.event.pull_request.number }} \
+          --subscription ${{ env.AZURE_SUBSCRIPTION_ID }}
