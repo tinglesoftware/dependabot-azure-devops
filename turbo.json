@@ -1,6 +1,6 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalDependencies": ["**/.env", "**/.env.*", "**/eslint.config.*"],
+  "globalDependencies": ["**/.env", "**/.env.*", "**/eslint*.config.*", "**/vitest.config.*"],
   "globalEnv": ["NODE_ENV"],
   "globalPassThroughEnv": ["GOPATH"],
   "tasks": {

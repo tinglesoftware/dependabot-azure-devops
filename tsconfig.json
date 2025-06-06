@@ -11,11 +11,15 @@
     "module": "ESNext",
     "moduleDetection": "force",
     "moduleResolution": "bundler",
+    "forceConsistentCasingInFileNames": true,
     "noUncheckedIndexedAccess": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": true,
-    "target": "ESNext"
+    "target": "ESNext",
+    "allowJs": true,
+    "noEmit": true,
+    "jsx": "preserve"
   },
   "exclude": ["node_modules"]
 }

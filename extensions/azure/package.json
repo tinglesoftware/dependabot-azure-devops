@@ -5,7 +5,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "prebuild": "tsc --noEmit",
+    "prebuild": "tsc",
     "build": "tsup",
     "start": "pnpm start:V2",
     "start:V1": "node tasks/dependabotV1/dist/task-v1.js",
@@ -42,9 +42,6 @@
     "zod": "3.25.30"
   },
   "devDependencies": {
-    "@paklo/eslint": "workspace:*",
-    "@paklo/tsconfig": "workspace:*",
-    "@paklo/vitest": "workspace:*",
     "@types/js-yaml": "4.0.9",
     "@types/node": "22.15.29",
     "@types/q": "1.5.8",

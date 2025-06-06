@@ -1,7 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
-  "extends": "@paklo/tsconfig/nextjs.json",
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
+    "incremental": true,
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]

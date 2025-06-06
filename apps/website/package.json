@@ -27,9 +27,6 @@
     "zod": "3.25.30"
   },
   "devDependencies": {
-    "@paklo/eslint": "workspace:*",
-    "@paklo/tsconfig": "workspace:*",
-    "@paklo/vitest": "workspace:*",
     "@tailwindcss/postcss": "4.1.8",
     "@types/react": "19.1.6",
     "@types/react-dom": "19.1.5",
