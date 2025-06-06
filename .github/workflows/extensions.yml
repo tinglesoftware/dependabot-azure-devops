@@ -24,6 +24,9 @@ concurrency:
   # wait for previous runs to complete on main and tags
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' && !startsWith(github.ref, 'refs/tags/') }}
 
+env:
+  BUILD_NUMBER: ${{ github.run_number }} # not discovered by default
+
 jobs:
   Azure:
     runs-on: ubuntu-latest
@@ -58,6 +61,11 @@ jobs:
 
       - name: Test
         run: pnpm dlx turbo test
+        working-directory: '${{ github.workspace }}/extensions/azure'
+
+      - name: Update Dev Version
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        run: pnpm packages:version --dev
         working-directory: '${{ github.workspace }}/extensions/azure'
 
       - name: Create Extension
