@@ -248,12 +248,8 @@ export class AzureDevOpsWebApiClient {
           title: pr.title,
           description: pr.description,
           reviewers: reviewers,
-          workItemRefs: pr.workItems?.map((id) => {
-            return { id: id };
-          }),
-          labels: pr.labels?.map((label) => {
-            return { name: label };
-          }),
+          workItemRefs: pr.workItems?.map((id) => ({ id: id })),
+          labels: pr.labels?.map((label) => ({ name: label })),
         },
       );
       if (!pullRequest?.pullRequestId) {

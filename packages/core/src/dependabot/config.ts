@@ -264,11 +264,11 @@ export function parseUpdates(config: DependabotConfig, configPath: string): Depe
     // NOTE: 'source' and 'updated-at' are not documented in the dependabot.yml config docs, but are defined in the dependabot-core and dependabot-cli models.
     //       Currently they don't appear to add much value to the update process, but are populated here for completeness.
     if (update.ignore) {
-      update.ignore.forEach((condition) => {
+      for (const condition of update.ignore) {
         condition['source'] ||= configPath;
         // we don't know the last updated time, so we use the current time
         condition['updated-at'] ||= new Date().toISOString();
-      });
+      };
     }
 
     updates.push(update);
