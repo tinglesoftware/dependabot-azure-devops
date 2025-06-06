@@ -268,7 +268,7 @@ export function parseUpdates(config: DependabotConfig, configPath: string): Depe
         condition['source'] ||= configPath;
         // we don't know the last updated time, so we use the current time
         condition['updated-at'] ||= new Date().toISOString();
-      };
+      }
     }
 
     updates.push(update);

@@ -4,7 +4,7 @@ import { readFile, writeFile } from 'fs/promises';
 import { join, relative } from 'path';
 import * as semver from 'semver';
 
-async function updateTaskJsonFiles({cwd, dev, version, buildNumber}) {
+async function updateTaskJsonFiles({ cwd, dev, version, buildNumber }) {
   const fileNames = [
     // 'tasks/dependabotV1/task.json',
     'tasks/dependabotV2/task.json',
@@ -26,7 +26,7 @@ async function updateTaskJsonFiles({cwd, dev, version, buildNumber}) {
   }
 }
 
-async function updateVssExtensions({cwd, dev, version, buildNumber}) {
+async function updateVssExtensions({ cwd, dev, version, buildNumber }) {
   const fileName = join(cwd, 'vss-extension.json');
   const contents = JSON.parse(await readFile(fileName, 'utf-8'));
   contents.version = `${version.major}.${version.minor}.${version.patch}.${buildNumber}`;
@@ -45,7 +45,7 @@ async function run(dev) {
   const buildNumber = Number.parseInt(process.env['BUILD_NUMBER'] || '0');
   console.log(`Updating versions to ${version} and BuildNumber: ${buildNumber}`);
 
-  var opt = {cwd: process.cwd(), dev, version, buildNumber};
+  var opt = { cwd: process.cwd(), dev, version, buildNumber };
   await updateTaskJsonFiles(opt);
   await updateVssExtensions(opt);
 
