@@ -20,6 +20,9 @@ on:
 env:
   AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
+permissions:
+  contents: read
+
 jobs:
   StaticWebApps:
     if: ${{ github.actor != 'dependabot[bot]' && !contains(github.head_ref, 'dependabot/') }}
