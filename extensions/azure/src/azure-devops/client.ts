@@ -187,16 +187,14 @@ export class AzureDevOpsWebApiClient {
 
       // Map the list of the pull request reviewer ids
       // NOTE: Azure DevOps does not have a concept of assignees.
-      //       We treat assignees as required reviewers and all other reviewers as optional.
-      const allReviewers: IdentityRefWithVote[] = [];
+      //       We treat them as optional reviewers. Branch policies should be used for required reviewers.
+      const reviewers: IdentityRefWithVote[] = [];
       if (pr.assignees && pr.assignees.length > 0) {
         for (const assignee of pr.assignees) {
           const identityId = isGuid(assignee) ? assignee : await this.resolveIdentityId(assignee);
-          if (identityId && !allReviewers.some((r) => r.id === identityId)) {
-            allReviewers.push({
+          if (identityId && !reviewers.some((r) => r.id === identityId)) {
+            reviewers.push({
               id: identityId,
-              isRequired: true,
-              isFlagged: true,
             });
           } else {
             warning(`Unable to resolve assignee identity '${assignee}'`);
@@ -249,7 +247,7 @@ export class AzureDevOpsWebApiClient {
           targetRefName: `refs/heads/${pr.target.branch}`,
           title: pr.title,
           description: pr.description,
-          reviewers: allReviewers,
+          reviewers: reviewers,
           workItemRefs: pr.workItems?.map((id) => {
             return { id: id };
           }),
