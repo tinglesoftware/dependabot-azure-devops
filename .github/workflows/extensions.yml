@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    tags: ['extensions-*']
+    tags: ['extension*']
     paths:
       - 'extensions/**'
       - '.github/workflows/extensions.yml'

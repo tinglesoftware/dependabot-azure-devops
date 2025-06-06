@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    tags: ['extensions-*']
+    tags: ['website*']
     paths:
       - 'apps/website/**'
       - '.github/workflows/website.yml'
