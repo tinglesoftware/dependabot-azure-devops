@@ -3,7 +3,7 @@ name: Website
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    # branches: [main]
     tags: ['website*']
     paths:
       - 'apps/website/**'
