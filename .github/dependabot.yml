@@ -127,7 +127,3 @@ updates:
         patterns:
           - 'eslint-plugin-turbo'
           - 'turbo'
-    ignore:
-      # TODO: remove this once the updates have settled a bit more, right now they are too much
-      - dependency-name: 'zod'
-        update-types: ['version-update:semver-patch']
