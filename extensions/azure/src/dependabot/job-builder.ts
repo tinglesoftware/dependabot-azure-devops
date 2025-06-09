@@ -167,6 +167,7 @@ export function buildUpdateJobConfig(
       'vendor-dependencies': update.vendor,
       'debug': taskInputs.debug,
       'credentials-metadata': makeCredentialsMetadata(credentials),
+      "proxy-log-response-body-on-auth-failure": true,
       'max-updater-run-time': 2700,
     },
     credentials,
