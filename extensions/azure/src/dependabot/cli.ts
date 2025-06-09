@@ -1,10 +1,10 @@
-import { type DependabotInput, type DependabotOutput, DependabotScenarioSchema } from '@paklo/core/dependabot';
 import { command, debug, error, tool, which } from 'azure-pipelines-task-lib/task';
 import { type ToolRunner } from 'azure-pipelines-task-lib/toolrunner';
 import { existsSync } from 'fs';
 import { mkdir, readFile, rename, rm, stat, writeFile } from 'fs/promises';
 import * as yaml from 'js-yaml';
 import * as os from 'os';
+import { type DependabotInput, type DependabotOutput, DependabotScenarioSchema } from 'paklo/dependabot';
 import * as path from 'path';
 import { Writable } from 'stream';
 import { endgroup, group, section } from '../azure-devops/formatting';

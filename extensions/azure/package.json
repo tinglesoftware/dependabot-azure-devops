@@ -32,11 +32,11 @@
   },
   "homepage": "https://github.com/tinglesoftware/dependabot-azure-devops#readme",
   "dependencies": {
-    "@paklo/core": "workspace:*",
     "axios": "1.9.0",
     "azure-devops-node-api": "15.1.0",
     "azure-pipelines-task-lib": "5.2.1",
     "js-yaml": "4.1.0",
+    "paklo": "workspace:*",
     "semver": "7.7.2",
     "typed-rest-client": "2.1.0",
     "zod": "3.25.56"

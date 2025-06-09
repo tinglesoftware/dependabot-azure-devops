@@ -14,7 +14,6 @@
     "clean": "rimraf .next .source out"
   },
   "dependencies": {
-    "@paklo/core": "workspace:*",
     "@vercel/analytics": "1.5.0",
     "@vercel/speed-insights": "1.2.0",
     "next": "15.3.3",
@@ -23,6 +22,7 @@
     "fumadocs-ui": "15.5.1",
     "fumadocs-core": "15.5.1",
     "fumadocs-mdx": "11.6.7",
+    "paklo": "workspace:*",
     "sharp": "0.34.2",
     "zod": "3.25.56"
   },

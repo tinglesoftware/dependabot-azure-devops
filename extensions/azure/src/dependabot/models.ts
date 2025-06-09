@@ -1,4 +1,4 @@
-import { type DependabotInput, type DependabotOutput, type DependabotUpdate } from '@paklo/core/dependabot';
+import { type DependabotInput, type DependabotOutput, type DependabotUpdate } from 'paklo/dependabot';
 
 /**
  * Represents a single Dependabot CLI update operation

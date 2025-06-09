@@ -1,5 +1,5 @@
 {
-  "name": "@paklo/core",
+  "name": "paklo",
   "version": "0.1.0",
   "sideEffects": false,
   "type": "module",

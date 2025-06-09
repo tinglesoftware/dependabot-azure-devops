@@ -1,4 +1,4 @@
-# @paklo/core
+# paklo
 
 ## 0.1.0
 

@@ -1,3 +1,5 @@
+import { GitPullRequestMergeStrategy, VersionControlChangeType } from 'azure-devops-node-api/interfaces/GitInterfaces';
+import { debug, error, warning } from 'azure-pipelines-task-lib/task';
 import {
   type DependabotClosePullRequest,
   type DependabotCreatePullRequest,
@@ -7,9 +9,7 @@ import {
   type DependabotOutput,
   type DependabotUpdatePullRequest,
   getBranchNameForUpdate,
-} from '@paklo/core/dependabot';
-import { GitPullRequestMergeStrategy, VersionControlChangeType } from 'azure-devops-node-api/interfaces/GitInterfaces';
-import { debug, error, warning } from 'azure-pipelines-task-lib/task';
+} from 'paklo/dependabot';
 import * as path from 'path';
 import { type AzureDevOpsWebApiClient } from '../azure-devops/client';
 import { section } from '../azure-devops/formatting';

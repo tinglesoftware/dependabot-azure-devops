@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { type DependabotGroup, type DependabotIgnoreCondition, type DependabotUpdate } from '@paklo/core/dependabot';
+import { type DependabotGroup, type DependabotIgnoreCondition, type DependabotUpdate } from 'paklo/dependabot';
 import {
   mapAllowedUpdatesFromDependabotConfigToJobConfig,
   mapExperiments,

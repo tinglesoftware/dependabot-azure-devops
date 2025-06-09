@@ -1,4 +1,4 @@
-import { environment, getSiteUrl } from '@paklo/core/environment';
+import { environment, getSiteUrl } from 'paklo/environment';
 
 const { development, main } = environment;
 const siteUrl = getSiteUrl({ defaultValue: 'https://paklo.software' });

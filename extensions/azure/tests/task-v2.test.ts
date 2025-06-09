@@ -1,7 +1,7 @@
 import { TaskResult } from 'azure-pipelines-task-lib';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { type DependabotConfig } from '@paklo/core/dependabot';
+import { type DependabotConfig } from 'paklo/dependabot';
 import { AzureDevOpsWebApiClient } from '../src/azure-devops/client';
 import {
   DEVOPS_PR_PROPERTY_DEPENDABOT_DEPENDENCIES,

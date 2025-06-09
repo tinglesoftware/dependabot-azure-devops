@@ -20,4 +20,4 @@
 - Updated dependencies [5301c73]
 - Updated dependencies [e6c0ffa]
 - Updated dependencies [8985a46]
-  - @paklo/core@0.1.0
+  - paklo@0.1.0

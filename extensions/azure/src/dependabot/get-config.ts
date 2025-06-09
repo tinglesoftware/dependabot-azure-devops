@@ -1,9 +1,9 @@
-import { parseDependabotConfig, type DependabotConfig } from '@paklo/core/dependabot';
 import axios from 'axios';
 import * as tl from 'azure-pipelines-task-lib/task';
 import { getVariable } from 'azure-pipelines-task-lib/task';
 import { existsSync } from 'fs';
 import { readFile } from 'fs/promises';
+import { parseDependabotConfig, type DependabotConfig } from 'paklo/dependabot';
 import * as path from 'path';
 import { type ISharedVariables } from '../utils/shared-variables';
 

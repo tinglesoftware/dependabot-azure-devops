@@ -2,7 +2,7 @@ import { debug, error, setResult, TaskResult, warning, which } from 'azure-pipel
 import { existsSync } from 'fs';
 import { readFile } from 'fs/promises';
 
-import { type DependabotConfig, type DependabotUpdate } from '@paklo/core/dependabot';
+import { type DependabotConfig, type DependabotUpdate } from 'paklo/dependabot';
 import { AzureDevOpsWebApiClient } from './azure-devops/client';
 import { normalizeBranchName, section, setSecrets } from './azure-devops/formatting';
 import { DEVOPS_PR_PROPERTY_MICROSOFT_GIT_SOURCE_REF_NAME, type IPullRequestProperties } from './azure-devops/models';

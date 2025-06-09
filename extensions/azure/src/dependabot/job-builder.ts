@@ -9,7 +9,7 @@ import {
   type DependabotRegistry,
   type DependabotUpdate,
   type PackageEcosystem,
-} from '@paklo/core/dependabot';
+} from 'paklo/dependabot';
 import { type SecurityVulnerability } from '../github';
 import { type ISharedVariables } from '../utils/shared-variables';
 import { type IDependabotUpdateOperation } from './models';
