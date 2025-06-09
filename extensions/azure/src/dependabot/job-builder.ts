@@ -63,6 +63,7 @@ export class DependabotJobBuilder {
     id: string,
     update: DependabotUpdate,
     registries?: Record<string, DependabotRegistry>,
+    enableBetaEcosystems?: boolean | undefined,
     dependencyNamesToUpdate?: string[],
     existingPullRequests?: any[], // eslint-disable-line @typescript-eslint/no-explicit-any
     securityVulnerabilities?: SecurityVulnerability[],
@@ -73,6 +74,7 @@ export class DependabotJobBuilder {
       taskInputs,
       update,
       registries,
+      enableBetaEcosystems,
       false,
       undefined,
       securityUpdatesOnly
@@ -98,6 +100,7 @@ export class DependabotJobBuilder {
     id: string,
     update: DependabotUpdate,
     registries: Record<string, DependabotRegistry> | undefined,
+    enableBetaEcosystems: boolean | undefined,
     existingPullRequests: any[], // eslint-disable-line @typescript-eslint/no-explicit-any
     pullRequestToUpdate: any, // eslint-disable-line @typescript-eslint/no-explicit-any
     securityVulnerabilities?: SecurityVulnerability[],
@@ -111,6 +114,7 @@ export class DependabotJobBuilder {
       taskInputs,
       update,
       registries,
+      enableBetaEcosystems,
       true,
       dependencyGroupName,
       dependencyNames,
@@ -125,6 +129,7 @@ export function buildUpdateJobConfig(
   taskInputs: ISharedVariables,
   update: DependabotUpdate,
   registries?: Record<string, DependabotRegistry>,
+  enableBetaEcosystems?: boolean | undefined,
   updatingPullRequest?: boolean | undefined,
   updateDependencyGroupName?: string | undefined,
   updateDependencyNames?: string[] | undefined,
@@ -167,8 +172,9 @@ export function buildUpdateJobConfig(
       'vendor-dependencies': update.vendor,
       'debug': taskInputs.debug,
       'credentials-metadata': makeCredentialsMetadata(credentials),
-      "proxy-log-response-body-on-auth-failure": true,
+      'proxy-log-response-body-on-auth-failure': true,
       'max-updater-run-time': 2700,
+      'enable-beta-ecosystems': enableBetaEcosystems || false,
     },
     credentials,
   };

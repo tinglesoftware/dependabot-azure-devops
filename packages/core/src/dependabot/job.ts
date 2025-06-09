@@ -161,6 +161,7 @@ export const DependabotJobConfigSchema = z.object({
   'max-updater-run-time': z.int().nullish(),
   'cooldown': DependabotCooldownSchema.nullish(),
   'proxy-log-response-body-on-auth-failure': z.boolean().nullish(),
+  'enable-beta-ecosystems': z.boolean().nullish(),
 });
 export type DependabotJobConfig = z.infer<typeof DependabotJobConfigSchema>;
 
