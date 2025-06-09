@@ -34,6 +34,6 @@
   "dependencies": {
     "pino": "9.7.0",
     "pino-pretty": "13.0.0",
-    "zod": "3.25.30"
+    "zod": "3.25.56"
   }
 }
