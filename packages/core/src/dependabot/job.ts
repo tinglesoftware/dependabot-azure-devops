@@ -162,6 +162,7 @@ export const DependabotJobConfigSchema = z.object({
   'cooldown': DependabotCooldownSchema.nullish(),
   'proxy-log-response-body-on-auth-failure': z.boolean().nullish(),
   'enable-beta-ecosystems': z.boolean().nullish(),
+  'multi-ecosystem-update': z.boolean().nullish(),
 });
 export type DependabotJobConfig = z.infer<typeof DependabotJobConfigSchema>;
 

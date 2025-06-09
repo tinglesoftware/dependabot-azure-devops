@@ -175,6 +175,12 @@ export function buildUpdateJobConfig(
       'proxy-log-response-body-on-auth-failure': true,
       'max-updater-run-time': 2700,
       'enable-beta-ecosystems': enableBetaEcosystems || false,
+      // Updates across ecosystems is still in development
+      // See https://github.com/dependabot/dependabot-core/issues/8126
+      //     https://github.com/dependabot/dependabot-core/pull/12339
+      // It needs to merged in the core repo first before we support it
+      // However, to match current job configs and to prevent surprises, we disable it
+      'multi-ecosystem-update': false,
     },
     credentials,
   };
