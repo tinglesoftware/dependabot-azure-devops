@@ -13,7 +13,6 @@ export const DEFAULT_EXPERIMENTS: DependabotExperiments = {
   'nuget-native-analysis': true,
   'nuget-native-updater': true,
   'nuget-use-direct-discovery': true,
-  'nuget-use-legacy-updater-when-updating-pr': true,
   'enable-file-parser-python-local': true,
   'npm-fallback-version-above-v6': true,
   'lead-security-dependency': true,
@@ -37,4 +36,6 @@ export const DEFAULT_EXPERIMENTS: DependabotExperiments = {
   'enable-cooldown-metrics-collection': true,
   'enable-cooldown-for-composer': true,
   'enable-cooldown-for-gradle': true,
+  'enable-cooldown-for-pub': true,
+  'enable-cooldown-for-gitsubmodules': true,
 };
