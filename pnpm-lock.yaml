@@ -139,8 +139,8 @@ importers:
         specifier: 15.1.0
         version: 15.1.0
       azure-pipelines-task-lib:
-        specifier: 5.2.0
-        version: 5.2.0
+        specifier: 5.2.1
+        version: 5.2.1
       js-yaml:
         specifier: 4.1.0
         version: 4.1.0
@@ -2076,8 +2076,8 @@ packages:
     resolution: {integrity: sha512-zlZ387CISkSKK1vjBv53kzR5fnzA60SxYrejypZawefZWvrjC28zyM/iKSP5b+iYl+Z7OOlm+Rgl6YsMecK6fg==}
     engines: {node: '>= 16.0.0'}
 
-  azure-pipelines-task-lib@5.2.0:
-    resolution: {integrity: sha512-RTvMzBz8zpJFZu1/bXSWMQRpw8IMufdy7H3B2kFoI8LJcfcY3eCtPFf4JYlVsRVcQGJlk6XDEmq9dwWZ6udOBg==}
+  azure-pipelines-task-lib@5.2.1:
+    resolution: {integrity: sha512-10RL/bGbs39spWf3yklOp+vWPOn54Y9x4OZUUih7OCpCXyj6S0POttlGd5fY2Vcd9KgERdaJHPhOXRG0fHGWfQ==}
 
   bail@2.0.2:
     resolution: {integrity: sha512-0xO6mYd7JB2YesxDKplafRpsiOzPt9V02ddPCLbY1xYGPOX24NTyN50qnUxgCPcSoYMhKpAuBTjQoRZCAkUDRw==}
@@ -2884,6 +2884,10 @@ packages:
 
   glob@7.1.2:
     resolution: {integrity: sha512-MJTUg1kjuLeQCJ+ccE4Vpa6kKVXkPYJ2mOCQyUuKLcLQsdrMCpBPUi8qVE6+YuaJkozeA9NusTAw3hLr8Xe5EQ==}
+    deprecated: Glob versions prior to v9 are no longer supported
+
+  glob@7.2.3:
+    resolution: {integrity: sha512-nFR0zLpU2YCaRxwoCJvL6UvCH2JFyFVIvwTLsIf21AuHlMskA1hhTdk+LlYJtOlYt9v6dvszD2BGRqBL+iQK9Q==}
     deprecated: Glob versions prior to v9 are no longer supported
 
   globals@14.0.0:
@@ -6686,7 +6690,7 @@ snapshots:
       tunnel: 0.0.6
       typed-rest-client: 2.1.0
 
-  azure-pipelines-task-lib@5.2.0:
+  azure-pipelines-task-lib@5.2.1:
     dependencies:
       adm-zip: 0.5.16
       minimatch: 3.0.5
@@ -7785,6 +7789,15 @@ snapshots:
       path-scurry: 2.0.0
 
   glob@7.1.2:
+    dependencies:
+      fs.realpath: 1.0.0
+      inflight: 1.0.6
+      inherits: 2.0.4
+      minimatch: 3.1.2
+      once: 1.4.0
+      path-is-absolute: 1.0.1
+
+  glob@7.2.3:
     dependencies:
       fs.realpath: 1.0.0
       inflight: 1.0.6
@@ -9560,7 +9573,7 @@ snapshots:
 
   shelljs@0.8.5:
     dependencies:
-      glob: 7.1.2
+      glob: 7.2.3
       interpret: 1.4.0
       rechoir: 0.6.2
 
