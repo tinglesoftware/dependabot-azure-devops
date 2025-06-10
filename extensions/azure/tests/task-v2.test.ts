@@ -182,7 +182,7 @@ describe('performDependabotUpdatesAsync', () => {
       existingPullRequests,
     );
 
-    expect(updateResult).toBe(TaskResult.Succeeded);
+    expect(updateResult).toEqual({ result: TaskResult.Succeeded, prs: [] });
     expect(dependabotCli.update).toHaveBeenCalled();
     expect(DependabotJobBuilder.updateAllDependenciesJob).toHaveBeenCalled();
   });
@@ -215,7 +215,7 @@ describe('performDependabotUpdatesAsync', () => {
       existingPullRequests,
     );
 
-    expect(updateResult).toBe(TaskResult.Succeeded);
+    expect(updateResult).toEqual({ result: TaskResult.Succeeded, prs: [] });
     expect(DependabotJobBuilder.updateAllDependenciesJob).not.toHaveBeenCalled();
   });
 
@@ -233,7 +233,7 @@ describe('performDependabotUpdatesAsync', () => {
       existingPullRequests,
     );
 
-    expect(updateResult).toBe(TaskResult.Succeeded);
+    expect(updateResult).toEqual({ result: TaskResult.Succeeded, prs: [] });
     expect(DependabotJobBuilder.listAllDependenciesJob).toHaveBeenCalled();
   });
 
@@ -265,7 +265,7 @@ describe('performDependabotUpdatesAsync', () => {
       existingPullRequests,
     );
 
-    expect(updateResult).toBe(TaskResult.Succeeded);
+    expect(updateResult).toEqual({ result: TaskResult.Succeeded, prs: [] });
     expect(DependabotJobBuilder.updatePullRequestJob).toHaveBeenCalled();
   });
 
@@ -283,7 +283,7 @@ describe('performDependabotUpdatesAsync', () => {
       existingPullRequests,
     );
 
-    expect(updateResult).toBe(TaskResult.Succeeded);
+    expect(updateResult).toEqual({ result: TaskResult.Succeeded, prs: [] });
   });
 
   it('should return SucceededWithIssues result when updates are mixture of success and failure', async () => {
@@ -301,7 +301,7 @@ describe('performDependabotUpdatesAsync', () => {
       existingPullRequests,
     );
 
-    expect(updateResult).toBe(TaskResult.SucceededWithIssues);
+    expect(updateResult).toEqual({ result: TaskResult.SucceededWithIssues, prs: [] });
   });
 
   it('should return Failed result when all updates are failure', async () => {
@@ -318,7 +318,7 @@ describe('performDependabotUpdatesAsync', () => {
       existingPullRequests,
     );
 
-    expect(updateResult).toBe(TaskResult.Failed);
+    expect(updateResult).toEqual({ result: TaskResult.Failed, prs: [] });
   });
 
   it('should return Skipped result when no updates are performed', async () => {
@@ -333,6 +333,25 @@ describe('performDependabotUpdatesAsync', () => {
       existingPullRequests,
     );
 
-    expect(updateResult).toBe(TaskResult.Skipped);
+    expect(updateResult).toEqual({ result: TaskResult.Skipped, prs: [] });
+  });
+
+  it('should collect PRs', async () => {
+    dependabotCli.update = vi.fn().mockResolvedValue([
+      { success: true, output: {}, pr: 501 },
+      { success: true, output: {}, pr: 501 },
+      { success: true, output: {}, pr: 521 },
+    ] as IDependabotUpdateOperationResult[]);
+
+    const updateResult = await performDependabotUpdatesAsync(
+      taskInputs,
+      dependabotConfig,
+      dependabotConfig.updates,
+      dependabotCli,
+      dependabotCliUpdateOptions,
+      existingPullRequests,
+    );
+
+    expect(updateResult).toEqual({ result: TaskResult.Succeeded, prs: [501, 521] });
   });
 });

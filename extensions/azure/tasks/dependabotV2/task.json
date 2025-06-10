@@ -258,6 +258,12 @@
       "helpMarkDown": "Comma-seperated list of key/value pairs representing the enabled Dependabot experiments e.g. `experiments: 'tidy=true,vendor=true,goprivate=*'`. Available options vary depending on the package ecosystem. If specified, this overrides the [default experiments](https://github.com/tinglesoftware/dependabot-azure-devops/blob/main/packages/core/src/dependabot/experiments.ts). See [configuring experiments](https://github.com/tinglesoftware/dependabot-azure-devops/#configuring-experiments) for more details."
     }
   ],
+  "outputVariables": [
+    {
+      "name": "affectedPrs",
+      "description": "Comma-separated values of identifiers for pull requests modified (created/modified/abandoned). For example: `1341,903`."
+    }
+  ],
   "execution": {
     "Node20_1": {
       "target": "dist/task-v2.js"
