@@ -5,6 +5,11 @@ job:
   allowed-updates:
     - dependency-type: direct
       update-type: all
+  ignore-conditions:
+    - dependency-name: 'anthropic'
+      update-types: ['version-update:semver-major']
+      source: '.github/dependabot.yml'
+      updated-at: 2025-06-10T13:12:56.154Z
   security-updates-only: false
   security-advisories: []
   source:
