@@ -1,5 +1,11 @@
 # paklo
 
+## 0.1.2
+
+### Patch Changes
+
+- 47b79b3: Script typing improvements
+
 ## 0.1.1
 
 ### Patch Changes
