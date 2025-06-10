@@ -166,7 +166,9 @@ export class DependabotCli {
             // https://github.com/dependabot/cli/blob/main/internal/model/scenario.go
             const operationResult: IDependabotUpdateOperationResult = { success: true, output };
             try {
-              operationResult.success = await this.outputProcessor.process(operation, output);
+              const { success, pr } = await this.outputProcessor.process(operation, output);
+              operationResult.success = success;
+              operationResult.pr = pr;
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
             } catch (e: any) {
               operationResult.success = false;

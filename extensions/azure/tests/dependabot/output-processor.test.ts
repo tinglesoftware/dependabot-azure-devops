@@ -74,7 +74,7 @@ describe('DependabotOutputProcessor', () => {
         },
       });
 
-      expect(result).toBe(true);
+      expect(result).toEqual({ success: true });
     });
 
     it('should skip processing "create_pull_request" if "dryRun" is true', async () => {
@@ -94,7 +94,7 @@ describe('DependabotOutputProcessor', () => {
         },
       });
 
-      expect(result).toBe(true);
+      expect(result).toEqual({ success: true });
       expect(prAuthorClient.createPullRequest).not.toHaveBeenCalled();
     });
 
@@ -115,14 +115,14 @@ describe('DependabotOutputProcessor', () => {
         },
       });
 
-      expect(result).toBe(true);
+      expect(result).toEqual({ success: true });
       expect(prAuthorClient.createPullRequest).not.toHaveBeenCalled();
     });
 
     it('should process "create_pull_request"', async () => {
       taskInputs.autoApprove = true;
 
-      prAuthorClient.createPullRequest = vi.fn().mockResolvedValue(1);
+      prAuthorClient.createPullRequest = vi.fn().mockResolvedValue(11);
       prAuthorClient.getDefaultBranch = vi.fn().mockResolvedValue('main');
       prApproverClient.approvePullRequest = vi.fn().mockResolvedValue(true);
 
@@ -140,7 +140,7 @@ describe('DependabotOutputProcessor', () => {
         },
       });
 
-      expect(result).toBe(true);
+      expect(result).toEqual({ success: true, pr: 11 });
       expect(prAuthorClient.createPullRequest).toHaveBeenCalled();
       expect(prApproverClient.approvePullRequest).toHaveBeenCalled();
     });
@@ -162,7 +162,7 @@ describe('DependabotOutputProcessor', () => {
         },
       });
 
-      expect(result).toBe(true);
+      expect(result).toEqual({ success: true });
       expect(prAuthorClient.updatePullRequest).not.toHaveBeenCalled();
     });
 
@@ -181,7 +181,7 @@ describe('DependabotOutputProcessor', () => {
         },
       });
 
-      expect(result).toBe(false);
+      expect(result).toEqual({ success: false });
       expect(prAuthorClient.updatePullRequest).not.toHaveBeenCalled();
     });
 
@@ -190,7 +190,7 @@ describe('DependabotOutputProcessor', () => {
       update.job['package-manager'] = 'npm_and_yarn';
 
       existingPullRequests.push({
-        id: 1,
+        id: 11,
         properties: [
           { name: DEVOPS_PR_PROPERTY_DEPENDABOT_PACKAGE_MANAGER, value: 'npm_and_yarn' },
           {
@@ -217,7 +217,7 @@ describe('DependabotOutputProcessor', () => {
         },
       });
 
-      expect(result).toBe(true);
+      expect(result).toEqual({ success: true, pr: 11 });
       expect(prAuthorClient.updatePullRequest).toHaveBeenCalled();
       expect(prApproverClient.approvePullRequest).toHaveBeenCalled();
     });
@@ -230,7 +230,7 @@ describe('DependabotOutputProcessor', () => {
         expect: { data: { 'dependency-names': [] } },
       });
 
-      expect(result).toBe(true);
+      expect(result).toEqual({ success: true });
       expect(prAuthorClient.abandonPullRequest).not.toHaveBeenCalled();
     });
 
@@ -242,7 +242,7 @@ describe('DependabotOutputProcessor', () => {
         expect: { data: { 'dependency-names': ['dependency1'] } },
       });
 
-      expect(result).toBe(false);
+      expect(result).toEqual({ success: false });
       expect(prAuthorClient.abandonPullRequest).not.toHaveBeenCalled();
     });
 
@@ -250,7 +250,7 @@ describe('DependabotOutputProcessor', () => {
       taskInputs.dryRun = false;
       update.job['package-manager'] = 'npm_and_yarn';
       existingPullRequests.push({
-        id: 1,
+        id: 11,
         properties: [
           { name: DEVOPS_PR_PROPERTY_DEPENDABOT_PACKAGE_MANAGER, value: 'npm_and_yarn' },
           {
@@ -267,18 +267,18 @@ describe('DependabotOutputProcessor', () => {
         expect: { data: { 'dependency-names': ['dependency1'] } },
       });
 
-      expect(result).toBe(true);
+      expect(result).toEqual({ success: true, pr: 11 });
       expect(prAuthorClient.abandonPullRequest).toHaveBeenCalled();
     });
 
     it('should process "mark_as_processed"', async () => {
       const result = await processor.process(update, { type: 'mark_as_processed', expect: { data: {} } });
-      expect(result).toBe(true);
+      expect(result).toEqual({ success: true });
     });
 
     it('should process "record_ecosystem_versions"', async () => {
       const result = await processor.process(update, { type: 'record_ecosystem_versions', expect: { data: {} } });
-      expect(result).toBe(true);
+      expect(result).toEqual({ success: true });
     });
 
     it('should process "record_ecosystem_meta"', async () => {
@@ -286,7 +286,7 @@ describe('DependabotOutputProcessor', () => {
         type: 'record_ecosystem_meta',
         expect: { data: [{ ecosystem: { name: 'npm_any_yarn' } }] },
       });
-      expect(result).toBe(true);
+      expect(result).toEqual({ success: true });
     });
 
     it('should process "record_update_job_error"', async () => {
@@ -294,7 +294,7 @@ describe('DependabotOutputProcessor', () => {
         type: 'record_update_job_error',
         expect: { data: { 'error-type': 'random' } },
       });
-      expect(result).toBe(false);
+      expect(result).toEqual({ success: false });
       expect(error).toHaveBeenCalled();
     });
 
@@ -303,8 +303,7 @@ describe('DependabotOutputProcessor', () => {
         type: 'record_update_job_unknown_error',
         expect: { data: { 'error-type': 'random' } },
       });
-
-      expect(result).toBe(false);
+      expect(result).toEqual({ success: false });
       expect(error).toHaveBeenCalled();
     });
 
@@ -313,15 +312,13 @@ describe('DependabotOutputProcessor', () => {
         type: 'increment_metric',
         expect: { data: { metric: 'random' } },
       });
-
-      expect(result).toBe(true);
+      expect(result).toEqual({ success: true });
     });
 
     it('should handle unknown output type', async () => {
       // @ts-expect-error - trying non existed type
       const result = await processor.process(update, { type: 'non_existant_output_type', expect: { data: {} } });
-
-      expect(result).toBe(true);
+      expect(result).toEqual({ success: true });
       expect(warning).toHaveBeenCalled();
     });
   });

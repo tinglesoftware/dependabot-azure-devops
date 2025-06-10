@@ -1,4 +1,4 @@
-import { debug, error, setResult, TaskResult, warning, which } from 'azure-pipelines-task-lib/task';
+import { debug, error, setResult, setVariable, TaskResult, warning, which } from 'azure-pipelines-task-lib/task';
 import { existsSync } from 'fs';
 import { readFile } from 'fs/promises';
 
@@ -151,7 +151,7 @@ async function run() {
     );
 
     // Perform updates for each of the [targeted] update blocks in dependabot.yaml
-    const taskResult = await performDependabotUpdatesAsync(
+    const { result: taskResult, prs } = await performDependabotUpdatesAsync(
       taskInputs,
       dependabotConfig,
       dependabotUpdatesToPerform,
@@ -172,6 +172,13 @@ async function run() {
             return 'Update tasks failed. Check the logs for more information';
         }
       })(),
+    );
+
+    setVariable(
+      'affectedPrs', // name
+      prs.join(','), // val
+      false, // secret
+      true, // isOutput
     );
   } catch (e) {
     setResult(TaskResult.Failed, e?.message);
@@ -248,7 +255,7 @@ export async function performDependabotUpdatesAsync(
   dependabotCli: DependabotCli,
   dependabotCliUpdateOptions: DependabotCliOptions,
   existingPullRequests: IPullRequestProperties[],
-): Promise<TaskResult> {
+): Promise<{ result: TaskResult; prs: number[] }> {
   const successfulOperations: IDependabotUpdateOperationResult[] = [];
   const failedOperations: IDependabotUpdateOperationResult[] = [];
   for (const update of dependabotUpdates) {
@@ -270,14 +277,14 @@ export async function performDependabotUpdatesAsync(
     const securityUpdatesOnly = update['open-pull-requests-limit'] === 0;
     if (securityUpdatesOnly) {
       // Run an update job to discover all dependencies
-      const discoveredDependencyListOutputs = await dependabotCli.update(
+      const outputs = await dependabotCli.update(
         DependabotJobBuilder.listAllDependenciesJob(taskInputs, updateId, update, dependabotConfig.registries),
         dependabotCliUpdateOptions,
       );
 
       // Get the list of vulnerabilities that apply to the discovered dependencies
       section(`Dependency vulnerability check`);
-      const packagesToCheckForVulnerabilities: Package[] = discoveredDependencyListOutputs
+      const packagesToCheckForVulnerabilities: Package[] = outputs
         ?.map((o) => o.output)
         .find((x) => x.type == 'update_dependency_list')
         ?.expect.data.dependencies?.map((d) => ({ name: d.name, version: d.version }));
@@ -386,14 +393,20 @@ export async function performDependabotUpdatesAsync(
     }
   }
 
-  // Return an overall result based on the success/failure of all the update operations
+  // Collect PRs from successful operations (unique numbers only, to be clean and for mocked tests)
+  const prs = [...new Set(successfulOperations.map((o) => o.pr).filter(Boolean))];
+
+  // Determine an overall result based on the success/failure of all the update operations
+  let result: TaskResult;
   if (successfulOperations.length > 0) {
-    return failedOperations.length == 0 ? TaskResult.Succeeded : TaskResult.SucceededWithIssues;
+    result = failedOperations.length == 0 ? TaskResult.Succeeded : TaskResult.SucceededWithIssues;
   } else if (failedOperations.length > 0) {
-    return TaskResult.Failed;
+    result = TaskResult.Failed;
   } else {
-    return TaskResult.Skipped;
+    result = TaskResult.Skipped;
   }
+
+  return { result, prs };
 }
 
 function exception(e: Error) {

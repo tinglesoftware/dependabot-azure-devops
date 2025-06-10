@@ -22,6 +22,11 @@ import {
 import { type ISharedVariables } from '../utils/shared-variables';
 import { type IDependabotUpdateOperation } from './models';
 
+export type DependabotOutputProcessorResult = {
+  success: boolean;
+  pr?: number;
+};
+
 /**
  * Processes dependabot update outputs using the DevOps API
  */
@@ -58,7 +63,10 @@ export class DependabotOutputProcessor {
    * Process the appropriate DevOps API actions for the supplied dependabot update output
    * @param output A scenario output
    */
-  public async process(operation: IDependabotUpdateOperation, output: DependabotOutput): Promise<boolean> {
+  public async process(
+    operation: IDependabotUpdateOperation,
+    output: DependabotOutput,
+  ): Promise<DependabotOutputProcessorResult> {
     const project = this.taskInputs.project;
     const repository = this.taskInputs.repository;
     const packageManager = operation.job?.['package-manager'];
@@ -76,7 +84,7 @@ export class DependabotOutputProcessor {
         const title = output.expect.data['pr-title'];
         if (this.taskInputs.dryRun) {
           warning(`Skipping pull request creation of '${title}' as 'dryRun' is set to 'true'`);
-          return true;
+          return { success: true };
         }
 
         // Skip if active pull request limit reached.
@@ -86,7 +94,7 @@ export class DependabotOutputProcessor {
           warning(
             `Skipping pull request creation of '${title}' as the open pull requests limit (${openPullRequestsLimit}) has been reached`,
           );
-          return true;
+          return { success: true };
         }
 
         const changedFiles = getPullRequestChangedFilesForOutputData(output.expect.data);
@@ -109,14 +117,14 @@ export class DependabotOutputProcessor {
           error(
             `Unable to create pull request '${title}' as source branch '${sourceBranch}' already exists; Delete the existing branch and try again.`,
           );
-          return false;
+          return { success: false };
         }
         const conflictingBranches = this.existingBranchNames?.filter((branch) => sourceBranch.startsWith(branch)) || [];
         if (conflictingBranches.length) {
           error(
             `Unable to create pull request '${title}' as source branch '${sourceBranch}' would conflict with existing branch(es) '${conflictingBranches.join(', ')}'; Delete the conflicting branch(es) and try again.`,
           );
-          return false;
+          return { success: false };
         }
 
         // Create a new pull request
@@ -179,16 +187,16 @@ export class DependabotOutputProcessor {
         // Store the new pull request ID, so we can keep track of the total number of open pull requests
         if (newPullRequestId > 0) {
           this.createdPullRequestIds.push(newPullRequestId);
-          return true;
+          return { success: true, pr: newPullRequestId };
         } else {
-          return false;
+          return { success: false };
         }
       }
 
       case 'update_pull_request': {
         if (this.taskInputs.dryRun) {
           warning(`Skipping pull request update as 'dryRun' is set to 'true'`);
-          return true;
+          return { success: true };
         }
 
         // Find the pull request to update
@@ -200,7 +208,7 @@ export class DependabotOutputProcessor {
           error(
             `Could not find pull request to update for package manager '${packageManager}' with dependencies '${output.expect.data['dependency-names'].join(', ')}'`,
           );
-          return false;
+          return { success: false };
         }
 
         // Update the pull request
@@ -229,13 +237,13 @@ export class DependabotOutputProcessor {
           });
         }
 
-        return pullRequestWasUpdated;
+        return { success: pullRequestWasUpdated, pr: pullRequestToUpdate.id };
       }
 
       case 'close_pull_request': {
         if (this.taskInputs.dryRun) {
           warning(`Skipping pull request closure as 'dryRun' is set to 'true'`);
-          return true;
+          return { success: true };
         }
 
         // Find the pull request to close
@@ -247,57 +255,58 @@ export class DependabotOutputProcessor {
           error(
             `Could not find pull request to close for package manager '${packageManager}' with dependencies '${output.expect.data['dependency-names'].join(', ')}'`,
           );
-          return false;
+          return { success: false };
         }
 
         // TODO: GitHub Dependabot will close with reason "Superseded by ${new_pull_request_id}" when another PR supersedes it.
         //       How do we detect this? Do we need to?
 
         // Close the pull request
-        return await this.prAuthorClient.abandonPullRequest({
+        const success = await this.prAuthorClient.abandonPullRequest({
           project: project,
           repository: repository,
           pullRequestId: pullRequestToClose.id,
           comment: getPullRequestCloseReasonForOutputData(output.expect.data),
           deleteSourceBranch: true,
         });
+        return { success, pr: pullRequestToClose.id };
       }
 
       case 'update_dependency_list':
         // No action required
-        return true;
+        return { success: true };
 
       case 'mark_as_processed':
         // No action required
-        return true;
+        return { success: true };
 
       case 'record_ecosystem_versions':
         // No action required
-        return true;
+        return { success: true };
 
       case 'record_ecosystem_meta':
         // No action required
-        return true;
+        return { success: true };
 
       case 'record_update_job_error':
         error(
           `Update job error: ${output.expect.data['error-type']} ${JSON.stringify(output.expect.data['error-details'])}`,
         );
-        return false;
+        return { success: false };
 
       case 'record_update_job_unknown_error':
         error(
           `Update job unknown error: ${output.expect.data['error-type']}, ${JSON.stringify(output.expect.data['error-details'])}`,
         );
-        return false;
+        return { success: false };
 
       case 'increment_metric':
         // No action required
-        return true;
+        return { success: true };
 
       default:
         warning(`Unknown dependabot output type '${type}', ignoring...`);
-        return true;
+        return { success: true };
     }
   }
 

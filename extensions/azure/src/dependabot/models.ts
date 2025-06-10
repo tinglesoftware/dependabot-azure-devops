@@ -14,4 +14,5 @@ export type IDependabotUpdateOperationResult = {
   success: boolean;
   error?: Error;
   output: DependabotOutput;
+  pr?: number;
 };
