@@ -67,7 +67,7 @@ export class DependabotCli {
       const dependabotPath = await this.getDependabotToolPath();
 
       // Create the job directory
-      const jobId = operation.job.id;
+      const jobId = operation.job.id!;
       const jobPath = path.join(this.jobsPath, jobId.toString());
       const jobInputPath = path.join(jobPath, 'job.yaml');
       const jobOutputPath = path.join(jobPath, 'scenario.yaml');
