@@ -46,7 +46,7 @@ export class AzureDevOpsWebApiClient {
    * @returns
    */
   public async getUserId(): Promise<string> {
-    this.authenticatedUserId ||= (await this.connection.connect()).authenticatedUser!.id!;
+    this.authenticatedUserId ??= (await this.connection.connect()).authenticatedUser!.id!;
     return this.authenticatedUserId;
   }
 
@@ -556,7 +556,7 @@ export class AzureDevOpsWebApiClient {
     params?: Record<string, string>,
     apiVersion: string = AzureDevOpsWebApiClient.API_VERSION,
   ) {
-    params ||= {};
+    params ??= {};
     const queryString = Object.keys(params)
       .map((key) => `${key}=${params[key]}`)
       .join('&');

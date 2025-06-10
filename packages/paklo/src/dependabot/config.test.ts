@@ -17,7 +17,7 @@ describe('Parse configuration file', () => {
       yaml.load(await readFile('fixtures/config/dependabot.yml', 'utf-8')),
     );
     const updates = parseUpdates(config, '');
-    expect(updates.length).toBe(3);
+    expect(updates.length).toBe(5);
 
     // first
     const first = updates[0]!;
@@ -43,6 +43,22 @@ describe('Parse configuration file', () => {
     expect(JSON.stringify(third.groups)).toBe(
       '{"microsoft":{"patterns":["microsoft*"],"update-types":["minor","patch"]}}',
     );
+
+    // fourth
+    const fourth = updates[3]!;
+    expect(fourth.directory).toBe('/');
+    expect(fourth.directories).toBeUndefined();
+    expect(fourth['package-ecosystem']).toBe('devcontainers');
+    expect(fourth['open-pull-requests-limit']).toEqual(0);
+    expect(fourth.registries).toBeUndefined();
+
+    // fifth
+    const fifth = updates[4]!;
+    expect(fifth.directory).toBe('/');
+    expect(fifth.directories).toBeUndefined();
+    expect(fifth['package-ecosystem']).toBe('dotnet-sdk');
+    expect(fifth['open-pull-requests-limit']).toEqual(5);
+    expect(fifth.registries).toBeUndefined();
   });
 });
 

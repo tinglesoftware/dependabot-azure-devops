@@ -195,7 +195,7 @@ export const DependabotUpdateSchema = z
       addIssue("Either 'directory' or 'directories' must be specified in the dependency update configuration.");
     }
 
-    value['open-pull-requests-limit'] ||= 5; // default to 5 if not specified
+    value['open-pull-requests-limit'] ??= 5; // default to 5 if not specified
 
     return value;
   });
@@ -272,9 +272,9 @@ export function parseUpdates(config: DependabotConfig, configPath: string): Depe
     //       Currently they don't appear to add much value to the update process, but are populated here for completeness.
     if (update.ignore) {
       for (const condition of update.ignore) {
-        condition['source'] ||= configPath;
+        condition['source'] ??= configPath;
         // we don't know the last updated time, so we use the current time
-        condition['updated-at'] ||= new Date().toISOString();
+        condition['updated-at'] ??= new Date().toISOString();
       }
     }
 
