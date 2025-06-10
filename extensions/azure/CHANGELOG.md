@@ -1,5 +1,18 @@
 # extension-azure-devops
 
+## 2.52.0
+
+### Minor Changes
+
+- dbe39d1: Collect affected PRs for a given run and set output variable
+
+### Patch Changes
+
+- 47b79b3: Script typing improvements
+- 22ee21d: Use ||= instead of ??= when finding go/dependabot tool
+- Updated dependencies [47b79b3]
+  - paklo@0.1.2
+
 ## 2.51.1
 
 ### Patch Changes
