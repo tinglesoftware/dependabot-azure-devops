@@ -54,7 +54,7 @@ export const DependabotGroupJobSchema = z.object({
 export type DependabotGroupJob = z.infer<typeof DependabotGroupJobSchema>;
 
 export const DependabotConditionSchema = z.object({
-  'dependency-name': z.string(),
+  'dependency-name': z.string().nullish(),
   'source': z.string().nullish(),
   'update-types': z.string().array().nullish(),
   'updated-at': z.coerce.string().nullish(),
@@ -65,7 +65,7 @@ export type DependabotCondition = z.infer<typeof DependabotConditionSchema>;
 export const DependabotSecurityAdvisorySchema = z.object({
   'dependency-name': z.string(),
   'affected-versions': z.string().array(),
-  'patched-versions': z.string().array(),
+  'patched-versions': z.string().array().nullish(), // may not be patched as of yet
   'unaffected-versions': z.string().array(),
 });
 export type DependabotSecurityAdvisory = z.infer<typeof DependabotSecurityAdvisorySchema>;

@@ -4,6 +4,8 @@ import { z } from 'zod/v4';
 
 import { warning } from 'azure-pipelines-task-lib/task';
 
+// we use nullish() because it does optional() and allows the value to be set to null
+
 const GHSA_GRAPHQL_API = 'https://api.github.com/graphql';
 
 const GHSA_SECURITY_VULNERABILITIES_QUERY = `
@@ -68,7 +70,7 @@ export type PackageEcosystem = z.infer<typeof PackageEcosystemSchema>;
 
 export const PackageSchema = z.object({
   name: z.string(),
-  version: z.string().optional(),
+  version: z.string().nullish(),
 });
 export type Package = z.infer<typeof PackageSchema>;
 
@@ -85,22 +87,22 @@ export const SecurityAdvisorySchema = z.object({
       value: z.string(),
     }),
   ),
-  severity: SecurityAdvisorySeveritySchema.optional(),
+  severity: SecurityAdvisorySeveritySchema.nullish(),
   summary: z.string(),
-  description: z.string().optional(),
-  references: z.array(z.object({ url: z.string() })).optional(),
+  description: z.string().nullish(),
+  references: z.array(z.object({ url: z.string() })).nullish(),
   cvss: z
     .object({
       score: z.number(),
       vectorString: z.string(),
     })
-    .optional(),
+    .nullish(),
   epss: z
     .object({
       percentage: z.number(),
       percentile: z.number(),
     })
-    .optional(),
+    .nullish(),
   cwes: z
     .array(
       z.object({
@@ -109,11 +111,11 @@ export const SecurityAdvisorySchema = z.object({
         description: z.string(),
       }),
     )
-    .optional(),
-  publishedAt: z.string().optional(),
-  updatedAt: z.string().optional(),
-  withdrawnAt: z.string().optional(),
-  permalink: z.string().optional(),
+    .nullish(),
+  publishedAt: z.string().nullish(),
+  updatedAt: z.string().nullish(),
+  withdrawnAt: z.string().nullish(),
+  permalink: z.string().nullish(),
 });
 export type SecurityAdvisory = z.infer<typeof SecurityAdvisorySchema>;
 
@@ -124,7 +126,7 @@ export const SecurityVulnerabilitySchema = z.object({
   package: PackageSchema,
   advisory: SecurityAdvisorySchema,
   vulnerableVersionRange: z.string(),
-  firstPatchedVersion: FirstPatchedVersionSchema.optional(),
+  firstPatchedVersion: FirstPatchedVersionSchema.nullish(),
 });
 export type SecurityVulnerability = z.infer<typeof SecurityVulnerabilitySchema>;
 

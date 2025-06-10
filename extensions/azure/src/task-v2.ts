@@ -151,7 +151,11 @@ async function run() {
     );
 
     // Perform updates for each of the [targeted] update blocks in dependabot.yaml
-    const { result: taskResult, prs } = await performDependabotUpdatesAsync(
+    const {
+      result: taskResult,
+      message: taskResultMessage,
+      prs,
+    } = await performDependabotUpdatesAsync(
       taskInputs,
       dependabotConfig,
       dependabotUpdatesToPerform,
@@ -160,19 +164,7 @@ async function run() {
       existingPullRequests,
     );
 
-    setResult(
-      taskResult,
-      (() => {
-        switch (taskResult) {
-          case TaskResult.Succeeded:
-            return 'All update tasks completed successfully';
-          case TaskResult.SucceededWithIssues:
-            return 'Partial success; some update tasks completed with issues. Check the logs for more information';
-          case TaskResult.Failed:
-            return 'Update tasks failed. Check the logs for more information';
-        }
-      })(),
-    );
+    setResult(taskResult, taskResultMessage);
 
     setVariable(
       'affectedPrs', // name
@@ -255,7 +247,7 @@ export async function performDependabotUpdatesAsync(
   dependabotCli: DependabotCli,
   dependabotCliUpdateOptions: DependabotCliOptions,
   existingPullRequests: IPullRequestProperties[],
-): Promise<{ result: TaskResult; prs: number[] }> {
+): Promise<{ result: TaskResult; message: string; prs: number[] }> {
   const successfulOperations: IDependabotUpdateOperationResult[] = [];
   const failedOperations: IDependabotUpdateOperationResult[] = [];
   for (const update of dependabotUpdates) {
@@ -284,7 +276,7 @@ export async function performDependabotUpdatesAsync(
 
       // Get the list of vulnerabilities that apply to the discovered dependencies
       section(`Dependency vulnerability check`);
-      const packagesToCheckForVulnerabilities: Package[] = outputs
+      const packagesToCheckForVulnerabilities: Package[] | undefined = outputs
         ?.map((o) => o.output)
         .find((x) => x.type == 'update_dependency_list')
         ?.expect.data.dependencies?.map((d) => ({ name: d.name, version: d.version }));
@@ -394,19 +386,34 @@ export async function performDependabotUpdatesAsync(
   }
 
   // Collect PRs from successful operations (unique numbers only, to be clean and for mocked tests)
-  const prs = [...new Set(successfulOperations.map((o) => o.pr).filter(Boolean))];
+  const prs = [
+    ...new Set(
+      successfulOperations
+        .map((o) => o.pr)
+        .filter(Boolean)
+        .map((n) => n!),
+    ),
+  ];
 
   // Determine an overall result based on the success/failure of all the update operations
   let result: TaskResult;
+  let message: string;
   if (successfulOperations.length > 0) {
-    result = failedOperations.length == 0 ? TaskResult.Succeeded : TaskResult.SucceededWithIssues;
+    if (failedOperations.length == 0) {
+      result = TaskResult.Succeeded;
+      message = 'All update tasks completed successfully';
+    } else {
+      result = TaskResult.SucceededWithIssues;
+      message = 'Partial success; some update tasks completed with issues. Check the logs for more information';
+    }
   } else if (failedOperations.length > 0) {
     result = TaskResult.Failed;
+    message = 'Update tasks failed. Check the logs for more information';
   } else {
     result = TaskResult.Skipped;
   }
 
-  return { result, prs };
+  return { result, message, prs };
 }
 
 function exception(e: Error) {

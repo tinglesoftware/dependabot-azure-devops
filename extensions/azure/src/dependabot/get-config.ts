@@ -88,7 +88,7 @@ export async function getDependabotConfig(taskInputs: ISharedVariables): Promise
   }
 
   // Ensure we have file contents. Otherwise throw a well readable error.
-  if (!configContents || typeof configContents !== 'string') {
+  if (!configContents || !configPath || typeof configContents !== 'string') {
     throw new Error(`Configuration file not found at possible locations: ${possibleFilePaths.join(', ')}`);
   } else {
     tl.debug('Configuration file contents read.');

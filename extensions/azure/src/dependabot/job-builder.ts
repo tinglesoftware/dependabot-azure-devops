@@ -1,12 +1,15 @@
 import {
   makeCredentialsMetadata,
   type DependabotAllowCondition,
+  type DependabotCondition,
   type DependabotCredential,
   type DependabotExperiments,
   type DependabotGroup,
+  type DependabotGroupJob,
   type DependabotIgnoreCondition,
   type DependabotPackageManager,
   type DependabotRegistry,
+  type DependabotSecurityAdvisory,
   type DependabotUpdate,
   type PackageEcosystem,
 } from 'paklo/dependabot';
@@ -204,16 +207,14 @@ export function mapSourceFromDependabotConfigToJobConfig(taskInputs: ISharedVari
 
 export function mapGroupsFromDependabotConfigToJobConfig(
   dependencyGroups?: Record<string, DependabotGroup | undefined | null>,
-) {
+): DependabotGroupJob[] | undefined {
   if (!dependencyGroups || !Object.keys(dependencyGroups).length) {
     return undefined;
   }
   return Object.keys(dependencyGroups)
+    .filter((name) => dependencyGroups[name])
     .map((name) => {
-      const group = dependencyGroups[name];
-      if (!group) {
-        return;
-      }
+      const group = dependencyGroups[name]!;
       return {
         'name': name,
         'applies-to': group['applies-to'],
@@ -223,9 +224,8 @@ export function mapGroupsFromDependabotConfigToJobConfig(
           'dependency-type': group['dependency-type'],
           'update-types': group['update-types'],
         },
-      };
-    })
-    .filter((g) => g);
+      } satisfies DependabotGroupJob;
+    });
 }
 
 export function mapAllowedUpdatesFromDependabotConfigToJobConfig(
@@ -252,7 +252,9 @@ export function mapAllowedUpdatesFromDependabotConfigToJobConfig(
   });
 }
 
-export function mapIgnoreConditionsFromDependabotConfigToJobConfig(ignoreConditions?: DependabotIgnoreCondition[]) {
+export function mapIgnoreConditionsFromDependabotConfigToJobConfig(
+  ignoreConditions?: DependabotIgnoreCondition[],
+): DependabotCondition[] | undefined {
   if (!ignoreConditions) {
     return undefined;
   }
@@ -268,11 +270,13 @@ export function mapIgnoreConditionsFromDependabotConfigToJobConfig(ignoreConditi
       'version-requirement': Array.isArray(ignore['versions'])
         ? (<string[]>ignore['versions'])?.join(', ')
         : <string>ignore['versions'],
-    };
+    } satisfies DependabotCondition;
   });
 }
 
-export function mapSecurityAdvisories(securityVulnerabilities?: SecurityVulnerability[]) {
+export function mapSecurityAdvisories(
+  securityVulnerabilities?: SecurityVulnerability[],
+): DependabotSecurityAdvisory[] | undefined {
   if (!securityVulnerabilities) {
     return undefined;
   }
@@ -291,9 +295,12 @@ export function mapSecurityAdvisories(securityVulnerabilities?: SecurityVulnerab
     return {
       'dependency-name': vulns[0]!.package.name,
       'affected-versions': vulns.map((v) => v.vulnerableVersionRange).filter((v) => v && v.length > 0),
-      'patched-versions': vulns.map((v) => v.firstPatchedVersion?.identifier).filter((v) => v && v.length > 0),
+      'patched-versions': vulns
+        .map((v) => v.firstPatchedVersion?.identifier)
+        .filter((v) => v && v.length > 0)
+        .map((v) => v!),
       'unaffected-versions': [],
-    };
+    } satisfies DependabotSecurityAdvisory;
   });
 }
 

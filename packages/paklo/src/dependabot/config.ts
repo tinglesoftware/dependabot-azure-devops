@@ -63,14 +63,16 @@ export const DependabotAllowConditionSchema = z.object({
 });
 export type DependabotAllowCondition = z.infer<typeof DependabotAllowConditionSchema>;
 
-export const DependabotIgnoreConditionSchema = z.object({
-  'dependency-name': z.string().optional(),
-  'versions': z.string().array().optional(),
-  'update-types': z
-    .enum(['version-update:semver-major', 'version-update:semver-minor', 'version-update:semver-patch'])
-    .array()
-    .optional(),
-});
+export const DependabotIgnoreConditionSchema = z
+  .object({
+    'dependency-name': z.string().optional(),
+    'versions': z.string().array().or(z.string()).optional(),
+    'update-types': z
+      .enum(['version-update:semver-major', 'version-update:semver-minor', 'version-update:semver-patch'])
+      .array()
+      .optional(),
+  })
+  .and(z.record(z.string(), z.any()));
 export type DependabotIgnoreCondition = z.infer<typeof DependabotIgnoreConditionSchema>;
 
 export const DependabotScheduleSchema = z.object({
@@ -168,7 +170,7 @@ export type PackageEcosystem = z.infer<typeof PackageEcosystemSchema>;
 
 export const DependabotUpdateSchema = z
   .object({
-    'package-ecosystem': PackageEcosystemSchema.optional(),
+    'package-ecosystem': PackageEcosystemSchema,
     'directory': z.string().optional(),
     'directories': z.string().array().optional(),
     'allow': DependabotAllowConditionSchema.array().optional(),
@@ -176,7 +178,7 @@ export const DependabotUpdateSchema = z
     'commit-message': DependabotCommitMessageSchema.optional(),
     'cooldown': DependabotCooldownSchema.optional(),
     'groups': z.record(z.string(), DependabotGroupSchema).optional(),
-    'ignore': DependabotIgnoreConditionSchema.and(z.record(z.string(), z.any())).array().optional(),
+    'ignore': DependabotIgnoreConditionSchema.array().optional(),
     'insecure-external-code-execution': z.enum(['allow', 'deny']).optional(),
     'labels': z.string().array().optional(),
     'milestone': z.coerce.string().optional(),
