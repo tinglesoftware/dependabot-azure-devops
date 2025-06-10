@@ -1,5 +1,14 @@
 # extension-azure-devops
 
+## 2.51.1
+
+### Patch Changes
+
+- 981fb6a: Replace ||= with ??= to preserve falsy values in default assignment
+- Updated dependencies [981fb6a]
+- Updated dependencies [57a09c2]
+  - paklo@0.1.1
+
 ## 2.51.0
 
 ### Minor Changes

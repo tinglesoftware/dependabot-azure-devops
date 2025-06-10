@@ -1,5 +1,12 @@
 # paklo
 
+## 0.1.1
+
+### Patch Changes
+
+- 981fb6a: Replace ||= with ??= to preserve falsy values in default assignment
+- 57a09c2: Coerce parsing of updated-at in ignore-conditions
+
 ## 0.1.0
 
 ### Minor Changes
