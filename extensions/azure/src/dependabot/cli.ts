@@ -191,7 +191,7 @@ export class DependabotCli {
   // Get the dependabot tool path and install if missing
   private async getDependabotToolPath(installIfMissing: boolean = true): Promise<string> {
     debug('Checking for `dependabot` install...');
-    this.toolPath ??= which('dependabot', false);
+    this.toolPath ||= which('dependabot', false);
     if (this.toolPath) {
       return this.toolPath;
     }
@@ -209,7 +209,7 @@ export class DependabotCli {
     // If dependabot still cannot be found using `which()` after install, we must manually resolve the path;
     // It will either be "$GOPATH/bin/dependabot" or "$HOME/go/bin/dependabot", if GOPATH is not set.
     const goBinPath = process.env.GOPATH ? path.join(process.env.GOPATH, 'bin') : path.join(os.homedir(), 'go', 'bin');
-    return (this.toolPath ??= which('dependabot', false) || path.join(goBinPath, 'dependabot'));
+    return (this.toolPath ||= which('dependabot', false) || path.join(goBinPath, 'dependabot'));
   }
 
   // Create the jobs directory if it does not exist
