@@ -350,7 +350,7 @@ export function mapCredentials(
 }
 
 export function mapExperiments(experiments?: DependabotExperiments): DependabotExperiments {
-  experiments ||= {};
+  experiments ??= {};
   return Object.keys(experiments).reduce((acc, key) => {
     // Experiment values are known to be either 'true', 'false', or a string value.
     // If the value is 'true' or 'false', convert it to a boolean type so that dependabot-core handles it correctly.

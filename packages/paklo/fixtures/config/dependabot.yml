@@ -35,6 +35,11 @@ updates:
         update-types:
           - 'minor'
           - 'patch'
+  - package-ecosystem: 'devcontainers' # See documentation for possible values
+    directory: '/' # Location of package manifests
+    open-pull-requests-limit: 0
+  - package-ecosystem: 'dotnet-sdk' # See documentation for possible values
+    directory: '/' # Location of package manifests
 registries:
   reg1:
     type: nuget-feed

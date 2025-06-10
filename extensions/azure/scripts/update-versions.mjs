@@ -12,7 +12,7 @@ async function updateTaskJsonFiles({ cwd, dev, version, buildNumber }) {
 
   for (const fileName of fileNames) {
     const contents = JSON.parse(await readFile(fileName, 'utf-8'));
-    const cv = (contents.version ||= {});
+    const cv = (contents.version ??= {});
     const current = `${cv.Major}.${cv.Minor}.${cv.Patch}`;
     // we do not update the Major version because ideally it would be a different task
     // contents.version.Major = version.major;
