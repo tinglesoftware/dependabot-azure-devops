@@ -57,7 +57,7 @@ export const DependabotConditionSchema = z.object({
   'dependency-name': z.string(),
   'source': z.string().nullish(),
   'update-types': z.string().array().nullish(),
-  'updated-at': z.string().nullish(), // TODO: should we instead use a date here?
+  'updated-at': z.coerce.string().nullish(),
   'version-requirement': z.string().nullish(),
 });
 export type DependabotCondition = z.infer<typeof DependabotConditionSchema>;
