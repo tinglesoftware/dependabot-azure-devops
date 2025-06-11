@@ -47,4 +47,30 @@ describe('scenario', () => {
     expect(scenario.output.filter((o) => o.type == 'record_ecosystem_meta').length).toBe(25);
     expect(scenario.output.filter((o) => o.type == 'increment_metric').length).toBe(0);
   });
+
+  it('nuget', async () => {
+    const raw = yaml.load(await readFile('fixtures/scenarios/nuget.yaml', 'utf-8'));
+    const scenario = DependabotScenarioSchema.parse(raw);
+
+    // parsing is enough to test that we have the right schema
+    // but we test a few fields to be sure
+    expect(scenario.input.job.id).toBeUndefined();
+    expect(scenario.input.job['package-manager']).toEqual('nuget');
+    expect(scenario.input.job['credentials-metadata']).toBeUndefined();
+    expect(scenario.input.credentials[0]!.type).toEqual('git_source');
+    expect(scenario.input.credentials[0]!.host).toEqual('dev.azure.com');
+    expect(scenario.input.credentials[0]!.username).toEqual('x-access-token');
+    expect(scenario.input.credentials[0]!.password).toEqual('01');
+    expect(scenario.output.length).toBe(2);
+    expect(scenario.output.filter((o) => o.type == 'create_pull_request').length).toBe(0);
+    expect(scenario.output.filter((o) => o.type == 'update_pull_request').length).toBe(1);
+    expect(scenario.output.filter((o) => o.type == 'close_pull_request').length).toBe(0);
+    expect(scenario.output.filter((o) => o.type == 'record_update_job_error').length).toBe(0);
+    expect(scenario.output.filter((o) => o.type == 'record_update_job_unknown_error').length).toBe(0);
+    expect(scenario.output.filter((o) => o.type == 'mark_as_processed').length).toBe(1);
+    expect(scenario.output.filter((o) => o.type == 'update_dependency_list').length).toBe(0);
+    expect(scenario.output.filter((o) => o.type == 'record_ecosystem_versions').length).toBe(0);
+    expect(scenario.output.filter((o) => o.type == 'record_ecosystem_meta').length).toBe(0);
+    expect(scenario.output.filter((o) => o.type == 'increment_metric').length).toBe(0);
+  });
 });

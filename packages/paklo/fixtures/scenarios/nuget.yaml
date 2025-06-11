@@ -1,0 +1,71 @@
+input:
+  job:
+    package-manager: nuget
+    allowed-updates:
+      - dependency-type: direct
+        update-type: all
+    debug: true
+    experiments:
+      allow-refresh-for-existing-pr-dependencies: true
+      allow-refresh-group-with-all-dependencies: true
+      avoid-duplicate-updates-package-json: true
+      dependency-change-validation: true
+      enable-cooldown-for-bun: true
+      enable-cooldown-for-bundler: true
+      enable-cooldown-for-cargo: true
+      enable-cooldown-for-composer: true
+      enable-cooldown-for-gomodules: true
+      enable-cooldown-for-gradle: true
+      enable-cooldown-for-maven: true
+      enable-cooldown-for-npm-and-yarn: true
+      enable-cooldown-for-python: true
+      enable-cooldown-for-uv: true
+      enable-cooldown-metrics-collection: true
+      enable-dependabot-setting-up-cronjob: true
+      enable-engine-version-detection: true
+      enable-enhanced-error-details-for-updater: true
+      enable-file-parser-python-local: true
+      enable-record-ecosystem-meta: true
+      enable-shared-helpers-command-timeout: true
+      exclude-local-composer-packages: true
+      lead-security-dependency: true
+      move-job-token: true
+      npm-fallback-version-above-v6: true
+      nuget-install-dotnet-sdks: true
+      nuget-native-analysis: true
+      nuget-native-updater: true
+      nuget-use-direct-discovery: true
+      nuget-use-legacy-updater-when-updating-pr: true
+      proxy-cached: true
+      record-ecosystem-versions: true
+      record-update-job-unknown-error: true
+    requirements-update-strategy: bump_versions
+    source:
+      provider: azure
+      repo: tingle/dependabot/_git/repro-1634
+      directory: /
+      commit: 850fed3072edf9e14f38fa1599cfa18f2ce3a1bb
+      hostname: dev.azure.com
+      api-endpoint: https://dev.azure.com:/
+    commit-message-options:
+      prefix: build
+    max-updater-run-time: 2700
+  credentials:
+    - host: dev.azure.com
+      password: '01'
+      type: git_source
+      username: x-access-token
+output:
+  - type: update_pull_request
+    expect:
+      data:
+        base-commit-sha: 850fed3072edf9e14f38fa1599cfa18f2ce3a1bb
+        dependency-group: null
+        dependency-names:
+          - Microsoft.Owin
+        updated-dependency-files:
+          - content: '[Redacted]'
+  - type: mark_as_processed
+    expect:
+      data:
+        base-commit-sha: 850fed3072edf9e14f38fa1599cfa18f2ce3a1bb
