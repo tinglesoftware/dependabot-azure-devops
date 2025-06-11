@@ -1,5 +1,11 @@
 # paklo
 
+## 0.1.3
+
+### Patch Changes
+
+- 765bd89: pr-title and comimt-message are often omitted in update_pull_request
+
 ## 0.1.2
 
 ### Patch Changes
