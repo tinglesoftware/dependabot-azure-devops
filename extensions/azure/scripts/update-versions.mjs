@@ -42,7 +42,7 @@ async function run(dev) {
     throw new Error('Invalid version in package.json');
   }
 
-  const buildNumber = Number.parseInt(process.env['BUILD_NUMBER'] || '0');
+  const buildNumber = Number.parseInt(process.env.BUILD_NUMBER || '0');
   console.log(`Updating versions to ${version} and BuildNumber: ${buildNumber}`);
 
   var opt = { cwd: process.cwd(), dev, version, buildNumber };

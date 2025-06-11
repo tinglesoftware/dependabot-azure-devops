@@ -71,7 +71,7 @@ describe('Parse registries', () => {
     expect(Object.keys(registries).length).toBe(11);
 
     // composer-repository
-    let registry = registries['composer']!;
+    let registry = registries['composer']!; // eslint-disable-line dot-notation
     expect(registry.type).toBe('composer_repository');
     expect(registry.url).toBe('https://repo.packagist.com/example-company/');
     expect(registry['index-url']).toBeUndefined();
@@ -88,7 +88,7 @@ describe('Parse registries', () => {
     expect(registry['replaces-base']).toBeUndefined();
 
     // docker-registry
-    registry = registries['dockerhub']!;
+    registry = registries['dockerhub']!; // eslint-disable-line dot-notation
     expect(registry.type).toBe('docker_registry');
     expect(registry.url).toBeUndefined();
     expect(registry['index-url']).toBeUndefined();

@@ -268,13 +268,13 @@ export function parseUpdates(config: DependabotConfig, configPath: string): Depe
   const updates: DependabotUpdate[] = [];
 
   // Parse the value of each of the updates obtained from the file
-  for (const update of config['updates']) {
+  for (const update of config.updates) {
     // populate the 'ignore' conditions 'source' and 'updated-at' properties, if missing
     // NOTE: 'source' and 'updated-at' are not documented in the dependabot.yml config docs, but are defined in the dependabot-core and dependabot-cli models.
     //       Currently they don't appear to add much value to the update process, but are populated here for completeness.
     if (update.ignore) {
       for (const condition of update.ignore) {
-        condition['source'] ??= configPath;
+        condition.source ??= configPath;
         // we don't know the last updated time, so we use the current time
         condition['updated-at'] ??= new Date().toISOString();
       }
@@ -291,7 +291,7 @@ export function parseRegistries(
 ): Record<string, DependabotRegistry> {
   // Parse the value of each of the registries obtained from the config
   const registries: Record<string, DependabotRegistry> = {};
-  for (const [key, registry] of Object.entries(config['registries'] || {})) {
+  for (const [key, registry] of Object.entries(config.registries || {})) {
     const updated = { ...registry };
     const { type } = updated;
 
@@ -312,7 +312,7 @@ export function parseRegistries(
     updated.token = convertPlaceholder({ input: updated.token, variableFinder: variableFinder });
 
     // parse the url
-    const url = updated['url'];
+    const url = updated.url;
     if (!url && type !== 'hex_organization') {
       throw new Error(`The value 'url' in dependency registry config '${key}' is missing`);
     }

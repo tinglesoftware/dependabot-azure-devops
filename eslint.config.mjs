@@ -23,4 +23,9 @@ export const config = [
   {
     ignores: ['dist/**', 'out/**'],
   },
+  {
+    rules: {
+      'dot-notation': 'error',
+    },
+  },
 ];

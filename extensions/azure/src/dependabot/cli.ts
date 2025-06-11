@@ -256,7 +256,7 @@ async function readJobScenarioOutputFile(path: string): Promise<DependabotOutput
 
   // Parse the scenario
   const scenario = await DependabotScenarioSchema.parseAsync(loadedScenario);
-  return scenario['output'];
+  return scenario.output;
 }
 
 // Log output from Dependabot based on the sub-component it originates from

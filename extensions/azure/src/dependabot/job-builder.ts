@@ -109,7 +109,7 @@ export class DependabotJobBuilder {
     securityVulnerabilities?: SecurityVulnerability[],
   ): IDependabotUpdateOperation {
     const dependencyGroupName = pullRequestToUpdate['dependency-group-name'];
-    const dependencyNames = (dependencyGroupName ? pullRequestToUpdate['dependencies'] : pullRequestToUpdate)?.map(
+    const dependencyNames = (dependencyGroupName ? pullRequestToUpdate.dependencies : pullRequestToUpdate)?.map(
       (d) => d['dependency-name'],
     );
     return buildUpdateJobConfig(
@@ -162,10 +162,10 @@ export function buildUpdateJobConfig(
         update['commit-message'] === undefined
           ? undefined
           : {
-              'prefix': update['commit-message']?.['prefix'],
+              'prefix': update['commit-message']?.prefix,
               'prefix-development': update['commit-message']?.['prefix-development'],
               'include-scope':
-                update['commit-message']?.['include']?.toLocaleLowerCase()?.trim() == 'scope' ? true : undefined,
+                update['commit-message']?.include?.toLocaleLowerCase()?.trim() == 'scope' ? true : undefined,
             },
       'cooldown': update.cooldown,
       'experiments': mapExperiments(taskInputs.experiments),
@@ -219,7 +219,7 @@ export function mapGroupsFromDependabotConfigToJobConfig(
         'name': name,
         'applies-to': group['applies-to'],
         'rules': {
-          'patterns': group['patterns']?.length ? group['patterns'] : ['*'],
+          'patterns': group.patterns?.length ? group.patterns : ['*'],
           'exclude-patterns': group['exclude-patterns'],
           'dependency-type': group['dependency-type'],
           'update-types': group['update-types'],
@@ -260,16 +260,16 @@ export function mapIgnoreConditionsFromDependabotConfigToJobConfig(
   }
   return ignoreConditions.map((ignore) => {
     return {
-      'source': ignore['source'],
+      'source': ignore.source,
       'updated-at': ignore['updated-at'],
       'dependency-name': ignore['dependency-name'],
       'update-types': ignore['update-types'],
 
       // The dependabot.yml config docs are not very clear about acceptable values; after scanning dependabot-core and dependabot-cli,
       // this could either be a single version string (e.g. '>1.0.0'), or multiple version strings separated by commas (e.g. '>1.0.0, <2.0.0')
-      'version-requirement': Array.isArray(ignore['versions'])
-        ? (<string[]>ignore['versions'])?.join(', ')
-        : <string>ignore['versions'],
+      'version-requirement': Array.isArray(ignore.versions)
+        ? (<string[]>ignore.versions)?.join(', ')
+        : <string>ignore.versions,
     } satisfies DependabotCondition;
   });
 }

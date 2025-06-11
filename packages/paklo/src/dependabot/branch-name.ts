@@ -35,6 +35,7 @@ export function getBranchNameForUpdate(
       .join('-and-')
       .replace(/[:[]]/g, '-') // Replace `:` and `[]` with `-`
       .replace(/@/g, ''); // Remove `@`
+    // eslint-disable-next-line dot-notation
     const versionSuffix = dependencies[0]?.['removed'] ? 'removed' : dependencies[0]?.['dependency-version'];
     branchName = `${dependencyNames}-${versionSuffix}`;
   }

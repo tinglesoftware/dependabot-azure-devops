@@ -107,7 +107,7 @@ export class DependabotOutputProcessor {
           operation.config.directory ||
             operation.config.directories?.find((dir) => changedFiles[0]?.path?.startsWith(dir)),
           dependencies['dependency-group-name'],
-          dependencies['dependencies'] || dependencies,
+          dependencies['dependencies'] || dependencies, // eslint-disable-line dot-notation
           operation.config['pull-request-branch-name']?.separator,
         );
 
@@ -142,11 +142,11 @@ export class DependabotOutputProcessor {
             email: this.taskInputs.authorEmail || DependabotOutputProcessor.PR_DEFAULT_AUTHOR_EMAIL,
             name: this.taskInputs.authorName || DependabotOutputProcessor.PR_DEFAULT_AUTHOR_NAME,
           },
-          title: output.expect.data['pr-title'],
+          title: title,
           description: getPullRequestDescription(
             packageManager,
             output.expect.data['pr-body'],
-            output.expect.data['dependencies'],
+            output.expect.data.dependencies,
           ),
           commitMessage: output.expect.data['commit-message'],
           autoComplete: this.taskInputs.setAutoComplete
@@ -368,21 +368,21 @@ function getPullRequestChangedFilesForOutputData(
   data: DependabotCreatePullRequest | DependabotUpdatePullRequest,
 ): IFileChange[] {
   return data['updated-dependency-files']
-    .filter((file) => file['type'] === 'file')
+    .filter((file) => file.type === 'file')
     .map((file) => {
       let changeType = VersionControlChangeType.None;
-      if (file['deleted'] === true) {
+      if (file.deleted === true) {
         changeType = VersionControlChangeType.Delete;
-      } else if (file['operation'] === 'update') {
+      } else if (file.operation === 'update') {
         changeType = VersionControlChangeType.Edit;
       } else {
         changeType = VersionControlChangeType.Add;
       }
       return {
         changeType: changeType,
-        path: path.join(file['directory'], file['name']),
-        content: file['content'],
-        encoding: file['content_encoding'],
+        path: path.join(file.directory, file.name),
+        content: file.content,
+        encoding: file.content_encoding,
       };
     });
 }
@@ -417,14 +417,14 @@ function getPullRequestCloseReasonForOutputData(data: DependabotClosePullRequest
 function getPullRequestDependenciesPropertyValueForOutputData(
   data: DependabotCreatePullRequest,
 ): DependabotExistingPR[] | DependabotExistingGroupPR {
-  const dependencies = data['dependencies']?.map((dep) => {
+  const dependencies = data.dependencies?.map((dep) => {
     return {
       'dependency-name': dep.name,
       'dependency-version': dep.version,
       'directory': dep.directory,
     };
   });
-  const dependencyGroupName = data['dependency-group']?.['name'];
+  const dependencyGroupName = data['dependency-group']?.name;
   if (!dependencyGroupName) return dependencies;
   return {
     'dependency-group-name': dependencyGroupName,
@@ -433,6 +433,7 @@ function getPullRequestDependenciesPropertyValueForOutputData(
 }
 
 function getDependencyNames(dependencies: unknown): string[] {
+  // eslint-disable-next-line dot-notation
   return (dependencies['dependency-group-name'] ? dependencies['dependencies'] : dependencies)?.map((dep) =>
     dep['dependency-name']?.toString(),
   );
