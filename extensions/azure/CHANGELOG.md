@@ -1,5 +1,12 @@
 # extension-azure-devops
 
+## 2.52.1
+
+### Patch Changes
+
+- Updated dependencies [765bd89]
+  - paklo@0.1.3
+
 ## 2.52.0
 
 ### Minor Changes
