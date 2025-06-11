@@ -1,8 +1,11 @@
 import {
   makeCredentialsMetadata,
   type DependabotAllowCondition,
+  type DependabotAllowed,
   type DependabotCondition,
   type DependabotCredential,
+  type DependabotExistingGroupPR,
+  type DependabotExistingPR,
   type DependabotExperiments,
   type DependabotGroup,
   type DependabotGroupJob,
@@ -68,7 +71,7 @@ export class DependabotJobBuilder {
     registries?: Record<string, DependabotRegistry>,
     enableBetaEcosystems?: boolean | undefined,
     dependencyNamesToUpdate?: string[],
-    existingPullRequests?: any[], // eslint-disable-line @typescript-eslint/no-explicit-any
+    existingPullRequests?: (DependabotExistingPR[] | DependabotExistingGroupPR)[],
     securityVulnerabilities?: SecurityVulnerability[],
   ): IDependabotUpdateOperation {
     const securityUpdatesOnly = update['open-pull-requests-limit'] == 0;
@@ -104,14 +107,16 @@ export class DependabotJobBuilder {
     update: DependabotUpdate,
     registries: Record<string, DependabotRegistry> | undefined,
     enableBetaEcosystems: boolean | undefined,
-    existingPullRequests: any[], // eslint-disable-line @typescript-eslint/no-explicit-any
-    pullRequestToUpdate: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    existingPullRequests: (DependabotExistingPR[] | DependabotExistingGroupPR)[],
+    pullRequestToUpdate: DependabotExistingPR[] | DependabotExistingGroupPR,
     securityVulnerabilities?: SecurityVulnerability[],
   ): IDependabotUpdateOperation {
-    const dependencyGroupName = pullRequestToUpdate['dependency-group-name'];
-    const dependencyNames = (dependencyGroupName ? pullRequestToUpdate.dependencies : pullRequestToUpdate)?.map(
-      (d) => d['dependency-name'],
-    );
+    const dependencyGroupName = Array.isArray(pullRequestToUpdate)
+      ? undefined
+      : pullRequestToUpdate['dependency-group-name'];
+    const dependencyNames = (
+      Array.isArray(pullRequestToUpdate) ? pullRequestToUpdate : pullRequestToUpdate.dependencies
+    )?.map((d) => d['dependency-name']);
     return buildUpdateJobConfig(
       `update-pr-${id}`,
       taskInputs,
@@ -136,7 +141,7 @@ export function buildUpdateJobConfig(
   updatingPullRequest?: boolean | undefined,
   updateDependencyGroupName?: string | undefined,
   updateDependencyNames?: string[] | undefined,
-  existingPullRequests?: any[], // eslint-disable-line @typescript-eslint/no-explicit-any
+  existingPullRequests?: (DependabotExistingPR[] | DependabotExistingGroupPR)[],
   securityVulnerabilities?: SecurityVulnerability[],
 ): IDependabotUpdateOperation {
   const securityOnlyUpdate = update['open-pull-requests-limit'] == 0;
@@ -156,8 +161,8 @@ export function buildUpdateJobConfig(
       'security-updates-only': securityOnlyUpdate,
       'security-advisories': mapSecurityAdvisories(securityVulnerabilities),
       'source': mapSourceFromDependabotConfigToJobConfig(taskInputs, update),
-      'existing-pull-requests': existingPullRequests?.filter((pr) => !pr['dependency-group-name']),
-      'existing-group-pull-requests': existingPullRequests?.filter((pr) => pr['dependency-group-name']),
+      'existing-pull-requests': existingPullRequests?.filter((pr) => Array.isArray(pr)),
+      'existing-group-pull-requests': existingPullRequests?.filter((pr): pr is DependabotExistingGroupPR => true),
       'commit-message-options':
         update['commit-message'] === undefined
           ? undefined
@@ -231,7 +236,7 @@ export function mapGroupsFromDependabotConfigToJobConfig(
 export function mapAllowedUpdatesFromDependabotConfigToJobConfig(
   allowedUpdates?: DependabotAllowCondition[],
   securityOnlyUpdate?: boolean,
-) {
+): DependabotAllowed[] {
   // If no allow conditions are specified, update direct dependencies by default; This is what GitHub does.
   // NOTE: 'update-type' appears to be a deprecated config, but still appears in the dependabot-core model and GitHub Dependabot job logs.
   //       See: https://github.com/dependabot/dependabot-core/blob/b3a0c1f86c20729494097ebc695067099f5b4ada/updater/lib/dependabot/job.rb#L253C1-L257C78
@@ -267,9 +272,7 @@ export function mapIgnoreConditionsFromDependabotConfigToJobConfig(
 
       // The dependabot.yml config docs are not very clear about acceptable values; after scanning dependabot-core and dependabot-cli,
       // this could either be a single version string (e.g. '>1.0.0'), or multiple version strings separated by commas (e.g. '>1.0.0, <2.0.0')
-      'version-requirement': Array.isArray(ignore.versions)
-        ? (<string[]>ignore.versions)?.join(', ')
-        : <string>ignore.versions,
+      'version-requirement': Array.isArray(ignore.versions) ? (<string[]>ignore.versions)?.join(', ') : ignore.versions,
     } satisfies DependabotCondition;
   });
 }

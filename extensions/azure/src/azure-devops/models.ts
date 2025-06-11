@@ -71,7 +71,7 @@ export interface IUpdatePullRequest {
   project: string;
   repository: string;
   pullRequestId: number;
-  commit?: string;
+  commit: string;
   author?: {
     email: string;
     name: string;

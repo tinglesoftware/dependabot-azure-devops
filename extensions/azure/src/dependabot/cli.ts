@@ -170,10 +170,10 @@ export class DependabotCli {
               const { success, pr } = await this.outputProcessor.process(operation, output);
               operationResult.success = success;
               operationResult.pr = pr;
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            } catch (e: any) {
+            } catch (e) {
+              const err = e as Error;
               operationResult.success = false;
-              operationResult.error = e;
+              operationResult.error = err;
               error(`An unhandled exception occurred while processing '${output.type}': ${e}`);
               console.debug(e); // Dump the stack trace to help with debugging
             } finally {

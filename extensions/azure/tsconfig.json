@@ -1,10 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "../../tsconfig.json",
-  "compilerOptions": {
-    // TODO: enable strict and fix errors
-    "strict": false
-  },
   "include": ["src/**/*", "tests/**/*"],
   "exclude": ["node_modules", "tasks/**/dist"]
 }

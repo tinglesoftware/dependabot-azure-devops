@@ -173,8 +173,9 @@ async function run() {
       true, // isOutput
     );
   } catch (e) {
-    setResult(TaskResult.Failed, e?.message);
-    exception(e);
+    const err = e as Error;
+    setResult(TaskResult.Failed, err.message);
+    exception(err);
   } finally {
     dependabotCli?.cleanup();
   }
@@ -278,7 +279,7 @@ export async function performDependabotUpdatesAsync(
       section(`Dependency vulnerability check`);
       const packagesToCheckForVulnerabilities: Package[] | undefined = outputs
         ?.map((o) => o.output)
-        .find((x) => x.type == 'update_dependency_list')
+        .find((o) => o?.type == 'update_dependency_list')
         ?.expect.data.dependencies?.map((d) => ({ name: d.name, version: d.version }));
       if (packagesToCheckForVulnerabilities?.length) {
         console.info(
@@ -369,7 +370,7 @@ export async function performDependabotUpdatesAsync(
               dependabotConfig.registries,
               dependabotConfig['enable-beta-ecosystems'],
               existingPullRequestDependenciesForPackageManager,
-              existingPullRequestsForPackageManager[pullRequestId],
+              existingPullRequestsForPackageManager[pullRequestId]!,
               securityVulnerabilities,
             ),
             dependabotCliUpdateOptions,
@@ -397,7 +398,7 @@ export async function performDependabotUpdatesAsync(
 
   // Determine an overall result based on the success/failure of all the update operations
   let result: TaskResult;
-  let message: string;
+  let message: string = '';
   if (successfulOperations.length > 0) {
     if (failedOperations.length == 0) {
       result = TaskResult.Succeeded;
