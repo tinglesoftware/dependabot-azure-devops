@@ -38,9 +38,9 @@ export const DependabotUpdatePullRequestSchema = z.object({
   'base-commit-sha': z.string(),
   'dependency-names': z.string().array(),
   'updated-dependency-files': DependabotDependencyFileSchema.array(),
-  'pr-title': z.string(),
-  'pr-body': z.string().nullish(),
-  'commit-message': z.string(),
+  'pr-title': z.string().nullish(), // this is usually excluded when working with dependabot-cli and an empty string if the API
+  'pr-body': z.string().nullish(), // this is usually excluded when working with dependabot-cli and an empty string if the API
+  'commit-message': z.string().nullish(), // this is usually excluded when working with dependabot-cli and an empty string if the API
   'dependency-group': z.record(z.string(), z.any()).nullish(),
 });
 export type DependabotUpdatePullRequest = z.infer<typeof DependabotUpdatePullRequestSchema>;
