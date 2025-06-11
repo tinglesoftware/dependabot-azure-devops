@@ -1,0 +1,96 @@
+---
+#-----------------------------------------------------
+# © 2024 BISSELL Homecare, Inc. All rights reserved.
+# Unauthorized copying, modification, distribution, or use of this software is strictly prohibited.
+#----------------------------------------------------------------------
+
+version: 2
+registries:
+  platform-clients:
+    type: npm-registry
+    url: <Custom registry>
+  custom-packages:
+    type: npm-registry
+    url: <Custom registry>
+
+updates:
+  - package-ecosystem: npm
+    directory: '/'
+    ignore:
+      # all of the below packages are really dependent on the react-native version, so we will
+      # only upgrade them at the same time we are upgrading react-native manually
+      - dependency-name: 'react-native'
+      - dependency-name: 'react'
+      - dependency-name: '@babel/core'
+      - dependency-name: '@babel/preset-env'
+      - dependency-name: '@babel/runtime'
+      - dependency-name: '@react-native/babel-preset'
+      - dependency-name: '@react-native/eslint-config'
+      - dependency-name: '@react-native/metro-config'
+      - dependency-name: '@react-native/typescript-config'
+      - dependency-name: '@types/react'
+      - dependency-name: '@types/react-test-renderer'
+      - dependency-name: 'babel-jest'
+      - dependency-name: 'eslint'
+      - dependency-name: 'jest'
+      - dependency-name: 'prettier'
+      - dependency-name: 'react-test-renderer'
+      - dependency-name: 'typescript'
+      # @storybook/react-native is only on v7, so we need to stay on v7 until they move to v8
+      - dependency-name: '@storybook*'
+        versions: '>=8'
+      # react-native-share v11 targets react-native 0.75+, so we need to stay on v10 until we can move to RN 0.75+
+      - dependency-name: 'react-native-share'
+        versions: '>=11'
+      # react-native-svg has issues displaying some of our SVGs on versions > 15.0.0. See docs/developer.md for more details
+      - dependency-name: 'react-native-svg'
+        versions: '>15.0.0'
+      # react-native-mmkv v3 requires the new architecture, so we need to stay on v2 until we switch over
+      - dependency-name: 'react-native-mmkv'
+        versions: '>=3'
+    registries:
+      - platform-clients
+      - custom-packages
+    commit-message:
+      prefix: 'fix'
+    schedule:
+      interval: 'daily'
+    groups:
+      firebase:
+        applies-to: version-updates
+        patterns:
+          - '@react-native-firebase*'
+      gluestack:
+        applies-to: version-updates
+        patterns:
+          - '@gluestack-ui*'
+      font-awesome:
+        applies-to: version-updates
+        patterns:
+          - '@fortawesome*'
+      storybook:
+        applies-to: version-updates
+        patterns:
+          - '@storybook*'
+      semantic-release:
+        applies-to: version-updates
+        patterns:
+          - '@semantic-release*'
+          - 'semantic-release'
+          - 'semantic-release-react-native'
+      redux:
+        applies-to: version-updates
+        patterns:
+          - 'redux'
+          - '@reduxjs/toolkit'
+          - 'reselect'
+          - 'react-redux'
+      formatjs:
+        applies-to: version-updates
+        patterns:
+          - '@formatjs*'
+      react-navigation:
+        applies-to: version-updates
+        patterns:
+          - '@react-navigation/*'
+          - 'react-native-tab-view'

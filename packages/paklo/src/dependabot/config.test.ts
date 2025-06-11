@@ -60,6 +60,24 @@ describe('Parse configuration file', () => {
     expect(fifth['open-pull-requests-limit']).toEqual(5);
     expect(fifth.registries).toBeUndefined();
   });
+
+  it('Parsing works as expected for issue 1789', async () => {
+    const config = await DependabotConfigSchema.parseAsync(
+      yaml.load(await readFile('fixtures/config/dependabot-issue-1789.yml', 'utf-8')),
+    );
+    const updates = parseUpdates(config, '');
+    expect(updates.length).toBe(1);
+
+    // update
+    const update = updates[0]!;
+    expect(update.directory).toBe('/');
+    expect(update.directories).toBeUndefined();
+    expect(update['package-ecosystem']).toBe('npm');
+    expect(update['insecure-external-code-execution']).toBeUndefined();
+    expect(update.registries).toEqual(['platform-clients', 'custom-packages']);
+    expect(update.ignore?.length).toEqual(21);
+    expect(update.ignore![20]!.versions).toEqual('>=3');
+  });
 });
 
 describe('Parse registries', () => {

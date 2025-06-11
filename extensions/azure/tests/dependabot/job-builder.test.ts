@@ -133,36 +133,19 @@ describe('mapGroupsFromDependabotConfigToJobConfig', () => {
 
     const result = mapGroupsFromDependabotConfigToJobConfig(dependencyGroups);
 
-    expect(result).toEqual([
-      {
-        name: 'group',
-        rules: {
-          patterns: ['*'],
-        },
-      },
-    ]);
+    expect(result).toEqual([{ name: 'group', rules: { patterns: ['*'] } }]);
   });
 });
 
 describe('mapAllowedUpdatesFromDependabotConfigToJobConfig', () => {
   it('should allow direct dependency updates if rules are undefined', () => {
     const result = mapAllowedUpdatesFromDependabotConfigToJobConfig(undefined);
-    expect(result).toEqual([
-      {
-        'dependency-type': 'direct',
-        'update-type': 'all',
-      },
-    ]);
+    expect(result).toEqual([{ 'dependency-type': 'direct', 'update-type': 'all' }]);
   });
 
   it('should allow direct dependency security updates if rules are undefined and securityOnlyUpdate is true', () => {
     const result = mapAllowedUpdatesFromDependabotConfigToJobConfig(undefined, true);
-    expect(result).toEqual([
-      {
-        'dependency-type': 'direct',
-        'update-type': 'security',
-      },
-    ]);
+    expect(result).toEqual([{ 'dependency-type': 'direct', 'update-type': 'security' }]);
   });
 });
 
@@ -173,54 +156,27 @@ describe('mapIgnoreConditionsFromDependabotConfigToJobConfig', () => {
   });
 
   it('should handle single version string correctly', () => {
-    const ignoreConditions: DependabotIgnoreCondition[] = [
-      {
-        'dependency-name': 'dep1',
-        'versions': ['>1.0.0'],
-      },
-    ];
+    const ignore: DependabotIgnoreCondition[] = [{ 'dependency-name': 'dep1', 'versions': '>3' }];
+    const result = mapIgnoreConditionsFromDependabotConfigToJobConfig(ignore);
+    expect(result).toEqual([{ 'dependency-name': 'dep1', 'version-requirement': '>3' }]);
+  });
 
-    const result = mapIgnoreConditionsFromDependabotConfigToJobConfig(ignoreConditions);
-    expect(result).toEqual([
-      {
-        'dependency-name': 'dep1',
-        'version-requirement': '>1.0.0',
-      },
-    ]);
+  it('should handle single version string array correctly', () => {
+    const ignore: DependabotIgnoreCondition[] = [{ 'dependency-name': 'dep1', 'versions': ['>1.0.0'] }];
+    const result = mapIgnoreConditionsFromDependabotConfigToJobConfig(ignore);
+    expect(result).toEqual([{ 'dependency-name': 'dep1', 'version-requirement': '>1.0.0' }]);
   });
 
   it('should handle multiple version strings correctly', () => {
-    const ignoreConditions: DependabotIgnoreCondition[] = [
-      {
-        'dependency-name': 'dep1',
-        'versions': ['>1.0.0', '<2.0.0'],
-      },
-    ];
-
-    const result = mapIgnoreConditionsFromDependabotConfigToJobConfig(ignoreConditions);
-    expect(result).toEqual([
-      {
-        'dependency-name': 'dep1',
-        'version-requirement': '>1.0.0, <2.0.0',
-      },
-    ]);
+    const ignore: DependabotIgnoreCondition[] = [{ 'dependency-name': 'dep1', 'versions': ['>1.0.0', '<2.0.0'] }];
+    const result = mapIgnoreConditionsFromDependabotConfigToJobConfig(ignore);
+    expect(result).toEqual([{ 'dependency-name': 'dep1', 'version-requirement': '>1.0.0, <2.0.0' }]);
   });
 
   it('should handle empty versions array correctly', () => {
-    const ignoreConditions: DependabotIgnoreCondition[] = [
-      {
-        'dependency-name': 'dep1',
-        'versions': [],
-      },
-    ];
-
-    const result = mapIgnoreConditionsFromDependabotConfigToJobConfig(ignoreConditions);
-    expect(result).toEqual([
-      {
-        'dependency-name': 'dep1',
-        'version-requirement': '',
-      },
-    ]);
+    const ignore: DependabotIgnoreCondition[] = [{ 'dependency-name': 'dep1', 'versions': [] }];
+    const result = mapIgnoreConditionsFromDependabotConfigToJobConfig(ignore);
+    expect(result).toEqual([{ 'dependency-name': 'dep1', 'version-requirement': '' }]);
   });
 });
 
