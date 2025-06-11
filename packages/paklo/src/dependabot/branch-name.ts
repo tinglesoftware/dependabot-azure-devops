@@ -1,5 +1,6 @@
 import * as crypto from 'crypto';
 import { type PackageEcosystem } from './config';
+import { type DependabotExistingPR } from './job';
 
 // TODO: figure out how to handle IDENTIFIER field (in a group) in branch naming
 // Docs: https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#groups--
@@ -10,7 +11,7 @@ export function getBranchNameForUpdate(
   targetBranchName: string | undefined,
   directory: string | undefined,
   dependencyGroupName: string | undefined,
-  dependencies: Record<string, unknown>[], // TODO: find appropriate type
+  dependencies: DependabotExistingPR[],
   separator: string = '/',
 ): string {
   // Based on dependabot-core implementation:
@@ -35,8 +36,7 @@ export function getBranchNameForUpdate(
       .join('-and-')
       .replace(/[:[]]/g, '-') // Replace `:` and `[]` with `-`
       .replace(/@/g, ''); // Remove `@`
-    // eslint-disable-next-line dot-notation
-    const versionSuffix = dependencies[0]?.['removed'] ? 'removed' : dependencies[0]?.['dependency-version'];
+    const versionSuffix = dependencies[0]?.removed ? 'removed' : dependencies[0]?.['dependency-version'];
     branchName = `${dependencyNames}-${versionSuffix}`;
   }
 

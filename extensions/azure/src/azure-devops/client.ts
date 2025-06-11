@@ -116,7 +116,7 @@ export class AzureDevOpsWebApiClient {
         throw new Error(`Repository '${project}/${repository}' not found`);
       }
 
-      return refs.value?.map((r) => normalizeBranchName(r.name)) || [];
+      return refs.value?.map((r: { name?: string }) => normalizeBranchName(r.name)) || [];
     } catch (e) {
       error(`Failed to list branch names for '${project}/${repository}': ${e}`);
       console.debug(e); // Dump the error stack trace to help with debugging
@@ -150,7 +150,7 @@ export class AzureDevOpsWebApiClient {
       }
 
       return await Promise.all(
-        pullRequests.value.map(async (pr) => {
+        pullRequests.value.map(async (pr: { pullRequestId: number }) => {
           const properties = await this.restApiGet(
             `${this.organisationApiUrl}/${project}/_apis/git/repositories/${repository}/pullrequests/${pr.pullRequestId}/properties`,
           );
@@ -236,7 +236,7 @@ export class AzureDevOpsWebApiClient {
       if (!push?.commits?.length) {
         throw new Error('Failed to push changes to source branch, no commits were created');
       }
-      console.info(` - Pushed commit: ${push.commits.map((c) => c.commitId).join(', ')}.`);
+      console.info(` - Pushed commit: ${push.commits.map((c: { commitId: string }) => c.commitId).join(', ')}.`);
 
       // Create the pull request
       console.info(` - Creating pull request to merge '${pr.source.branch}' into '${pr.target.branch}'...`);
@@ -340,7 +340,11 @@ export class AzureDevOpsWebApiClient {
         const commits = await this.restApiGet(
           `${this.organisationApiUrl}/${pr.project}/_apis/git/repositories/${pr.repository}/pullrequests/${pr.pullRequestId}/commits`,
         );
-        if (commits?.value?.some((c) => c.author?.email !== pr.skipIfCommitsFromAuthorsOtherThan)) {
+        if (
+          commits?.value?.some(
+            (c: { author?: { email?: string } }) => c.author?.email !== pr.skipIfCommitsFromAuthorsOtherThan,
+          )
+        ) {
           console.info(` - Skipping update as pull request has been modified by another user.`);
           return true;
         }
@@ -422,7 +426,7 @@ export class AzureDevOpsWebApiClient {
       if (!push?.commits?.length) {
         throw new Error('Failed to push changes to source branch, no commits were created');
       }
-      console.info(` - Pushed commit: ${push.commits.map((c) => c.commitId).join(', ')}.`);
+      console.info(` - Pushed commit: ${push.commits.map((c: { commitId: string }) => c.commitId).join(', ')}.`);
 
       console.info(` - Pull request was updated successfully.`);
       return true;
@@ -553,7 +557,7 @@ export class AzureDevOpsWebApiClient {
 
   private async restApiGet(
     url: string,
-    params?: Record<string, string>,
+    params?: Record<string, unknown>,
     apiVersion: string = AzureDevOpsWebApiClient.API_VERSION,
   ) {
     params ??= {};
@@ -686,9 +690,10 @@ export async function sendRestApiRequestWithRetry(
     // Parse the response
     return JSON.parse(body);
   } catch (e) {
+    const err = e as Error;
     // Retry the request if the error is a temporary failure
-    if (retryCount > 1 && isErrorTemporaryFailure(e)) {
-      warning(e.message);
+    if (retryCount > 1 && isErrorTemporaryFailure(err)) {
+      warning(err.message);
       if (isDebug) debug(`⏳ Retrying request in ${retryDelay}ms...`);
       await new Promise((resolve) => setTimeout(resolve, retryDelay));
       return sendRestApiRequestWithRetry(method, url, payload, requestAsync, isDebug, retryCount - 1, retryDelay);
@@ -709,8 +714,7 @@ export async function sendRestApiRequestWithRetry(
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isErrorTemporaryFailure(e: any): boolean {
+export function isErrorTemporaryFailure(e?: { code?: string | number; message?: string } | null): boolean {
   if (e instanceof HttpRequestError) {
     // Check for common HTTP status codes that indicate a temporary failure
     // See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status

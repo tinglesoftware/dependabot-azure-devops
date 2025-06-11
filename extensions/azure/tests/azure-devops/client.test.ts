@@ -74,17 +74,12 @@ describe('AzureDevOpsWebApiClient', () => {
       const pullRequestId = await client.createPullRequest(pr);
 
       // Assert
+      /* eslint-disable @typescript-eslint/no-explicit-any */
       expect(mockRestApiPost).toHaveBeenCalledTimes(2);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect((mockRestApiPost.mock.calls[1] as any)[1].reviewers.length).toBe(2);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      expect((mockRestApiPost.mock.calls[1] as any)[1].reviewers).toContainEqual({
-        id: 'user1',
-      });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      expect((mockRestApiPost.mock.calls[1] as any)[1].reviewers).toContainEqual({
-        id: 'user2',
-      });
+      expect((mockRestApiPost.mock.calls[1] as any)[1].reviewers).toContainEqual({ id: 'user1' });
+      expect((mockRestApiPost.mock.calls[1] as any)[1].reviewers).toContainEqual({ id: 'user2' });
+      /* eslint-enable @typescript-eslint/no-explicit-any */
       expect(pullRequestId).toBe(1);
     });
   });

@@ -361,7 +361,7 @@ describe('performDependabotUpdatesAsync', () => {
       existingPullRequests,
     );
 
-    expect(updateResult).toEqual({ result: TaskResult.Skipped, prs: [] });
+    expect(updateResult).toEqual({ result: TaskResult.Skipped, message: '', prs: [] });
   });
 
   it('should collect PRs', async () => {

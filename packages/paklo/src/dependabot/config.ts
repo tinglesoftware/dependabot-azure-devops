@@ -60,6 +60,7 @@ export type DependabotGroup = z.infer<typeof DependabotGroupSchema>;
 export const DependabotAllowConditionSchema = z.object({
   'dependency-name': z.string().optional(),
   'dependency-type': z.enum(['direct', 'indirect', 'all', 'production', 'development']).optional(),
+  'update-type': z.enum(['all', 'security']).optional(),
 });
 export type DependabotAllowCondition = z.infer<typeof DependabotAllowConditionSchema>;
 

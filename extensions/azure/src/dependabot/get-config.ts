@@ -58,15 +58,17 @@ export async function getDependabotConfig(taskInputs: ISharedVariables): Promise
           break;
         }
       } catch (error) {
-        const responseStatusCode = error?.response?.status;
+        if (axios.isAxiosError(error)) {
+          const responseStatusCode = error?.response?.status;
 
-        if (responseStatusCode === 404) {
-          tl.debug(`No configuration file at '${url}'`);
-          continue;
-        } else if (responseStatusCode === 401) {
-          throw new Error(`No access token has been provided to access '${url}'`);
-        } else if (responseStatusCode === 403) {
-          throw new Error(`The access token provided does not have permissions to access '${url}'`);
+          if (responseStatusCode === 404) {
+            tl.debug(`No configuration file at '${url}'`);
+            continue;
+          } else if (responseStatusCode === 401) {
+            throw new Error(`No access token has been provided to access '${url}'`);
+          } else if (responseStatusCode === 403) {
+            throw new Error(`The access token provided does not have permissions to access '${url}'`);
+          }
         } else {
           throw error;
         }

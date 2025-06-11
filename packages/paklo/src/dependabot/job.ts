@@ -22,6 +22,7 @@ export const DependabotExistingPRSchema = z.object({
   'dependency-name': z.string(),
   'dependency-version': z.string().nullish(),
   'directory': z.string().nullish(),
+  'removed': z.boolean().nullish(),
 });
 export type DependabotExistingPR = z.infer<typeof DependabotExistingPRSchema>;
 
@@ -34,7 +35,7 @@ export type DependabotExistingGroupPR = z.infer<typeof DependabotExistingGroupPR
 export const DependabotAllowedSchema = z.object({
   'dependency-name': z.string().nullish(),
   'dependency-type': z.string().nullish(),
-  'update-type': z.string().nullish(),
+  'update-type': z.enum(['all', 'security']).optional(),
 });
 export type DependabotAllowed = z.infer<typeof DependabotAllowedSchema>;
 
