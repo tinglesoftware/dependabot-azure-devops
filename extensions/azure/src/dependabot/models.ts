@@ -13,6 +13,6 @@ export type IDependabotUpdateOperation = DependabotInput & {
 export type IDependabotUpdateOperationResult = {
   success: boolean;
   error?: Error;
-  output: DependabotOutput;
+  output?: DependabotOutput;
   pr?: number;
 };

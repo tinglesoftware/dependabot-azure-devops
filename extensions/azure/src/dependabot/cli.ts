@@ -143,6 +143,7 @@ export class DependabotCli {
         });
         if (dependabotResultCode != 0) {
           error(`Dependabot failed with exit code ${dependabotResultCode}`);
+          return [{ success: false }];
         }
       }
 
