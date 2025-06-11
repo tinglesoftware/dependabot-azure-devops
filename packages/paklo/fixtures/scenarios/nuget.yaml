@@ -65,6 +65,11 @@ output:
           - Microsoft.Owin
         updated-dependency-files:
           - content: '[Redacted]'
+            directory: '/'
+            operation: update
+            support_file: false
+            type: file
+            name: Root.csproj
   - type: mark_as_processed
     expect:
       data:
