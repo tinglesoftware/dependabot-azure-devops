@@ -19,7 +19,9 @@
     "target": "ESNext",
     "allowJs": true,
     "noEmit": true,
-    "jsx": "preserve"
+    "jsx": "preserve",
+    // Enforce the usage of type-only imports when needed, which helps avoid bundling issues.
+    "verbatimModuleSyntax": true
   },
   "exclude": ["node_modules"]
 }

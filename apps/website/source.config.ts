@@ -1,6 +1,6 @@
 import { rehypeCodeDefaultOptions, remarkAdmonition, remarkSteps } from 'fumadocs-core/mdx-plugins';
 import {
-  DefaultMDXOptions,
+  type DefaultMDXOptions,
   defineCollections,
   defineConfig,
   defineDocs,

@@ -26,6 +26,7 @@ export const config = [
   {
     rules: {
       'dot-notation': 'error',
+      '@typescript-eslint/consistent-type-imports': 'error',
     },
   },
 ];
