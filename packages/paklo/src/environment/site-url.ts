@@ -11,7 +11,7 @@ interface SiteUrlOptions {
 
 /**
  * Get the site URL based on the environment variables.
- * @param options The options to use.
+ * @param options - The options to use.
  * @returns The site URL.
  */
 export function getSiteUrlCombined({ development, main, defaultValue }: SiteUrlOptions) {
