@@ -5,6 +5,9 @@
   "type": "module",
   "private": true,
   "license": "AGPL-3.0-later",
+  "bin": {
+    "paklo": "./dist/cli.js"
+  },
   "exports": {
     "./dependabot": {
       "import": "./dist/dependabot.js",
@@ -32,7 +35,8 @@
     "build": "tsup",
     "lint": "eslint .",
     "test": "vitest",
-    "clean": "rimraf .turbo dist"
+    "clean": "rimraf .turbo dist",
+    "cli": "node dist/cli.js"
   },
   "repository": {
     "type": "git",
@@ -49,6 +53,7 @@
   },
   "homepage": "https://github.com/mburumaxwell/dependabot-azure-devops#readme",
   "dependencies": {
+    "commander": "14.0.0",
     "pino": "9.7.0",
     "pino-pretty": "13.0.0",
     "zod": "3.25.56"

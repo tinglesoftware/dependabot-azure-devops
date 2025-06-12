@@ -3,13 +3,13 @@ import * as tl from 'azure-pipelines-task-lib/task';
 import { getVariable } from 'azure-pipelines-task-lib/task';
 import { existsSync } from 'fs';
 import { readFile } from 'fs/promises';
-import { parseDependabotConfig, type DependabotConfig } from 'paklo/dependabot';
+import { parseDependabotConfig, POSSIBLE_CONFIG_FILE_PATHS, type DependabotConfig } from 'paklo/dependabot';
 import * as path from 'path';
 import { type ISharedVariables } from '../utils/shared-variables';
 
 /**
  * Parse the dependabot config YAML file to specify update configuration.
- * The file should be located at '/.azuredevops/dependabot.yml' or '/.github/dependabot.yml'
+ * The file should be located at any of POSSIBLE_CONFIG_FILE_PATHS.
  *
  * To view YAML file format, visit
  * https://docs.github.com/en/github/administering-a-repository/configuration-options-for-dependency-updates#allow
@@ -18,13 +18,6 @@ import { type ISharedVariables } from '../utils/shared-variables';
  * @returns {DependabotConfig} config - the dependabot configuration
  */
 export async function getDependabotConfig(taskInputs: ISharedVariables): Promise<DependabotConfig> {
-  const possibleFilePaths = [
-    '/.azuredevops/dependabot.yml',
-    '/.azuredevops/dependabot.yaml',
-    '/.github/dependabot.yaml',
-    '/.github/dependabot.yml',
-  ];
-
   let configPath: undefined | string;
   let configContents: undefined | string;
 
@@ -36,9 +29,9 @@ export async function getDependabotConfig(taskInputs: ISharedVariables): Promise
    */
   if (taskInputs.repositoryOverridden) {
     tl.debug(`Attempting to fetch configuration file via REST API ...`);
-    for (const fp of possibleFilePaths) {
+    for (const fp of POSSIBLE_CONFIG_FILE_PATHS) {
       // make HTTP request
-      const url = `${taskInputs.organizationUrl}${taskInputs.project}/_apis/git/repositories/${taskInputs.repository}/items?path=${fp}`;
+      const url = `${taskInputs.organizationUrl}${taskInputs.project}/_apis/git/repositories/${taskInputs.repository}/items?path=/${fp}`;
       tl.debug(`GET ${url}`);
 
       try {
@@ -76,7 +69,7 @@ export async function getDependabotConfig(taskInputs: ISharedVariables): Promise
     }
   } else {
     const rootDir = getVariable('Build.SourcesDirectory')!;
-    for (const fp of possibleFilePaths) {
+    for (const fp of POSSIBLE_CONFIG_FILE_PATHS) {
       const filePath = path.join(rootDir, fp);
       if (existsSync(filePath)) {
         tl.debug(`Found configuration file cloned at ${filePath}`);
@@ -91,7 +84,7 @@ export async function getDependabotConfig(taskInputs: ISharedVariables): Promise
 
   // Ensure we have file contents. Otherwise throw a well readable error.
   if (!configContents || !configPath || typeof configContents !== 'string') {
-    throw new Error(`Configuration file not found at possible locations: ${possibleFilePaths.join(', ')}`);
+    throw new Error(`Configuration file not found at possible locations: ${POSSIBLE_CONFIG_FILE_PATHS.join(', ')}`);
   } else {
     tl.debug('Configuration file contents read.');
   }

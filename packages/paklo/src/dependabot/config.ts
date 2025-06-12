@@ -237,34 +237,6 @@ export const DependabotConfigSchema = z.object({
 
 export type DependabotConfig = z.infer<typeof DependabotConfigSchema>;
 
-/**
- * Parse the contents of a dependabot config YAML file
- * @returns {DependabotConfig} config - the dependabot configuration
- */
-export async function parseDependabotConfig({
-  configContents,
-  configPath,
-  variableFinder,
-}: {
-  configContents: string;
-  configPath: string;
-  variableFinder: VariableFinderFn;
-}): Promise<DependabotConfig> {
-  // Load the config
-  const loadedConfig = yaml.load(configContents);
-  if (loadedConfig === null || typeof loadedConfig !== 'object') {
-    throw new Error('Invalid dependabot config object');
-  }
-
-  // Parse the config
-  const config = await DependabotConfigSchema.parseAsync(loadedConfig);
-  const updates = parseUpdates(config, configPath);
-  const registries = parseRegistries(config, variableFinder);
-  validateConfiguration(updates, registries);
-
-  return { ...config, updates, registries };
-}
-
 export function parseUpdates(config: DependabotConfig, configPath: string): DependabotUpdate[] {
   const updates: DependabotUpdate[] = [];
 
@@ -286,10 +258,10 @@ export function parseUpdates(config: DependabotConfig, configPath: string): Depe
   return updates;
 }
 
-export function parseRegistries(
+export async function parseRegistries(
   config: DependabotConfig,
   variableFinder: VariableFinderFn,
-): Record<string, DependabotRegistry> {
+): Promise<Record<string, DependabotRegistry>> {
   // Parse the value of each of the registries obtained from the config
   const registries: Record<string, DependabotRegistry> = {};
   for (const [key, registry] of Object.entries(config.registries || {})) {
@@ -307,10 +279,10 @@ export function parseRegistries(
     }
 
     // parse username, password, key, and token while replacing tokens where necessary
-    updated.username = convertPlaceholder({ input: updated.username, variableFinder: variableFinder });
-    updated.password = convertPlaceholder({ input: updated.password, variableFinder: variableFinder });
-    updated.key = convertPlaceholder({ input: updated.key, variableFinder: variableFinder });
-    updated.token = convertPlaceholder({ input: updated.token, variableFinder: variableFinder });
+    updated.username = await convertPlaceholder({ input: updated.username, variableFinder: variableFinder });
+    updated.password = await convertPlaceholder({ input: updated.password, variableFinder: variableFinder });
+    updated.key = await convertPlaceholder({ input: updated.key, variableFinder: variableFinder });
+    updated.token = await convertPlaceholder({ input: updated.token, variableFinder: variableFinder });
 
     // parse the url
     const url = updated.url;
@@ -374,4 +346,43 @@ export function validateConfiguration(updates: DependabotUpdate[], registries: R
   if (missingReferences.length > 0) {
     throw new Error(`Registries: '${missingReferences.join(',')}' have not been referenced by any update`);
   }
+}
+
+/**
+ * Possible paths to the dependabot config file.
+ * Remember to prefix with a forward slash when querying API endpoints or where necessary.
+ */
+export const POSSIBLE_CONFIG_FILE_PATHS = [
+  '.azuredevops/dependabot.yml',
+  '.azuredevops/dependabot.yaml',
+  '.github/dependabot.yaml',
+  '.github/dependabot.yml',
+];
+
+/**
+ * Parse the contents of a dependabot config YAML file
+ * @returns {DependabotConfig} config - the dependabot configuration
+ */
+export async function parseDependabotConfig({
+  configContents,
+  configPath,
+  variableFinder,
+}: {
+  configContents: string;
+  configPath: string;
+  variableFinder: VariableFinderFn;
+}): Promise<DependabotConfig> {
+  // Load the config
+  const loadedConfig = yaml.load(configContents);
+  if (loadedConfig === null || typeof loadedConfig !== 'object') {
+    throw new Error('Invalid dependabot config object');
+  }
+
+  // Parse the config
+  const config = await DependabotConfigSchema.parseAsync(loadedConfig);
+  const updates = parseUpdates(config, configPath);
+  const registries = await parseRegistries(config, variableFinder);
+  validateConfiguration(updates, registries);
+
+  return { ...config, updates, registries };
 }
