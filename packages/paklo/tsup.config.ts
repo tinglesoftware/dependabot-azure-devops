@@ -12,6 +12,7 @@ export default defineConfig({
     dependabot: 'src/dependabot/index.ts',
     environment: 'src/environment/index.ts',
     logger: 'src/logger.ts',
+    cli: 'src/cli/index.ts',
   },
   outDir: 'dist',
 });

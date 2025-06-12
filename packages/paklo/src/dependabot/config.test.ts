@@ -85,7 +85,7 @@ describe('Parse registries', () => {
     const config = await DependabotConfigSchema.parseAsync(
       yaml.load(await readFile('fixtures/config/sample-registries.yml', 'utf-8')),
     );
-    const registries = parseRegistries(config, () => undefined);
+    const registries = await parseRegistries(config, () => undefined);
     expect(Object.keys(registries).length).toBe(11);
 
     // composer-repository

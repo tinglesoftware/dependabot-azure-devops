@@ -1,12 +1,12 @@
-export type VariableFinderFn = (name: string) => string | undefined;
+export type VariableFinderFn = (name: string) => string | undefined | Promise<string | undefined>;
 
-function convertPlaceholder({
+async function convertPlaceholder({
   input,
   variableFinder,
 }: {
   input?: string;
   variableFinder: VariableFinderFn;
-}): string | undefined {
+}): Promise<string | undefined> {
   if (!input) return undefined;
 
   const matches: RegExpExecArray[] = extractPlaceholder(input);
@@ -14,7 +14,7 @@ function convertPlaceholder({
   for (const match of matches) {
     const placeholder = match[0];
     const name = match[1]!;
-    const value = variableFinder(name) ?? placeholder;
+    const value = (await variableFinder(name)) ?? placeholder;
     result = result.replace(placeholder, value);
   }
   return result;

@@ -1,6 +1,7 @@
 import { pino, type DestinationStream, type Logger, type LoggerOptions } from 'pino';
 import { PinoPretty } from 'pino-pretty';
-import { environment } from './environment';
+
+import { environment } from '@/environment';
 
 const options: LoggerOptions = {
   level: process.env.LOG_LEVEL || (environment.production ? 'warn' : 'debug'),
@@ -21,10 +22,10 @@ const destination: DestinationStream | undefined = environment.production
       // https://github.com/pinojs/pino-pretty#usage-with-jest
       sync: environment.test,
     });
-const logger = pino(options, destination);
+export const logger = pino(options, destination);
 
 /** Options for creating a logger. */
-type CreateOptions = {
+export type CreateOptions = {
   /**
    * The name of the application.
    * @example `website`
@@ -34,8 +35,8 @@ type CreateOptions = {
 
 /**
  * Creates a logger for the application.
- * @param {CreateOptions} options - The options for creating the logger.
- * @returns {Logger} The created logger.
+ * @param options - The options for creating the logger.
+ * @returns The created logger.
  */
 export function create({ name }: CreateOptions): Logger {
   const application = `paklo-${name}`;

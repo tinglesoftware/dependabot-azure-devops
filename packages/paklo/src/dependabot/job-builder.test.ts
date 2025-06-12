@@ -11,7 +11,7 @@ describe('makeCredentialsMetadata', () => {
       yaml.load(await readFile('fixtures/config/sample-registries.yml', 'utf-8')),
     );
 
-    let registries = parseRegistries(config, () => undefined);
+    let registries = await parseRegistries(config, () => undefined);
     expect(Object.keys(registries).length).toBe(11);
 
     // TODO: change this to call makeCredentials/mapCredentials once it is moved to this package hence remove this hack
