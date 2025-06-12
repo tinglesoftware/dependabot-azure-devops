@@ -1,5 +1,18 @@
 # extension-azure-devops
 
+## 2.53.0
+
+### Minor Changes
+
+- 4e34a26: Fix dependabot cli execution environment variables
+- aaf6698: Complete enforcing of strict typescript
+
+### Patch Changes
+
+- 761fb3e: Non-zero result from dependabot-cli should result in a failed result
+- Updated dependencies [aaf6698]
+  - paklo@0.2.0
+
 ## 2.52.1
 
 ### Patch Changes

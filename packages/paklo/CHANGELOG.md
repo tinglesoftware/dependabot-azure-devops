@@ -1,5 +1,11 @@
 # paklo
 
+## 0.2.0
+
+### Minor Changes
+
+- aaf6698: Complete enforcing of strict typescript
+
 ## 0.1.3
 
 ### Patch Changes

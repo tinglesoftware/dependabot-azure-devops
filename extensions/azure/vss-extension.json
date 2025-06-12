@@ -4,7 +4,7 @@
   "id": "dependabot",
   "name": "Dependabot",
   "description": "Automatically update dependencies and vulnerabilities in your code",
-  "version": "2.52.1.0",
+  "version": "2.53.0.0",
   "publisher": "tingle-software",
   "public": true,
   "targets": [
