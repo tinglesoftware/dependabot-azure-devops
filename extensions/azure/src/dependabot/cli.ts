@@ -128,18 +128,20 @@ export class DependabotCli {
       // Run dependabot update
       if (!existsSync(jobOutputPath) || (await stat(jobOutputPath))?.size == 0) {
         section(`Processing job from '${jobInputPath}'`);
-        // Enrich the environment with additional variables needed by the dependabot CLI
-        const additionalEnv = {
+        // By default, tool(...) uses the environment variables in the current process if none are provided.
+        // We need to additional variables for the dependabot CLI hence we extend them which overrides any defaults.
+        // See: https://github.com/microsoft/azure-pipelines-task-lib/blob/740206eb72342b22d2ba545204827636eb7b7126/node/toolrunner.ts#L26-L27
+        //      https://github.com/microsoft/azure-pipelines-task-lib/blob/740206eb72342b22d2ba545204827636eb7b7126/node/toolrunner.ts#L570
+        //      https://github.com/mburumaxwell/dependabot-azure-devops/pull/1753#issuecomment-2944939628
+        const env: Record<string, string | undefined> = {
+          ...process.env,
+
+          // additional ENV
           DEPENDABOT_JOB_ID: jobId.replace(/-/g, '_'), // replace hyphens with underscores
           LOCAL_GITHUB_ACCESS_TOKEN: options?.gitHubAccessToken, // avoid rate-limiting when pulling images from GitHub container registries
           LOCAL_AZURE_ACCESS_TOKEN: options?.azureDevOpsAccessToken, // technically not needed since we already supply this in our 'git_source' registry, but included for consistency
           FAKE_API_PORT: options?.apiListeningPort, // used to pin PORT of the Dependabot CLI api back-channel
         };
-        // merge the additional environment variables with the current process environment
-        // and pass it to the dependabot tool.
-        // Setting `env` here overrides the default environment variables.
-        // See: https://github.com/mburumaxwell/dependabot-azure-devops/pull/1753#issuecomment-2944939628
-        const env = Object.assign({}, process.env, additionalEnv);
         const dependabotTool = tool(dependabotPath).arg(dependabotArguments);
         const dependabotResultCode = await dependabotTool.execAsync({
           outStream: this.outputLogStream,
