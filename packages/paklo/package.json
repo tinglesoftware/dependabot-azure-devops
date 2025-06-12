@@ -34,6 +34,20 @@
     "test": "vitest",
     "clean": "rimraf .turbo dist"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mburumaxwell/dependabot-azure-devops.git"
+  },
+  "keywords": [
+    "dependabot",
+    "azure",
+    "devops",
+    "paklo"
+  ],
+  "bugs": {
+    "url": "https://github.com/mburumaxwell/dependabot-azure-devops/issues"
+  },
+  "homepage": "https://github.com/mburumaxwell/dependabot-azure-devops#readme",
   "dependencies": {
     "pino": "9.7.0",
     "pino-pretty": "13.0.0",
