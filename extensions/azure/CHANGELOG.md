@@ -1,5 +1,13 @@
 # extension-azure-devops
 
+## 2.53.1
+
+### Patch Changes
+
+- 5af507a: Added CLI with command to validate a dependabot configuration file
+- Updated dependencies [5af507a]
+  - paklo@0.3.0
+
 ## 2.53.0
 
 ### Minor Changes
