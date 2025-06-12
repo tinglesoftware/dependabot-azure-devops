@@ -41,16 +41,16 @@ async function handler({ options, error }: HandlerOptions<Options>) {
   // load the file contents and validate
   logger.info(`Validating file at ${configPath}`);
   const configContents = await readFile(configPath, 'utf-8');
-  const variables: string[] = [];
+  const variables = new Set<string>;
   function variableFinder(name: string) {
-    variables.push(name);
+    variables.add(name);
     return undefined;
   }
   const config = await parseDependabotConfig({ configContents, configPath, variableFinder });
   logger.info(
     `Configuration file valid: ${config.updates.length} update(s) and ${config.registries?.length ?? 'no'} registries.`,
   );
-  if (variables.length) logger.info(`Found replaceable variables/tokens:\n- ${variables.join('\n- ')}`);
+  if (variables.size) logger.info(`Found replaceable variables/tokens:\n- ${variables.values().toArray().join('\n- ')}`);
   else logger.info('No replaceable variables/tokens found.');
 }
 

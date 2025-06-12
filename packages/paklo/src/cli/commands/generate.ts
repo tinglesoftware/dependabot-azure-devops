@@ -49,12 +49,12 @@ async function handler({ options, error }: HandlerOptions<Options>) {
   async function variableFinder(name: string) {
     if (variables.has(name)) return variables.get(name);
     logger.trace(`Asking value for variable named: ${name}`);
-    const value = await rl.question(`Please provide the value for '${name}'`);
+    const value = await rl.question(`Please provide the value for '${name}': `);
     variables.set(name, value);
     return value;
   }
-  rl.close();
   const config = await parseDependabotConfig({ configContents, configPath, variableFinder });
+  rl.close();
   logger.info(
     `Configuration file valid: ${config.updates.length} update(s) and ${config.registries?.length ?? 'no'} registries.`,
   );
