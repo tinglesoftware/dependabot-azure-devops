@@ -1,31 +1,13 @@
 import * as tl from 'azure-pipelines-task-lib/task';
+import { type AzureDevOpsUrl, extractUrlParts } from 'paklo/azure';
 import { DEFAULT_EXPERIMENTS, type DependabotExperiments } from 'paklo/dependabot';
 import { getAzureDevOpsAccessToken, getGithubAccessToken } from './tokens';
-import { extractHostname, extractOrganization, extractVirtualDirectory } from './url-parts';
 
 export interface ISharedVariables {
-  /** URL of the organization. This may lack the project name */
-  organizationUrl: URL;
+  url: AzureDevOpsUrl;
 
-  /** Organization URL protocol */
-  protocol: string;
-  /** Organization URL hostname */
-  hostname: string;
-  /** Organization URL hostname */
-  port: string;
-  /** Organization URL virtual directory */
-  virtualDirectory: string;
-  /** Organization name */
-  organization: string;
-  /** Project ID */
-  project: string;
-  /** Repository name */
-  repository: string;
   /** Whether the repository was overridden via input */
   repositoryOverridden: boolean;
-
-  /** Organisation API endpoint URL */
-  apiEndpointUrl: string;
 
   /** The github token */
   githubAccessToken?: string;
@@ -83,20 +65,6 @@ export interface ISharedVariables {
  * @returns shared variables
  */
 export default function getSharedVariables(): ISharedVariables {
-  const organizationUrl = tl.getVariable('System.TeamFoundationCollectionUri')!;
-
-  //convert url string into a valid JS URL object
-  const formattedOrganizationUrl = new URL(organizationUrl);
-  const protocol: string = formattedOrganizationUrl.protocol.slice(0, -1);
-  const hostname: string = extractHostname(formattedOrganizationUrl);
-  const port: string = formattedOrganizationUrl.port;
-  const virtualDirectory: string = extractVirtualDirectory(formattedOrganizationUrl);
-  if (!virtualDirectory) {
-    tl.debug(`No virtual directory detected; Running for Azure DevOps Services.`);
-  } else {
-    tl.debug(`Virtual directory detected; Running for an on-premises Azure DevOps Server.`);
-  }
-  const organization: string = extractOrganization(organizationUrl);
   let project = tl.getInput('targetProjectName');
   const projectOverridden = typeof project === 'string';
   if (!projectOverridden) {
@@ -107,7 +75,6 @@ export default function getSharedVariables(): ISharedVariables {
   } else {
     tl.debug(`Custom project provided; Running update for specified project.`);
   }
-  project = encodeURI(project!); // encode special characters like spaces
 
   let repository = tl.getInput('targetRepositoryName');
   const repositoryOverridden = typeof repository === 'string';
@@ -120,10 +87,9 @@ export default function getSharedVariables(): ISharedVariables {
   } else {
     tl.debug(`Custom repository provided; Running update for remote repository.`);
   }
-  repository = encodeURI(repository!); // encode special characters like spaces
 
-  const virtualDirectorySuffix = virtualDirectory?.length > 0 ? `${virtualDirectory}/` : '';
-  const apiEndpointUrl = `${protocol}://${hostname}:${port}/${virtualDirectorySuffix}`;
+  const organisationUrl = tl.getVariable('System.TeamFoundationCollectionUri')!;
+  const urlParts = extractUrlParts({ organisationUrl, project: project!, repository: repository! });
 
   // Prepare the access credentials
   const githubAccessToken = getGithubAccessToken();
@@ -187,17 +153,8 @@ export default function getSharedVariables(): ISharedVariables {
   const proxyCertPath: string | undefined = tl.getInput('proxyCertPath');
 
   return {
-    organizationUrl: formattedOrganizationUrl,
-    protocol,
-    hostname,
-    port,
-    virtualDirectory,
-    organization,
-    project,
-    repository,
+    url: urlParts,
     repositoryOverridden,
-
-    apiEndpointUrl,
 
     githubAccessToken,
     systemAccessUser,

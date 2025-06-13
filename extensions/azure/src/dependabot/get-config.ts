@@ -31,7 +31,7 @@ export async function getDependabotConfig(taskInputs: ISharedVariables): Promise
     tl.debug(`Attempting to fetch configuration file via REST API ...`);
     for (const fp of POSSIBLE_CONFIG_FILE_PATHS) {
       // make HTTP request
-      const url = `${taskInputs.organizationUrl}${taskInputs.project}/_apis/git/repositories/${taskInputs.repository}/items?path=/${fp}`;
+      const url = `${taskInputs.url.url}${taskInputs.url.project}/_apis/git/repositories/${taskInputs.url.repository}/items?path=/${fp}`;
       tl.debug(`GET ${url}`);
 
       try {
