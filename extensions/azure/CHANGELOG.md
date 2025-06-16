@@ -1,5 +1,12 @@
 # extension-azure-devops
 
+## 2.53.2
+
+### Patch Changes
+
+- e1dc185: Fix filtering logic for existing pull requests between grouped and normal
+- d010d50: Do not write YAML files with refs
+
 ## 2.53.1
 
 ### Patch Changes
