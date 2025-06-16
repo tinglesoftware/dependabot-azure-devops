@@ -27,7 +27,7 @@
   },
   "devDependencies": {
     "@changesets/cli": "2.29.4",
-    "@types/node": "24.0.1",
+    "@types/node": "24.0.3",
     "eslint": "9.29.0",
     "eslint-config-prettier": "10.1.5",
     "eslint-plugin-react": "7.37.5",
