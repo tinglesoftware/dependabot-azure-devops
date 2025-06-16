@@ -175,6 +175,9 @@ importers:
       commander:
         specifier: 14.0.0
         version: 14.0.0
+      js-yaml:
+        specifier: 4.1.0
+        version: 4.1.0
       pino:
         specifier: 9.7.0
         version: 9.7.0
@@ -184,6 +187,10 @@ importers:
       zod:
         specifier: 3.25.56
         version: 3.25.56
+    devDependencies:
+      '@types/js-yaml':
+        specifier: 4.0.9
+        version: 4.0.9
 
 packages:
 

@@ -54,8 +54,12 @@
   "homepage": "https://github.com/mburumaxwell/dependabot-azure-devops#readme",
   "dependencies": {
     "commander": "14.0.0",
+    "js-yaml": "4.1.0",
     "pino": "9.7.0",
     "pino-pretty": "13.0.0",
     "zod": "3.25.56"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "4.0.9"
   }
 }
