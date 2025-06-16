@@ -243,10 +243,13 @@ export class DependabotCli {
 // Documentation on the job model can be found here:
 // https://github.com/dependabot/cli/blob/main/internal/model/job.go
 async function writeJobConfigFile(path: string, input: DependabotInput): Promise<void> {
-  const contents = yaml.dump({
-    job: input.job,
-    credentials: input.credentials,
-  });
+  const contents = yaml.dump(
+    {
+      job: input.job,
+      credentials: input.credentials,
+    },
+    { noRefs: true /* Dereference objects that may be repeated */ },
+  );
   debug(`JobConfig:\r\n${contents}`);
   await writeFile(path, contents);
 }
