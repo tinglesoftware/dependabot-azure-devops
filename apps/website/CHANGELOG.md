@@ -1,5 +1,13 @@
 # website
 
+## 0.1.5
+
+### Patch Changes
+
+- Updated dependencies [5af507a]
+- Updated dependencies [86822e2]
+  - paklo@0.3.0
+
 ## 0.1.4
 
 ### Patch Changes

@@ -1,5 +1,15 @@
 # paklo
 
+## 0.3.0
+
+### Minor Changes
+
+- 5af507a: Added CLI with command to validate a dependabot configuration file
+
+### Patch Changes
+
+- 86822e2: Fix invalid yaml references
+
 ## 0.2.0
 
 ### Minor Changes
