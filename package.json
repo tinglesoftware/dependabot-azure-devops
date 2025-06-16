@@ -42,7 +42,7 @@
     "tsup": "8.5.0",
     "turbo": "2.5.4",
     "typescript": "5.8.3",
-    "typescript-eslint": "8.33.1",
+    "typescript-eslint": "8.34.0",
     "vitest": "3.2.2"
   },
   "engines": {
