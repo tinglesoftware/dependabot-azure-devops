@@ -162,7 +162,9 @@ export function buildUpdateJobConfig(
       'security-advisories': mapSecurityAdvisories(securityVulnerabilities),
       'source': mapSourceFromDependabotConfigToJobConfig(taskInputs, update),
       'existing-pull-requests': existingPullRequests?.filter((pr) => Array.isArray(pr)),
-      'existing-group-pull-requests': existingPullRequests?.filter((pr): pr is DependabotExistingGroupPR => true),
+      'existing-group-pull-requests': existingPullRequests?.filter(
+        (pr): pr is DependabotExistingGroupPR => !Array.isArray(pr),
+      ),
       'commit-message-options':
         update['commit-message'] === undefined
           ? undefined
