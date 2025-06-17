@@ -4,11 +4,16 @@ import { existsSync } from 'fs';
 import { mkdir, readFile, rename, rm, stat, writeFile } from 'fs/promises';
 import * as yaml from 'js-yaml';
 import * as os from 'os';
-import { type DependabotInput, type DependabotOutput, DependabotScenarioSchema } from 'paklo/dependabot';
+import {
+  type DependabotInput,
+  type DependabotOperation,
+  type DependabotOperationResult,
+  type DependabotOutput,
+  DependabotScenarioSchema,
+} from 'paklo/dependabot';
 import * as path from 'path';
 import { Writable } from 'stream';
 import { endgroup, group, section } from '../azure-devops/formatting';
-import { type IDependabotUpdateOperation, type IDependabotUpdateOperationResult } from './models';
 import { type DependabotOutputProcessor } from './output-processor';
 
 export type DependabotCliOptions = {
@@ -57,9 +62,9 @@ export class DependabotCli {
    * @returns
    */
   public async update(
-    operation: IDependabotUpdateOperation,
+    operation: DependabotOperation,
     options?: DependabotCliOptions,
-  ): Promise<IDependabotUpdateOperationResult[] | undefined> {
+  ): Promise<DependabotOperationResult[] | undefined> {
     try {
       group(`Job '${operation.job.id}'`);
 
@@ -166,7 +171,7 @@ export class DependabotCli {
       }
 
       // Process the job output
-      const operationResults = Array<IDependabotUpdateOperationResult>();
+      const operationResults = Array<DependabotOperationResult>();
       if (existsSync(jobOutputPath)) {
         const jobOutputs = await readJobScenarioOutputFile(jobOutputPath);
         if (jobOutputs?.length > 0) {
@@ -174,7 +179,7 @@ export class DependabotCli {
           for (const output of jobOutputs) {
             // Documentation on the scenario model can be found here:
             // https://github.com/dependabot/cli/blob/main/internal/model/scenario.go
-            const operationResult: IDependabotUpdateOperationResult = { success: true, output };
+            const operationResult: DependabotOperationResult = { success: true, output };
             try {
               const { success, pr } = await this.outputProcessor.process(operation, output);
               operationResult.success = success;
