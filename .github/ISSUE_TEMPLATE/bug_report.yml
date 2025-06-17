@@ -1,0 +1,102 @@
+name: Bug Report
+description: File a bug report.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+  - type: checkboxes
+    attributes:
+      label: Categorization
+      description: Please confirm these points before submitting
+      options:
+        - label: This is not a permissions issue (Seek help at https://github.com/tinglesoftware/dependabot-azure-devops/discussions/1245)
+          required: true
+        - label: |
+            This is an issue specific to Azure DevOps or this repository and does not belong in [dependabot-core](https://github.com/dependabot/dependabot-core).
+            Specific issues for dependabot are solved faster in the core repository. For example, why a package version is skipped.
+            Trying out this behaviour in the GitHub Hosted version can help you pinpoint where it lies.
+          required: true
+        - label: |
+            I have linked a public reproduction of the specific issue or none is required because the issue is not specific to me.
+            Please note that you can create a public organization/project and repository to show the issue. This tends to accelerate resolution.
+          required: false
+
+  - type: input
+    id: repository
+    attributes:
+      label: Repository
+      description: URL of the repository where the bug occurs
+      placeholder: e.g. https://dev.azure.com/tingle/dependabot/_git/repro-684
+    validations:
+      required: false
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Please provide clear steps to reproduce the behavior
+      placeholder: |
+        1. ...
+        2. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: A clear and concise description of what you expected to happen
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs and screenshots
+      description: If applicable, include relevant logs or screenshots to help explain your problem. See [Azure extension troubleshooting](https://github.com/tinglesoftware/dependabot-azure-devops/blob/main/docs/extensions/azure.md#troubleshooting-issues) for more on how to collect additional diagnostic logs.
+    validations:
+      required: false
+
+  - type: input
+    id: extension-host
+    attributes:
+      label: Extension Host
+      description: The host where the extension is running
+      placeholder: e.g. Azure DevOps, Azure DevOps Server
+    validations:
+      required: false
+
+  - type: input
+    id: extension-version
+    attributes:
+      label: Extension Version
+      description: The version of the extension
+      placeholder: e.g. 1.2.54
+    validations:
+      required: false
+
+  - type: input
+    id: server-region
+    attributes:
+      label: Server Region
+      description: The region where the server is running
+      placeholder: e.g. westeurope
+    validations:
+      required: false
+
+  - type: input
+    id: server-version
+    attributes:
+      label: Server Version
+      description: The version of the server
+      placeholder: e.g. 1.2.54
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Add any other context about the problem here
