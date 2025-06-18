@@ -38,4 +38,5 @@ export const DEFAULT_EXPERIMENTS: DependabotExperiments = {
   'enable-cooldown-for-gradle': true,
   'enable-cooldown-for-pub': true,
   'enable-cooldown-for-gitsubmodules': true,
+  'enable-cooldown-for-elm': true,
 };
