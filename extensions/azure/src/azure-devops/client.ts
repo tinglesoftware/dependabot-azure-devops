@@ -457,7 +457,7 @@ export class AzureDevOpsWebApiClient {
           // Reapprove must be set to true after the 2023 August 23 update;
           // Approval of a previous PR iteration does not count in later iterations, which means we must (re)approve every after push to the source branch
           // See: https://learn.microsoft.com/en-us/azure/devops/release-notes/2023/sprint-226-update#new-branch-policy-preventing-users-to-approve-their-own-changes
-          //      https://github.com/tinglesoftware/dependabot-azure-devops/issues/1069
+          //      https://github.com/mburumaxwell/dependabot-azure-devops/issues/1069
           isReapprove: true,
         },
         // API version 7.1 is required to use the 'isReapprove' parameter

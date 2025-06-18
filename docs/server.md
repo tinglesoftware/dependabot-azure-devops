@@ -48,7 +48,7 @@ The easiest means of deployment is to use the relevant button below.
 [![Deploy to Azure US Gov](https://aka.ms/deploytoazuregovbutton)](https://portal.azure.us/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Ftinglesoftware%2Fdependabot-azure-devops%2Fmain%2Fserver%2Fmain.json)
 [![Visualize](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/visualizebutton.svg?sanitize=true)](http://armviz.io/#/?load=https%3A%2F%2Fraw.githubusercontent.com%2Ftinglesoftware%2Fdependabot-azure-devops%2Fmain%2Fserver%2Fmain.json)
 
-You can also use the [server/main.json](../server/main.json) file, [server/main.bicep](../server/main.bicep) file, or pull either file from the [latest release](https://github.com/tinglesoftware/dependabot-azure-devops/releases/latest). You will need an Azure subscription and a resource group to deploy to.
+You can also use the [server/main.json](../server/main.json) file, [server/main.bicep](../server/main.bicep) file, or pull either file from the [latest release](https://github.com/mburumaxwell/dependabot-azure-devops/releases/latest). You will need an Azure subscription and a resource group to deploy to.
 
 ### Deployment Parameters
 
@@ -114,7 +114,7 @@ The parameters file (`main.parameters.json`):
 
 ### Service Hooks and Subscriptions
 
-To enable automatic pickup of configuration files, merge conflict resolution and commands via comments, subscriptions need to be setup on Azure DevOps. You should let the application create them on startup to because it is easier. See [code](https://github.com/tinglesoftware/dependabot-azure-devops/blob/b4e87bfeea133b8e9fa278c98157b7a0123bfdd3/server/Tingle.Dependabot/Workflow/AzureDevOpsProvider.cs#L18-L21) for the list of events subscribed to.
+To enable automatic pickup of configuration files, merge conflict resolution and commands via comments, subscriptions need to be setup on Azure DevOps. You should let the application create them on startup to because it is easier. See [code](https://github.com/mburumaxwell/dependabot-azure-devops/blob/b4e87bfeea133b8e9fa278c98157b7a0123bfdd3/server/Tingle.Dependabot/Workflow/AzureDevOpsProvider.cs#L18-L21) for the list of events subscribed to.
 
 ### Docker Compose
 

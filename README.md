@@ -2,10 +2,10 @@
 
 This repository contains tools for updating dependencies in Azure DevOps repositories using [Dependabot](https://dependabot.com).
 
-![Extensions](https://img.shields.io/github/actions/workflow/status/tinglesoftware/dependabot-azure-devops/extensions.yml?branch=main&label=Extensions&style=flat-square)
-![Server](https://img.shields.io/github/actions/workflow/status/tinglesoftware/dependabot-azure-devops/server.yml?branch=main&label=Server&style=flat-square)
-[![Release](https://img.shields.io/github/release/tinglesoftware/dependabot-azure-devops.svg?style=flat-square)](https://github.com/tinglesoftware/dependabot-azure-devops/releases/latest)
-[![license](https://img.shields.io/github/license/tinglesoftware/dependabot-azure-devops.svg?style=flat-square)](LICENSE)
+![Extensions](https://img.shields.io/github/actions/workflow/status/mburumaxwell/dependabot-azure-devops/extensions.yml?branch=main&label=Extensions&style=flat-square)
+![Server](https://img.shields.io/github/actions/workflow/status/mburumaxwell/dependabot-azure-devops/server.yml?branch=main&label=Server&style=flat-square)
+[![Release](https://img.shields.io/github/release/mburumaxwell/dependabot-azure-devops.svg?style=flat-square)](https://github.com/mburumaxwell/dependabot-azure-devops/releases/latest)
+[![license](https://img.shields.io/github/license/mburumaxwell/dependabot-azure-devops.svg?style=flat-square)](LICENSE)
 
 In this repository you'll find:
 
@@ -192,7 +192,7 @@ No longer functional.
 - [`directories`](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#directories-or-directory--) are not supported.
 - [`groups`](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#groups--) are not supported.
 - [`assignees`](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#assignees--) must be a list of user GUIDs; email addresses and group/team names are not supported.
-- Private feed/registry authentication may not work with all package ecosystems. See [problems with authentication](https://github.com/tinglesoftware/dependabot-azure-devops/discussions/1317) for more.
+- Private feed/registry authentication may not work with all package ecosystems. See [problems with authentication](https://github.com/mburumaxwell/dependabot-azure-devops/discussions/1317) for more.
 
 ## Contributing
 
@@ -200,8 +200,8 @@ No longer functional.
 
 ### Reporting issues and feature requests
 
-Please leave all issues, bugs, and feature requests on the [issues page](https://github.com/tinglesoftware/dependabot-azure-devops/issues). We'll respond ASAP!
-Use the [discussions page](https://github.com/tinglesoftware/dependabot-azure-devops/discussions) for all other questions and comments.
+Please leave all issues, bugs, and feature requests on the [issues page](https://github.com/mburumaxwell/dependabot-azure-devops/issues). We'll respond ASAP!
+Use the [discussions page](https://github.com/mburumaxwell/dependabot-azure-devops/discussions) for all other questions and comments.
 
 ### Submitting pull requests
 

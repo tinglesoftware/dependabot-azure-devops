@@ -25,7 +25,7 @@ export async function getDependabotConfig(taskInputs: ISharedVariables): Promise
    * The configuration file can be available locally if the repository is cloned.
    * Otherwise, we should get it via the API which supports 2 scenarios:
    * 1. Running the pipeline without cloning, which is useful for huge repositories (multiple submodules or large commit log)
-   * 2. Running a single pipeline to update multiple repositories https://github.com/tinglesoftware/dependabot-azure-devops/issues/328
+   * 2. Running a single pipeline to update multiple repositories https://github.com/mburumaxwell/dependabot-azure-devops/issues/328
    */
   if (taskInputs.repositoryOverridden) {
     tl.debug(`Attempting to fetch configuration file via REST API ...`);

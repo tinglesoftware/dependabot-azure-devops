@@ -414,7 +414,7 @@
         "template": {
           "containers": [
             {
-              "image": "[format('ghcr.io/tinglesoftware/dependabot-server:{0}', parameters('imageTag'))]",
+              "image": "[format('ghcr.io/mburumaxwell/dependabot-server:{0}', parameters('imageTag'))]",
               "name": "dependabot",
               "volumeMounts": [
                 {

@@ -4,9 +4,9 @@
   "name": "dependabot",
   "friendlyName": "Dependabot",
   "description": "Automatically update dependencies and vulnerabilities in your code using [Dependabot CLI](https://github.com/dependabot/cli)",
-  "helpMarkDown": "For help please visit https://github.com/tinglesoftware/dependabot-azure-devops/issues",
-  "helpUrl": "https://github.com/tinglesoftware/dependabot-azure-devops/issues",
-  "releaseNotes": "https://github.com/tinglesoftware/dependabot-azure-devops/releases",
+  "helpMarkDown": "For help please visit https://github.com/mburumaxwell/dependabot-azure-devops/issues",
+  "helpUrl": "https://github.com/mburumaxwell/dependabot-azure-devops/issues",
+  "releaseNotes": "https://github.com/mburumaxwell/dependabot-azure-devops/releases",
   "author": "Tingle Software",
   "category": "Azure Pipelines",
   "visibility": [
@@ -255,7 +255,7 @@
       "groupName": "advanced",
       "label": "Dependabot Updater experiments",
       "required": false,
-      "helpMarkDown": "Comma-seperated list of key/value pairs representing the enabled Dependabot experiments e.g. `experiments: 'tidy=true,vendor=true,goprivate=*'`. Available options vary depending on the package ecosystem. If specified, this overrides the [default experiments](https://github.com/tinglesoftware/dependabot-azure-devops/blob/main/packages/core/src/dependabot/experiments.ts). See [configuring experiments](https://github.com/tinglesoftware/dependabot-azure-devops/#configuring-experiments) for more details."
+      "helpMarkDown": "Comma-seperated list of key/value pairs representing the enabled Dependabot experiments e.g. `experiments: 'tidy=true,vendor=true,goprivate=*'`. Available options vary depending on the package ecosystem. If specified, this overrides the [default experiments](https://github.com/mburumaxwell/dependabot-azure-devops/blob/main/packages/core/src/dependabot/experiments.ts). See [configuring experiments](https://github.com/mburumaxwell/dependabot-azure-devops/#configuring-experiments) for more details."
     }
   ],
   "outputVariables": [

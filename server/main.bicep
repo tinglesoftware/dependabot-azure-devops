@@ -265,7 +265,7 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
     template: {
       containers: [
         {
-          image: 'ghcr.io/tinglesoftware/dependabot-server:${imageTag}'
+          image: 'ghcr.io/mburumaxwell/dependabot-server:${imageTag}'
           name: 'dependabot'
           volumeMounts: [
             { mountPath: '/mnt/dependabot', volumeName: 'working-dir' }

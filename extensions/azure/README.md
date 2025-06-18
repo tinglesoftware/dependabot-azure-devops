@@ -49,7 +49,7 @@ steps:
 The task uses [dependabot-cli](https://github.com/dependabot/cli), which requires [Go](https://go.dev/doc/install) (1.22+) and [Docker](https://docs.docker.com/engine/install/) (with Linux containers) be installed on the pipeline agent.
 If you use [Microsoft-hosted agents](https://learn.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=azure-devops&tabs=yaml#software), we recommend using the [ubuntu-latest](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md) image, which meets all task requirements.
 
-Dependabot uses Docker containers, which may take time to install if not already cached. Subsequent dependabot tasks in the same job will be faster after initially pulling the images. An alternative way to run your pipelines faster is by leveraging Docker caching in Azure Pipelines (See [#113](https://github.com/tinglesoftware/dependabot-azure-devops/issues/113#issuecomment-894771611)).
+Dependabot uses Docker containers, which may take time to install if not already cached. Subsequent dependabot tasks in the same job will be faster after initially pulling the images. An alternative way to run your pipelines faster is by leveraging Docker caching in Azure Pipelines (See [#113](https://github.com/mburumaxwell/dependabot-azure-devops/issues/113#issuecomment-894771611)).
 
 ## Task Parameters
 
@@ -75,12 +75,12 @@ Dependabot uses Docker containers, which may take time to install if not already
 |dependabotCliApiListeningPort|**_Optional_**. This set fixed listening port for of the dependabot cli using `FAKE_API_PORT`. It should match the `dependabotCliApiUrl` option|
 |dependabotUpdaterImage|**_Optional_**. The [Dependabot CLI container image](https://github.com/dependabot/dependabot-core/pkgs/container/dependabot-updater-bundler) to use for updates. The image must contain a '{ecosystem}' placeholder, which will be substituted with the package ecosystem for each update operation. This is intended to be used in scenarios where 'latest' has issues and you want to pin a known working version, or use a custom package. Defaults to `ghcr.io/dependabot/dependabot-updater-{ecosystem}:latest`|
 |proxyCertPath|**_Optional_**. This is useful when the proxy is expected to connect to a server using a self-signed certificate. The default one is located at `/usr/local/share/ca-certificates/custom-ca-cert.crt` in the closed-source updater proxy container image.|
-|experiments|**_Optional_**. Comma separated list of Dependabot experiments; available options depend on the ecosystem. Example: `tidy=true,vendor=true,goprivate=*`. If specified, this overrides the [default experiments](https://github.com/tinglesoftware/dependabot-azure-devops/blob/main/packages/core/src/dependabot/experiments.ts). See: [Configuring experiments](https://github.com/tinglesoftware/dependabot-azure-devops/#configuring-experiments)|
+|experiments|**_Optional_**. Comma separated list of Dependabot experiments; available options depend on the ecosystem. Example: `tidy=true,vendor=true,goprivate=*`. If specified, this overrides the [default experiments](https://github.com/mburumaxwell/dependabot-azure-devops/blob/main/packages/core/src/dependabot/experiments.ts). See: [Configuring experiments](https://github.com/mburumaxwell/dependabot-azure-devops/#configuring-experiments)|
 
 ## Advanced
 
-- [Configuring private feeds and registries](https://github.com/tinglesoftware/dependabot-azure-devops/#configuring-private-feeds-and-registries)
-- [Configuring security advisories and known vulnerabilities](https://github.com/tinglesoftware/dependabot-azure-devops/#configuring-security-advisories-and-known-vulnerabilities)
-- [Configuring experiments](https://github.com/tinglesoftware/dependabot-azure-devops/#configuring-experiments)
-- [Configuring assignees](https://github.com/tinglesoftware/dependabot-azure-devops/#configuring-assignees)
-- [Unsupported features and configurations](https://github.com/tinglesoftware/dependabot-azure-devops/#unsupported-features-and-configurations)
+- [Configuring private feeds and registries](https://github.com/mburumaxwell/dependabot-azure-devops/#configuring-private-feeds-and-registries)
+- [Configuring security advisories and known vulnerabilities](https://github.com/mburumaxwell/dependabot-azure-devops/#configuring-security-advisories-and-known-vulnerabilities)
+- [Configuring experiments](https://github.com/mburumaxwell/dependabot-azure-devops/#configuring-experiments)
+- [Configuring assignees](https://github.com/mburumaxwell/dependabot-azure-devops/#configuring-assignees)
+- [Unsupported features and configurations](https://github.com/mburumaxwell/dependabot-azure-devops/#unsupported-features-and-configurations)

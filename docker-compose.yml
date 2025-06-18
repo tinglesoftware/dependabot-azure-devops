@@ -29,7 +29,7 @@ services:
       retries: 6
 
   server:
-    image: ghcr.io/tinglesoftware/dependabot:${IMAGE_TAG:-latest}
+    image: ghcr.io/mburumaxwell/dependabot:${IMAGE_TAG:-latest}
     ports: [8080:8080]
     restart: unless-stopped
     user: root # required to write to the mounted volumes

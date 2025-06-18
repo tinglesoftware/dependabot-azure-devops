@@ -56,7 +56,7 @@ internal partial class UpdateRunner(IFeatureManagerSnapshot featureManager,
         var volumeName = "working-dir";
         var ecosystem = job.PackageEcosystem!;
         var updaterImageTag = options.GetUpdaterImageTag(ecosystem, project);
-        var updaterImage = job.UpdaterImage = $"ghcr.io/tinglesoftware/dependabot-updater-{ecosystem}:{updaterImageTag}";
+        var updaterImage = job.UpdaterImage = $"ghcr.io/mburumaxwell/dependabot-updater-{ecosystem}:{updaterImageTag}";
 
         var platform = job.Platform = options.JobsPlatform!.Value;
         var resourceName = job.Id;

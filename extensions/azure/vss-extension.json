@@ -33,28 +33,28 @@
   },
   "links": {
     "home": {
-      "uri": "https://github.com/tinglesoftware/dependabot-azure-devops"
+      "uri": "https://github.com/mburumaxwell/dependabot-azure-devops"
     },
     "getstarted": {
-      "uri": "https://github.com/tinglesoftware/dependabot-azure-devops/blob/main/extensions/azure/README.md"
+      "uri": "https://github.com/mburumaxwell/dependabot-azure-devops/blob/main/extensions/azure/README.md"
     },
     "issues": {
-      "uri": "https://github.com/tinglesoftware/dependabot-azure-devops/issues"
+      "uri": "https://github.com/mburumaxwell/dependabot-azure-devops/issues"
     },
     "support": {
-      "uri": "https://github.com/tinglesoftware/dependabot-azure-devops/issues"
+      "uri": "https://github.com/mburumaxwell/dependabot-azure-devops/issues"
     },
     "license": {
-      "uri": "https://github.com/tinglesoftware/dependabot-azure-devops/blob/main/LICENSE"
+      "uri": "https://github.com/mburumaxwell/dependabot-azure-devops/blob/main/LICENSE"
     }
   },
   "customerQnASupport": {
     "enablemarketplaceqna": true,
-    "url": "https://github.com/tinglesoftware/dependabot-azure-devops/discussions"
+    "url": "https://github.com/mburumaxwell/dependabot-azure-devops/discussions"
   },
   "repository": {
     "type": "git",
-    "uri": "https://github.com/tinglesoftware/dependabot-azure-devops"
+    "uri": "https://github.com/mburumaxwell/dependabot-azure-devops"
   },
   "content": {
     "details": {

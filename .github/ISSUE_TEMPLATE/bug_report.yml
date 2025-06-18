@@ -11,7 +11,7 @@ body:
       label: Categorization
       description: Please confirm these points before submitting
       options:
-        - label: This is not a permissions issue (Seek help at https://github.com/tinglesoftware/dependabot-azure-devops/discussions/1245)
+        - label: This is not a permissions issue (Seek help at https://github.com/mburumaxwell/dependabot-azure-devops/discussions/1245)
           required: true
         - label: |
             This is an issue specific to Azure DevOps or this repository and does not belong in [dependabot-core](https://github.com/dependabot/dependabot-core).
@@ -55,7 +55,10 @@ body:
     id: logs
     attributes:
       label: Logs and screenshots
-      description: If applicable, include relevant logs or screenshots to help explain your problem. See [Azure extension troubleshooting](https://github.com/tinglesoftware/dependabot-azure-devops/blob/main/docs/extensions/azure.md#troubleshooting-issues) for more on how to collect additional diagnostic logs.
+      description: |
+        If applicable, include relevant logs or screenshots to help explain your problem.
+        See [Azure extension troubleshooting](https://github.com/mburumaxwell/dependabot-azure-devops/blob/main/docs/extensions/azure.md#troubleshooting-issues)
+        for more on how to collect additional diagnostic logs.
     validations:
       required: false
 
