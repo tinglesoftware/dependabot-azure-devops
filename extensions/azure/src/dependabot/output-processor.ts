@@ -9,6 +9,7 @@ import {
   type DependabotDependency,
   type DependabotExistingGroupPR,
   type DependabotExistingPR,
+  type DependabotOperation,
   type DependabotOutput,
   type DependabotUpdatePullRequest,
 } from 'paklo/dependabot';
@@ -22,7 +23,6 @@ import {
   type IPullRequestProperties,
 } from '../azure-devops/models';
 import { type ISharedVariables } from '../utils/shared-variables';
-import { type IDependabotUpdateOperation } from './models';
 
 export type DependabotOutputProcessorResult = {
   success: boolean;
@@ -68,11 +68,10 @@ export class DependabotOutputProcessor {
    * @param output A scenario output
    */
   public async process(
-    operation: IDependabotUpdateOperation,
+    operation: DependabotOperation,
     output: DependabotOutput,
   ): Promise<DependabotOutputProcessorResult> {
-    const project = this.taskInputs.project;
-    const repository = this.taskInputs.repository;
+    const { project, repository } = this.taskInputs.url;
     const packageManager = operation.job?.['package-manager'];
 
     const type = output.type;

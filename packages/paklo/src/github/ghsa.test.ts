@@ -1,7 +1,7 @@
 import { readFile } from 'fs/promises';
 import { describe, expect, it } from 'vitest';
 
-import { SecurityVulnerabilitySchema } from '../src/github';
+import { SecurityVulnerabilitySchema } from './ghsa';
 
 describe('SecurityVulnerabilitySchema', () => {
   it('works for sample', async () => {

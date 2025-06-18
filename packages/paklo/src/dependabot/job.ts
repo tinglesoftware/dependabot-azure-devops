@@ -4,8 +4,11 @@ import { DependabotCredentialSchema } from './proxy';
 
 // we use nullish() because it does optional() and allows the value to be set to null
 
+export const DependabotSourceProviderSchema = z.enum(['azure']);
+export type DependabotSourceProvider = z.infer<typeof DependabotSourceProviderSchema>;
+
 export const DependabotSourceSchema = z.object({
-  'provider': z.string(), // TODO: convert to enum?
+  'provider': DependabotSourceProviderSchema,
   'repo': z.string(),
   'directory': z.string().nullish(),
   'directories': z.string().array().nullish(),

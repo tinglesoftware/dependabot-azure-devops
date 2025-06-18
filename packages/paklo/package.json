@@ -9,20 +9,30 @@
     "paklo": "./dist/cli.js"
   },
   "exports": {
+    "./azure": {
+      "types": "./dist/azure.d.ts",
+      "require": "./dist/azure.cjs",
+      "import": "./dist/azure.js"
+    },
     "./dependabot": {
-      "import": "./dist/dependabot.js",
+      "types": "./dist/dependabot.d.ts",
       "require": "./dist/dependabot.cjs",
-      "types": "./dist/dependabot.d.ts"
+      "import": "./dist/dependabot.js"
     },
     "./environment": {
-      "import": "./dist/environment.js",
+      "types": "./dist/environment.d.ts",
       "require": "./dist/environment.cjs",
-      "types": "./dist/environment.d.ts"
+      "import": "./dist/environment.js"
+    },
+    "./github": {
+      "types": "./dist/github.d.ts",
+      "require": "./dist/github.cjs",
+      "import": "./dist/github.js"
     },
     "./logger": {
-      "import": "./dist/logger.js",
+      "types": "./dist/logger.d.ts",
       "require": "./dist/logger.cjs",
-      "types": "./dist/logger.d.ts"
+      "import": "./dist/logger.js"
     }
   },
   "files": [
@@ -53,13 +63,16 @@
   },
   "homepage": "https://github.com/mburumaxwell/dependabot-azure-devops#readme",
   "dependencies": {
+    "axios": "1.10.0",
     "commander": "14.0.0",
     "js-yaml": "4.1.0",
     "pino": "9.7.0",
     "pino-pretty": "13.0.0",
+    "semver": "7.7.2",
     "zod": "3.25.64"
   },
   "devDependencies": {
-    "@types/js-yaml": "4.0.9"
+    "@types/js-yaml": "4.0.9",
+    "@types/semver": "7.7.0"
   }
 }

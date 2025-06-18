@@ -2,15 +2,13 @@ import { debug, error, setResult, setVariable, TaskResult, warning, which } from
 import { existsSync } from 'fs';
 import { readFile } from 'fs/promises';
 
-import { type DependabotConfig, type DependabotUpdate } from 'paklo/dependabot';
-import { AzureDevOpsWebApiClient } from './azure-devops/client';
-import { normalizeBranchName, section, setSecrets } from './azure-devops/formatting';
-import { DEVOPS_PR_PROPERTY_MICROSOFT_GIT_SOURCE_REF_NAME, type IPullRequestProperties } from './azure-devops/models';
-import { DependabotCli, type DependabotCliOptions } from './dependabot/cli';
-import { getDependabotConfig } from './dependabot/get-config';
-import { DependabotJobBuilder, mapPackageEcosystemToPackageManager } from './dependabot/job-builder';
-import { type IDependabotUpdateOperationResult } from './dependabot/models';
-import { DependabotOutputProcessor, parsePullRequestProperties } from './dependabot/output-processor';
+import {
+  DependabotJobBuilder,
+  mapPackageEcosystemToPackageManager,
+  type DependabotConfig,
+  type DependabotOperationResult,
+  type DependabotUpdate,
+} from 'paklo/dependabot';
 import {
   filterVulnerabilities,
   getGhsaPackageEcosystemFromDependabotPackageManager,
@@ -18,7 +16,13 @@ import {
   SecurityVulnerabilitySchema,
   type Package,
   type SecurityVulnerability,
-} from './github';
+} from 'paklo/github';
+import { AzureDevOpsWebApiClient } from './azure-devops/client';
+import { normalizeBranchName, section, setSecrets } from './azure-devops/formatting';
+import { DEVOPS_PR_PROPERTY_MICROSOFT_GIT_SOURCE_REF_NAME, type IPullRequestProperties } from './azure-devops/models';
+import { DependabotCli, type DependabotCliOptions } from './dependabot/cli';
+import { getDependabotConfig } from './dependabot/get-config';
+import { DependabotOutputProcessor, parsePullRequestProperties } from './dependabot/output-processor';
 import parseTaskInputConfiguration, { type ISharedVariables } from './utils/shared-variables';
 
 async function run() {
@@ -41,11 +45,9 @@ async function run() {
     // Although not exhaustive, this will mask the most common information that could be used to identify the user's environment.
     if (taskInputs.secrets) {
       setSecrets(
-        taskInputs.hostname,
-        taskInputs.virtualDirectory,
-        taskInputs.organization,
-        taskInputs.project,
-        taskInputs.repository,
+        taskInputs.url.hostname,
+        taskInputs.url.project,
+        taskInputs.url.repository,
         taskInputs.githubAccessToken,
         taskInputs.systemAccessUser,
         taskInputs.systemAccessToken,
@@ -71,23 +73,26 @@ async function run() {
     // Initialise the DevOps API clients
     // There are two clients; one for authoring pull requests and one for auto-approving pull requests (if configured)
     const devOpsPrAuthorClient = new AzureDevOpsWebApiClient(
-      taskInputs.organizationUrl.toString(),
+      taskInputs.url.url.toString(),
       taskInputs.systemAccessToken,
       taskInputs.debug,
     );
     const devOpsPrApproverClient = taskInputs.autoApprove
       ? new AzureDevOpsWebApiClient(
-          taskInputs.organizationUrl.toString(),
+          taskInputs.url.url.toString(),
           taskInputs.autoApproveUserToken || taskInputs.systemAccessToken,
           taskInputs.debug,
         )
       : undefined;
 
     // Fetch the active pull requests created by the author user
-    const existingBranchNames = await devOpsPrAuthorClient.getBranchNames(taskInputs.project, taskInputs.repository);
+    const existingBranchNames = await devOpsPrAuthorClient.getBranchNames(
+      taskInputs.url.project,
+      taskInputs.url.repository,
+    );
     const existingPullRequests = await devOpsPrAuthorClient.getActivePullRequestProperties(
-      taskInputs.project,
-      taskInputs.repository,
+      taskInputs.url.project,
+      taskInputs.url.repository,
       await devOpsPrAuthorClient.getUserId(),
     );
 
@@ -210,8 +215,8 @@ export async function abandonPullRequestsWhereSourceRefIsDeleted(
           `Detected source branch for PR #${pullRequest.id} has been deleted; The pull request will be abandoned`,
         );
         await devOpsPrAuthorClient.abandonPullRequest({
-          project: taskInputs.project,
-          repository: taskInputs.repository,
+          project: taskInputs.url.project,
+          repository: taskInputs.url.repository,
           pullRequestId: pullRequest.id,
           // comment:
           //   'OK, I won't notify you again about this release, but will get in touch when a new version is available. ' +
@@ -249,8 +254,8 @@ export async function performDependabotUpdatesAsync(
   dependabotCliUpdateOptions: DependabotCliOptions,
   existingPullRequests: IPullRequestProperties[],
 ): Promise<{ result: TaskResult; message: string; prs: number[] }> {
-  const successfulOperations: IDependabotUpdateOperationResult[] = [];
-  const failedOperations: IDependabotUpdateOperationResult[] = [];
+  const successfulOperations: DependabotOperationResult[] = [];
+  const failedOperations: DependabotOperationResult[] = [];
   for (const update of dependabotUpdates) {
     const updateId = dependabotUpdates.indexOf(update).toString();
     const packageEcosystem = update['package-ecosystem'];
@@ -261,6 +266,17 @@ export async function performDependabotUpdatesAsync(
     const existingPullRequestsForPackageManager = parsePullRequestProperties(existingPullRequests, packageManager);
     const existingPullRequestDependenciesForPackageManager = Object.values(existingPullRequestsForPackageManager);
 
+    const builder = new DependabotJobBuilder({
+      source: { provider: 'azure', ...taskInputs.url },
+      config: dependabotConfig,
+      update,
+      experiments: taskInputs.experiments,
+      systemAccessUser: taskInputs.systemAccessUser,
+      systemAccessToken: taskInputs.systemAccessToken,
+      githubToken: taskInputs.githubAccessToken,
+      debug: taskInputs.debug,
+    });
+
     // If this is a security-only update (i.e. 'open-pull-requests-limit: 0'), then we first need to discover the dependencies
     // that need updating and check each one for vulnerabilities. This is because Dependabot requires the list of vulnerable dependencies
     // to be supplied in the job definition of security-only update job, it will not automatically discover them like a versioned update does.
@@ -270,10 +286,10 @@ export async function performDependabotUpdatesAsync(
     const securityUpdatesOnly = update['open-pull-requests-limit'] === 0;
     if (securityUpdatesOnly) {
       // Run an update job to discover all dependencies
-      const outputs = await dependabotCli.update(
-        DependabotJobBuilder.listAllDependenciesJob(taskInputs, updateId, update, dependabotConfig.registries),
-        dependabotCliUpdateOptions,
-      );
+      const job = builder.forDependenciesList({
+        id: `discover-${updateId}-${update['package-ecosystem']}-dependency-list`,
+      });
+      const outputs = await dependabotCli.update(job, dependabotCliUpdateOptions);
 
       // Get the list of vulnerabilities that apply to the discovered dependencies
       section(`Dependency vulnerability check`);
@@ -333,19 +349,13 @@ export async function performDependabotUpdatesAsync(
     if (!hasReachedOpenPullRequestLimit) {
       const dependenciesHaveVulnerabilities = dependencyNamesToUpdate.length && securityVulnerabilities.length;
       if (!securityUpdatesOnly || dependenciesHaveVulnerabilities) {
-        const outputs = await dependabotCli.update(
-          DependabotJobBuilder.updateAllDependenciesJob(
-            taskInputs,
-            updateId,
-            update,
-            dependabotConfig.registries,
-            dependabotConfig['enable-beta-ecosystems'],
-            dependencyNamesToUpdate,
-            existingPullRequestDependenciesForPackageManager,
-            securityVulnerabilities,
-          ),
-          dependabotCliUpdateOptions,
-        );
+        const job = builder.forUpdate({
+          id: `update-${updateId}-${update['package-ecosystem']}-${securityUpdatesOnly ? 'security-only' : 'all'}`,
+          dependencyNamesToUpdate,
+          existingPullRequests: existingPullRequestDependenciesForPackageManager,
+          securityVulnerabilities,
+        });
+        const outputs = await dependabotCli.update(job, dependabotCliUpdateOptions);
         successfulOperations.push(...(outputs?.filter((u) => u.success) || []));
         failedOperations.push(...(outputs?.filter((u) => !u.success) || []));
       } else {
@@ -362,19 +372,13 @@ export async function performDependabotUpdatesAsync(
     if (numberOfPullRequestsToUpdate > 0) {
       if (!taskInputs.dryRun) {
         for (const pullRequestId in existingPullRequestsForPackageManager) {
-          const outputs = await dependabotCli.update(
-            DependabotJobBuilder.updatePullRequestJob(
-              taskInputs,
-              pullRequestId,
-              update,
-              dependabotConfig.registries,
-              dependabotConfig['enable-beta-ecosystems'],
-              existingPullRequestDependenciesForPackageManager,
-              existingPullRequestsForPackageManager[pullRequestId]!,
-              securityVulnerabilities,
-            ),
-            dependabotCliUpdateOptions,
-          );
+          const job = builder.forUpdate({
+            id: `update-pr-${pullRequestId}`,
+            existingPullRequests: existingPullRequestDependenciesForPackageManager,
+            pullRequestToUpdate: existingPullRequestsForPackageManager[pullRequestId]!,
+            securityVulnerabilities,
+          });
+          const outputs = await dependabotCli.update(job, dependabotCliUpdateOptions);
           successfulOperations.push(...(outputs?.filter((u) => u.success) || []));
           failedOperations.push(...(outputs?.filter((u) => !u.success) || []));
         }

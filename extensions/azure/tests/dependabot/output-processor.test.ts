@@ -1,4 +1,5 @@
 import { error, warning } from 'azure-pipelines-task-lib/task';
+import { type DependabotOperation } from 'paklo/dependabot';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AzureDevOpsWebApiClient } from '../../src/azure-devops/client';
@@ -7,7 +8,6 @@ import {
   DEVOPS_PR_PROPERTY_DEPENDABOT_PACKAGE_MANAGER,
   type IPullRequestProperties,
 } from '../../src/azure-devops/models';
-import { type IDependabotUpdateOperation } from '../../src/dependabot/models';
 import { DependabotOutputProcessor } from '../../src/dependabot/output-processor';
 import { type ISharedVariables } from '../../src/utils/shared-variables';
 
@@ -24,7 +24,9 @@ describe('DependabotOutputProcessor', () => {
   let existingPullRequests: IPullRequestProperties[];
 
   beforeEach(() => {
-    taskInputs = {} as ISharedVariables;
+    taskInputs = {
+      url: {},
+    } as ISharedVariables;
     prAuthorClient = new AzureDevOpsWebApiClient('http://localhost:8081', 'token1', true);
     prApproverClient = new AzureDevOpsWebApiClient('http://localhost:8081', 'token1', true);
     existingBranchNames = [];
@@ -40,7 +42,7 @@ describe('DependabotOutputProcessor', () => {
   });
 
   describe('process', () => {
-    let update: IDependabotUpdateOperation;
+    let update: DependabotOperation;
 
     beforeEach(() => {
       vi.clearAllMocks();
