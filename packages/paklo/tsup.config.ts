@@ -8,6 +8,7 @@ export default defineConfig({
   clean: true,
   dts: true,
   sourcemap: true,
+  noExternal: ['semver'], // tsup default for libraries: mark all node_modules as external
   entry: {
     azure: 'src/azure/index.ts',
     dependabot: 'src/dependabot/index.ts',
