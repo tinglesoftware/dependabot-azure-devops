@@ -49,7 +49,7 @@ importers:
         version: 6.0.1
       tsup:
         specifier: 8.5.0
-        version: 8.5.0(jiti@2.4.2)(postcss@8.5.5)(typescript@5.8.3)
+        version: 8.5.0(jiti@2.4.2)(postcss@8.5.6)(typescript@5.8.3)
       turbo:
         specifier: 2.5.4
         version: 2.5.4
@@ -118,8 +118,8 @@ importers:
         specifier: 15.3.3
         version: 15.3.3(eslint@9.29.0(jiti@2.4.2))(typescript@5.8.3)
       postcss:
-        specifier: 8.5.5
-        version: 8.5.5
+        specifier: 8.5.6
+        version: 8.5.6
       reading-time:
         specifier: 1.5.0
         version: 1.5.0
@@ -3634,8 +3634,8 @@ packages:
     resolution: {integrity: sha512-PS08Iboia9mts/2ygV3eLpY5ghnUcfLV/EXTOW1E2qYxJKGGBUtNjN76FYHnMs36RmARn41bC0AZmn+rR0OVpQ==}
     engines: {node: ^10 || ^12 || >=14}
 
-  postcss@8.5.5:
-    resolution: {integrity: sha512-d/jtm+rdNT8tpXuHY5MMtcbJFBkhXE6593XVR9UoGCH8jSFGci7jGvMGH5RYd5PBJW+00NZQt6gf7CbagJCrhg==}
+  postcss@8.5.6:
+    resolution: {integrity: sha512-3Ybi1tAuwAP9s0r1UQ2J4n5Y0G05bJkpUIO0/bI9MhwmD70S5aTWbXGBwxHrelT+XM1k6dM0pk+SwNkpTRN7Pg==}
     engines: {node: ^10 || ^12 || >=14}
 
   prelude-ls@1.2.1:
@@ -5740,7 +5740,7 @@ snapshots:
       '@alloc/quick-lru': 5.2.0
       '@tailwindcss/node': 4.1.10
       '@tailwindcss/oxide': 4.1.10
-      postcss: 8.5.5
+      postcss: 8.5.6
       tailwindcss: 4.1.10
 
   '@tybys/wasm-util@0.9.0':
@@ -8496,12 +8496,12 @@ snapshots:
 
   possible-typed-array-names@1.1.0: {}
 
-  postcss-load-config@6.0.1(jiti@2.4.2)(postcss@8.5.5):
+  postcss-load-config@6.0.1(jiti@2.4.2)(postcss@8.5.6):
     dependencies:
       lilconfig: 3.1.3
     optionalDependencies:
       jiti: 2.4.2
-      postcss: 8.5.5
+      postcss: 8.5.6
 
   postcss-selector-parser@7.1.0:
     dependencies:
@@ -8514,7 +8514,7 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
-  postcss@8.5.5:
+  postcss@8.5.6:
     dependencies:
       nanoid: 3.3.11
       picocolors: 1.1.1
@@ -9308,7 +9308,7 @@ snapshots:
 
   tslib@2.8.1: {}
 
-  tsup@8.5.0(jiti@2.4.2)(postcss@8.5.5)(typescript@5.8.3):
+  tsup@8.5.0(jiti@2.4.2)(postcss@8.5.6)(typescript@5.8.3):
     dependencies:
       bundle-require: 5.1.0(esbuild@0.25.5)
       cac: 6.7.14
@@ -9319,7 +9319,7 @@ snapshots:
       fix-dts-default-cjs-exports: 1.0.1
       joycon: 3.1.1
       picocolors: 1.1.1
-      postcss-load-config: 6.0.1(jiti@2.4.2)(postcss@8.5.5)
+      postcss-load-config: 6.0.1(jiti@2.4.2)(postcss@8.5.6)
       resolve-from: 5.0.0
       rollup: 4.43.0
       source-map: 0.8.0-beta.0
@@ -9328,7 +9328,7 @@ snapshots:
       tinyglobby: 0.2.14
       tree-kill: 1.2.2
     optionalDependencies:
-      postcss: 8.5.5
+      postcss: 8.5.6
       typescript: 5.8.3
     transitivePeerDependencies:
       - jiti
@@ -9589,7 +9589,7 @@ snapshots:
       esbuild: 0.25.5
       fdir: 6.4.6(picomatch@4.0.2)
       picomatch: 4.0.2
-      postcss: 8.5.5
+      postcss: 8.5.6
       rollup: 4.43.0
       tinyglobby: 0.2.14
     optionalDependencies:
