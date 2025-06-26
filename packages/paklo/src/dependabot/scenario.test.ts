@@ -1,8 +1,8 @@
 import { createReadStream } from 'fs';
 import { readFile } from 'fs/promises';
 import * as yaml from 'js-yaml';
-import { describe, expect, it } from 'vitest';
 import * as readline from 'readline';
+import { describe, expect, it } from 'vitest';
 
 import { DependabotDataSchema, DependabotInputSchema, DependabotScenarioSchema, type DependabotData } from './scenario';
 
@@ -79,7 +79,7 @@ describe('scenario', () => {
 
 describe('result data', () => {
   it('python-pip.jsonl', async () => {
-     const data = await readDependabotData('fixtures/scenarios/python-pip.jsonl');
+    const data = await readDependabotData('fixtures/scenarios/python-pip.jsonl');
 
     // parsing is enough to test that we have the right schema
     // but we test a few fields to be sure
@@ -97,7 +97,7 @@ describe('result data', () => {
   });
 
   it('nuget.jsonl', async () => {
-     const data = await readDependabotData('fixtures/scenarios/nuget.jsonl');
+    const data = await readDependabotData('fixtures/scenarios/nuget.jsonl');
 
     // parsing is enough to test that we have the right schema
     // but we test a few fields to be sure
@@ -115,13 +115,13 @@ describe('result data', () => {
   });
 });
 
-async function readDependabotData(path: string) : Promise<DependabotData[]> {
+async function readDependabotData(path: string): Promise<DependabotData[]> {
   const rl = readline.createInterface({
     input: createReadStream(path, { encoding: 'utf-8' }),
-    crlfDelay: Infinity
+    crlfDelay: Infinity,
   });
 
-  const outputArray : DependabotData[] = [];
+  const outputArray: DependabotData[] = [];
   for await (const line of rl) {
     const json = JSON.parse(line);
     const output = await DependabotDataSchema.parseAsync(json);

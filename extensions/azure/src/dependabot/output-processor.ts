@@ -157,11 +157,7 @@ export class DependabotOutputProcessor {
             name: this.taskInputs.authorName || DependabotOutputProcessor.PR_DEFAULT_AUTHOR_NAME,
           },
           title: title,
-          description: getPullRequestDescription(
-            packageManager,
-            output.data['pr-body'],
-            output.data.dependencies,
-          ),
+          description: getPullRequestDescription(packageManager, output.data['pr-body'], output.data.dependencies),
           commitMessage: output.data['commit-message'],
           autoComplete: this.taskInputs.setAutoComplete
             ? {
@@ -303,9 +299,7 @@ export class DependabotOutputProcessor {
         return { success: true };
 
       case 'record_update_job_error':
-        error(
-          `Update job error: ${output.data['error-type']} ${JSON.stringify(output.data['error-details'])}`,
-        );
+        error(`Update job error: ${output.data['error-type']} ${JSON.stringify(output.data['error-details'])}`);
         return { success: false };
 
       case 'record_update_job_unknown_error':

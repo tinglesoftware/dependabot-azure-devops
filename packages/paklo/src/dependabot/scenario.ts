@@ -102,7 +102,7 @@ export const DependabotDataSchema = z.discriminatedUnion('type', [
   }),
   z.object({
     type: z.literal('increment_metric'),
-    data: DependabotIncrementMetricSchema
+    data: DependabotIncrementMetricSchema,
   }),
 ]);
 export type DependabotData = z.infer<typeof DependabotDataSchema>;
