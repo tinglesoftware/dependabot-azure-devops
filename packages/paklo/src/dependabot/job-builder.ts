@@ -21,7 +21,7 @@ import {
   type DependabotSourceProvider,
 } from './job';
 import { type DependabotCredential } from './proxy';
-import { type DependabotInput, type DependabotData } from './scenario';
+import { type DependabotData, type DependabotInput } from './scenario';
 
 export type DependabotSourceInfo = {
   'provider': DependabotSourceProvider;

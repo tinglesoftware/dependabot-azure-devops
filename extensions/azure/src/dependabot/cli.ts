@@ -1,4 +1,4 @@
-import { command, debug, error, tool, which, getVariable } from 'azure-pipelines-task-lib/task';
+import { command, debug, error, getVariable, tool, which } from 'azure-pipelines-task-lib/task';
 import { type ToolRunner } from 'azure-pipelines-task-lib/toolrunner';
 import { closeSync, createReadStream, createWriteStream, existsSync, openSync } from 'fs';
 import { rename, rm, stat, writeFile } from 'fs/promises';
@@ -12,10 +12,10 @@ import {
   DependabotDataSchema,
 } from 'paklo/dependabot';
 import * as path from 'path';
+import * as readline from 'readline';
 import { Writable } from 'stream';
 import { endgroup, group, section } from '../azure-devops/formatting';
 import { type DependabotOutputProcessor } from './output-processor';
-import * as readline from 'readline';
 
 export type DependabotCliOptions = {
   sourceProvider?: string;
@@ -51,7 +51,7 @@ export class DependabotCli {
     this.toolPackage = toolPackage;
     this.outputProcessor = outputProcessor;
     this.outputLogStream = new Writable({
-      write: (chunk, encoding, callback) => logComponentOutput(debug, chunk, encoding, callback)
+      write: (chunk, encoding, callback) => logComponentOutput(debug, chunk, encoding, callback),
     });
     this.debug = debug;
   }
@@ -74,7 +74,7 @@ export class DependabotCli {
 
       // Set job files
       const jobId = operation.job.id!;
-      const jobInputPath =  `${this.jobsPath}-${jobId.toString()}-job.yaml`;
+      const jobInputPath = `${this.jobsPath}-${jobId.toString()}-job.yaml`;
       const jobOutputPath = `${this.jobsPath}-${jobId.toString()}-result.jsonl`;
       this.ensureFileExists(jobInputPath);
 
@@ -144,7 +144,7 @@ export class DependabotCli {
         FAKE_API_PORT: options?.apiListeningPort, // used to pin PORT of the Dependabot CLI api back-channel
       };
       const dependabotTool = tool(dependabotPath).arg(dependabotArguments);
-      const jobOutputStream = createWriteStream(jobOutputPath, { flush: true } );
+      const jobOutputStream = createWriteStream(jobOutputPath, { flush: true });
       dependabotTool.on('stdout', (buffer: Buffer) => jobOutputStream.write(buffer));
       const dependabotResultCode = await dependabotTool.execAsync({
         outStream: this.outputLogStream,
@@ -263,10 +263,10 @@ async function readDependabotDataFile(path: string): Promise<DependabotData[]> {
   // create a readline interface for reading the file line by line
   const rl = readline.createInterface({
     input: createReadStream(path, { encoding: 'utf-8' }),
-    crlfDelay: Infinity
+    crlfDelay: Infinity,
   });
 
-  const outputArray : DependabotData[] = [];
+  const outputArray: DependabotData[] = [];
   for await (const line of rl) {
     const json = JSON.parse(line);
     const output = await DependabotDataSchema.parseAsync(json);

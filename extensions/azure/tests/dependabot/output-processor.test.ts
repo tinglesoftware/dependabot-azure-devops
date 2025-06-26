@@ -82,7 +82,7 @@ describe('DependabotOutputProcessor', () => {
 
       const result = await processor.process(update, {
         type: 'create_pull_request',
-          data: {
+        data: {
           'base-commit-sha': '1234abcd',
           'commit-message': 'Test commit message',
           'pr-body': 'Test body',
