@@ -6,11 +6,11 @@ import {
   getBranchNameForUpdate,
   type DependabotClosePullRequest,
   type DependabotCreatePullRequest,
+  type DependabotData,
   type DependabotDependency,
   type DependabotExistingGroupPR,
   type DependabotExistingPR,
   type DependabotOperation,
-  type DependabotOutput,
   type DependabotUpdatePullRequest,
 } from 'paklo/dependabot';
 import * as path from 'path';
@@ -69,7 +69,7 @@ export class DependabotOutputProcessor {
    */
   public async process(
     operation: DependabotOperation,
-    output: DependabotOutput,
+    output: DependabotData,
   ): Promise<DependabotOutputProcessorResult> {
     const { project, repository } = this.taskInputs.url;
     const packageManager = operation.job?.['package-manager'];
@@ -77,14 +77,14 @@ export class DependabotOutputProcessor {
     const type = output.type;
     section(`Processing '${type}'`);
     if (this.debug) {
-      debug(JSON.stringify(output.expect.data));
+      debug(JSON.stringify(output.data));
     }
     switch (type) {
       // Documentation on the 'data' model for each output type can be found here:
       // See: https://github.com/dependabot/cli/blob/main/internal/model/update.go
 
       case 'create_pull_request': {
-        const title = output.expect.data['pr-title'];
+        const title = output.data['pr-title'];
         if (this.taskInputs.dryRun) {
           warning(`Skipping pull request creation of '${title}' as 'dryRun' is set to 'true'`);
           return { success: true };
@@ -111,8 +111,8 @@ export class DependabotOutputProcessor {
           return { success: true };
         }
 
-        const changedFiles = getPullRequestChangedFilesForOutputData(output.expect.data);
-        const dependencies = getPullRequestDependenciesPropertyValueForOutputData(output.expect.data);
+        const changedFiles = getPullRequestChangedFilesForOutputData(output.data);
+        const dependencies = getPullRequestDependenciesPropertyValueForOutputData(output.data);
         const targetBranch =
           operation.config['target-branch'] || (await this.prAuthorClient.getDefaultBranch(project, repository));
         const sourceBranch = getBranchNameForUpdate(
@@ -146,7 +146,7 @@ export class DependabotOutputProcessor {
           project: project,
           repository: repository,
           source: {
-            commit: output.expect.data['base-commit-sha'] || operation.job.source.commit!,
+            commit: output.data['base-commit-sha'] || operation.job.source.commit!,
             branch: sourceBranch,
           },
           target: {
@@ -159,10 +159,10 @@ export class DependabotOutputProcessor {
           title: title,
           description: getPullRequestDescription(
             packageManager,
-            output.expect.data['pr-body'],
-            output.expect.data.dependencies,
+            output.data['pr-body'],
+            output.data.dependencies,
           ),
-          commitMessage: output.expect.data['commit-message'],
+          commitMessage: output.data['commit-message'],
           autoComplete: this.taskInputs.setAutoComplete
             ? {
                 ignorePolicyConfigIds: this.taskInputs.autoCompleteIgnoreConfigIds,
@@ -216,11 +216,11 @@ export class DependabotOutputProcessor {
         // Find the pull request to update
         const pullRequestToUpdate = this.getPullRequestForDependencyNames(
           packageManager,
-          output.expect.data['dependency-names'],
+          output.data['dependency-names'],
         );
         if (!pullRequestToUpdate) {
           error(
-            `Could not find pull request to update for package manager '${packageManager}' with dependencies '${output.expect.data['dependency-names'].join(', ')}'`,
+            `Could not find pull request to update for package manager '${packageManager}' with dependencies '${output.data['dependency-names'].join(', ')}'`,
           );
           return { success: false };
         }
@@ -230,12 +230,12 @@ export class DependabotOutputProcessor {
           project: project,
           repository: repository,
           pullRequestId: pullRequestToUpdate.id,
-          commit: output.expect.data['base-commit-sha'] || operation.job.source.commit!,
+          commit: output.data['base-commit-sha'] || operation.job.source.commit!,
           author: {
             email: this.taskInputs.authorEmail || DependabotOutputProcessor.PR_DEFAULT_AUTHOR_EMAIL,
             name: this.taskInputs.authorName || DependabotOutputProcessor.PR_DEFAULT_AUTHOR_NAME,
           },
-          changes: getPullRequestChangedFilesForOutputData(output.expect.data),
+          changes: getPullRequestChangedFilesForOutputData(output.data),
           skipIfDraft: true,
           skipIfCommitsFromAuthorsOtherThan:
             this.taskInputs.authorEmail || DependabotOutputProcessor.PR_DEFAULT_AUTHOR_EMAIL,
@@ -263,11 +263,11 @@ export class DependabotOutputProcessor {
         // Find the pull request to close
         const pullRequestToClose = this.getPullRequestForDependencyNames(
           packageManager,
-          output.expect.data['dependency-names'],
+          output.data['dependency-names'],
         );
         if (!pullRequestToClose) {
           error(
-            `Could not find pull request to close for package manager '${packageManager}' with dependencies '${output.expect.data['dependency-names'].join(', ')}'`,
+            `Could not find pull request to close for package manager '${packageManager}' with dependencies '${output.data['dependency-names'].join(', ')}'`,
           );
           return { success: false };
         }
@@ -280,7 +280,7 @@ export class DependabotOutputProcessor {
           project: project,
           repository: repository,
           pullRequestId: pullRequestToClose.id,
-          comment: getPullRequestCloseReasonForOutputData(output.expect.data),
+          comment: getPullRequestCloseReasonForOutputData(output.data),
           deleteSourceBranch: true,
         });
         return { success, pr: pullRequestToClose.id };
@@ -304,13 +304,13 @@ export class DependabotOutputProcessor {
 
       case 'record_update_job_error':
         error(
-          `Update job error: ${output.expect.data['error-type']} ${JSON.stringify(output.expect.data['error-details'])}`,
+          `Update job error: ${output.data['error-type']} ${JSON.stringify(output.data['error-details'])}`,
         );
         return { success: false };
 
       case 'record_update_job_unknown_error':
         error(
-          `Update job unknown error: ${output.expect.data['error-type']}, ${JSON.stringify(output.expect.data['error-details'])}`,
+          `Update job unknown error: ${output.data['error-type']}, ${JSON.stringify(output.data['error-details'])}`,
         );
         return { success: false };
 

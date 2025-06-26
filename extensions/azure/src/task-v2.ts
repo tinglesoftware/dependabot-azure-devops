@@ -296,7 +296,7 @@ export async function performDependabotUpdatesAsync(
       const packagesToCheckForVulnerabilities: Package[] | undefined = outputs
         ?.map((o) => o.output)
         .find((o) => o?.type == 'update_dependency_list')
-        ?.expect.data.dependencies?.map((d) => ({ name: d.name, version: d.version }));
+        ?.data.dependencies?.map((d) => ({ name: d.name, version: d.version }));
       if (packagesToCheckForVulnerabilities?.length) {
         console.info(
           `Detected ${packagesToCheckForVulnerabilities.length} dependencies; Checking for vulnerabilities...`,

@@ -68,11 +68,9 @@ describe('DependabotOutputProcessor', () => {
     it('should process "update_dependency_list"', async () => {
       const result = await processor.process(update, {
         type: 'update_dependency_list',
-        expect: {
-          data: {
-            dependencies: [],
-            dependency_files: [],
-          },
+        data: {
+          dependencies: [],
+          dependency_files: [],
         },
       });
 
@@ -84,15 +82,13 @@ describe('DependabotOutputProcessor', () => {
 
       const result = await processor.process(update, {
         type: 'create_pull_request',
-        expect: {
           data: {
-            'base-commit-sha': '1234abcd',
-            'commit-message': 'Test commit message',
-            'pr-body': 'Test body',
-            'pr-title': 'Test PR',
-            'updated-dependency-files': [],
-            'dependencies': [],
-          },
+          'base-commit-sha': '1234abcd',
+          'commit-message': 'Test commit message',
+          'pr-body': 'Test body',
+          'pr-title': 'Test PR',
+          'updated-dependency-files': [],
+          'dependencies': [],
         },
       });
 
@@ -114,15 +110,13 @@ describe('DependabotOutputProcessor', () => {
       console.info(existingPullRequests);
       const result = await processor.process(update, {
         type: 'create_pull_request',
-        expect: {
-          data: {
-            'base-commit-sha': '1234abcd',
-            'commit-message': 'Test commit message',
-            'pr-body': 'Test body',
-            'pr-title': 'Test PR',
-            'updated-dependency-files': [],
-            'dependencies': [],
-          },
+        data: {
+          'base-commit-sha': '1234abcd',
+          'commit-message': 'Test commit message',
+          'pr-body': 'Test body',
+          'pr-title': 'Test PR',
+          'updated-dependency-files': [],
+          'dependencies': [],
         },
       });
 
@@ -139,15 +133,13 @@ describe('DependabotOutputProcessor', () => {
 
       const result = await processor.process(update, {
         type: 'create_pull_request',
-        expect: {
-          data: {
-            'base-commit-sha': '1234abcd',
-            'commit-message': 'Test commit message',
-            'pr-body': 'Test body',
-            'pr-title': 'Test PR',
-            'updated-dependency-files': [],
-            'dependencies': [],
-          },
+        data: {
+          'base-commit-sha': '1234abcd',
+          'commit-message': 'Test commit message',
+          'pr-body': 'Test body',
+          'pr-title': 'Test PR',
+          'updated-dependency-files': [],
+          'dependencies': [],
         },
       });
 
@@ -161,15 +153,13 @@ describe('DependabotOutputProcessor', () => {
 
       const result = await processor.process(update, {
         type: 'update_pull_request',
-        expect: {
-          data: {
-            'base-commit-sha': '1234abcd',
-            'commit-message': 'Test commit message',
-            'pr-body': 'Test body',
-            'pr-title': 'Test PR',
-            'updated-dependency-files': [],
-            'dependency-names': [],
-          },
+        data: {
+          'base-commit-sha': '1234abcd',
+          'commit-message': 'Test commit message',
+          'pr-body': 'Test body',
+          'pr-title': 'Test PR',
+          'updated-dependency-files': [],
+          'dependency-names': [],
         },
       });
 
@@ -180,15 +170,13 @@ describe('DependabotOutputProcessor', () => {
     it('should fail processing "update_pull_request" if pull request does not exist', async () => {
       const result = await processor.process(update, {
         type: 'update_pull_request',
-        expect: {
-          data: {
-            'base-commit-sha': '1234abcd',
-            'commit-message': 'Test commit message',
-            'pr-body': 'Test body',
-            'pr-title': 'Test PR',
-            'updated-dependency-files': [],
-            'dependency-names': ['dependency1'],
-          },
+        data: {
+          'base-commit-sha': '1234abcd',
+          'commit-message': 'Test commit message',
+          'pr-body': 'Test body',
+          'pr-title': 'Test PR',
+          'updated-dependency-files': [],
+          'dependency-names': ['dependency1'],
         },
       });
 
@@ -216,15 +204,13 @@ describe('DependabotOutputProcessor', () => {
 
       const result = await processor.process(update, {
         type: 'update_pull_request',
-        expect: {
-          data: {
-            'base-commit-sha': '1234abcd',
-            'commit-message': 'Test commit message',
-            'pr-body': 'Test body',
-            'pr-title': 'Test PR',
-            'updated-dependency-files': [],
-            'dependency-names': ['dependency1'],
-          },
+        data: {
+          'base-commit-sha': '1234abcd',
+          'commit-message': 'Test commit message',
+          'pr-body': 'Test body',
+          'pr-title': 'Test PR',
+          'updated-dependency-files': [],
+          'dependency-names': ['dependency1'],
         },
       });
 
@@ -238,7 +224,7 @@ describe('DependabotOutputProcessor', () => {
 
       const result = await processor.process(update, {
         type: 'close_pull_request',
-        expect: { data: { 'dependency-names': [] } },
+        data: { 'dependency-names': [] },
       });
 
       expect(result).toEqual({ success: true });
@@ -250,7 +236,7 @@ describe('DependabotOutputProcessor', () => {
 
       const result = await processor.process(update, {
         type: 'close_pull_request',
-        expect: { data: { 'dependency-names': ['dependency1'] } },
+        data: { 'dependency-names': ['dependency1'] },
       });
 
       expect(result).toEqual({ success: false });
@@ -275,7 +261,7 @@ describe('DependabotOutputProcessor', () => {
 
       const result = await processor.process(update, {
         type: 'close_pull_request',
-        expect: { data: { 'dependency-names': ['dependency1'] } },
+        data: { 'dependency-names': ['dependency1'] },
       });
 
       expect(result).toEqual({ success: true, pr: 11 });
@@ -283,19 +269,19 @@ describe('DependabotOutputProcessor', () => {
     });
 
     it('should process "mark_as_processed"', async () => {
-      const result = await processor.process(update, { type: 'mark_as_processed', expect: { data: {} } });
+      const result = await processor.process(update, { type: 'mark_as_processed', data: {} });
       expect(result).toEqual({ success: true });
     });
 
     it('should process "record_ecosystem_versions"', async () => {
-      const result = await processor.process(update, { type: 'record_ecosystem_versions', expect: { data: {} } });
+      const result = await processor.process(update, { type: 'record_ecosystem_versions', data: {} });
       expect(result).toEqual({ success: true });
     });
 
     it('should process "record_ecosystem_meta"', async () => {
       const result = await processor.process(update, {
         type: 'record_ecosystem_meta',
-        expect: { data: [{ ecosystem: { name: 'npm_any_yarn' } }] },
+        data: [{ ecosystem: { name: 'npm_any_yarn' } }],
       });
       expect(result).toEqual({ success: true });
     });
@@ -303,7 +289,7 @@ describe('DependabotOutputProcessor', () => {
     it('should process "record_update_job_error"', async () => {
       const result = await processor.process(update, {
         type: 'record_update_job_error',
-        expect: { data: { 'error-type': 'random' } },
+        data: { 'error-type': 'random' },
       });
       expect(result).toEqual({ success: false });
       expect(error).toHaveBeenCalled();
@@ -312,7 +298,7 @@ describe('DependabotOutputProcessor', () => {
     it('should process "record_update_job_unknown_error"', async () => {
       const result = await processor.process(update, {
         type: 'record_update_job_unknown_error',
-        expect: { data: { 'error-type': 'random' } },
+        data: { 'error-type': 'random' },
       });
       expect(result).toEqual({ success: false });
       expect(error).toHaveBeenCalled();
@@ -321,7 +307,7 @@ describe('DependabotOutputProcessor', () => {
     it('should process "increment_metric"', async () => {
       const result = await processor.process(update, {
         type: 'increment_metric',
-        expect: { data: { metric: 'random' } },
+        data: { metric: 'random' },
       });
       expect(result).toEqual({ success: true });
     });

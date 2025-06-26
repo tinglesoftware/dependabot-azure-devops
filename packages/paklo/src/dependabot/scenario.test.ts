@@ -1,8 +1,10 @@
+import { createReadStream } from 'fs';
 import { readFile } from 'fs/promises';
 import * as yaml from 'js-yaml';
 import { describe, expect, it } from 'vitest';
+import * as readline from 'readline';
 
-import { DependabotInputSchema, DependabotScenarioSchema } from './scenario';
+import { DependabotDataSchema, DependabotInputSchema, DependabotScenarioSchema, type DependabotData } from './scenario';
 
 describe('input', () => {
   it('python-pip', async () => {
@@ -74,3 +76,57 @@ describe('scenario', () => {
     expect(scenario.output.filter((o) => o.type == 'increment_metric').length).toBe(0);
   });
 });
+
+describe('result data', () => {
+  it('python-pip.jsonl', async () => {
+     const data = await readDependabotData('fixtures/scenarios/python-pip.jsonl');
+
+    // parsing is enough to test that we have the right schema
+    // but we test a few fields to be sure
+    expect(data.length).toBe(46);
+    expect(data.filter((o) => o.type == 'create_pull_request').length).toBe(18);
+    expect(data.filter((o) => o.type == 'update_pull_request').length).toBe(0);
+    expect(data.filter((o) => o.type == 'close_pull_request').length).toBe(0);
+    expect(data.filter((o) => o.type == 'record_update_job_error').length).toBe(0);
+    expect(data.filter((o) => o.type == 'record_update_job_unknown_error').length).toBe(0);
+    expect(data.filter((o) => o.type == 'mark_as_processed').length).toBe(1);
+    expect(data.filter((o) => o.type == 'update_dependency_list').length).toBe(1);
+    expect(data.filter((o) => o.type == 'record_ecosystem_versions').length).toBe(1);
+    expect(data.filter((o) => o.type == 'record_ecosystem_meta').length).toBe(25);
+    expect(data.filter((o) => o.type == 'increment_metric').length).toBe(0);
+  });
+
+  it('nuget.jsonl', async () => {
+     const data = await readDependabotData('fixtures/scenarios/nuget.jsonl');
+
+    // parsing is enough to test that we have the right schema
+    // but we test a few fields to be sure
+    expect(data.length).toBe(2);
+    expect(data.filter((o) => o.type == 'create_pull_request').length).toBe(0);
+    expect(data.filter((o) => o.type == 'update_pull_request').length).toBe(1);
+    expect(data.filter((o) => o.type == 'close_pull_request').length).toBe(0);
+    expect(data.filter((o) => o.type == 'record_update_job_error').length).toBe(0);
+    expect(data.filter((o) => o.type == 'record_update_job_unknown_error').length).toBe(0);
+    expect(data.filter((o) => o.type == 'mark_as_processed').length).toBe(1);
+    expect(data.filter((o) => o.type == 'update_dependency_list').length).toBe(0);
+    expect(data.filter((o) => o.type == 'record_ecosystem_versions').length).toBe(0);
+    expect(data.filter((o) => o.type == 'record_ecosystem_meta').length).toBe(0);
+    expect(data.filter((o) => o.type == 'increment_metric').length).toBe(0);
+  });
+});
+
+async function readDependabotData(path: string) : Promise<DependabotData[]> {
+  const rl = readline.createInterface({
+    input: createReadStream(path, { encoding: 'utf-8' }),
+    crlfDelay: Infinity
+  });
+
+  const outputArray : DependabotData[] = [];
+  for await (const line of rl) {
+    const json = JSON.parse(line);
+    const output = await DependabotDataSchema.parseAsync(json);
+    outputArray.push(output);
+  }
+
+  return outputArray;
+}
