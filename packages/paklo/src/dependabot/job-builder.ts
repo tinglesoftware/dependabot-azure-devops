@@ -21,7 +21,7 @@ import {
   type DependabotSourceProvider,
 } from './job';
 import { type DependabotCredential } from './proxy';
-import { type DependabotInput, type DependabotOutput } from './scenario';
+import { type DependabotInput, type DependabotData } from './scenario';
 
 export type DependabotSourceInfo = {
   'provider': DependabotSourceProvider;
@@ -37,7 +37,7 @@ export type DependabotOperation = DependabotInput & { config: DependabotUpdate }
 export type DependabotOperationResult = {
   success: boolean;
   error?: Error;
-  output?: DependabotOutput;
+  output?: DependabotData;
   pr?: number;
 };
 

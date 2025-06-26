@@ -63,6 +63,50 @@ export const DependabotOutputSchema = z.discriminatedUnion('type', [
 ]);
 export type DependabotOutput = z.infer<typeof DependabotOutputSchema>;
 
+export const DependabotDataSchema = z.discriminatedUnion('type', [
+  z.object({
+    type: z.literal('create_pull_request'),
+    data: DependabotCreatePullRequestSchema,
+  }),
+  z.object({
+    type: z.literal('update_pull_request'),
+    data: DependabotUpdatePullRequestSchema,
+  }),
+  z.object({
+    type: z.literal('close_pull_request'),
+    data: DependabotClosePullRequestSchema,
+  }),
+  z.object({
+    type: z.literal('record_update_job_error'),
+    data: DependabotRecordUpdateJobErrorSchema,
+  }),
+  z.object({
+    type: z.literal('record_update_job_unknown_error'),
+    data: DependabotRecordUpdateJobUnknownErrorSchema,
+  }),
+  z.object({
+    type: z.literal('mark_as_processed'),
+    data: DependabotMarkAsProcessedSchema,
+  }),
+  z.object({
+    type: z.literal('update_dependency_list'),
+    data: DependabotUpdateDependencyListSchema,
+  }),
+  z.object({
+    type: z.literal('record_ecosystem_versions'),
+    data: DependabotRecordEcosystemVersionsSchema,
+  }),
+  z.object({
+    type: z.literal('record_ecosystem_meta'),
+    data: DependabotRecordEcosystemMetaSchema.array(),
+  }),
+  z.object({
+    type: z.literal('increment_metric'),
+    data: DependabotIncrementMetricSchema
+  }),
+]);
+export type DependabotData = z.infer<typeof DependabotDataSchema>;
+
 export const DependabotScenarioSchema = z.object({
   input: DependabotInputSchema,
   output: DependabotOutputSchema.array(),

@@ -1,20 +1,21 @@
-import { command, debug, error, tool, which } from 'azure-pipelines-task-lib/task';
+import { command, debug, error, tool, which, getVariable } from 'azure-pipelines-task-lib/task';
 import { type ToolRunner } from 'azure-pipelines-task-lib/toolrunner';
-import { existsSync } from 'fs';
-import { mkdir, readFile, rename, rm, stat, writeFile } from 'fs/promises';
+import { closeSync, createReadStream, createWriteStream, existsSync, openSync } from 'fs';
+import { rename, rm, stat, writeFile } from 'fs/promises';
 import * as yaml from 'js-yaml';
 import * as os from 'os';
 import {
+  type DependabotData,
   type DependabotInput,
   type DependabotOperation,
   type DependabotOperationResult,
-  type DependabotOutput,
-  DependabotScenarioSchema,
+  DependabotDataSchema,
 } from 'paklo/dependabot';
 import * as path from 'path';
 import { Writable } from 'stream';
 import { endgroup, group, section } from '../azure-devops/formatting';
 import { type DependabotOutputProcessor } from './output-processor';
+import * as readline from 'readline';
 
 export type DependabotCliOptions = {
   sourceProvider?: string;
@@ -46,13 +47,13 @@ export class DependabotCli {
   public static readonly CLI_PACKAGE_LATEST = 'github.com/dependabot/cli/cmd/dependabot@latest';
 
   constructor(toolPackage: string, outputProcessor: DependabotOutputProcessor, debug: boolean = false) {
-    this.jobsPath = path.join(os.tmpdir(), 'dependabot-jobs');
+    this.jobsPath = getVariable('Build.SourcesDirectory')!;
     this.toolPackage = toolPackage;
     this.outputProcessor = outputProcessor;
-    this.outputLogStream = new Writable();
-    this.outputLogStream._write = (chunk, encoding, callback) => logComponentOutput(debug, chunk, encoding, callback);
+    this.outputLogStream = new Writable({
+      write: (chunk, encoding, callback) => logComponentOutput(debug, chunk, encoding, callback)
+    });
     this.debug = debug;
-    this.ensureJobsPathExists();
   }
 
   /**
@@ -71,20 +72,16 @@ export class DependabotCli {
       // Find the dependabot tool path, or install it if missing
       const dependabotPath = await this.getDependabotToolPath();
 
-      // Create the job directory
+      // Set job files
       const jobId = operation.job.id!;
-      const jobPath = path.join(this.jobsPath, jobId.toString());
-      const jobInputPath = path.join(jobPath, 'job.yaml');
-      const jobOutputPath = path.join(jobPath, 'scenario.yaml');
-      this.ensureJobsPathExists();
-      if (!existsSync(jobPath)) {
-        await mkdir(jobPath);
-      }
+      const jobInputPath =  `${this.jobsPath}-${jobId.toString()}-job.yaml`;
+      const jobOutputPath = `${this.jobsPath}-${jobId.toString()}-result.jsonl`;
+      this.ensureFileExists(jobInputPath);
 
       // Compile dependabot cmd arguments
       // See: https://github.com/dependabot/cli/blob/main/cmd/dependabot/internal/cmd/root.go
       //      https://github.com/dependabot/cli/blob/main/cmd/dependabot/internal/cmd/update.go
-      const dependabotArguments = ['update', '--file', jobInputPath, '--output', jobOutputPath];
+      const dependabotArguments = ['update', '--file', jobInputPath];
       if (options?.sourceProvider) {
         dependabotArguments.push('--provider', options.sourceProvider);
       }
@@ -131,34 +128,35 @@ export class DependabotCli {
       await writeJobConfigFile(jobInputPath, operation);
 
       // Run dependabot update
-      if (!existsSync(jobOutputPath) || (await stat(jobOutputPath))?.size == 0) {
-        section(`Processing job from '${jobInputPath}'`);
-        // By default, tool(...) uses the environment variables in the current process if none are provided.
-        // We need to additional variables for the dependabot CLI hence we extend them which overrides any defaults.
-        // See: https://github.com/microsoft/azure-pipelines-task-lib/blob/740206eb72342b22d2ba545204827636eb7b7126/node/toolrunner.ts#L26-L27
-        //      https://github.com/microsoft/azure-pipelines-task-lib/blob/740206eb72342b22d2ba545204827636eb7b7126/node/toolrunner.ts#L570
-        //      https://github.com/mburumaxwell/dependabot-azure-devops/pull/1753#issuecomment-2944939628
-        const env: Record<string, string | undefined> = {
-          ...process.env,
+      section(`Processing job from '${jobInputPath}'`);
+      // By default, tool(...) uses the environment variables in the current process if none are provided.
+      // We need to additional variables for the dependabot CLI hence we extend them which overrides any defaults.
+      // See: https://github.com/microsoft/azure-pipelines-task-lib/blob/740206eb72342b22d2ba545204827636eb7b7126/node/toolrunner.ts#L26-L27
+      //      https://github.com/microsoft/azure-pipelines-task-lib/blob/740206eb72342b22d2ba545204827636eb7b7126/node/toolrunner.ts#L570
+      //      https://github.com/mburumaxwell/dependabot-azure-devops/pull/1753#issuecomment-2944939628
+      const env: Record<string, string | undefined> = {
+        ...process.env,
 
-          // additional ENV
-          DEPENDABOT_JOB_ID: jobId.replace(/-/g, '_'), // replace hyphens with underscores
-          LOCAL_GITHUB_ACCESS_TOKEN: options?.gitHubAccessToken, // avoid rate-limiting when pulling images from GitHub container registries
-          LOCAL_AZURE_ACCESS_TOKEN: options?.azureDevOpsAccessToken, // technically not needed since we already supply this in our 'git_source' registry, but included for consistency
-          FAKE_API_PORT: options?.apiListeningPort, // used to pin PORT of the Dependabot CLI api back-channel
-        };
-        const dependabotTool = tool(dependabotPath).arg(dependabotArguments);
-        const dependabotResultCode = await dependabotTool.execAsync({
-          outStream: this.outputLogStream,
-          errStream: this.outputLogStream,
-          ignoreReturnCode: true,
-          failOnStdErr: false,
-          env: env,
-        });
-        if (dependabotResultCode != 0) {
-          error(`Dependabot failed with exit code ${dependabotResultCode}`);
-          return [{ success: false }];
-        }
+        // additional ENV
+        DEPENDABOT_JOB_ID: jobId.replace(/-/g, '_'), // replace hyphens with underscores
+        LOCAL_GITHUB_ACCESS_TOKEN: options?.gitHubAccessToken, // avoid rate-limiting when pulling images from GitHub container registries
+        LOCAL_AZURE_ACCESS_TOKEN: options?.azureDevOpsAccessToken, // technically not needed since we already supply this in our 'git_source' registry, but included for consistency
+        FAKE_API_PORT: options?.apiListeningPort, // used to pin PORT of the Dependabot CLI api back-channel
+      };
+      const dependabotTool = tool(dependabotPath).arg(dependabotArguments);
+      const jobOutputStream = createWriteStream(jobOutputPath, { flush: true } );
+      dependabotTool.on('stdout', (buffer: Buffer) => jobOutputStream.write(buffer));
+      const dependabotResultCode = await dependabotTool.execAsync({
+        outStream: this.outputLogStream,
+        errStream: this.outputLogStream,
+        ignoreReturnCode: true,
+        failOnStdErr: false,
+        env: env,
+      });
+      jobOutputStream.end();
+      if (dependabotResultCode != 0) {
+        error(`Dependabot failed with exit code ${dependabotResultCode}`);
+        return [{ success: false }];
       }
 
       // If flamegraph is enabled, upload the report to the pipeline timeline so the use can download it
@@ -172,8 +170,8 @@ export class DependabotCli {
 
       // Process the job output
       const operationResults = Array<DependabotOperationResult>();
-      if (existsSync(jobOutputPath)) {
-        const jobOutputs = await readJobScenarioOutputFile(jobOutputPath);
+      if ((await stat(jobOutputPath))?.size != 0) {
+        const jobOutputs = await readDependabotDataFile(jobOutputPath);
         if (jobOutputs?.length > 0) {
           section(`Processing job outputs from '${jobOutputPath}'`);
           for (const output of jobOutputs) {
@@ -227,11 +225,9 @@ export class DependabotCli {
     return (this.toolPath ||= which('dependabot', false) || path.join(goBinPath, 'dependabot'));
   }
 
-  // Create the jobs directory if it does not exist
-  private ensureJobsPathExists(): void {
-    if (!existsSync(this.jobsPath)) {
-      mkdir(this.jobsPath);
-    }
+  // Ensure the file exists and is empty, creating it if necessary
+  private ensureFileExists(filepath: string): void {
+    closeSync(openSync(filepath, 'w'));
   }
 
   // Clean up the jobs directory and its contents
@@ -259,22 +255,25 @@ async function writeJobConfigFile(path: string, input: DependabotInput): Promise
   await writeFile(path, contents);
 }
 
-// Documentation on the scenario model can be found here:
-// https://github.com/dependabot/cli/blob/main/internal/model/scenario.go
-async function readJobScenarioOutputFile(path: string): Promise<DependabotOutput[]> {
-  const scenarioContents = await readFile(path, 'utf-8');
-  if (!scenarioContents || typeof scenarioContents !== 'string') {
-    return []; // No outputs or failed scenario
+async function readDependabotDataFile(path: string): Promise<DependabotData[]> {
+  if ((await stat(path))?.size <= 0) {
+    return []; // No outputs or failed job
   }
 
-  const loadedScenario = yaml.load(scenarioContents);
-  if (loadedScenario === null || typeof loadedScenario !== 'object') {
-    throw new Error('Invalid scenario object');
+  // create a readline interface for reading the file line by line
+  const rl = readline.createInterface({
+    input: createReadStream(path, { encoding: 'utf-8' }),
+    crlfDelay: Infinity
+  });
+
+  const outputArray : DependabotData[] = [];
+  for await (const line of rl) {
+    const json = JSON.parse(line);
+    const output = await DependabotDataSchema.parseAsync(json);
+    outputArray.push(output);
   }
 
-  // Parse the scenario
-  const scenario = await DependabotScenarioSchema.parseAsync(loadedScenario);
-  return scenario.output;
+  return outputArray;
 }
 
 // Log output from Dependabot based on the sub-component it originates from
