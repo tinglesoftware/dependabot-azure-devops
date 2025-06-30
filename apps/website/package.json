@@ -19,9 +19,9 @@
     "next": "15.3.4",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "fumadocs-ui": "15.5.2",
-    "fumadocs-core": "15.5.2",
-    "fumadocs-mdx": "11.6.8",
+    "fumadocs-ui": "15.6.0",
+    "fumadocs-core": "15.6.0",
+    "fumadocs-mdx": "11.6.10",
     "paklo": "workspace:*",
     "sharp": "0.34.2",
     "zod": "3.25.67"
