@@ -17,11 +17,11 @@
   <ItemGroup>
     <PackageReference Include="AspNetCore.Authentication.ApiKey" Version="8.0.1" />
     <PackageReference Include="AspNetCore.Authentication.Basic" Version="9.0.0" />
-    <PackageReference Include="Azure.Extensions.AspNetCore.DataProtection.Keys" Version="1.6.0" />
-    <PackageReference Include="Azure.Identity" Version="1.14.0" />
+    <PackageReference Include="Azure.Extensions.AspNetCore.DataProtection.Keys" Version="1.6.1" />
+    <PackageReference Include="Azure.Identity" Version="1.14.1" />
     <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.20.1" /> <!-- Allows for faster updates -->
     <PackageReference Include="Azure.Monitor.OpenTelemetry.Exporter" Version="1.4.0" />
-    <PackageReference Include="Azure.Monitor.Query" Version="1.6.0" />
+    <PackageReference Include="Azure.Monitor.Query" Version="1.7.0" />
     <PackageReference Include="Azure.ResourceManager.AppContainers" Version="1.4.0" />
     <PackageReference Include="DistributedLock.FileSystem" Version="1.0.3" />
     <PackageReference Include="Docker.DotNet" Version="3.125.15" />
