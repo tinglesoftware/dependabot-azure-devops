@@ -4,7 +4,7 @@ This repository contains tools for updating dependencies in Azure DevOps reposit
 
 ![Extensions](https://img.shields.io/github/actions/workflow/status/mburumaxwell/dependabot-azure-devops/extensions.yml?branch=main&label=Extensions&style=flat-square)
 ![Server](https://img.shields.io/github/actions/workflow/status/mburumaxwell/dependabot-azure-devops/server.yml?branch=main&label=Server&style=flat-square)
-[![Release](https://img.shields.io/github/release/mburumaxwell/dependabot-azure-devops.svg?style=flat-square)](https://github.com/mburumaxwell/dependabot-azure-devops/releases/latest)
+![Website](https://img.shields.io/github/actions/workflow/status/mburumaxwell/dependabot-azure-devops/website.yml?branch=main&label=Website&style=flat-square)
 [![license](https://img.shields.io/github/license/mburumaxwell/dependabot-azure-devops.svg?style=flat-square)](LICENSE)
 
 In this repository you'll find:
