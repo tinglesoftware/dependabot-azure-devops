@@ -17,6 +17,7 @@ export const DEFAULT_EXPERIMENTS: DependabotExperiments = {
   'npm-fallback-version-above-v6': true,
   'lead-security-dependency': true,
   'enable-record-ecosystem-meta': true,
+  'enable-corepack-for-npm-and-yarn': true,
   'enable-shared-helpers-command-timeout': true,
   'enable-dependabot-setting-up-cronjob': true,
   'enable-engine-version-detection': true,
@@ -39,4 +40,9 @@ export const DEFAULT_EXPERIMENTS: DependabotExperiments = {
   'enable-cooldown-for-pub': true,
   'enable-cooldown-for-gitsubmodules': true,
   'enable-cooldown-for-elm': true,
+  'gradle-lockfile-updater': true,
+  'enable-cooldown-for-github-actions': true,
+  'enable-cooldown-for-dev-containers': true,
+  'enable-cooldown-for-hex': true,
+  'enable-cooldown-for-dotnet-sdk': true,
 };
