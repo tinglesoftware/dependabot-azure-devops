@@ -1,5 +1,16 @@
 # paklo
 
+## 0.4.0
+
+### Minor Changes
+
+- 131d0f1: Added command to CLI to generate dependabot job files
+
+### Patch Changes
+
+- 4f9929b: Update default experiments as of 16 June 2025
+- a257919: Update default experiments as of 02 July 2025
+
 ## 0.3.0
 
 ### Minor Changes

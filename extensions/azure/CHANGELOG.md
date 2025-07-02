@@ -1,5 +1,18 @@
 # extension-azure-devops
 
+## 2.54.0
+
+### Minor Changes
+
+- 131d0f1: Added command to CLI to generate dependabot job files
+
+### Patch Changes
+
+- Updated dependencies [4f9929b]
+- Updated dependencies [131d0f1]
+- Updated dependencies [a257919]
+  - paklo@0.4.0
+
 ## 2.53.2
 
 ### Patch Changes
