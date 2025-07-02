@@ -22,8 +22,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Generate token
+        id: generate-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.GH_APP_ID_RELEASER }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY_RELEASER }}
+          permission-contents: write
+          permission-pull-requests: write
+
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          token: ${{ steps.generate-token.outputs.token }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -37,14 +48,11 @@ jobs:
       - name: Download deps
         run: pnpm install
 
-      - name: Generate token
-        id: generate-token
-        uses: actions/create-github-app-token@v2
-        with:
-          app-id: ${{ secrets.GH_APP_ID_RELEASER }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY_RELEASER }}
-          permission-contents: write
-          permission-pull-requests: write
+      # Change git info to match the token
+      - name: Setup git info
+        run: |
+          git config user.name release-automator-mburumaxwell[bot]
+          git config user.email 214517399+release-automator-mburumaxwell[bot]@users.noreply.github.com
 
       - name: Create release pull request
         if: ${{ github.event_name != 'pull_request' }}
@@ -54,6 +62,6 @@ jobs:
           version: pnpm packages:version
           publish: pnpm packages:publish
           commit: 'Version packages'
-          commitMode: 'github-api'
+          setupGitUser: false # setup above
         env:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
