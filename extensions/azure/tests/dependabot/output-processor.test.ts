@@ -101,8 +101,17 @@ describe('DependabotOutputProcessor', () => {
     });
 
     it('should skip processing "create_pull_request" if open pull request limit is reached', async () => {
+      const packageManager = 'nuget';
       update.config['open-pull-requests-limit'] = 1;
-      existingPullRequests.push({ id: 1 } as IPullRequestProperties);
+      update.job['package-manager'] = packageManager;
+      existingPullRequests.push({
+        id: 1,
+        properties: [
+          { name: DEVOPS_PR_PROPERTY_DEPENDABOT_PACKAGE_MANAGER, value: packageManager },
+          { name: DEVOPS_PR_PROPERTY_DEPENDABOT_DEPENDENCIES, value: '[]' },
+        ],
+      } as IPullRequestProperties);
+      console.info(existingPullRequests);
       const result = await processor.process(update, {
         type: 'create_pull_request',
         expect: {

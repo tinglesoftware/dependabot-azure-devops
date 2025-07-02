@@ -92,8 +92,19 @@ export class DependabotOutputProcessor {
 
         // Skip if active pull request limit reached.
         const openPullRequestsLimit = operation.config['open-pull-requests-limit']!;
-        const openPullRequestsCount = this.createdPullRequestIds.length + this.existingPullRequests.length;
-        if (openPullRequestsLimit > 0 && openPullRequestsCount >= openPullRequestsLimit) {
+
+        // Parse the Dependabot metadata for the existing pull requests that are related to this update
+        // Dependabot will use this to determine if we need to create new pull requests or update/close existing ones
+        const existingPullRequestsForPackageManager = parsePullRequestProperties(
+          this.existingPullRequests,
+          packageManager,
+        );
+        const existingPullRequestsCount = Object.entries(existingPullRequestsForPackageManager).length;
+        const openPullRequestsCount = this.createdPullRequestIds.length + existingPullRequestsCount;
+        const hasReachedOpenPullRequestLimit =
+          openPullRequestsLimit > 0 && openPullRequestsCount >= openPullRequestsLimit;
+
+        if (hasReachedOpenPullRequestLimit) {
           warning(
             `Skipping pull request creation of '${title}' as the open pull requests limit (${openPullRequestsLimit}) has been reached`,
           );
