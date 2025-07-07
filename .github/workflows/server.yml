@@ -46,12 +46,12 @@ jobs:
         uses: actions/setup-dotnet@v4
 
       - name: Install GitVersion
-        uses: gittools/actions/gitversion/setup@v3
+        uses: gittools/actions/gitversion/setup@v4
         with:
           versionSpec: '6.0.x'
 
       - name: Determine Version
-        uses: gittools/actions/gitversion/execute@v3
+        uses: gittools/actions/gitversion/execute@v4
         id: gitversion
         with:
           useConfigFile: true
