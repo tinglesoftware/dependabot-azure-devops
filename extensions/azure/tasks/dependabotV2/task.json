@@ -54,15 +54,6 @@
   ],
   "inputs": [
     {
-      "name": "skipPullRequests",
-      "type": "boolean",
-      "groupName": "pull_requests",
-      "label": "Skip creation and updating of pull requests.",
-      "defaultValue": false,
-      "required": false,
-      "helpMarkDown": "When set to `true` the logic to update the dependencies is executed but the actual Pull Requests are not created/updated. Defaults to `false`."
-    },
-    {
       "name": "dryRun",
       "type": "boolean",
       "label": "Test logic without actually creating, updating or abandoning pull requests.",
