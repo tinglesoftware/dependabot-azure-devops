@@ -24,7 +24,7 @@
     "fumadocs-mdx": "11.6.10",
     "paklo": "workspace:*",
     "sharp": "0.34.2",
-    "zod": "3.25.67"
+    "zod": "3.25.74"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "4.1.11",
