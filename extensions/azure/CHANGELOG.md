@@ -1,5 +1,15 @@
 # extension-azure-devops
 
+## 2.55.0
+
+### Minor Changes
+
+- 2814fd6: Fix open PR limit per package-ecosystem.
+
+### Patch Changes
+
+- 9aba8a9: Remove the `skipPullRequests` input
+
 ## 2.54.0
 
 ### Minor Changes
