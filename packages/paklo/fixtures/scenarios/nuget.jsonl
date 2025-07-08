@@ -1,0 +1,2 @@
+{"data":{"base-commit-sha":"850fed3072edf9e14f38fa1599cfa18f2ce3a1bb","dependency-group":null,"dependency-names":["Microsoft.Owin"],"updated-dependency-files":[{"content":"[Redacted]","directory":"/","operation":"update","support_file":false,"type":"file","name":"Root.csproj"}]},"type":"update_pull_request"}
+{"data":{"base-commit-sha":"850fed3072edf9e14f38fa1599cfa18f2ce3a1bb"},"type":"mark_as_processed"}
